@@ -1,0 +1,42 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:campusiq/core/providers/isar_provider.dart';
+import 'package:campusiq/features/cwa/data/models/course_model.dart';
+import 'package:campusiq/features/cwa/data/repositories/cwa_repository.dart';
+import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
+import 'package:campusiq/core/constants/app_constants.dart';
+
+/// Active semester — becomes user-configurable in a later phase.
+final activeSemesterProvider = StateProvider<String>((ref) => AppConstants.defaultSemesterKey);
+
+/// Repository — only available once Isar is open.
+final cwaRepositoryProvider = Provider<CwaRepository?>((ref) {
+  final isarAsync = ref.watch(isarProvider);
+  return isarAsync.whenOrNull(data: (isar) => CwaRepository(isar));
+});
+
+/// Live stream of courses for the active semester.
+final coursesProvider = StreamProvider<List<CourseModel>>((ref) {
+  final repo = ref.watch(cwaRepositoryProvider);
+  final semester = ref.watch(activeSemesterProvider);
+  if (repo == null) return const Stream.empty();
+  return repo.watchCourses(semester);
+});
+
+/// User's target CWA — persisted to Isar in Phase 2.
+final targetCwaProvider = StateProvider<double>((ref) => 70.0);
+
+/// Computed projected CWA from current courses.
+final projectedCwaProvider = Provider<double>((ref) {
+  final courses = ref.watch(coursesProvider).valueOrNull ?? [];
+  final pairs = courses
+      .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
+      .toList();
+  return CwaCalculator.calculate(pairs);
+});
+
+/// Gap between target and projected. Positive = below target.
+final cwaGapProvider = Provider<double>((ref) {
+  final projected = ref.watch(projectedCwaProvider);
+  final target = ref.watch(targetCwaProvider);
+  return CwaCalculator.gap(projected, target);
+});
