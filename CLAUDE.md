@@ -27,12 +27,25 @@ flutter analyze
 flutter run
 
 ## Current phase
-Phase 4 complete — Phase 5 next (Streak System)
+Phase 5 complete — MVP DONE
+
+## MVP feature set
+- CWA Target Planner (offline, live calculation)
+- Dual-layer Timetable (class + personal, swipe view, full recurrence)
+- Study Session Tracker (DateTime anchor timer, planned vs actual)
+- Streak System (study + per-course + attendance, milestones, heatmap)
+
+## Phase 6 (future)
+AI timetable scanning (Google ML Kit OCR)
+Smart study scheduler
+Study Connect (social feature)
+Firebase sync + push notifications
 
 ## Routes live
 /cwa        → CWA Target Planner
 /timetable  → Class + Personal Timetable (swipe layers)
 /sessions   → Session Tracker + Analytics Dashboard
+/streak     → Streak System
 
 ## Timetable views
 Swipe left/right: Class Only ↔ Both ↔ Personal Only
