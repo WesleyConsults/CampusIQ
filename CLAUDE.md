@@ -27,11 +27,15 @@ flutter analyze
 flutter run
 
 ## Current phase
-Phase 2 complete — Phase 3 next (Personal Timetable + Dual View)
+Phase 3 complete — Phase 4 next (Study Session Tracking)
 
 ## Routes live
 /cwa        → CWA Target Planner
-/timetable  → Class Timetable
+/timetable  → Class Timetable + Personal Timetable (dual layer, swiped)
+
+## Timetable views
+Swipe left/right: Class Only ↔ Both ↔ Personal Only
+Page 0 = classOnly, Page 1 = both (default), Page 2 = personalOnly
 
 ## Do not
 - Use Hive (we chose Isar)
