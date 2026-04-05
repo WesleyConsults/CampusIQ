@@ -6,6 +6,7 @@ import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/data/models/personal_slot_model.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
+import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 
 final isarProvider = FutureProvider<Isar>((ref) async {
   final dir = await getApplicationDocumentsDirectory();
@@ -16,6 +17,7 @@ final isarProvider = FutureProvider<Isar>((ref) async {
       PersonalSlotModelSchema,
       StudySessionModelSchema,
       UserPrefsModelSchema,
+      DailyPlanTaskModelSchema,
     ],
     directory: dir.path,
   );
