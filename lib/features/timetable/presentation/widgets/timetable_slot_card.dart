@@ -1,0 +1,91 @@
+import 'package:flutter/material.dart';
+import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
+import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
+
+/// A positioned slot card rendered inside the timetable grid.
+/// Uses absolute positioning based on startMinutes/endMinutes.
+class TimetableSlotCard extends StatelessWidget {
+  final TimetableSlotModel slot;
+  final double columnWidth;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const TimetableSlotCard({
+    super.key,
+    required this.slot,
+    required this.columnWidth,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final topOffset = (slot.startMinutes - TimetableConstants.gridStartMinutes) *
+        TimetableConstants.pixelsPerMinute;
+    final height = slot.durationMinutes * TimetableConstants.pixelsPerMinute;
+    final color = Color(slot.colorValue);
+    final isShort = height < 40;
+
+    return Positioned(
+      top: topOffset,
+      left: 2,
+      right: 2,
+      height: height,
+      child: GestureDetector(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: Container(
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color, width: 1.5),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          child: isShort
+              ? Text(
+                  slot.courseCode,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      slot.courseCode,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (!isShort) ...[
+                      Text(
+                        slot.courseName,
+                        style: TextStyle(
+                          color: color.withValues(alpha: 0.8),
+                          fontSize: 10,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        maxLines: 1,
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${slot.startTimeLabel} · ${slot.slotType}',
+                        style: TextStyle(
+                          color: color.withValues(alpha: 0.7),
+                          fontSize: 9,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
