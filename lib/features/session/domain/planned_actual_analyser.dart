@@ -182,4 +182,33 @@ class PlannedActualAnalyser {
       leastStudiedCourse: leastStudied,
     );
   }
+
+  /// Generates a plain-language feedback string for the student.
+  static String feedbackForDay(DayAnalytics analytics) {
+    if (analytics.sessionCount == 0) return 'No study sessions recorded today.';
+
+    final rate = analytics.completionRate;
+    final total = analytics.totalActualMinutes;
+    final h = total ~/ 60;
+    final m = total % 60;
+    final timeStr = h > 0 ? '${h}h ${m}m' : '${m}m';
+
+    if (analytics.totalPlannedMinutes == 0) {
+      return 'You studied $timeStr today — great spontaneous effort!';
+    }
+
+    if (rate >= 1.0) return 'You hit your study target today. $timeStr studied. Keep it up!';
+    if (rate >= 0.7) return 'Almost there — $timeStr studied, ${((1 - rate) * 100).toInt()}% left to hit your plan.';
+
+    // Find most under-studied course
+    final worst = analytics.perCourse
+        .where((c) => c.plannedMinutes > 0 && c.actualMinutes < c.plannedMinutes)
+        .fold<CourseStats?>(null, (prev, c) =>
+            prev == null || c.gapMinutes > prev.gapMinutes ? c : prev);
+
+    if (worst != null) {
+      return 'You are under-studying ${worst.courseCode} — ${worst.formattedPlanned} planned, only ${worst.formattedActual} done.';
+    }
+    return 'Keep going — $timeStr studied today.';
+  }
 }

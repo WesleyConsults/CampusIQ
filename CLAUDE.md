@@ -27,15 +27,20 @@ flutter analyze
 flutter run
 
 ## Current phase
-Phase 3 complete — Phase 4 next (Study Session Tracking)
+Phase 4 complete — Phase 5 next (Streak System)
 
 ## Routes live
 /cwa        → CWA Target Planner
-/timetable  → Class Timetable + Personal Timetable (dual layer, swiped)
+/timetable  → Class + Personal Timetable (swipe layers)
+/sessions   → Session Tracker + Analytics Dashboard
 
 ## Timetable views
 Swipe left/right: Class Only ↔ Both ↔ Personal Only
 Page 0 = classOnly, Page 1 = both (default), Page 2 = personalOnly
+
+## Global state
+activeSessionProvider — lives above ShellRoute, survives tab switches
+Timer uses DateTime anchor (not Stopwatch) for Android reliability
 
 ## Do not
 - Use Hive (we chose Isar)
