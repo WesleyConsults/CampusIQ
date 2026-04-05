@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:campusiq/features/cwa/presentation/screens/cwa_screen.dart';
+import 'package:campusiq/features/plan/presentation/screens/plan_screen.dart';
 import 'package:campusiq/features/timetable/presentation/screens/timetable_screen.dart';
 import 'package:campusiq/features/session/presentation/screens/session_screen.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
@@ -10,11 +11,16 @@ import 'package:campusiq/features/streak/presentation/screens/streak_screen.dart
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/cwa',
+  initialLocation: '/plan',
   routes: [
     ShellRoute(
       builder: (context, state, child) => _AppShell(child: child),
       routes: [
+        GoRoute(
+          path: '/plan',
+          name: 'plan',
+          builder: (context, state) => const PlanScreen(),
+        ),
         GoRoute(
           path: '/cwa',
           name: 'cwa',
@@ -46,10 +52,11 @@ class _AppShell extends ConsumerWidget {
 
   int _locationToIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith('/timetable')) return 1;
-    if (location.startsWith('/sessions'))  return 2;
-    if (location.startsWith('/streak'))    return 3;
-    return 0;
+    if (location.startsWith('/cwa'))       return 1;
+    if (location.startsWith('/timetable')) return 2;
+    if (location.startsWith('/sessions'))  return 3;
+    if (location.startsWith('/streak'))    return 4;
+    return 0; // /plan
   }
 
   @override
@@ -70,13 +77,19 @@ class _AppShell extends ConsumerWidget {
         selectedIndex: _locationToIndex(context),
         onDestinationSelected: (i) {
           switch (i) {
-            case 0: context.go('/cwa');
-            case 1: context.go('/timetable');
-            case 2: context.go('/sessions');
-            case 3: context.go('/streak');
+            case 0: context.go('/plan');
+            case 1: context.go('/cwa');
+            case 2: context.go('/timetable');
+            case 3: context.go('/sessions');
+            case 4: context.go('/streak');
           }
         },
         destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.checklist_rounded),
+            selectedIcon: Icon(Icons.checklist_rounded),
+            label: 'Plan',
+          ),
           const NavigationDestination(
             icon: Icon(Icons.school_outlined),
             selectedIcon: Icon(Icons.school),
