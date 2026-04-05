@@ -51,6 +51,40 @@ class UserPrefsRepository {
     await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
   }
 
+  /// Returns the full prefs object (for reading notification settings).
+  Future<UserPrefsModel> getPrefs() => _getOrCreate();
+
+  Future<void> setNotifyStudyReminders(bool value) async {
+    final prefs = await _getOrCreate();
+    prefs.notifyStudyReminders = value;
+    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+  }
+
+  Future<void> setNotifyStreakAlerts(bool value) async {
+    final prefs = await _getOrCreate();
+    prefs.notifyStreakAlerts = value;
+    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+  }
+
+  Future<void> setNotifyMilestoneAlerts(bool value) async {
+    final prefs = await _getOrCreate();
+    prefs.notifyMilestoneAlerts = value;
+    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+  }
+
+  Future<void> setNotifyWeeklyReview(bool value) async {
+    final prefs = await _getOrCreate();
+    prefs.notifyWeeklyReview = value;
+    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+  }
+
+  Future<void> setDailyReminderTime(int hour, int minute) async {
+    final prefs = await _getOrCreate();
+    prefs.dailyReminderHour = hour;
+    prefs.dailyReminderMinute = minute;
+    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+  }
+
   static String _toStr(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }

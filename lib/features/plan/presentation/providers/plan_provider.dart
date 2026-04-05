@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
+import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 import 'package:campusiq/features/plan/data/repositories/daily_plan_repository.dart';
@@ -84,5 +85,11 @@ final generatePlanProvider =
   if (repo == null) return;
 
   await repo.deleteAllTasksForDate(date);
-  await repo.saveTasks(tasks.map((t) => t.toDailyPlanTaskModel(date)).toList());
+  final models = tasks.map((t) => t.toDailyPlanTaskModel(date)).toList();
+  await repo.saveTasks(models);
+
+  // Schedule 10-min reminders for each study task with a start time
+  for (final model in models) {
+    await NotificationService.instance.schedulePlannedSessionReminder(model);
+  }
 });

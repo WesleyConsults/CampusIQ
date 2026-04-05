@@ -15,5 +15,17 @@ class UserPrefsModel {
   /// Last date the app was opened — used for streak alive check.
   DateTime? lastOpenedDate;
 
+  // ── Notification preferences ─────────────────────────────────────────────
+  bool notifyStudyReminders = true;
+  bool notifyStreakAlerts = true;
+  bool notifyMilestoneAlerts = true;
+  bool notifyWeeklyReview = true;
+
+  /// Hour of day for the daily "haven't studied" reminder (24h). Default 20 = 8 PM.
+  int dailyReminderHour = 20;
+
+  /// Minute of hour for the daily reminder. Default 0.
+  int dailyReminderMinute = 0;
+
   UserPrefsModel();
 }

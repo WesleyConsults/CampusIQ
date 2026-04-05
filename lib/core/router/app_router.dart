@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:campusiq/features/cwa/presentation/screens/cwa_screen.dart';
 import 'package:campusiq/features/plan/presentation/screens/plan_screen.dart';
+import 'package:campusiq/features/settings/presentation/screens/settings_screen.dart';
 import 'package:campusiq/features/timetable/presentation/screens/timetable_screen.dart';
 import 'package:campusiq/features/session/presentation/screens/session_screen.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
@@ -40,6 +41,11 @@ final appRouter = GoRouter(
           path: '/streak',
           name: 'streak',
           builder: (context, state) => const StreakScreen(),
+        ),
+        GoRoute(
+          path: '/settings',
+          name: 'settings',
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
     ),

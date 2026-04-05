@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
@@ -62,6 +63,9 @@ class SessionScreen extends ConsumerWidget {
 
     final repo = ref.read(sessionRepositoryProvider);
     await repo?.saveSession(session);
+
+    // Student has now studied today — cancel "haven't studied" and streak alerts
+    await NotificationService.instance.cancelStudiedTodayAlerts();
   }
 
   @override

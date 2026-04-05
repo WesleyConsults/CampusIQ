@@ -22,10 +22,40 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'attendedDatesJson',
       type: IsarType.string,
     ),
-    r'lastOpenedDate': PropertySchema(
+    r'dailyReminderHour': PropertySchema(
       id: 1,
+      name: r'dailyReminderHour',
+      type: IsarType.long,
+    ),
+    r'dailyReminderMinute': PropertySchema(
+      id: 2,
+      name: r'dailyReminderMinute',
+      type: IsarType.long,
+    ),
+    r'lastOpenedDate': PropertySchema(
+      id: 3,
       name: r'lastOpenedDate',
       type: IsarType.dateTime,
+    ),
+    r'notifyMilestoneAlerts': PropertySchema(
+      id: 4,
+      name: r'notifyMilestoneAlerts',
+      type: IsarType.bool,
+    ),
+    r'notifyStreakAlerts': PropertySchema(
+      id: 5,
+      name: r'notifyStreakAlerts',
+      type: IsarType.bool,
+    ),
+    r'notifyStudyReminders': PropertySchema(
+      id: 6,
+      name: r'notifyStudyReminders',
+      type: IsarType.bool,
+    ),
+    r'notifyWeeklyReview': PropertySchema(
+      id: 7,
+      name: r'notifyWeeklyReview',
+      type: IsarType.bool,
     )
   },
   estimateSize: _userPrefsModelEstimateSize,
@@ -59,7 +89,13 @@ void _userPrefsModelSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.attendedDatesJson);
-  writer.writeDateTime(offsets[1], object.lastOpenedDate);
+  writer.writeLong(offsets[1], object.dailyReminderHour);
+  writer.writeLong(offsets[2], object.dailyReminderMinute);
+  writer.writeDateTime(offsets[3], object.lastOpenedDate);
+  writer.writeBool(offsets[4], object.notifyMilestoneAlerts);
+  writer.writeBool(offsets[5], object.notifyStreakAlerts);
+  writer.writeBool(offsets[6], object.notifyStudyReminders);
+  writer.writeBool(offsets[7], object.notifyWeeklyReview);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -70,8 +106,14 @@ UserPrefsModel _userPrefsModelDeserialize(
 ) {
   final object = UserPrefsModel();
   object.attendedDatesJson = reader.readString(offsets[0]);
+  object.dailyReminderHour = reader.readLong(offsets[1]);
+  object.dailyReminderMinute = reader.readLong(offsets[2]);
   object.id = id;
-  object.lastOpenedDate = reader.readDateTimeOrNull(offsets[1]);
+  object.lastOpenedDate = reader.readDateTimeOrNull(offsets[3]);
+  object.notifyMilestoneAlerts = reader.readBool(offsets[4]);
+  object.notifyStreakAlerts = reader.readBool(offsets[5]);
+  object.notifyStudyReminders = reader.readBool(offsets[6]);
+  object.notifyWeeklyReview = reader.readBool(offsets[7]);
   return object;
 }
 
@@ -85,7 +127,19 @@ P _userPrefsModelDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
+      return (reader.readLong(offset)) as P;
+    case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 4:
+      return (reader.readBool(offset)) as P;
+    case 5:
+      return (reader.readBool(offset)) as P;
+    case 6:
+      return (reader.readBool(offset)) as P;
+    case 7:
+      return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -323,6 +377,118 @@ extension UserPrefsModelQueryFilter
     });
   }
 
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyReminderHourEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dailyReminderHour',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyReminderHourGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dailyReminderHour',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyReminderHourLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dailyReminderHour',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyReminderHourBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dailyReminderHour',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyReminderMinuteEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dailyReminderMinute',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyReminderMinuteGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dailyReminderMinute',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyReminderMinuteLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dailyReminderMinute',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyReminderMinuteBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dailyReminderMinute',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -451,6 +617,46 @@ extension UserPrefsModelQueryFilter
       ));
     });
   }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      notifyMilestoneAlertsEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'notifyMilestoneAlerts',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      notifyStreakAlertsEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'notifyStreakAlerts',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      notifyStudyRemindersEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'notifyStudyReminders',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      notifyWeeklyReviewEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'notifyWeeklyReview',
+        value: value,
+      ));
+    });
+  }
 }
 
 extension UserPrefsModelQueryObject
@@ -476,6 +682,34 @@ extension UserPrefsModelQuerySortBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDailyReminderHour() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dailyReminderHour', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDailyReminderHourDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dailyReminderHour', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDailyReminderMinute() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dailyReminderMinute', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDailyReminderMinuteDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dailyReminderMinute', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       sortByLastOpenedDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastOpenedDate', Sort.asc);
@@ -486,6 +720,62 @@ extension UserPrefsModelQuerySortBy
       sortByLastOpenedDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastOpenedDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByNotifyMilestoneAlerts() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyMilestoneAlerts', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByNotifyMilestoneAlertsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyMilestoneAlerts', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByNotifyStreakAlerts() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyStreakAlerts', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByNotifyStreakAlertsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyStreakAlerts', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByNotifyStudyReminders() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyStudyReminders', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByNotifyStudyRemindersDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyStudyReminders', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByNotifyWeeklyReview() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyWeeklyReview', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByNotifyWeeklyReviewDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyWeeklyReview', Sort.desc);
     });
   }
 }
@@ -503,6 +793,34 @@ extension UserPrefsModelQuerySortThenBy
       thenByAttendedDatesJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'attendedDatesJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDailyReminderHour() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dailyReminderHour', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDailyReminderHourDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dailyReminderHour', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDailyReminderMinute() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dailyReminderMinute', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDailyReminderMinuteDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dailyReminderMinute', Sort.desc);
     });
   }
 
@@ -531,6 +849,62 @@ extension UserPrefsModelQuerySortThenBy
       return query.addSortBy(r'lastOpenedDate', Sort.desc);
     });
   }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByNotifyMilestoneAlerts() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyMilestoneAlerts', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByNotifyMilestoneAlertsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyMilestoneAlerts', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByNotifyStreakAlerts() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyStreakAlerts', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByNotifyStreakAlertsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyStreakAlerts', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByNotifyStudyReminders() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyStudyReminders', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByNotifyStudyRemindersDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyStudyReminders', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByNotifyWeeklyReview() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyWeeklyReview', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByNotifyWeeklyReviewDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notifyWeeklyReview', Sort.desc);
+    });
+  }
 }
 
 extension UserPrefsModelQueryWhereDistinct
@@ -544,9 +918,51 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByDailyReminderHour() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'dailyReminderHour');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByDailyReminderMinute() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'dailyReminderMinute');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByLastOpenedDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastOpenedDate');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByNotifyMilestoneAlerts() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'notifyMilestoneAlerts');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByNotifyStreakAlerts() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'notifyStreakAlerts');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByNotifyStudyReminders() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'notifyStudyReminders');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByNotifyWeeklyReview() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'notifyWeeklyReview');
     });
   }
 }
@@ -566,10 +982,52 @@ extension UserPrefsModelQueryProperty
     });
   }
 
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      dailyReminderHourProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'dailyReminderHour');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      dailyReminderMinuteProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'dailyReminderMinute');
+    });
+  }
+
   QueryBuilder<UserPrefsModel, DateTime?, QQueryOperations>
       lastOpenedDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastOpenedDate');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, bool, QQueryOperations>
+      notifyMilestoneAlertsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'notifyMilestoneAlerts');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, bool, QQueryOperations>
+      notifyStreakAlertsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'notifyStreakAlerts');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, bool, QQueryOperations>
+      notifyStudyRemindersProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'notifyStudyReminders');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, bool, QQueryOperations>
+      notifyWeeklyReviewProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'notifyWeeklyReview');
     });
   }
 }

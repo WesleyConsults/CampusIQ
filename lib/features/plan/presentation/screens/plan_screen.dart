@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
@@ -68,6 +69,12 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined,
+                color: Colors.white),
+            tooltip: 'Notification settings',
+            onPressed: () => context.go('/settings'),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: _isGenerating
