@@ -27,7 +27,11 @@ flutter analyze
 flutter run
 
 ## Current phase
-Phase 1 — CWA Target Planner (in progress)
+Phase 2 complete — Phase 3 next (Personal Timetable + Dual View)
+
+## Routes live
+/cwa        → CWA Target Planner
+/timetable  → Class Timetable
 
 ## Do not
 - Use Hive (we chose Isar)
