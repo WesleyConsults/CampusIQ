@@ -30,13 +30,13 @@ class NotificationService {
     if (_initialized) return;
 
     tz_data.initializeTimeZones();
-    final timeZoneName = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timeZoneName));
+    final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneInfo.identifier));
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     await _plugin.initialize(
-      const InitializationSettings(android: androidSettings),
+      settings: const InitializationSettings(android: androidSettings),
     );
 
     await _plugin
@@ -67,14 +67,12 @@ class NotificationService {
     String channelName,
   ) async {
     await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledAt, tz.local),
-      NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
+      notificationDetails: NotificationDetails(
           android: _androidDetails(channelId, channelName)),
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
@@ -85,7 +83,7 @@ class NotificationService {
   /// [freeBlocks] come from FreeTimeDetector — startMinutes is minutes from midnight.
   Future<void> scheduleFreeBlockReminders(List<FreeBlock> freeBlocks) async {
     for (int i = 100; i < 200; i++) {
-      await _plugin.cancel(i);
+      await _plugin.cancel(id: i);
     }
 
     final now = DateTime.now();
@@ -116,7 +114,7 @@ class NotificationService {
 
   /// Schedule a streak-at-risk alert at 8:30 PM today.
   Future<void> scheduleStreakAtRiskAlert(int currentStreak) async {
-    await _plugin.cancel(200);
+    await _plugin.cancel(id: 200);
     if (currentStreak <= 0) return;
 
     final now = DateTime.now();
@@ -140,7 +138,7 @@ class NotificationService {
     int hour = 20,
     int minute = 0,
   }) async {
-    await _plugin.cancel(201);
+    await _plugin.cancel(id: 201);
 
     final now = DateTime.now();
     final target =
@@ -160,7 +158,7 @@ class NotificationService {
   /// Schedule a milestone-approaching alert for tomorrow at 9 AM.
   Future<void> scheduleMilestoneAlert(
       int daysToNextMilestone, int nextMilestone) async {
-    await _plugin.cancel(300);
+    await _plugin.cancel(id: 300);
     if (daysToNextMilestone <= 0 || daysToNextMilestone > 3) return;
 
     final tomorrow = DateTime.now().add(const Duration(days: 1));
@@ -180,7 +178,7 @@ class NotificationService {
 
   /// Schedule weekly review prompt for next Monday at 8 AM.
   Future<void> scheduleWeeklyReviewPrompt() async {
-    await _plugin.cancel(400);
+    await _plugin.cancel(id: 400);
 
     final now = DateTime.now();
     int daysUntilMonday = DateTime.monday - now.weekday;
@@ -221,8 +219,8 @@ class NotificationService {
 
   /// Cancel notification IDs 200 and 201 (used when a session is logged).
   Future<void> cancelStudiedTodayAlerts() async {
-    await _plugin.cancel(200);
-    await _plugin.cancel(201);
+    await _plugin.cancel(id: 200);
+    await _plugin.cancel(id: 201);
   }
 
   Future<void> cancelAllReminders() async {
@@ -230,6 +228,6 @@ class NotificationService {
   }
 
   Future<void> cancelNotification(int id) async {
-    await _plugin.cancel(id);
+    await _plugin.cancel(id: id);
   }
 }
