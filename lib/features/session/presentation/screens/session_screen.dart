@@ -12,6 +12,7 @@ import 'package:campusiq/features/session/presentation/widgets/course_breakdown_
 import 'package:campusiq/features/session/presentation/widgets/course_picker_sheet.dart';
 import 'package:campusiq/features/session/presentation/widgets/session_tile.dart';
 import 'package:campusiq/features/session/presentation/widgets/weekly_bar_chart.dart';
+import 'package:campusiq/features/review/presentation/widgets/weekly_review_sheet.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -83,6 +84,16 @@ class SessionScreen extends ConsumerWidget {
         title: const Text('Study Sessions',
             style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
+          TextButton(
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const WeeklyReviewSheet(),
+            ),
+            child: const Text('This Week',
+                style: TextStyle(color: Colors.white)),
+          ),
           IconButton(
             icon: const Icon(Icons.auto_awesome_rounded),
             tooltip: 'Insights',

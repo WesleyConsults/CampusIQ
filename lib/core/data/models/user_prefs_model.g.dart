@@ -37,25 +37,35 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'lastOpenedDate',
       type: IsarType.dateTime,
     ),
-    r'notifyMilestoneAlerts': PropertySchema(
+    r'lastReviewShownWeek': PropertySchema(
       id: 4,
+      name: r'lastReviewShownWeek',
+      type: IsarType.string,
+    ),
+    r'notifyMilestoneAlerts': PropertySchema(
+      id: 5,
       name: r'notifyMilestoneAlerts',
       type: IsarType.bool,
     ),
     r'notifyStreakAlerts': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'notifyStreakAlerts',
       type: IsarType.bool,
     ),
     r'notifyStudyReminders': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'notifyStudyReminders',
       type: IsarType.bool,
     ),
     r'notifyWeeklyReview': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'notifyWeeklyReview',
       type: IsarType.bool,
+    ),
+    r'weeklyNotesJson': PropertySchema(
+      id: 9,
+      name: r'weeklyNotesJson',
+      type: IsarType.string,
     )
   },
   estimateSize: _userPrefsModelEstimateSize,
@@ -79,6 +89,8 @@ int _userPrefsModelEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.attendedDatesJson.length * 3;
+  bytesCount += 3 + object.lastReviewShownWeek.length * 3;
+  bytesCount += 3 + object.weeklyNotesJson.length * 3;
   return bytesCount;
 }
 
@@ -92,10 +104,12 @@ void _userPrefsModelSerialize(
   writer.writeLong(offsets[1], object.dailyReminderHour);
   writer.writeLong(offsets[2], object.dailyReminderMinute);
   writer.writeDateTime(offsets[3], object.lastOpenedDate);
-  writer.writeBool(offsets[4], object.notifyMilestoneAlerts);
-  writer.writeBool(offsets[5], object.notifyStreakAlerts);
-  writer.writeBool(offsets[6], object.notifyStudyReminders);
-  writer.writeBool(offsets[7], object.notifyWeeklyReview);
+  writer.writeString(offsets[4], object.lastReviewShownWeek);
+  writer.writeBool(offsets[5], object.notifyMilestoneAlerts);
+  writer.writeBool(offsets[6], object.notifyStreakAlerts);
+  writer.writeBool(offsets[7], object.notifyStudyReminders);
+  writer.writeBool(offsets[8], object.notifyWeeklyReview);
+  writer.writeString(offsets[9], object.weeklyNotesJson);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -110,10 +124,12 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.dailyReminderMinute = reader.readLong(offsets[2]);
   object.id = id;
   object.lastOpenedDate = reader.readDateTimeOrNull(offsets[3]);
-  object.notifyMilestoneAlerts = reader.readBool(offsets[4]);
-  object.notifyStreakAlerts = reader.readBool(offsets[5]);
-  object.notifyStudyReminders = reader.readBool(offsets[6]);
-  object.notifyWeeklyReview = reader.readBool(offsets[7]);
+  object.lastReviewShownWeek = reader.readString(offsets[4]);
+  object.notifyMilestoneAlerts = reader.readBool(offsets[5]);
+  object.notifyStreakAlerts = reader.readBool(offsets[6]);
+  object.notifyStudyReminders = reader.readBool(offsets[7]);
+  object.notifyWeeklyReview = reader.readBool(offsets[8]);
+  object.weeklyNotesJson = reader.readString(offsets[9]);
   return object;
 }
 
@@ -133,13 +149,17 @@ P _userPrefsModelDeserializeProp<P>(
     case 3:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 4:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 5:
       return (reader.readBool(offset)) as P;
     case 6:
       return (reader.readBool(offset)) as P;
     case 7:
       return (reader.readBool(offset)) as P;
+    case 8:
+      return (reader.readBool(offset)) as P;
+    case 9:
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -619,6 +639,142 @@ extension UserPrefsModelQueryFilter
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastReviewShownWeekEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastReviewShownWeek',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastReviewShownWeekGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastReviewShownWeek',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastReviewShownWeekLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastReviewShownWeek',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastReviewShownWeekBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastReviewShownWeek',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastReviewShownWeekStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'lastReviewShownWeek',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastReviewShownWeekEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'lastReviewShownWeek',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastReviewShownWeekContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'lastReviewShownWeek',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastReviewShownWeekMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'lastReviewShownWeek',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastReviewShownWeekIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastReviewShownWeek',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastReviewShownWeekIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'lastReviewShownWeek',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
       notifyMilestoneAlertsEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -654,6 +810,142 @@ extension UserPrefsModelQueryFilter
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'notifyWeeklyReview',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyNotesJsonEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'weeklyNotesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyNotesJsonGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'weeklyNotesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyNotesJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'weeklyNotesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyNotesJsonBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'weeklyNotesJson',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyNotesJsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'weeklyNotesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyNotesJsonEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'weeklyNotesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyNotesJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'weeklyNotesJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyNotesJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'weeklyNotesJson',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyNotesJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'weeklyNotesJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyNotesJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'weeklyNotesJson',
+        value: '',
       ));
     });
   }
@@ -724,6 +1016,20 @@ extension UserPrefsModelQuerySortBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByLastReviewShownWeek() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastReviewShownWeek', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByLastReviewShownWeekDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastReviewShownWeek', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       sortByNotifyMilestoneAlerts() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notifyMilestoneAlerts', Sort.asc);
@@ -776,6 +1082,20 @@ extension UserPrefsModelQuerySortBy
       sortByNotifyWeeklyReviewDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notifyWeeklyReview', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByWeeklyNotesJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'weeklyNotesJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByWeeklyNotesJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'weeklyNotesJson', Sort.desc);
     });
   }
 }
@@ -851,6 +1171,20 @@ extension UserPrefsModelQuerySortThenBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByLastReviewShownWeek() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastReviewShownWeek', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByLastReviewShownWeekDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastReviewShownWeek', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       thenByNotifyMilestoneAlerts() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notifyMilestoneAlerts', Sort.asc);
@@ -905,6 +1239,20 @@ extension UserPrefsModelQuerySortThenBy
       return query.addSortBy(r'notifyWeeklyReview', Sort.desc);
     });
   }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByWeeklyNotesJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'weeklyNotesJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByWeeklyNotesJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'weeklyNotesJson', Sort.desc);
+    });
+  }
 }
 
 extension UserPrefsModelQueryWhereDistinct
@@ -939,6 +1287,14 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByLastReviewShownWeek({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastReviewShownWeek',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByNotifyMilestoneAlerts() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'notifyMilestoneAlerts');
@@ -963,6 +1319,14 @@ extension UserPrefsModelQueryWhereDistinct
       distinctByNotifyWeeklyReview() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'notifyWeeklyReview');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByWeeklyNotesJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'weeklyNotesJson',
+          caseSensitive: caseSensitive);
     });
   }
 }
@@ -1003,6 +1367,13 @@ extension UserPrefsModelQueryProperty
     });
   }
 
+  QueryBuilder<UserPrefsModel, String, QQueryOperations>
+      lastReviewShownWeekProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastReviewShownWeek');
+    });
+  }
+
   QueryBuilder<UserPrefsModel, bool, QQueryOperations>
       notifyMilestoneAlertsProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -1028,6 +1399,13 @@ extension UserPrefsModelQueryProperty
       notifyWeeklyReviewProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'notifyWeeklyReview');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, String, QQueryOperations>
+      weeklyNotesJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'weeklyNotesJson');
     });
   }
 }

@@ -4,6 +4,8 @@ import 'package:campusiq/core/router/app_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/constants/app_constants.dart';
 import 'package:campusiq/core/services/notification_service.dart';
+import 'package:campusiq/features/review/presentation/providers/review_provider.dart';
+import 'package:campusiq/features/review/presentation/widgets/weekly_review_sheet.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
@@ -21,7 +23,10 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleNotifications());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleNotifications();
+      _maybeShowWeeklyReview();
+    });
   }
 
   @override
@@ -34,7 +39,41 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _scheduleNotifications();
+      _maybeShowWeeklyReview();
     }
+  }
+
+  Future<void> _maybeShowWeeklyReview() async {
+    final now = DateTime.now();
+    if (now.weekday != DateTime.monday) return;
+
+    final prefsRepo = ref.read(userPrefsRepositoryProvider);
+    if (prefsRepo == null) return;
+
+    final prefs = await prefsRepo.getPrefs();
+    final key = weekKey(_mondayOf(now));
+    if (prefs.lastReviewShownWeek == key) return;
+
+    await prefsRepo.setLastReviewShownWeek(key);
+    if (!mounted) return;
+
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+
+    final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
+    if (navContext == null || !navContext.mounted) return;
+
+    showModalBottomSheet(
+      context: navContext,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const WeeklyReviewSheet(),
+    );
+  }
+
+  DateTime _mondayOf(DateTime date) {
+    final d = date.subtract(Duration(days: date.weekday - 1));
+    return DateTime(d.year, d.month, d.day);
   }
 
   Future<void> _scheduleNotifications() async {

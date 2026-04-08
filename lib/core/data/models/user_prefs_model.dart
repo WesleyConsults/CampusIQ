@@ -27,5 +27,13 @@ class UserPrefsModel {
   /// Minute of hour for the daily reminder. Default 0.
   int dailyReminderMinute = 0;
 
+  // ── Weekly Review ─────────────────────────────────────────────────────────
+
+  /// JSON map of week key → reflection note. e.g. {"2026_W14": "focus more on maths"}
+  String weeklyNotesJson = '{}';
+
+  /// The week key for which the weekly review was last auto-shown. e.g. "2026_W14"
+  String lastReviewShownWeek = '';
+
   UserPrefsModel();
 }

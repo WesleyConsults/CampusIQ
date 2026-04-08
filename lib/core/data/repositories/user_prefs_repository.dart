@@ -85,6 +85,28 @@ class UserPrefsRepository {
     await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
   }
 
+  // ── Weekly Review helpers ─────────────────────────────────────────────────
+
+  Future<String?> getWeeklyNote(String weekKey) async {
+    final prefs = await _getOrCreate();
+    final Map<String, dynamic> map = jsonDecode(prefs.weeklyNotesJson);
+    return map[weekKey] as String?;
+  }
+
+  Future<void> setWeeklyNote(String weekKey, String note) async {
+    final prefs = await _getOrCreate();
+    final Map<String, dynamic> map = jsonDecode(prefs.weeklyNotesJson);
+    map[weekKey] = note;
+    prefs.weeklyNotesJson = jsonEncode(map);
+    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+  }
+
+  Future<void> setLastReviewShownWeek(String weekKey) async {
+    final prefs = await _getOrCreate();
+    prefs.lastReviewShownWeek = weekKey;
+    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+  }
+
   static String _toStr(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
