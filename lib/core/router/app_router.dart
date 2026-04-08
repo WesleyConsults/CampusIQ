@@ -8,6 +8,7 @@ import 'package:campusiq/features/timetable/presentation/screens/timetable_scree
 import 'package:campusiq/features/session/presentation/screens/session_screen.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
 import 'package:campusiq/features/session/presentation/widgets/floating_mini_timer.dart';
+import 'package:campusiq/features/insights/presentation/screens/insights_screen.dart';
 import 'package:campusiq/features/streak/presentation/screens/streak_screen.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 
@@ -41,6 +42,11 @@ final appRouter = GoRouter(
           path: '/streak',
           name: 'streak',
           builder: (context, state) => const StreakScreen(),
+        ),
+        GoRoute(
+          path: '/insights',
+          name: 'insights',
+          builder: (context, state) => const InsightsScreen(),
         ),
         GoRoute(
           path: '/settings',

@@ -13,6 +13,7 @@ import 'package:campusiq/features/session/presentation/widgets/course_picker_she
 import 'package:campusiq/features/session/presentation/widgets/session_tile.dart';
 import 'package:campusiq/features/session/presentation/widgets/weekly_bar_chart.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class SessionScreen extends ConsumerWidget {
   const SessionScreen({super.key});
@@ -81,6 +82,13 @@ class SessionScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Study Sessions',
             style: TextStyle(fontWeight: FontWeight.w700)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome_rounded),
+            tooltip: 'Insights',
+            onPressed: () => context.push('/insights'),
+          ),
+        ],
       ),
       body: CustomScrollView(
         slivers: [
