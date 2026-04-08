@@ -119,6 +119,22 @@ class UserPrefsRepository {
     await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
   }
 
+  // ── Exam Mode ─────────────────────────────────────────────────────────────
+
+  Future<void> updateExamModeSettings({
+    required bool isActive,
+    DateTime? examStart,
+    DateTime? examEnd,
+    int? dailyGoal,
+  }) async {
+    final prefs = await _getOrCreate();
+    prefs.examModeActive = isActive;
+    if (examStart != null) prefs.examModeStart = examStart;
+    if (examEnd != null) prefs.examModeEnd = examEnd;
+    if (dailyGoal != null) prefs.examDailyGoalMinutes = dailyGoal;
+    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+  }
+
   static String _toStr(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }

@@ -16,6 +16,9 @@ class CourseModel {
 
   DateTime createdAt = DateTime.now();
 
+  /// Scheduled exam date for this course — nullable until exam is added.
+  DateTime? examDate;
+
   CourseModel();
 
   CourseModel.create({

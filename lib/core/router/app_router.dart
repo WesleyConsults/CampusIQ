@@ -11,6 +11,7 @@ import 'package:campusiq/features/session/presentation/widgets/floating_mini_tim
 import 'package:campusiq/features/insights/presentation/screens/insights_screen.dart';
 import 'package:campusiq/features/streak/presentation/screens/streak_screen.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
+import 'package:campusiq/features/plan/presentation/providers/exam_mode_provider.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/plan',
@@ -76,6 +77,8 @@ class _AppShell extends ConsumerWidget {
     final isSessionActive = ref.watch(activeSessionProvider) != null;
     final studyStreak     = ref.watch(studyStreakProvider);
     final hasLossRisk     = studyStreak.lossAversionMessage != null;
+    final examModeActive  =
+        ref.watch(examModeActiveProvider).valueOrNull ?? false;
 
     return Scaffold(
       body: Stack(
@@ -97,10 +100,14 @@ class _AppShell extends ConsumerWidget {
           }
         },
         destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.checklist_rounded),
-            selectedIcon: Icon(Icons.checklist_rounded),
-            label: 'Plan',
+          NavigationDestination(
+            icon: examModeActive
+                ? const Icon(Icons.whatshot, color: Colors.deepOrange)
+                : const Icon(Icons.checklist_rounded),
+            selectedIcon: examModeActive
+                ? const Icon(Icons.whatshot, color: Colors.deepOrange)
+                : const Icon(Icons.checklist_rounded),
+            label: examModeActive ? 'Exam Mode' : 'Plan',
           ),
           const NavigationDestination(
             icon: Icon(Icons.school_outlined),

@@ -32,18 +32,23 @@ const CourseModelSchema = CollectionSchema(
       name: r'creditHours',
       type: IsarType.double,
     ),
-    r'expectedScore': PropertySchema(
+    r'examDate': PropertySchema(
       id: 3,
+      name: r'examDate',
+      type: IsarType.dateTime,
+    ),
+    r'expectedScore': PropertySchema(
+      id: 4,
       name: r'expectedScore',
       type: IsarType.double,
     ),
     r'name': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'name',
       type: IsarType.string,
     ),
     r'semesterKey': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'semesterKey',
       type: IsarType.string,
     )
@@ -83,9 +88,10 @@ void _courseModelSerialize(
   writer.writeString(offsets[0], object.code);
   writer.writeDateTime(offsets[1], object.createdAt);
   writer.writeDouble(offsets[2], object.creditHours);
-  writer.writeDouble(offsets[3], object.expectedScore);
-  writer.writeString(offsets[4], object.name);
-  writer.writeString(offsets[5], object.semesterKey);
+  writer.writeDateTime(offsets[3], object.examDate);
+  writer.writeDouble(offsets[4], object.expectedScore);
+  writer.writeString(offsets[5], object.name);
+  writer.writeString(offsets[6], object.semesterKey);
 }
 
 CourseModel _courseModelDeserialize(
@@ -98,10 +104,11 @@ CourseModel _courseModelDeserialize(
   object.code = reader.readString(offsets[0]);
   object.createdAt = reader.readDateTime(offsets[1]);
   object.creditHours = reader.readDouble(offsets[2]);
-  object.expectedScore = reader.readDouble(offsets[3]);
+  object.examDate = reader.readDateTimeOrNull(offsets[3]);
+  object.expectedScore = reader.readDouble(offsets[4]);
   object.id = id;
-  object.name = reader.readString(offsets[4]);
-  object.semesterKey = reader.readString(offsets[5]);
+  object.name = reader.readString(offsets[5]);
+  object.semesterKey = reader.readString(offsets[6]);
   return object;
 }
 
@@ -119,10 +126,12 @@ P _courseModelDeserializeProp<P>(
     case 2:
       return (reader.readDouble(offset)) as P;
     case 3:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -471,6 +480,79 @@ extension CourseModelQueryFilter
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      examDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'examDate',
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      examDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'examDate',
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition> examDateEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'examDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      examDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'examDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      examDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'examDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition> examDateBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'examDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -906,6 +988,18 @@ extension CourseModelQuerySortBy
     });
   }
 
+  QueryBuilder<CourseModel, CourseModel, QAfterSortBy> sortByExamDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'examDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterSortBy> sortByExamDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'examDate', Sort.desc);
+    });
+  }
+
   QueryBuilder<CourseModel, CourseModel, QAfterSortBy> sortByExpectedScore() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'expectedScore', Sort.asc);
@@ -982,6 +1076,18 @@ extension CourseModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<CourseModel, CourseModel, QAfterSortBy> thenByExamDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'examDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterSortBy> thenByExamDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'examDate', Sort.desc);
+    });
+  }
+
   QueryBuilder<CourseModel, CourseModel, QAfterSortBy> thenByExpectedScore() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'expectedScore', Sort.asc);
@@ -1053,6 +1159,12 @@ extension CourseModelQueryWhereDistinct
     });
   }
 
+  QueryBuilder<CourseModel, CourseModel, QDistinct> distinctByExamDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'examDate');
+    });
+  }
+
   QueryBuilder<CourseModel, CourseModel, QDistinct> distinctByExpectedScore() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'expectedScore');
@@ -1097,6 +1209,12 @@ extension CourseModelQueryProperty
   QueryBuilder<CourseModel, double, QQueryOperations> creditHoursProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'creditHours');
+    });
+  }
+
+  QueryBuilder<CourseModel, DateTime?, QQueryOperations> examDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'examDate');
     });
   }
 

@@ -1,0 +1,2 @@
+- [Project Overview](project_overview.md) — MVP complete with 5 phases, 4 planned future phases
+- [Planned Phases 6-10](planned_phases.md) — Daily Plan, Notifications, Insights, Weekly Review roadmap
