@@ -89,13 +89,25 @@ class UserPrefsRepository {
 
   Future<String?> getWeeklyNote(String weekKey) async {
     final prefs = await _getOrCreate();
-    final Map<String, dynamic> map = jsonDecode(prefs.weeklyNotesJson);
-    return map[weekKey] as String?;
+    final raw = prefs.weeklyNotesJson;
+    if (raw.isEmpty) return null;
+    try {
+      final Map<String, dynamic> map = jsonDecode(raw);
+      return map[weekKey] as String?;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> setWeeklyNote(String weekKey, String note) async {
     final prefs = await _getOrCreate();
-    final Map<String, dynamic> map = jsonDecode(prefs.weeklyNotesJson);
+    final raw = prefs.weeklyNotesJson;
+    Map<String, dynamic> map = {};
+    if (raw.isNotEmpty) {
+      try {
+        map = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      } catch (_) {}
+    }
     map[weekKey] = note;
     prefs.weeklyNotesJson = jsonEncode(map);
     await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
