@@ -183,7 +183,7 @@ Navigation uses a `ShellRoute` so the bottom nav bar and floating mini-timer per
 |---|---|
 | Day selector | Swipe or tap to switch between Mon–Sat |
 | Time grid | 6AM–8PM, hourly rows, 30-min resolution |
-| Add class slot | FAB or tap empty cell opens bottom sheet (course code, name, venue, type, time, color) |
+| Add class slot | Bottom sheet with fast-select CWA course chips for instant autofill (course code, name, venue, type, time, color) |
 | Slot detail sheet | Tap slot to view/delete |
 | Free time detector | `FreeTimeDetector` computes contiguous free blocks per day — pure Dart |
 | Free block indicator | Displays free blocks in the grid when no class is scheduled |
@@ -347,6 +347,7 @@ flutter run
 | Phase 5 S1 | `feat(streak): Phase 5 Session 1 — Streak domain models + Isar setup` |
 | Phase 5 S2 | `feat(streak): Phase 5 Session 2 — Streak UI widgets` |
 | Phase 5 | `feat: Phase 5 complete — Streak System. CampusIQ MVP done.` |
+| Post-MVP UX | `Timetable Add Class UX Improvements (CWA Course Fast-Select)` |
 
 ---
 
