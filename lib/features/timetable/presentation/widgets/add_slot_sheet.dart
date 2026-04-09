@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
-class AddSlotSheet extends StatefulWidget {
+class AddSlotSheet extends ConsumerStatefulWidget {
   final int dayIndex;
   final String semesterKey;
   final int colorValue;
@@ -23,10 +25,10 @@ class AddSlotSheet extends StatefulWidget {
   });
 
   @override
-  State<AddSlotSheet> createState() => _AddSlotSheetState();
+  ConsumerState<AddSlotSheet> createState() => _AddSlotSheetState();
 }
 
-class _AddSlotSheetState extends State<AddSlotSheet> {
+class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
   final _codeController = TextEditingController();
   final _nameController = TextEditingController();
   final _venueController = TextEditingController();
@@ -131,6 +133,47 @@ class _AddSlotSheetState extends State<AddSlotSheet> {
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 20),
+
+              // Fast selection from CWA courses
+              ref.watch(coursesProvider).when(
+                data: (courses) {
+                  if (courses.isEmpty) return const SizedBox.shrink();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Select from My Courses:',
+                        style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                      ),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: courses.map((course) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ActionChip(
+                                label: Text(course.code),
+                                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                                side: BorderSide.none,
+                                onPressed: () {
+                                  setState(() {
+                                    _codeController.text = course.code;
+                                    _nameController.text = course.name;
+                                  });
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
 
               // Day selector
               DropdownButtonFormField<int>(
