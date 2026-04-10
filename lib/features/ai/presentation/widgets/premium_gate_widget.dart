@@ -65,7 +65,7 @@ class PremiumGateWidget extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => context.go('/subscribe'),
+              onPressed: () => context.push('/subscribe'),
               icon: Icon(Icons.arrow_forward),
               label: Text('Upgrade to Premium'),
             ),

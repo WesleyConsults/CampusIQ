@@ -30,7 +30,7 @@ class UsageCounterChip extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: remaining == 0
           ? GestureDetector(
-              onTap: () => context.go('/subscribe'),
+              onTap: () => context.push('/subscribe'),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
