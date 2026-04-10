@@ -14,6 +14,10 @@ dependencies:
   flutter_riverpod: ^2.5.1
   riverpod_annotation: ^2.3.5
 
+  # HTTP and Environment
+  http: ^1.2.0
+  flutter_dotenv: ^5.1.0
+
   # Local storage
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
@@ -46,3 +50,4 @@ flutter:
   assets:
     - assets/fonts/
     - assets/images/
+    - .env
