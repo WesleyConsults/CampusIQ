@@ -12,6 +12,8 @@ import 'package:campusiq/features/insights/presentation/screens/insights_screen.
 import 'package:campusiq/features/streak/presentation/screens/streak_screen.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 import 'package:campusiq/features/plan/presentation/providers/exam_mode_provider.dart';
+import 'package:campusiq/features/ai/presentation/screens/ai_chat_screen.dart';
+import 'package:campusiq/features/ai/presentation/screens/subscribe_screen_stub.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/plan',
@@ -54,7 +56,17 @@ final appRouter = GoRouter(
           name: 'settings',
           builder: (context, state) => const SettingsScreen(),
         ),
+        GoRoute(
+          path: '/ai',
+          name: 'ai',
+          builder: (context, state) => const AiChatScreen(),
+        ),
       ],
+    ),
+    GoRoute(
+      path: '/subscribe',
+      name: 'subscribe',
+      builder: (context, state) => const SubscribeScreenStub(),
     ),
   ],
 );
@@ -69,6 +81,7 @@ class _AppShell extends ConsumerWidget {
     if (location.startsWith('/timetable')) return 2;
     if (location.startsWith('/sessions'))  return 3;
     if (location.startsWith('/streak'))    return 4;
+    if (location.startsWith('/ai'))        return 5;
     return 0; // /plan
   }
 
@@ -97,6 +110,7 @@ class _AppShell extends ConsumerWidget {
             case 2: context.go('/timetable');
             case 3: context.go('/sessions');
             case 4: context.go('/streak');
+            case 5: context.go('/ai');
           }
         },
         destinations: [
@@ -135,6 +149,11 @@ class _AppShell extends ConsumerWidget {
                 : const Icon(Icons.local_fire_department_outlined),
             selectedIcon: const Icon(Icons.local_fire_department),
             label: 'Streak',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.auto_awesome_outlined),
+            selectedIcon: Icon(Icons.auto_awesome),
+            label: 'AI Coach',
           ),
         ],
       ),

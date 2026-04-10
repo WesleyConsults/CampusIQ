@@ -4,6 +4,7 @@ import 'package:campusiq/core/router/app_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/constants/app_constants.dart';
 import 'package:campusiq/core/services/notification_service.dart';
+import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/features/plan/presentation/providers/exam_mode_provider.dart';
 import 'package:campusiq/features/plan/presentation/widgets/exam_mode_activation_sheet.dart';
 import 'package:campusiq/features/review/presentation/providers/review_provider.dart';
@@ -26,6 +27,7 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSubscriptionStatus();
       _scheduleNotifications();
       _maybeShowWeeklyReview();
     });
@@ -40,6 +42,7 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _checkSubscriptionStatus();
       _scheduleNotifications();
       _maybeShowWeeklyReview();
       _maybeAutoActivateExamMode();
@@ -72,6 +75,11 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
       backgroundColor: Colors.transparent,
       builder: (_) => const WeeklyReviewSheet(),
     );
+  }
+
+  Future<void> _checkSubscriptionStatus() async {
+    final subRepo = await ref.read(subscriptionRepositoryProvider.future);
+    await subRepo.checkAndDowngrade();
   }
 
   DateTime _mondayOf(DateTime date) {
