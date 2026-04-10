@@ -53,9 +53,9 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   void _handleSend() {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
-
     _textController.clear();
     ref.read(aiChatProvider.notifier).sendMessage(text);
+    // First scroll — user message will appear immediately via state update
     _scrollToBottom();
   }
 
@@ -64,6 +64,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final chatState = ref.watch(aiChatProvider);
     final isPremiumAsync = ref.watch(isPremiumProvider);
     final usageAsync = ref.watch(aiUsageTodayProvider('chat'));
+
+    // Scroll to bottom whenever the message list grows (user msg or AI reply)
+    ref.listen<AiChatState>(aiChatProvider, (previous, next) {
+      if (next.messages.length != (previous?.messages.length ?? 0)) {
+        _scrollToBottom();
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(

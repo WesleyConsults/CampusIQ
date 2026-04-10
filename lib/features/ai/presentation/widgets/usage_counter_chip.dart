@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,6 +13,7 @@ class UsageCounterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (kDebugMode) return const SizedBox.shrink();
     Color chipColor;
     String label;
 

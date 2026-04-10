@@ -62,21 +62,26 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       }
     }
 
+    // Build the user message object immediately
+    final userMsg = AiMessageModel()
+      ..feature = _feature
+      ..role = 'user'
+      ..content = userText
+      ..createdAt = DateTime.now();
+
+    // 1. Add user message to UI state RIGHT AWAY and show typing indicator
+    state = state.copyWith(
+      messages: [...state.messages, userMsg],
+      isLoading: true,
+      error: null,
+    );
+
     try {
-      // Update state to loading
-      state = state.copyWith(isLoading: true, error: null);
-
-      // Save user message
-      final userMsg = AiMessageModel()
-        ..feature = _feature
-        ..role = 'user'
-        ..content = userText
-        ..createdAt = DateTime.now();
-
+      // Persist user message to Isar in the background
       final chatRepo = await ref.read(aiChatRepositoryProvider.future);
       await chatRepo.saveMessage(userMsg);
 
-      // Build context
+      // Build academic context
       final contextBuilder = await ref.read(contextBuilderProvider.future);
       const semesterKey = 'current'; // Placeholder — would come from prefs
       final academicContext = await contextBuilder.buildAcademicContext(semesterKey);
@@ -88,31 +93,33 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
           .map((m) => {'role': m.role, 'content': m.content})
           .cast<Map<String, String>>()
           .toList();
-      messagesList.add({'role': 'user', 'content': userText});
 
-      // Call DeepSeek API
+      // 2. Call DeepSeek API
       final client = await ref.read(deepseekClientProvider.future);
       final response = await client.complete(
         systemPrompt: academicContext,
         messages: messagesList,
       );
 
-      // Save assistant response
+      // Build assistant message
       final assistantMsg = AiMessageModel()
         ..feature = _feature
         ..role = 'assistant'
         ..content = response
         ..createdAt = DateTime.now();
 
+      // Persist assistant message
       await chatRepo.saveMessage(assistantMsg);
 
       // Increment usage counter
       final usageRepo = await ref.read(aiUsageRepositoryProvider.future);
       await usageRepo.incrementUsage(_feature);
 
-      // Reload history and clear loading
-      await loadHistory();
-      state = state.copyWith(isLoading: false);
+      // 3. Append assistant reply to state and clear loading
+      state = state.copyWith(
+        messages: [...state.messages, assistantMsg],
+        isLoading: false,
+      );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Failed to send message: $e');
     }

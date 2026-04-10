@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,6 +7,7 @@ class PremiumGateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (kDebugMode) return const SizedBox.shrink();
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
