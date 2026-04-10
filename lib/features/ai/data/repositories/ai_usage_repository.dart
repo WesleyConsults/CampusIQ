@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import '../models/ai_usage_model.dart';
 
@@ -42,6 +43,7 @@ class AiUsageRepository {
   }
 
   Future<bool> isUnderLimit(String feature, int freeLimit) async {
+    if (kDebugMode) return true;
     final usage = await getUsageToday(feature);
     return usage < freeLimit;
   }
