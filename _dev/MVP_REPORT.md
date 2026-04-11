@@ -300,7 +300,21 @@ Navigation uses a `ShellRoute` so the bottom nav bar and floating mini-timer per
 | AI Usage Limits | Local usage counter (`ai_usage_table`) capping non-premium users to 3 generic prompts per day. |
 | Premium Paywall | Gateway widget substituting chat inputs when free-tier users exceed their limit. |
 
-**Isar schemas:** `AiMessageModel`, `AiChatSessionModel`, `AiUsageModel`
+### Phase 14 — Exam Prep Generator + Smart Notifications
+
+**Route:** `/ai/exam-prep`
+
+| Feature | Description |
+|---|---|
+| Exam Prep Generator | AI-powered question generator for any course with 3 formats: MCQ, Short Answer, and Flashcards. |
+| MCQ Interaction | Reveal correct answer and AI explanation on selection with animations. |
+| Flashcard Animation | Realistic 3D-style flip animation using `flutter_animate`. |
+| Background notifications | Periodic background tasks via `Workmanager` checking steak status. |
+| Personalized Alerts | DeepSeek-generated motivational messages for streak-at-risk notifications. |
+| Notification Service | Centralized management of local notifications (immediate and scheduled). |
+| Permission Guard | One-time custom dialog for notification permissions before enabling smart features. |
+
+**Isar schemas:** No new schemas (uses ephemeral state for questions; updates `UserPrefsModel`).
 
 ---
 
@@ -316,6 +330,12 @@ Navigation uses a `ShellRoute` so the bottom nav bar and floating mini-timer per
 | `AiMessageModel` | AI Chat | Individual user/assistant chat messages |
 | `AiChatSessionModel` | AI Chat | Individual chat session containers mapping history |
 | `AiUsageModel` | AI Limits | Tracks daily usage and limits for free-tier queries |
+| `SubscriptionModel` | Payments | Tracks premium status and subscription details |
+| `StudyPlanModel` | AI Planner | Container for AI-generated study plans |
+| `StudyPlanSlotModel` | AI Planner | Individual tasks/slots within a study plan |
+| `WeeklyReviewModel` | AI Planner | Weekly summary and performance analysis |
+| `DailyPlanTaskModel` | Planning | Daily tasks and checklist items |
+| `ExamModel` | Planning | Exam dates and specific study targets |
 
 ---
 
@@ -336,6 +356,9 @@ Navigation uses a `ShellRoute` so the bottom nav bar and floating mini-timer per
 | intl | ^0.19.0 | Number / date formatting |
 | http | ^1.2.0 | DeepSeek API integration |
 | flutter_dotenv | ^5.1.0 | Environment Variables / API Key isolation |
+| flutter_local_notifications | ^17.2.2 | Local push notifications |
+| timezone | ^0.9.4 | Timezone data for scheduling |
+| workmanager | ^0.9.0 | Background task execution |
 
 ### Dev
 
@@ -398,6 +421,7 @@ flutter run
 | Phase 5 | `feat: Phase 5 complete — Streak System. CampusIQ MVP done.` |
 | Post-MVP UX | `Timetable Add Class UX Improvements (CWA Course Fast-Select)` |
 | Phase 12 | `ai chat bot updated with option to choose past conversations` |
+| Phase 14 | `phase 14 exam prep plus notification` |
 
 ---
 
