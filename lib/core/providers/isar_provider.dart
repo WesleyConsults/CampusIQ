@@ -10,6 +10,7 @@ import 'package:campusiq/features/session/data/models/study_session_model.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 import 'package:campusiq/features/plan/data/models/exam_model.dart';
 import 'package:campusiq/features/ai/data/models/ai_message_model.dart';
+import 'package:campusiq/features/ai/data/models/ai_chat_session_model.dart';
 import 'package:campusiq/features/ai/data/models/ai_usage_model.dart';
 
 final isarProvider = FutureProvider<Isar>((ref) async {
@@ -24,6 +25,7 @@ final isarProvider = FutureProvider<Isar>((ref) async {
       DailyPlanTaskModelSchema,
       ExamModelSchema,
       SubscriptionModelSchema,
+      AiChatSessionModelSchema,
       AiMessageModelSchema,
       AiUsageModelSchema,
     ],

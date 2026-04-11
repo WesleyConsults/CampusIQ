@@ -8,6 +8,9 @@ class AiMessageModel {
   @Index()
   late String feature; // 'chat' | 'insight' | 'plan' | 'examprep' | 'coach'
 
+  @Index()
+  int? sessionId;
+
   late String role; // 'user' | 'assistant'
   late String content;
   late DateTime createdAt;

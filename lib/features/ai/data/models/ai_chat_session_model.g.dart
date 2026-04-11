@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'ai_message_model.dart';
+part of 'ai_chat_session_model.dart';
 
 // **************************************************************************
 // IsarCollectionGenerator
@@ -9,44 +9,40 @@ part of 'ai_message_model.dart';
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
-extension GetAiMessageModelCollection on Isar {
-  IsarCollection<AiMessageModel> get aiMessageModels => this.collection();
+extension GetAiChatSessionModelCollection on Isar {
+  IsarCollection<AiChatSessionModel> get aiChatSessionModels =>
+      this.collection();
 }
 
-const AiMessageModelSchema = CollectionSchema(
-  name: r'AiMessageModel',
-  id: 7778045001031156120,
+const AiChatSessionModelSchema = CollectionSchema(
+  name: r'AiChatSessionModel',
+  id: 3136819479149659837,
   properties: {
-    r'content': PropertySchema(
-      id: 0,
-      name: r'content',
-      type: IsarType.string,
-    ),
     r'createdAt': PropertySchema(
-      id: 1,
+      id: 0,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'feature': PropertySchema(
-      id: 2,
+      id: 1,
       name: r'feature',
       type: IsarType.string,
     ),
-    r'role': PropertySchema(
-      id: 3,
-      name: r'role',
+    r'title': PropertySchema(
+      id: 2,
+      name: r'title',
       type: IsarType.string,
     ),
-    r'sessionId': PropertySchema(
-      id: 4,
-      name: r'sessionId',
-      type: IsarType.long,
+    r'updatedAt': PropertySchema(
+      id: 3,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
     )
   },
-  estimateSize: _aiMessageModelEstimateSize,
-  serialize: _aiMessageModelSerialize,
-  deserialize: _aiMessageModelDeserialize,
-  deserializeProp: _aiMessageModelDeserializeProp,
+  estimateSize: _aiChatSessionModelEstimateSize,
+  serialize: _aiChatSessionModelSerialize,
+  deserialize: _aiChatSessionModelDeserialize,
+  deserializeProp: _aiChatSessionModelDeserializeProp,
   idName: r'id',
   indexes: {
     r'feature': IndexSchema(
@@ -62,14 +58,14 @@ const AiMessageModelSchema = CollectionSchema(
         )
       ],
     ),
-    r'sessionId': IndexSchema(
-      id: 6949518585047923839,
-      name: r'sessionId',
+    r'updatedAt': IndexSchema(
+      id: -6238191080293565125,
+      name: r'updatedAt',
       unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
-          name: r'sessionId',
+          name: r'updatedAt',
           type: IndexType.value,
           caseSensitive: false,
         )
@@ -78,54 +74,51 @@ const AiMessageModelSchema = CollectionSchema(
   },
   links: {},
   embeddedSchemas: {},
-  getId: _aiMessageModelGetId,
-  getLinks: _aiMessageModelGetLinks,
-  attach: _aiMessageModelAttach,
+  getId: _aiChatSessionModelGetId,
+  getLinks: _aiChatSessionModelGetLinks,
+  attach: _aiChatSessionModelAttach,
   version: '3.1.0+1',
 );
 
-int _aiMessageModelEstimateSize(
-  AiMessageModel object,
+int _aiChatSessionModelEstimateSize(
+  AiChatSessionModel object,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.content.length * 3;
   bytesCount += 3 + object.feature.length * 3;
-  bytesCount += 3 + object.role.length * 3;
+  bytesCount += 3 + object.title.length * 3;
   return bytesCount;
 }
 
-void _aiMessageModelSerialize(
-  AiMessageModel object,
+void _aiChatSessionModelSerialize(
+  AiChatSessionModel object,
   IsarWriter writer,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.content);
-  writer.writeDateTime(offsets[1], object.createdAt);
-  writer.writeString(offsets[2], object.feature);
-  writer.writeString(offsets[3], object.role);
-  writer.writeLong(offsets[4], object.sessionId);
+  writer.writeDateTime(offsets[0], object.createdAt);
+  writer.writeString(offsets[1], object.feature);
+  writer.writeString(offsets[2], object.title);
+  writer.writeDateTime(offsets[3], object.updatedAt);
 }
 
-AiMessageModel _aiMessageModelDeserialize(
+AiChatSessionModel _aiChatSessionModelDeserialize(
   Id id,
   IsarReader reader,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = AiMessageModel();
-  object.content = reader.readString(offsets[0]);
-  object.createdAt = reader.readDateTime(offsets[1]);
-  object.feature = reader.readString(offsets[2]);
+  final object = AiChatSessionModel();
+  object.createdAt = reader.readDateTime(offsets[0]);
+  object.feature = reader.readString(offsets[1]);
   object.id = id;
-  object.role = reader.readString(offsets[3]);
-  object.sessionId = reader.readLongOrNull(offsets[4]);
+  object.title = reader.readString(offsets[2]);
+  object.updatedAt = reader.readDateTime(offsets[3]);
   return object;
 }
 
-P _aiMessageModelDeserializeProp<P>(
+P _aiChatSessionModelDeserializeProp<P>(
   IsarReader reader,
   int propertyId,
   int offset,
@@ -133,54 +126,54 @@ P _aiMessageModelDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
-    case 1:
       return (reader.readDateTime(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
-    case 4:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
-Id _aiMessageModelGetId(AiMessageModel object) {
+Id _aiChatSessionModelGetId(AiChatSessionModel object) {
   return object.id;
 }
 
-List<IsarLinkBase<dynamic>> _aiMessageModelGetLinks(AiMessageModel object) {
+List<IsarLinkBase<dynamic>> _aiChatSessionModelGetLinks(
+    AiChatSessionModel object) {
   return [];
 }
 
-void _aiMessageModelAttach(
-    IsarCollection<dynamic> col, Id id, AiMessageModel object) {
+void _aiChatSessionModelAttach(
+    IsarCollection<dynamic> col, Id id, AiChatSessionModel object) {
   object.id = id;
 }
 
-extension AiMessageModelQueryWhereSort
-    on QueryBuilder<AiMessageModel, AiMessageModel, QWhere> {
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhere> anyId() {
+extension AiChatSessionModelQueryWhereSort
+    on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QWhere> {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhere> anySessionId() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhere>
+      anyUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'sessionId'),
+        const IndexWhereClause.any(indexName: r'updatedAt'),
       );
     });
   }
 }
 
-extension AiMessageModelQueryWhere
-    on QueryBuilder<AiMessageModel, AiMessageModel, QWhereClause> {
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause> idEqualTo(
-      Id id) {
+extension AiChatSessionModelQueryWhere
+    on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QWhereClause> {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IdWhereClause.between(
         lower: id,
@@ -189,8 +182,8 @@ extension AiMessageModelQueryWhere
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause> idNotEqualTo(
-      Id id) {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -212,9 +205,8 @@ extension AiMessageModelQueryWhere
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause> idGreaterThan(
-      Id id,
-      {bool include = false}) {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -222,9 +214,8 @@ extension AiMessageModelQueryWhere
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause> idLessThan(
-      Id id,
-      {bool include = false}) {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -232,7 +223,8 @@ extension AiMessageModelQueryWhere
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause> idBetween(
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
@@ -248,7 +240,7 @@ extension AiMessageModelQueryWhere
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
       featureEqualTo(String feature) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
@@ -258,7 +250,7 @@ extension AiMessageModelQueryWhere
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
       featureNotEqualTo(String feature) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
@@ -293,261 +285,103 @@ extension AiMessageModelQueryWhere
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause>
-      sessionIdIsNull() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      updatedAtEqualTo(DateTime updatedAt) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'sessionId',
-        value: [null],
+        indexName: r'updatedAt',
+        value: [updatedAt],
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause>
-      sessionIdIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'sessionId',
-        lower: [null],
-        includeLower: false,
-        upper: [],
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause>
-      sessionIdEqualTo(int? sessionId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'sessionId',
-        value: [sessionId],
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause>
-      sessionIdNotEqualTo(int? sessionId) {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      updatedAtNotEqualTo(DateTime updatedAt) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'sessionId',
+              indexName: r'updatedAt',
               lower: [],
-              upper: [sessionId],
+              upper: [updatedAt],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'sessionId',
-              lower: [sessionId],
+              indexName: r'updatedAt',
+              lower: [updatedAt],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'sessionId',
-              lower: [sessionId],
+              indexName: r'updatedAt',
+              lower: [updatedAt],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'sessionId',
+              indexName: r'updatedAt',
               lower: [],
-              upper: [sessionId],
+              upper: [updatedAt],
               includeUpper: false,
             ));
       }
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause>
-      sessionIdGreaterThan(
-    int? sessionId, {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      updatedAtGreaterThan(
+    DateTime updatedAt, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'sessionId',
-        lower: [sessionId],
+        indexName: r'updatedAt',
+        lower: [updatedAt],
         includeLower: include,
         upper: [],
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause>
-      sessionIdLessThan(
-    int? sessionId, {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      updatedAtLessThan(
+    DateTime updatedAt, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'sessionId',
+        indexName: r'updatedAt',
         lower: [],
-        upper: [sessionId],
+        upper: [updatedAt],
         includeUpper: include,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterWhereClause>
-      sessionIdBetween(
-    int? lowerSessionId,
-    int? upperSessionId, {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      updatedAtBetween(
+    DateTime lowerUpdatedAt,
+    DateTime upperUpdatedAt, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'sessionId',
-        lower: [lowerSessionId],
+        indexName: r'updatedAt',
+        lower: [lowerUpdatedAt],
         includeLower: includeLower,
-        upper: [upperSessionId],
+        upper: [upperUpdatedAt],
         includeUpper: includeUpper,
       ));
     });
   }
 }
 
-extension AiMessageModelQueryFilter
-    on QueryBuilder<AiMessageModel, AiMessageModel, QFilterCondition> {
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      contentEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      contentGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      contentLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      contentBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'content',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      contentStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      contentEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      contentContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      contentMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'content',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      contentIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'content',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      contentIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'content',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+extension AiChatSessionModelQueryFilter
+    on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QFilterCondition> {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -557,7 +391,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       createdAtGreaterThan(
     DateTime value, {
     bool include = false,
@@ -571,7 +405,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       createdAtLessThan(
     DateTime value, {
     bool include = false,
@@ -585,7 +419,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       createdAtBetween(
     DateTime lower,
     DateTime upper, {
@@ -603,7 +437,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       featureEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -617,7 +451,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       featureGreaterThan(
     String value, {
     bool include = false,
@@ -633,7 +467,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       featureLessThan(
     String value, {
     bool include = false,
@@ -649,7 +483,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       featureBetween(
     String lower,
     String upper, {
@@ -669,7 +503,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       featureStartsWith(
     String value, {
     bool caseSensitive = true,
@@ -683,7 +517,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       featureEndsWith(
     String value, {
     bool caseSensitive = true,
@@ -697,7 +531,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       featureContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
@@ -708,7 +542,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       featureMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
@@ -719,7 +553,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       featureIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -729,7 +563,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       featureIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
@@ -739,8 +573,8 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition> idEqualTo(
-      Id value) {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'id',
@@ -749,7 +583,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       idGreaterThan(
     Id value, {
     bool include = false,
@@ -763,7 +597,7 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       idLessThan(
     Id value, {
     bool include = false,
@@ -777,7 +611,8 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition> idBetween(
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
@@ -794,22 +629,22 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      roleEqualTo(
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      titleEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'role',
+        property: r'title',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      roleGreaterThan(
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      titleGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -817,15 +652,15 @@ extension AiMessageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'role',
+        property: r'title',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      roleLessThan(
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      titleLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -833,15 +668,15 @@ extension AiMessageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'role',
+        property: r'title',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      roleBetween(
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      titleBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -850,7 +685,7 @@ extension AiMessageModelQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'role',
+        property: r'title',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -860,142 +695,124 @@ extension AiMessageModelQueryFilter
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      roleStartsWith(
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      titleStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'role',
+        property: r'title',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      roleEndsWith(
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      titleEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'role',
+        property: r'title',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      roleContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      titleContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'role',
+        property: r'title',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      roleMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      titleMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'role',
+        property: r'title',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      roleIsEmpty() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      titleIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'role',
+        property: r'title',
         value: '',
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      roleIsNotEmpty() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      titleIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'role',
+        property: r'title',
         value: '',
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      sessionIdIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'sessionId',
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      sessionIdIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'sessionId',
-      ));
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      sessionIdEqualTo(int? value) {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      updatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'sessionId',
+        property: r'updatedAt',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      sessionIdGreaterThan(
-    int? value, {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      updatedAtGreaterThan(
+    DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'sessionId',
+        property: r'updatedAt',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      sessionIdLessThan(
-    int? value, {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      updatedAtLessThan(
+    DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'sessionId',
+        property: r'updatedAt',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterFilterCondition>
-      sessionIdBetween(
-    int? lower,
-    int? upper, {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      updatedAtBetween(
+    DateTime lower,
+    DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'sessionId',
+        property: r'updatedAt',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1005,231 +822,206 @@ extension AiMessageModelQueryFilter
   }
 }
 
-extension AiMessageModelQueryObject
-    on QueryBuilder<AiMessageModel, AiMessageModel, QFilterCondition> {}
+extension AiChatSessionModelQueryObject
+    on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QFilterCondition> {}
 
-extension AiMessageModelQueryLinks
-    on QueryBuilder<AiMessageModel, AiMessageModel, QFilterCondition> {}
+extension AiChatSessionModelQueryLinks
+    on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QFilterCondition> {}
 
-extension AiMessageModelQuerySortBy
-    on QueryBuilder<AiMessageModel, AiMessageModel, QSortBy> {
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> sortByContent() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'content', Sort.asc);
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy>
-      sortByContentDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'content', Sort.desc);
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> sortByCreatedAt() {
+extension AiChatSessionModelQuerySortBy
+    on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QSortBy> {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
       sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> sortByFeature() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      sortByFeature() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'feature', Sort.asc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
       sortByFeatureDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'feature', Sort.desc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> sortByRole() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      sortByTitle() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'role', Sort.asc);
+      return query.addSortBy(r'title', Sort.asc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> sortByRoleDesc() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      sortByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'role', Sort.desc);
+      return query.addSortBy(r'title', Sort.desc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> sortBySessionId() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sessionId', Sort.asc);
+      return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy>
-      sortBySessionIdDesc() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sessionId', Sort.desc);
+      return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 }
 
-extension AiMessageModelQuerySortThenBy
-    on QueryBuilder<AiMessageModel, AiMessageModel, QSortThenBy> {
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> thenByContent() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'content', Sort.asc);
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy>
-      thenByContentDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'content', Sort.desc);
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> thenByCreatedAt() {
+extension AiChatSessionModelQuerySortThenBy
+    on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QSortThenBy> {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
       thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> thenByFeature() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      thenByFeature() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'feature', Sort.asc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy>
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
       thenByFeatureDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'feature', Sort.desc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> thenById() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> thenByIdDesc() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> thenByRole() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      thenByTitle() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'role', Sort.asc);
+      return query.addSortBy(r'title', Sort.asc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> thenByRoleDesc() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      thenByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'role', Sort.desc);
+      return query.addSortBy(r'title', Sort.desc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy> thenBySessionId() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sessionId', Sort.asc);
+      return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QAfterSortBy>
-      thenBySessionIdDesc() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sessionId', Sort.desc);
+      return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 }
 
-extension AiMessageModelQueryWhereDistinct
-    on QueryBuilder<AiMessageModel, AiMessageModel, QDistinct> {
-  QueryBuilder<AiMessageModel, AiMessageModel, QDistinct> distinctByContent(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'content', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<AiMessageModel, AiMessageModel, QDistinct>
+extension AiChatSessionModelQueryWhereDistinct
+    on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QDistinct> {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QDistinct>
       distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QDistinct> distinctByFeature(
-      {bool caseSensitive = true}) {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QDistinct>
+      distinctByFeature({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'feature', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QDistinct> distinctByRole(
-      {bool caseSensitive = true}) {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QDistinct>
+      distinctByTitle({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'role', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<AiMessageModel, AiMessageModel, QDistinct>
-      distinctBySessionId() {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QDistinct>
+      distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'sessionId');
+      return query.addDistinctBy(r'updatedAt');
     });
   }
 }
 
-extension AiMessageModelQueryProperty
-    on QueryBuilder<AiMessageModel, AiMessageModel, QQueryProperty> {
-  QueryBuilder<AiMessageModel, int, QQueryOperations> idProperty() {
+extension AiChatSessionModelQueryProperty
+    on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QQueryProperty> {
+  QueryBuilder<AiChatSessionModel, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
     });
   }
 
-  QueryBuilder<AiMessageModel, String, QQueryOperations> contentProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'content');
-    });
-  }
-
-  QueryBuilder<AiMessageModel, DateTime, QQueryOperations> createdAtProperty() {
+  QueryBuilder<AiChatSessionModel, DateTime, QQueryOperations>
+      createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
     });
   }
 
-  QueryBuilder<AiMessageModel, String, QQueryOperations> featureProperty() {
+  QueryBuilder<AiChatSessionModel, String, QQueryOperations> featureProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'feature');
     });
   }
 
-  QueryBuilder<AiMessageModel, String, QQueryOperations> roleProperty() {
+  QueryBuilder<AiChatSessionModel, String, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'role');
+      return query.addPropertyName(r'title');
     });
   }
 
-  QueryBuilder<AiMessageModel, int?, QQueryOperations> sessionIdProperty() {
+  QueryBuilder<AiChatSessionModel, DateTime, QQueryOperations>
+      updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'sessionId');
+      return query.addPropertyName(r'updatedAt');
     });
   }
 }

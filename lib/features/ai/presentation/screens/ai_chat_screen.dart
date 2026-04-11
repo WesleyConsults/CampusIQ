@@ -7,6 +7,7 @@ import 'package:campusiq/features/ai/presentation/widgets/ai_message_bubble.dart
 import 'package:campusiq/features/ai/presentation/widgets/ai_typing_indicator.dart';
 import 'package:campusiq/features/ai/presentation/widgets/usage_counter_chip.dart';
 import 'package:campusiq/features/ai/presentation/widgets/premium_gate_widget.dart';
+import 'package:campusiq/features/ai/presentation/widgets/ai_chat_history_drawer.dart';
 
 class AiChatScreen extends ConsumerStatefulWidget {
   const AiChatScreen();
@@ -25,9 +26,9 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     _textController = TextEditingController();
     _scrollController = ScrollController();
 
-    // Load chat history on init
+    // Load chat history/sessions on init
     Future.microtask(() {
-      ref.read(aiChatProvider.notifier).loadHistory();
+      ref.read(aiChatProvider.notifier).loadSessions();
     });
   }
 
@@ -73,6 +74,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     });
 
     return Scaffold(
+      endDrawer: const AiChatHistoryDrawer(),
       appBar: AppBar(
         title: Row(
           children: [
@@ -95,6 +97,15 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             ),
           ],
         ),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: 'Chat History',
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
