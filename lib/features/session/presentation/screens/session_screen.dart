@@ -14,12 +14,33 @@ import 'package:campusiq/features/session/presentation/widgets/session_tile.dart
 import 'package:campusiq/features/session/presentation/widgets/weekly_bar_chart.dart';
 import 'package:campusiq/features/review/presentation/widgets/weekly_review_sheet.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
+import 'package:campusiq/features/ai/presentation/widgets/study_plan_tab.dart';
 import 'package:go_router/go_router.dart';
 
-class SessionScreen extends ConsumerWidget {
+class SessionScreen extends ConsumerStatefulWidget {
   const SessionScreen({super.key});
 
-  Future<void> _startSession(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<SessionScreen> createState() => _SessionScreenState();
+}
+
+class _SessionScreenState extends ConsumerState<SessionScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startSession(BuildContext context) async {
     final picked = await showModalBottomSheet<PickedCourse>(
       context: context,
       isScrollControlled: true,
@@ -39,44 +60,37 @@ class SessionScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _stopSession(WidgetRef ref, String semesterKey) async {
-    final notifier   = ref.read(activeSessionProvider.notifier);
-    final completed  = notifier.stopSession();
+  Future<void> _stopSession(String semesterKey) async {
+    final notifier = ref.read(activeSessionProvider.notifier);
+    final completed = notifier.stopSession();
     if (completed == null) return;
 
     final durationMins = completed.elapsedMinutes;
-    if (durationMins < 1) return; // ignore < 1 min sessions
+    if (durationMins < 1) return;
 
-    // Check if session was planned (timetable slot exists for this course today)
     final todaySlots = ref.read(activeDaySlotsProvider);
-    final wasPlanned = todaySlots.any(
-      (s) => s.courseCode == completed.courseCode,
-    );
+    final wasPlanned = todaySlots.any((s) => s.courseCode == completed.courseCode);
 
     final session = StudySessionModel()
-      ..courseCode      = completed.courseCode
-      ..courseName      = completed.courseName
-      ..startTime       = completed.startTime
-      ..endTime         = DateTime.now()
+      ..courseCode = completed.courseCode
+      ..courseName = completed.courseName
+      ..startTime = completed.startTime
+      ..endTime = DateTime.now()
       ..durationMinutes = durationMins
-      ..wasPlanned      = wasPlanned
-      ..courseSource    = completed.courseSource
-      ..semesterKey     = semesterKey;
+      ..wasPlanned = wasPlanned
+      ..courseSource = completed.courseSource
+      ..semesterKey = semesterKey;
 
     final repo = ref.read(sessionRepositoryProvider);
     await repo?.saveSession(session);
 
-    // Student has now studied today — cancel "haven't studied" and streak alerts
     await NotificationService.instance.cancelStudiedTodayAlerts();
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final activeSession   = ref.watch(activeSessionProvider);
-    final sessionsAsync   = ref.watch(allSessionsProvider);
-    final todayAnalytics  = ref.watch(todayAnalyticsProvider);
-    final weeklyAnalytics = ref.watch(weeklyAnalyticsProvider);
-    final semester        = ref.watch(activeSemesterProvider);
+  Widget build(BuildContext context) {
+    final activeSession = ref.watch(activeSessionProvider);
+    final semester = ref.watch(activeSemesterProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
@@ -91,8 +105,7 @@ class SessionScreen extends ConsumerWidget {
               backgroundColor: Colors.transparent,
               builder: (_) => const WeeklyReviewSheet(),
             ),
-            child: const Text('This Week',
-                style: TextStyle(color: Colors.white)),
+            child: const Text('This Week', style: TextStyle(color: Colors.white)),
           ),
           IconButton(
             icon: const Icon(Icons.auto_awesome_rounded),
@@ -100,111 +113,154 @@ class SessionScreen extends ConsumerWidget {
             onPressed: () => context.push('/insights'),
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          tabs: const [
+            Tab(text: 'History'),
+            Tab(text: 'Plan'),
+          ],
+        ),
       ),
-      body: CustomScrollView(
-        slivers: [
-          // ── Active timer or start button ──────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: activeSession != null
-                  ? ActiveTimerCard(
-                      session: activeSession,
-                      onStop: () => _stopSession(ref, semester),
-                      onCancel: () =>
-                          ref.read(activeSessionProvider.notifier).cancelSession(),
-                    )
-                  : _StartCard(onStart: () => _startSession(context, ref)),
-            ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // Tab 0: History — all existing content
+          _HistoryTab(
+            activeSession: activeSession,
+            semester: semester,
+            onStart: () => _startSession(context),
+            onStop: () => _stopSession(semester),
+            onCancel: () => ref.read(activeSessionProvider.notifier).cancelSession(),
           ),
-
-          // ── Today's analytics summary ─────────────────────────────────
-          if (todayAnalytics != null && todayAnalytics.sessionCount > 0)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: AnalyticsSummaryCard(analytics: todayAnalytics),
-              ),
-            ),
-
-          // ── Per-course breakdown ──────────────────────────────────────
-          if (todayAnalytics != null && todayAnalytics.perCourse.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: CourseBreakdownCard(courses: todayAnalytics.perCourse),
-              ),
-            ),
-
-          // ── Weekly bar chart ──────────────────────────────────────────
-          if (weeklyAnalytics != null)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: WeeklyBarChart(weekly: weeklyAnalytics),
-              ),
-            ),
-
-          // ── Session history ───────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Row(
-                children: [
-                  const Text('History',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 15)),
-                  const Spacer(),
-                  sessionsAsync.whenOrNull(
-                        data: (s) => Text('${s.length} sessions',
-                            style: const TextStyle(
-                                fontSize: 13,
-                                color: AppTheme.textSecondary)),
-                      ) ??
-                      const SizedBox.shrink(),
-                ],
-              ),
-            ),
-          ),
-
-          sessionsAsync.when(
-            loading: () => const SliverToBoxAdapter(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (e, _) => SliverToBoxAdapter(
-              child: Center(child: Text('Error: $e')),
-            ),
-            data: (sessions) {
-              if (sessions.isEmpty) {
-                return const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(
-                      child: Text('No sessions yet — start studying!',
-                          style: TextStyle(color: AppTheme.textSecondary)),
-                    ),
-                  ),
-                );
-              }
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
-                    final session = sessions[i];
-                    return SessionTile(
-                      session: session,
-                      onDelete: () =>
-                          ref.read(sessionRepositoryProvider)?.deleteSession(session.id),
-                    );
-                  },
-                  childCount: sessions.length,
-                ),
-              );
-            },
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          // Tab 1: Plan
+          const StudyPlanTab(),
         ],
       ),
+    );
+  }
+}
+
+// ── History tab — extracted so it can be kept as-is ─────────────────────────
+
+class _HistoryTab extends ConsumerWidget {
+  final dynamic activeSession;
+  final String semester;
+  final VoidCallback onStart;
+  final VoidCallback onStop;
+  final VoidCallback onCancel;
+
+  const _HistoryTab({
+    required this.activeSession,
+    required this.semester,
+    required this.onStart,
+    required this.onStop,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessionsAsync = ref.watch(allSessionsProvider);
+    final todayAnalytics = ref.watch(todayAnalyticsProvider);
+    final weeklyAnalytics = ref.watch(weeklyAnalyticsProvider);
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: activeSession != null
+                ? ActiveTimerCard(
+                    session: activeSession,
+                    onStop: onStop,
+                    onCancel: onCancel,
+                  )
+                : _StartCard(onStart: onStart),
+          ),
+        ),
+
+        if (todayAnalytics != null && todayAnalytics.sessionCount > 0)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: AnalyticsSummaryCard(analytics: todayAnalytics),
+            ),
+          ),
+
+        if (todayAnalytics != null && todayAnalytics.perCourse.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: CourseBreakdownCard(courses: todayAnalytics.perCourse),
+            ),
+          ),
+
+        if (weeklyAnalytics != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: WeeklyBarChart(weekly: weeklyAnalytics),
+            ),
+          ),
+
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                const Text('History',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                const Spacer(),
+                sessionsAsync.whenOrNull(
+                      data: (s) => Text('${s.length} sessions',
+                          style: const TextStyle(
+                              fontSize: 13, color: AppTheme.textSecondary)),
+                    ) ??
+                    const SizedBox.shrink(),
+              ],
+            ),
+          ),
+        ),
+
+        sessionsAsync.when(
+          loading: () => const SliverToBoxAdapter(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (e, _) => SliverToBoxAdapter(
+            child: Center(child: Text('Error: $e')),
+          ),
+          data: (sessions) {
+            if (sessions.isEmpty) {
+              return const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(
+                    child: Text('No sessions yet — start studying!',
+                        style: TextStyle(color: AppTheme.textSecondary)),
+                  ),
+                ),
+              );
+            }
+            return SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, i) {
+                  final session = sessions[i];
+                  return SessionTile(
+                    session: session,
+                    onDelete: () =>
+                        ref.read(sessionRepositoryProvider)?.deleteSession(session.id),
+                  );
+                },
+                childCount: sessions.length,
+              ),
+            );
+          },
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 100)),
+      ],
     );
   }
 }

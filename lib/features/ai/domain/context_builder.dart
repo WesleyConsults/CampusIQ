@@ -1,7 +1,11 @@
 import 'package:campusiq/features/cwa/data/repositories/cwa_repository.dart';
 import 'package:campusiq/features/session/data/repositories/session_repository.dart';
 import 'package:campusiq/features/timetable/data/repositories/timetable_repository.dart';
+import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
+import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
+import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/core/data/repositories/user_prefs_repository.dart';
+import 'package:campusiq/core/constants/app_constants.dart';
 import 'prompt_templates.dart';
 
 class WhatIfInput {
@@ -110,6 +114,95 @@ This changes their projected CWA from ${input.originalCwa.toStringAsFixed(1)} to
 Explain the impact in exactly 1–2 sentences.
 Focus on: does this help reach the target? Is this course high or low leverage?
 Plain English only. No markdown.''';
+  }
+
+  Future<String> buildStudyPlanPrompt() async {
+    final semesterKey = AppConstants.defaultSemesterKey;
+
+    // 1. Courses sorted by (creditHours * gap) desc — proxy for CWA leverage
+    final allCourses = await _getCourses(semesterKey);
+    // We don't have targetCwa here so just sort by creditHours desc as best proxy
+    final sortedCourses = [...allCourses]
+      ..sort((a, b) => b.creditHours.compareTo(a.creditHours));
+
+    final courseLines = sortedCourses.asMap().entries.map((e) {
+      final i = e.key + 1;
+      final c = e.value;
+      return '$i. ${c.code} — ${c.creditHours.toInt()} credit hours, expected score ${c.expectedScore.toInt()}';
+    }).join('\n');
+
+    // 2. Free blocks per day Mon–Sat (KNUST grid)
+    final dayNames = TimetableConstants.dayFullLabels; // Mon–Sat
+    final freeBlockLines = <String>[];
+    for (int i = 0; i < dayNames.length; i++) {
+      final slots = await _getSlotsForDay(semesterKey, i);
+      final blocks = FreeTimeDetector.detect(dayIndex: i, slots: slots);
+      if (blocks.isEmpty) {
+        freeBlockLines.add('${dayNames[i]}: (no free blocks)');
+      } else {
+        final blockStr = blocks.map((b) => '${b.startLabel}–${b.endLabel}').join(', ');
+        freeBlockLines.add('${dayNames[i]}: $blockStr');
+      }
+    }
+    // Sunday always free (KNUST day 6 not in grid)
+    freeBlockLines.add('Sunday: (no free blocks — rest day)');
+
+    // 3. Past 4 weeks of sessions — extract day/time preferences
+    final now = DateTime.now();
+    final fourWeeksAgo = now.subtract(const Duration(days: 28));
+    final pastSessions = await sessionRepository.getSessionsForRange(semesterKey, fourWeeksAgo, now);
+    final dayCount = <int, int>{};
+    for (final s in pastSessions) {
+      final d = s.startTime.weekday; // 1=Mon … 7=Sun
+      dayCount[d] = (dayCount[d] ?? 0) + 1;
+    }
+    String patternSummary = 'No past study sessions recorded.';
+    if (dayCount.isNotEmpty) {
+      final sorted = dayCount.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+      final dayNames2 = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      final top = sorted.take(3).map((e) => dayNames2[e.key]).join(', ');
+      final bottom = sorted.reversed.take(2).map((e) => dayNames2[e.key]).join(', ');
+      patternSummary = 'Tends to study: $top\nRarely studies: $bottom';
+    }
+
+    return '''You are a study planner. Generate a 7-day study plan for a university student.
+
+Course priority (highest to lowest impact on CWA):
+$courseLines
+
+Available free blocks per day (class times are already excluded):
+${freeBlockLines.join('\n')}
+
+Student's past study patterns (days/times they actually study):
+$patternSummary
+
+Rules:
+- Never schedule a study session during a class time
+- Prioritize high-credit courses (more impact on CWA)
+- Respect past patterns where possible — don't force sessions at times they never study
+- Maximum 2 study sessions per day
+- Each session: 60–120 minutes
+- At least 1 rest day per week
+- If a day has no free blocks, mark it as a rest day
+
+Return ONLY a JSON array. No explanation text before or after the JSON.
+Each item must have exactly these fields:
+{
+  "day": "Monday",
+  "courseCode": "EE 301",
+  "courseName": "Circuit Theory",
+  "startTime": "10:00",
+  "durationMinutes": 90,
+  "reason": "Highest CWA leverage course"
+}''';
+  }
+
+  Future<List<TimetableSlotModel>> _getSlotsForDay(String semesterKey, int dayIndex) async {
+    try {
+      return await timetableRepository.getSlotsForDayOnce(semesterKey, dayIndex);
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<List<dynamic>> _getCourses(String semesterKey) async {
