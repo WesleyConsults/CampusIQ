@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/features/ai/domain/context_builder.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
+import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
+import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/features/cwa/presentation/providers/whatif_provider.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/whatif_explain_chip.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/whatif_result_card.dart';
 
-class CourseCard extends StatelessWidget {
+class CourseCard extends ConsumerStatefulWidget {
   final CourseModel course;
   final bool isHighImpact;
   final VoidCallback onEdit;
@@ -19,7 +26,36 @@ class CourseCard extends StatelessWidget {
   });
 
   @override
+  ConsumerState<CourseCard> createState() => _CourseCardState();
+}
+
+class _CourseCardState extends ConsumerState<CourseCard> {
+  late double _sliderValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _sliderValue = widget.course.expectedScore;
+  }
+
+  @override
+  void didUpdateWidget(CourseCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If saved score changed externally (e.g., different course), reset slider
+    if (oldWidget.course.id != widget.course.id) {
+      _sliderValue = widget.course.expectedScore;
+    }
+  }
+
+  String get _courseId => widget.course.id.toString();
+  bool get _isAdjusted => (_sliderValue - widget.course.expectedScore).abs() > 0.5;
+
+  @override
   Widget build(BuildContext context) {
+    final whatifState = ref.watch(whatifProvider);
+    final explanation = whatifState.explanations[_courseId];
+    final isLoading = whatifState.isLoading[_courseId] ?? false;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Padding(
@@ -36,10 +72,10 @@ class CourseCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            course.code,
+                            widget.course.code,
                             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textPrimary),
                           ),
-                          if (isHighImpact) ...[
+                          if (widget.isHighImpact) ...[
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -56,16 +92,16 @@ class CourseCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 2),
-                      Text(course.name, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                      Text(widget.course.name, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                     ],
                   ),
                 ),
                 Text(
-                  '${course.creditHours.toInt()} cr',
+                  '${widget.course.creditHours.toInt()} cr',
                   style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                 ),
                 PopupMenuButton<String>(
-                  onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
+                  onSelected: (v) => v == 'edit' ? widget.onEdit() : widget.onDelete(),
                   itemBuilder: (_) => const [
                     PopupMenuItem(value: 'edit', child: Text('Edit')),
                     PopupMenuItem(value: 'delete', child: Text('Delete')),
@@ -78,20 +114,63 @@ class CourseCard extends StatelessWidget {
               children: [
                 const Text('Expected score:', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                 const Spacer(),
-                Text('${course.expectedScore.toInt()}%', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                Text('${_sliderValue.toInt()}%', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               ],
             ),
             Slider(
-              value: course.expectedScore,
+              value: _sliderValue,
               min: 0,
               max: 100,
               divisions: 100,
               activeColor: AppTheme.primary,
               inactiveColor: Colors.grey.shade200,
-              onChanged: onScoreChanged,
+              onChanged: (value) {
+                setState(() => _sliderValue = value);
+                ref.read(whatifProvider.notifier).setAdjustedScore(
+                  _courseId,
+                  value,
+                  widget.course.expectedScore,
+                );
+                widget.onScoreChanged(value);
+              },
             ),
+            // What-if chip — only shows when slider differs from saved score
+            if (_isAdjusted)
+              WhatifExplainChip(
+                isLoading: isLoading,
+                onTap: () => _triggerExplain(),
+              ),
+            // Animated result card
+            WhatifResultCard(explanation: explanation),
           ],
         ),
+      ),
+    );
+  }
+
+  void _triggerExplain() {
+    final courses = ref.read(coursesProvider).valueOrNull ?? [];
+    final pairs = courses.map((c) => (creditHours: c.creditHours, score: c.expectedScore)).toList();
+    final originalCwa = CwaCalculator.calculate(pairs);
+
+    final courseIndex = courses.indexWhere((c) => c.id == widget.course.id);
+    final newCwa = courseIndex >= 0
+        ? CwaCalculator.whatIf(courses: pairs, index: courseIndex, newScore: _sliderValue)
+        : originalCwa;
+
+    final targetCwa = ref.read(targetCwaProvider);
+
+    ref.read(whatifProvider.notifier).explainChange(
+      _courseId,
+      WhatIfInput(
+        courseCode: widget.course.code,
+        courseName: widget.course.name,
+        creditHours: widget.course.creditHours.toInt(),
+        originalScore: widget.course.expectedScore,
+        newScore: _sliderValue,
+        originalCwa: originalCwa,
+        newCwa: newCwa,
+        targetCwa: targetCwa,
       ),
     );
   }

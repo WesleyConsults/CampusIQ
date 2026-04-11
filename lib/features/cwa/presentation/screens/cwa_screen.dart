@@ -8,6 +8,7 @@ import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/cwa_summary_bar.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/course_card.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/cwa_coach_sheet.dart';
 
 class CwaScreen extends ConsumerWidget {
   const CwaScreen({super.key});
@@ -67,6 +68,22 @@ class CwaScreen extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: CwaSummaryBar(projected: projected, target: target, gap: gap),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  child: TextButton.icon(
+                    onPressed: () => showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => const CwaCoachSheet(),
+                    ),
+                    icon: const Icon(Icons.auto_awesome, size: 16),
+                    label: const Text('Get AI Coaching'),
+                    style: TextButton.styleFrom(foregroundColor: AppTheme.primary),
+                  ),
                 ),
               ),
               SliverToBoxAdapter(
