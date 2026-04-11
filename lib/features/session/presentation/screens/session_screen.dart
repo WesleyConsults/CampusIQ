@@ -15,6 +15,7 @@ import 'package:campusiq/features/session/presentation/widgets/weekly_bar_chart.
 import 'package:campusiq/features/review/presentation/widgets/weekly_review_sheet.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 import 'package:campusiq/features/ai/presentation/widgets/study_plan_tab.dart';
+import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 import 'package:go_router/go_router.dart';
 
 class SessionScreen extends ConsumerStatefulWidget {
@@ -68,6 +69,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final durationMins = completed.elapsedMinutes;
     if (durationMins < 1) return;
 
+    // Check if this will be the first session of today (before saving)
+    final existingSessions = ref.read(allSessionsProvider).valueOrNull ?? [];
+    final today = DateTime.now();
+    final hadSessionToday = existingSessions.any((s) {
+      final d = s.startTime;
+      return d.year == today.year && d.month == today.month && d.day == today.day;
+    });
+
     final todaySlots = ref.read(activeDaySlotsProvider);
     final wasPlanned = todaySlots.any((s) => s.courseCode == completed.courseCode);
 
@@ -84,7 +93,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final repo = ref.read(sessionRepositoryProvider);
     await repo?.saveSession(session);
 
+    // Cancel at-risk alerts since the user has now studied today
     await NotificationService.instance.cancelStudiedTodayAlerts();
+
+    // Fire streak-secured notification only after the first session of the day
+    if (!hadSessionToday) {
+      final streak = ref.read(studyStreakProvider);
+      await NotificationService.instance.showStreakSecured(streak.currentStreak);
+    }
   }
 
   @override

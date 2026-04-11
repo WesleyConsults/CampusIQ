@@ -223,6 +223,22 @@ class NotificationService {
     await _plugin.cancel(id: 201);
   }
 
+  /// Fire an immediate "streak secured" notification after the first session
+  /// of the day. Only shown when there is an active streak to protect.
+  Future<void> showStreakSecured(int currentStreak) async {
+    final message = currentStreak > 0
+        ? "Day $currentStreak streak secured — great work! 🔥"
+        : "First session logged today — keep going!";
+    await _plugin.show(
+      id: 202,
+      title: 'Session complete',
+      body: message,
+      notificationDetails: NotificationDetails(
+        android: _androidDetails(_channelStreakAlert, 'Streak Alerts'),
+      ),
+    );
+  }
+
   Future<void> cancelAllReminders() async {
     await _plugin.cancelAll();
   }

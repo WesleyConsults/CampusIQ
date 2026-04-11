@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_chat_provider.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_usage_provider.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
@@ -27,7 +28,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     _textController = TextEditingController();
     _scrollController = ScrollController();
 
-    // Load chat history/sessions on init
     Future.microtask(() {
       ref.read(aiChatProvider.notifier).loadSessions();
     });
@@ -57,7 +57,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     if (text.isEmpty) return;
     _textController.clear();
     ref.read(aiChatProvider.notifier).sendMessage(text);
-    // First scroll — user message will appear immediately via state update
     _scrollToBottom();
   }
 
@@ -67,7 +66,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final isPremiumAsync = ref.watch(isPremiumProvider);
     final usageAsync = ref.watch(aiUsageTodayProvider('chat'));
 
-    // Scroll to bottom whenever the message list grows (user msg or AI reply)
     ref.listen<AiChatState>(aiChatProvider, (previous, next) {
       if (next.messages.length != (previous?.messages.length ?? 0)) {
         _scrollToBottom();
@@ -79,8 +77,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            Text('AI Coach'),
-            SizedBox(width: 8),
+            const Text('AI Coach'),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
@@ -111,6 +109,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       body: Column(
         children: [
           const WeeklyReviewBanner(),
+          const _ExamPrepCard(),
           Expanded(
             child: chatState.messages.isEmpty
                 ? Center(
@@ -135,7 +134,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                     },
                   ),
           ),
-          // Error message
           if (chatState.error != null)
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -150,32 +148,24 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 ),
               ),
             ),
-          // Premium gate or input area
           if (chatState.isAtLimit)
             const PremiumGateWidget()
           else
             Column(
               children: [
-                // Usage counter (hidden for premium)
                 usageAsync.when(
-                  data: (used) {
-                    return isPremiumAsync.when(
-                      data: (isPremium) {
-                        if (isPremium) return SizedBox.shrink();
-                        final remaining = (3 - used).clamp(0, 3);
-                        return UsageCounterChip(
-                          remaining: remaining,
-                          limit: 3,
-                        );
-                      },
-                      loading: () => SizedBox.shrink(),
-                      error: (_, __) => SizedBox.shrink(),
-                    );
-                  },
-                  loading: () => SizedBox.shrink(),
-                  error: (_, __) => SizedBox.shrink(),
+                  data: (used) => isPremiumAsync.when(
+                    data: (isPremium) {
+                      if (isPremium) return const SizedBox.shrink();
+                      final remaining = (3 - used).clamp(0, 3);
+                      return UsageCounterChip(remaining: remaining, limit: 3);
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
                 ),
-                // Input area
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -203,10 +193,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                           maxLines: 3,
                         ),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       IconButton(
                         onPressed: chatState.isLoading ? null : _handleSend,
-                        icon: Icon(Icons.send),
+                        icon: const Icon(Icons.send),
                       ),
                     ],
                   ),
@@ -214,6 +204,64 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               ],
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Exam Prep feature card ────────────────────────────────────────────────────
+
+class _ExamPrepCard extends StatelessWidget {
+  const _ExamPrepCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/ai/exam-prep'),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.indigo.shade50,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.indigo.shade100),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.indigo.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.quiz_outlined,
+                  size: 18, color: Colors.indigo.shade700),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Exam Prep',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.indigo.shade800,
+                    ),
+                  ),
+                  Text(
+                    'Generate practice questions for any course',
+                    style: TextStyle(
+                        fontSize: 11, color: Colors.indigo.shade600),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios,
+                size: 14, color: Colors.indigo.shade400),
+          ],
+        ),
       ),
     );
   }

@@ -13,6 +13,7 @@ import 'package:campusiq/features/streak/presentation/screens/streak_screen.dart
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 import 'package:campusiq/features/plan/presentation/providers/exam_mode_provider.dart';
 import 'package:campusiq/features/ai/presentation/screens/ai_chat_screen.dart';
+import 'package:campusiq/features/ai/presentation/screens/exam_prep_screen.dart';
 import 'package:campusiq/features/ai/presentation/screens/subscribe_screen_stub.dart';
 import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.dart';
 
@@ -73,6 +74,11 @@ final appRouter = GoRouter(
       path: '/ai/weekly-review',
       name: 'weekly-review',
       builder: (context, state) => const WeeklyReviewScreen(),
+    ),
+    GoRoute(
+      path: '/ai/exam-prep',
+      name: 'exam-prep',
+      builder: (context, state) => const ExamPrepScreen(),
     ),
   ],
 );
