@@ -14,6 +14,7 @@ import 'package:campusiq/features/ai/data/models/ai_chat_session_model.dart';
 import 'package:campusiq/features/ai/data/models/ai_usage_model.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_model.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_slot_model.dart';
+import 'package:campusiq/features/ai/data/models/weekly_review_model.dart';
 
 final isarProvider = FutureProvider<Isar>((ref) async {
   final dir = await getApplicationDocumentsDirectory();
@@ -32,6 +33,7 @@ final isarProvider = FutureProvider<Isar>((ref) async {
       AiUsageModelSchema,
       StudyPlanModelSchema,
       StudyPlanSlotModelSchema,
+      WeeklyReviewModelSchema,
     ],
     directory: dir.path,
   );

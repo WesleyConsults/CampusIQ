@@ -197,6 +197,74 @@ Each item must have exactly these fields:
 }''';
   }
 
+  Future<String> buildWeeklyReviewPrompt() async {
+    final semesterKey = AppConstants.defaultSemesterKey;
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final weekStart = DateTime(monday.year, monday.month, monday.day);
+    final weekEnd = weekStart.add(const Duration(days: 7));
+
+    // Sessions this week
+    final sessions = await sessionRepository.getSessionsForRange(semesterKey, weekStart, weekEnd);
+    final totalMinutes = sessions.fold<int>(0, (sum, s) => sum + s.durationMinutes);
+    final totalHours = totalMinutes / 60.0;
+
+    // Per-course breakdown
+    final courseMinutes = <String, int>{};
+    final courseNames = <String, String>{};
+    for (final s in sessions) {
+      courseMinutes[s.courseCode] = (courseMinutes[s.courseCode] ?? 0) + s.durationMinutes;
+      courseNames[s.courseCode] = s.courseName;
+    }
+    final courseLines = courseMinutes.entries
+        .map((e) => '${e.key} — ${(e.value / 60.0).toStringAsFixed(1)}hr')
+        .join(', ');
+
+    // Courses with no study sessions this week
+    final allCourses = await _getCourses(semesterKey);
+    final studiedCodes = courseMinutes.keys.toSet();
+    final neglected = allCourses
+        .where((c) => !studiedCodes.contains(c.code))
+        .map((c) => c.code)
+        .toList();
+
+    // CWA gap proxy — highest credit course with lowest expected score
+    String cwaLine = 'No courses added yet';
+    if (allCourses.isNotEmpty) {
+      final totalCr = allCourses.fold<double>(0, (s, c) => s + c.creditHours);
+      final projected = totalCr > 0
+          ? allCourses.fold<double>(0, (s, c) => s + c.creditHours * c.expectedScore) / totalCr
+          : 0.0;
+      cwaLine = 'Projected CWA: ${projected.toStringAsFixed(1)}';
+    }
+
+    final sessionSummary = sessions.isEmpty
+        ? 'No study sessions recorded this week.'
+        : 'Total: ${totalHours.toStringAsFixed(1)} hours. By course: $courseLines';
+    final neglectedSummary = neglected.isEmpty
+        ? 'All courses had at least one study session.'
+        : 'Courses with no study sessions: ${neglected.join(', ')}';
+
+    return '''You are an academic coach writing a weekly review for a university student.
+
+This week's data:
+- $sessionSummary
+- $neglectedSummary
+- $cwaLine
+
+Write a weekly review with exactly 4 sections.
+Return ONLY a JSON object — no text before or after.
+{
+  "summary": "2-3 sentence overall summary of the week",
+  "well": "1-2 sentences on what went well",
+  "watch": "1-2 sentences on one specific risk or gap",
+  "focus": "1 sentence with one concrete priority for next week"
+}
+
+Tone: warm, honest, encouraging. Not generic. Reference their actual numbers and courses.
+Do not use markdown. Plain sentences only.''';
+  }
+
   Future<List<TimetableSlotModel>> _getSlotsForDay(String semesterKey, int dayIndex) async {
     try {
       return await timetableRepository.getSlotsForDayOnce(semesterKey, dayIndex);

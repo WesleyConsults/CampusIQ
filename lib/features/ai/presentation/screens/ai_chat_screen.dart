@@ -8,6 +8,7 @@ import 'package:campusiq/features/ai/presentation/widgets/ai_typing_indicator.da
 import 'package:campusiq/features/ai/presentation/widgets/usage_counter_chip.dart';
 import 'package:campusiq/features/ai/presentation/widgets/premium_gate_widget.dart';
 import 'package:campusiq/features/ai/presentation/widgets/ai_chat_history_drawer.dart';
+import 'package:campusiq/features/ai/presentation/widgets/weekly_review_banner.dart';
 
 class AiChatScreen extends ConsumerStatefulWidget {
   const AiChatScreen();
@@ -109,6 +110,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       ),
       body: Column(
         children: [
+          const WeeklyReviewBanner(),
           Expanded(
             child: chatState.messages.isEmpty
                 ? Center(

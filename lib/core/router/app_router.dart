@@ -14,6 +14,7 @@ import 'package:campusiq/features/streak/presentation/providers/streak_provider.
 import 'package:campusiq/features/plan/presentation/providers/exam_mode_provider.dart';
 import 'package:campusiq/features/ai/presentation/screens/ai_chat_screen.dart';
 import 'package:campusiq/features/ai/presentation/screens/subscribe_screen_stub.dart';
+import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/plan',
@@ -67,6 +68,11 @@ final appRouter = GoRouter(
       path: '/subscribe',
       name: 'subscribe',
       builder: (context, state) => const SubscribeScreenStub(),
+    ),
+    GoRoute(
+      path: '/ai/weekly-review',
+      name: 'weekly-review',
+      builder: (context, state) => const WeeklyReviewScreen(),
     ),
   ],
 );
