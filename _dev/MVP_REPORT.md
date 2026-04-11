@@ -1,397 +1,157 @@
-# CampusIQ — MVP Completion Report
+# CampusIQ — MVP Completion & Roadmap Report
 
-**Date:** 2026-04-05
+**Date:** 2026-04-11
 **Package:** com.wesleyconsults.campusiq
-**Status:** MVP Complete (Phases 1–5)
+**Status:** Roadmap Phase 15 Complete (Study Plan & Weekly Review)
 
 ---
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The MVP covers five phases: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking, and Streak System.
+CampusIQ is an advanced academic performance system built Android-first for Ghanaian university students (KNUST target audience). Beyond the core MVP (CWA, Timetable, Sessions, Streaks), the system now integrates powerful AI capabilities for academic coaching, exam preparation, automated study planning, and smart behavioral notifications.
 
 ---
 
 ## Tech Stack
 
-| Layer | Choice |
-|---|---|
-| Framework | Flutter (Android-first) |
-| Language | Dart |
-| State management | Riverpod (riverpod_annotation + riverpod_generator) |
-| Local storage | Isar 3.x |
-| Navigation | Go Router |
-| Fonts | Google Fonts — Inter |
-| Code generation | build_runner + isar_generator + riverpod_generator |
+| Layer | Choice | Version |
+|---|---|---|
+| Framework | Flutter (Android-first) | 3.x |
+| State management | Riverpod (Annotations + Codegen) | ^2.5.1 |
+| Local storage | Isar (NoSql) | ^3.1.0+1 |
+| Navigation | Go Router | ^14.2.0 |
+| AI Integration | DeepSeek API | (Direct HTTP) |
+| Notifications | Flutter Local Notifications | ^21.0.0 |
+| Background Tasks | Workmanager | ^0.9.0 |
+| Fonts | Google Fonts (Inter) | ^6.2.1 |
 
 ---
 
 ## Architecture
 
-Every feature follows a strict three-layer structure:
-
-```
-lib/features/<feature>/
-├── data/
-│   ├── models/          — Isar @collection schemas + generated .g.dart
-│   └── repositories/    — CRUD + stream methods (no Flutter deps)
-├── domain/              — Pure Dart business logic only
-└── presentation/
-    ├── providers/        — Riverpod providers (riverpod_annotation)
-    ├── screens/          — ConsumerWidget screens
-    └── widgets/          — Stateless/Consumer widgets
-```
-
-Business logic is never placed in widgets. Domain layer has zero Flutter dependencies.
-
----
-
-## Full File Tree (source files only)
+The project adheres to a strict **Feature-Based Data/Domain/Presentation** architecture. Business logic is isolated in the domain layer as pure Dart, ensuring testability and reliability in background isolates.
 
 ```
 lib/
-├── main.dart
-├── app.dart
-├── core/
-│   ├── constants/app_constants.dart
-│   ├── data/
-│   │   ├── models/user_prefs_model.dart          — single-row key/value Isar store
-│   │   └── repositories/user_prefs_repository.dart
-│   ├── providers/isar_provider.dart               — singleton FutureProvider<Isar>
-│   ├── router/app_router.dart                     — GoRouter + ShellRoute
-│   └── theme/app_theme.dart                       — Material 3 + Inter
-├── features/
-│   ├── cwa/                                       — Phase 1
-│   │   ├── data/models/course_model.dart
-│   │   ├── data/repositories/cwa_repository.dart
-│   │   ├── domain/cwa_calculator.dart
-│   │   └── presentation/
-│   │       ├── providers/cwa_provider.dart
-│   │       ├── screens/cwa_screen.dart
-│   │       └── widgets/
-│   │           ├── add_course_sheet.dart
-│   │           ├── course_card.dart
-│   │           └── cwa_summary_bar.dart
-│   ├── timetable/                                 — Phase 2 + 3
-│   │   ├── data/models/timetable_slot_model.dart
-│   │   ├── data/models/personal_slot_model.dart
-│   │   ├── data/repositories/timetable_repository.dart
-│   │   ├── data/repositories/personal_slot_repository.dart
-│   │   ├── domain/
-│   │   │   ├── free_time_detector.dart
-│   │   │   ├── personal_slot_category.dart
-│   │   │   ├── recurrence_type.dart
-│   │   │   ├── slot_expander.dart
-│   │   │   └── timetable_constants.dart
-│   │   └── presentation/
-│   │       ├── providers/timetable_provider.dart
-│   │       ├── providers/personal_slot_provider.dart
-│   │       ├── screens/timetable_screen.dart
-│   │       └── widgets/
-│   │           ├── add_slot_sheet.dart
-│   │           ├── add_personal_slot_sheet.dart
-│   │           ├── day_selector.dart
-│   │           ├── dual_layer_grid.dart
-│   │           ├── free_block_indicator.dart
-│   │           ├── personal_slot_card.dart
-│   │           ├── personal_slot_detail_sheet.dart
-│   │           ├── slot_detail_sheet.dart
-│   │           ├── timetable_page_indicator.dart
-│   │           └── timetable_slot_card.dart
-│   ├── session/                                   — Phase 4
-│   │   ├── data/models/study_session_model.dart
-│   │   ├── data/repositories/session_repository.dart
-│   │   ├── domain/
-│   │   │   ├── active_session_state.dart
-│   │   │   └── planned_actual_analyser.dart
-│   │   └── presentation/
-│   │       ├── providers/active_session_provider.dart
-│   │       ├── providers/session_provider.dart
-│   │       ├── screens/session_screen.dart
-│   │       └── widgets/
-│   │           ├── active_timer_card.dart
-│   │           ├── analytics_summary_card.dart
-│   │           ├── course_breakdown_card.dart
-│   │           ├── course_picker_sheet.dart
-│   │           ├── floating_mini_timer.dart
-│   │           ├── session_tile.dart
-│   │           └── weekly_bar_chart.dart
-│   └── streak/                                    — Phase 5
-│       ├── domain/
-│       │   ├── milestone.dart
-│       │   ├── streak_calculator.dart
-│       │   └── streak_result.dart
-│       └── presentation/
-│           ├── providers/streak_provider.dart
-│           ├── screens/streak_screen.dart
-│           └── widgets/
-│               ├── activity_heatmap.dart
-│               ├── attendance_tracker.dart
-│               ├── course_streak_list.dart
-│               ├── milestone_grid.dart
-│               ├── next_milestone_card.dart
-│               ├── streak_hero_card.dart
-│               └── streak_summary_mini.dart
-│   ├── ai/                                        — Phase 12
-│   │   ├── data/
-│   │   │   ├── models/
-│   │   │   │   ├── ai_message_model.dart
-│   │   │   │   ├── ai_chat_session_model.dart
-│   │   │   │   └── ai_usage_model.dart
-│   │   │   └── repositories/
-│   │   │       ├── ai_chat_repository.dart
-│   │   │       └── ai_usage_repository.dart
-│   │   ├── domain/
-│   │   │   ├── context_builder.dart
-│   │   │   ├── deepseek_api_client.dart
-│   │   │   └── prompt_templates.dart
-│   │   └── presentation/
-│   │       ├── providers/
-│   │       │   ├── ai_chat_provider.dart
-│   │       │   ├── ai_usage_provider.dart
-│   │       │   └── ai_providers.dart
-│   │       ├── screens/ai_chat_screen.dart
-│   │       └── widgets/
-│   │           ├── ai_chat_history_drawer.dart
-│   │           ├── ai_message_bubble.dart
-│   │           ├── ai_typing_indicator.dart
-│   │           ├── premium_gate_widget.dart
-│   │           └── usage_counter_chip.dart
-└── shared/
-    ├── extensions/double_extensions.dart
-    └── widgets/empty_state_widget.dart
+├── core/                  — Global infrastructure (Router, Theme, Providers, Services)
+├── shared/                — Cross-feature utilities and widgets
+└── features/
+    ├── ai/                — AI Infrastructure, Chat, History, Exam Prep
+    ├── cwa/               — CWA Tracker and Calculator
+    ├── insights/          — Performance Analyser and Insights
+    ├── plan/              — Daily Task Planner and Exam Mode
+    ├── review/            — Weekly Review system
+    ├── session/           — Study Session Tracker
+    ├── settings/          — App configuration and testing hooks
+    ├── streak/            — Streak calculator and Milestone system
+    └── timetable/         — Dual-layer timetable components
 ```
 
 ---
 
 ## Routes
 
-| Route | Screen |
-|---|---|
-| `/cwa` | CWA Target Planner |
-| `/timetable` | Class + Personal Timetable (dual layer, swipe) |
-| `/sessions` | Study Session Tracker + Analytics Dashboard |
-| `/streak` | Streak System + Milestone Gallery |
-| `/ai_chat` | AI Coach & Academic Assistant Chatbot |
-
-Navigation uses a `ShellRoute` so the bottom nav bar and floating mini-timer persist across tab switches.
+| Route | Feature | Access |
+|---|---|---|
+| `/plan` | Daily Task Planner / Exam Mode | Bottom Nav |
+| `/cwa` | CWA Target Planner | Bottom Nav |
+| `/timetable` | Dual-layer Timetable | Bottom Nav |
+| `/sessions` | Study Session Tracker | Bottom Nav |
+| `/streak` | Streak & Milestones | Bottom Nav |
+| `/ai` | AI Coach Chatbot | Bottom Nav |
+| `/insights` | Academic Insights | Side menu / Plan tab |
+| `/settings` | App Settings | Top bar |
+| `/ai/exam-prep` | MCQ / Flashcard Generator | AI Tab |
+| `/ai/weekly-review`| Monday Performance Review | AI Tab |
+| `/subscribe` | Premium Subscription Stub | Gate triggers |
 
 ---
 
 ## Phase Summaries
 
----
+### Phases 1–5: The Core MVP
+*   **Phase 1 (CWA)**: Course tracking with live projected CWA calculations.
+*   **Phase 2 (Class Table)**: Official lecture schedules with fast-select course chips.
+*   **Phase 3 (Personal Table)**: Recurring personal slots (Gym, Study) on a dual-layer grid.
+*   **Phase 4 (Sessions)**: Time tracking with DateTime anchors and Mini-Timer persistence.
+*   **Phase 5 (Streak)**: Milestone-driven study streaks with activity heatmaps and loss aversion alerts.
 
-### Phase 1 — CWA Target Planner
+### Phase 11: Exam Mode Transformation
+*   **Dynamic UI**: The "Plan" tab transforms into "Exam Mode" with orange styling and countdown banners.
+*   **Activation**: Triggered manually or automatically when exams are identified in the roadmap.
+*   **Exam Manager**: Dedicated interface for tracking exam dates, venues, and specific study targets.
 
-**Route:** `/cwa`
+### Phase 12: AI Infrastructure & Chat
+*   **DeepSeek Integration**: Direct REST API integration with environment variable isolation.
+*   **Context Injection**: `ContextBuilder` gathers real academic data (CWA, Streaks, Schedule) to personalise AI responses.
+*   **Session History**: Chat sessions are persisted in Isar with a history drawer for switching conversations.
 
-| Feature | Description |
-|---|---|
-| Add / edit / delete courses | Bottom sheet with course code, name, credit hours, expected score |
-| Live CWA calculation | Riverpod stream recalculates instantly on every change |
-| Score slider per course | Drag to adjust expected score; CWA updates in real time |
-| CWA summary bar | Projected CWA, target CWA, gap indicator |
-| High-impact badge | Flags the course with the most credit hours |
-| Target CWA dialog | Set a personal target; gap indicator updates accordingly |
-| Isar persistence | Courses survive hot restart and app relaunch |
-| What-if logic | `CwaCalculator.whatIf()` available for future scenario screens |
+### Phase 13: CWA AI Coach
+*   **What-if Explainer**: AI explains how specific grades in upcoming courses will impact the overall CWA.
+*   **Academic Advice**: Goal-oriented coaching based on current performance gaps.
 
-**Isar schemas:** `CourseModel`
+### Phase 14: Exam Prep & Smart Notifications
+*   **Generator**: AI creates MCQs (with explanations), Short Answers, and Flashcards (with 3D-flip animations).
+*   **Workmanager**: background isolate handles daily streak checks and personalized motivation.
+*   **Notification System**: Permission-guarded alerts for streak-at-risk (fired at 8pm), study reminders, and milestones.
 
----
-
-### Phase 2 — Class Timetable + Free Time Detection
-
-**Route:** `/timetable` (Layer 1)
-
-| Feature | Description |
-|---|---|
-| Day selector | Swipe or tap to switch between Mon–Sat |
-| Time grid | 6AM–8PM, hourly rows, 30-min resolution |
-| Add class slot | Bottom sheet with fast-select CWA course chips for instant autofill (course code, name, venue, type, time, color) |
-| Slot detail sheet | Tap slot to view/delete |
-| Free time detector | `FreeTimeDetector` computes contiguous free blocks per day — pure Dart |
-| Free block indicator | Displays free blocks in the grid when no class is scheduled |
-| Slot types | Lecture / Practical / Tutorial |
-
-**Isar schemas:** `TimetableSlotModel`
+### Phase 15: Study Plan & Weekly Review
+*   **Automated Planning**: AI generates a full daily schedule combining classes, study habits, and personal goals.
+*   **Weekly Review**: Every Monday morning, AI evaluates the previous week's performance, logs it in Isar, and presents a summary sheet.
+*   **Performance Insights**: `InsightAnalyser` identifies best study windows and neglected subjects.
 
 ---
 
-### Phase 3 — Personal Timetable + Dual Layer View
+## Isar Collections (Full List)
 
-**Route:** `/timetable` (Layer 2, swipe to switch)
-
-| Feature | Description |
-|---|---|
-| Personal slot categories | Study, Gym, Rest, Meal, Side Project, Devotion, Errand, Custom |
-| Recurrence types | One-off, Daily, Weekly |
-| Slot expander | `SlotExpander` expands recurring slots into concrete instances for the active day — no duplicated rows in Isar |
-| Dual layer grid | `DualLayerGrid` renders class slots (Layer 1) and personal slots (Layer 2) in the same `Stack` |
-| Three views | Class Only / Both / Personal Only — implemented as a `PageView` (swipe left/right) |
-| Page indicator | Shows which layer view is active |
-| Add personal slot | Bottom sheet with category, recurrence, time, color |
-| Personal slot detail | Tap to view / delete |
-
-**Isar schemas:** `PersonalSlotModel`
-
-**Timetable views:**
-- Page 0 = Class Only
-- Page 1 = Both (default)
-- Page 2 = Personal Only
-
----
-
-### Phase 4 — Study Session Tracking
-
-**Route:** `/sessions`
-
-| Feature | Description |
-|---|---|
-| Course picker | Merged list of CWA courses + today's timetable slots |
-| Start / stop timer | Tapping a course starts the global session timer |
-| Wall-clock anchor | Timer stores `sessionStartTime` as `DateTime`; elapsed = `DateTime.now().difference(sessionStartTime)` — survives Android app pauses |
-| Global session state | `activeSessionProvider` lives above `ShellRoute`, survives tab switches |
-| Floating mini-timer | Visible in the `_AppShell` body overlay when a session is active; tapping returns to Sessions tab |
-| Session history | Chronological list of past sessions with duration and course |
-| Analytics dashboard | Daily total, weekly bar chart, per-course breakdown |
-| Planned vs actual | `PlannedActualAnalyser` compares session records against timetable slots — pure Dart |
-
-**Isar schemas:** `StudySessionModel`
-
----
-
-### Phase 5 — Streak System
-
-**Route:** `/streak`
-
-| Feature | Description |
-|---|---|
-| Study streak | Consecutive days with at least one completed study session |
-| Per-course streak | Streak calculated per individual course |
-| Attendance streak | Days marked as attended, stored in `UserPrefsModel` |
-| Streak calculator | Pure Dart `StreakCalculator` — receives sorted `List<DateTime>`, returns current streak, longest streak, alive/broken state |
-| Alive vs broken logic | If student studied yesterday but not yet today, streak is still alive (day not over) |
-| Milestone system | 12 milestones: 3, 7, 14, 21, 30, 40, 50, 60, 70, 80, 90, 100 days — computed as value objects, no Isar collection |
-| Milestone grid | Visual gallery of locked/unlocked milestones |
-| Next milestone card | Shows the next target and days remaining |
-| Activity heatmap | Calendar-style heatmap of study activity |
-| Course streak list | Per-course streak breakdown |
-| Streak hero card | Current streak + longest streak prominently displayed |
-| Streak summary mini | Compact widget reused in other screens |
-| Attendance tracker | Mark/unmark class attendance days |
-
-**Isar schemas:** `UserPrefsModel` (single-row key/value store, shared with future features)
-
----
-
-### Phase 12 — AI Integration & Chat History
-
-**Route:** `/ai_chat` (accessible via bottom nav or floating action)
-
-| Feature | Description |
-|---|---|
-| DeepSeek Integration | Direct integration with DeepSeek API via `dart:convert` and `http`. |
-| Context Builder | Injects user's academic context implicitly into AI prompts for personalization. |
-| AI Chat Interface | Streamlined messaging UI with user/assistant bubbles and a typing indicator. |
-| Chat History Tracker | Automatically tracks individual conversations, storing them in Isar as unified sessions. |
-| Chat Sesssion Drawer | `endDrawer` interface listing previous conversations allowing users to switch chats. |
-| AI Usage Limits | Local usage counter (`ai_usage_table`) capping non-premium users to 3 generic prompts per day. |
-| Premium Paywall | Gateway widget substituting chat inputs when free-tier users exceed their limit. |
-
-### Phase 14 — Exam Prep Generator + Smart Notifications
-
-**Route:** `/ai/exam-prep`
-
-| Feature | Description |
-|---|---|
-| Exam Prep Generator | AI-powered question generator for any course with 3 formats: MCQ, Short Answer, and Flashcards. |
-| MCQ Interaction | Reveal correct answer and AI explanation on selection with animations. |
-| Flashcard Animation | Realistic 3D-style flip animation using `flutter_animate`. |
-| Background notifications | Periodic background tasks via `Workmanager` checking steak status. |
-| Personalized Alerts | DeepSeek-generated motivational messages for streak-at-risk notifications. |
-| Notification Service | Centralized management of local notifications (immediate and scheduled). |
-| Permission Guard | One-time custom dialog for notification permissions before enabling smart features. |
-
-**Isar schemas:** No new schemas (uses ephemeral state for questions; updates `UserPrefsModel`).
-
----
-
-## Isar Collections (full list)
-
-| Collection | Feature | Purpose |
+| Collection | Context | Purpose |
 |---|---|---|
-| `CourseModel` | CWA | Courses with credit hours + expected scores |
-| `TimetableSlotModel` | Timetable | Official class slots (Layer 1) |
-| `PersonalSlotModel` | Timetable | Personal/recurring slots (Layer 2) |
-| `StudySessionModel` | Sessions | Completed study session records |
-| `UserPrefsModel` | Core / Streak | Single-row key/value persistent flags (attended days, etc.) |
-| `AiMessageModel` | AI Chat | Individual user/assistant chat messages |
-| `AiChatSessionModel` | AI Chat | Individual chat session containers mapping history |
-| `AiUsageModel` | AI Limits | Tracks daily usage and limits for free-tier queries |
-| `SubscriptionModel` | Payments | Tracks premium status and subscription details |
-| `StudyPlanModel` | AI Planner | Container for AI-generated study plans |
-| `StudyPlanSlotModel` | AI Planner | Individual tasks/slots within a study plan |
-| `WeeklyReviewModel` | AI Planner | Weekly summary and performance analysis |
-| `DailyPlanTaskModel` | Planning | Daily tasks and checklist items |
-| `ExamModel` | Planning | Exam dates and specific study targets |
+| `CourseModel` | CWA | Academic courses, credits, and target grades. |
+| `TimetableSlotModel` | Timetable | Official university class schedules. |
+| `PersonalSlotModel` | Timetable | Recurring personal tasks and study blocks. |
+| `StudySessionModel` | Sessions | Logged study time records. |
+| `UserPrefsModel` | Core | App state, attendance tracker, and featured flags. |
+| `AiMessageModel` | AI | Persistent chat message history. |
+| `AiChatSessionModel` | AI | Container for unified chat threads. |
+| `AiUsageModel` | AI | Daily rate-limiting for free-tier users. |
+| `StudyPlanModel` | Plan | Container for AI-generated daily study schedules. |
+| `StudyPlanSlotModel` | Plan | Individual tasks within an AI study plan. |
+| `DailyPlanTaskModel` | Plan | Unified task list items (Classes + Study + Manual). |
+| `ExamModel` | Plan | Exam event tracker with dates and venues. |
+| `WeeklyReviewModel` | Review | Weekly performance evaluations stored as history. |
+| `SubscriptionModel` | Payments | User premium status and entitlement data. |
 
 ---
 
 ## Dependencies
 
-### Runtime
-
-| Package | Version | Purpose |
+| Package | Version | Layer |
 |---|---|---|
-| flutter_riverpod | ^2.5.1 | State management |
-| riverpod_annotation | ^2.3.5 | Riverpod code-gen annotations |
-| isar | ^3.1.0+1 | Local database |
-| isar_flutter_libs | ^3.1.0+1 | Isar native binaries |
-| path_provider | ^2.1.3 | Database directory |
-| go_router | ^14.2.0 | Navigation + ShellRoute |
-| google_fonts | ^6.2.1 | Inter typeface |
-| flutter_animate | ^4.5.0 | Animation utilities |
-| intl | ^0.19.0 | Number / date formatting |
-| http | ^1.2.0 | DeepSeek API integration |
-| flutter_dotenv | ^5.1.0 | Environment Variables / API Key isolation |
-| flutter_local_notifications | ^17.2.2 | Local push notifications |
-| timezone | ^0.9.4 | Timezone data for scheduling |
-| workmanager | ^0.9.0 | Background task execution |
-
-### Dev
-
-| Package | Version | Purpose |
-|---|---|---|
-| build_runner | ^2.4.11 | Code generation runner |
-| isar_generator | ^3.1.0+1 | Isar schema codegen |
-| riverpod_generator | ^2.3.9 | Riverpod codegen (pinned — see Issues) |
+| `flutter_riverpod` | ^2.5.1 | State Management |
+| `isar` | ^3.1.0+1 | Local Database |
+| `go_router` | ^14.2.0 | Navigation |
+| `flutter_animate` | ^4.5.0 | Dynamic UI |
+| `flutter_local_notifications`| ^21.0.0 | System Alerts |
+| `workmanager` | ^0.9.0 | Background Tasks |
+| `http` | ^1.2.0 | Networking |
+| `flutter_dotenv` | ^5.1.0 | Environment Config |
+| `timezone` | ^0.11.0 | Scheduling Logic |
 
 ---
 
 ## Key Engineering Decisions
 
-### 1. Timer reliability on Android
-`Stopwatch` and `Timer.periodic` counters are killed when Android pauses background isolates. The session timer stores `sessionStartTime` as a `DateTime` anchor. Elapsed time is always computed as `DateTime.now().difference(sessionStartTime)`, giving correct results even after the app is paused or backgrounded.
+### 1-7: MVP Core Decisions
+*(See previous reports for details on Timer Reliability, ShellRoute Mini-Timers, and Recurrence Expansion)*
 
-### 2. Global session state above ShellRoute
-`activeSessionProvider` is scoped to `ProviderScope` (above the `ShellRoute`), so it survives tab switches. The floating mini-timer widget reads the same provider and is rendered inside `_AppShell` as an `Overlay`/`Stack`, always visible when a session is active.
+### 8. Background Isolation Strategy
+Workmanager tasks run in a separate entry-point isolate. We re-open Isar in the background to access session history for streak checks, and re-load `.env` for DeepSeek API calls. This ensures background notifications are truly personalised without relying on a running UI thread.
 
-### 3. Recurring slots — no duplicated Isar rows
-Recurring personal slots are stored once with a `recurrenceType` field. The pure Dart `SlotExpander` reads stored slots and expands them into concrete instances for the currently viewed day before the grid renders. Isar stays clean; the grid always receives a flat `List<PersonalSlotModel>`.
+### 9. Unified Plan Screen (Exam Mode)
+Rather than a separate route, the Plan tab dynamically morphs into Exam Mode. This ensures the student remains focused on their priority tasks (exams) without losing access to their daily routine.
 
-### 4. Streak calculation without a dedicated Isar schema
-Streak state is computed entirely from existing data. Study streak reads `StudySessionModel`; attendance streak reads a JSON-encoded list in `UserPrefsModel`. No new collection needed. Milestones are pure value objects — computed on every provider rebuild.
-
-### 5. Dependency conflict — `isar_generator` vs `riverpod_generator`
-`isar_generator 3.x` requires `analyzer >=4.6.0 <6.0.0`. `riverpod_generator >=2.4.2` requires `analyzer ^6.x`. These are mutually exclusive. Fixed by pinning `riverpod_generator: ^2.3.9` (resolves to 2.4.0). `riverpod_lint` and `custom_lint` removed — they are optional lint tools with no build-time role.
-
-### 6. AGP 8.x namespace error for `isar_flutter_libs`
-`isar_flutter_libs 3.1.0+1` ships a Groovy `build.gradle` without a `namespace` declaration. AGP 8+ requires it. Fixed with a `plugins.withId("com.android.library")` hook in `android/build.gradle.kts` that injects the namespace from the project group before evaluation. Using `afterEvaluate` failed because `evaluationDependsOn(":app")` had already triggered sibling project evaluation.
-
-### 7. Dual-layer timetable as PageView
-Three timetable views (Class Only / Both / Personal Only) are implemented as a three-page `PageView` rather than toggle buttons. This gives a natural swipe gesture and avoids conditional render complexity in the grid.
+### 10. AI Contextual Awareness
+The `ContextBuilder` transforms raw Isar data into prompt-friendly markdown strings. The AI "sees" the student's entire academic profile before answering, preventing generic "hallucinations" and providing Ghanaian-specific advice.
 
 ---
 
@@ -399,39 +159,18 @@ Three timetable views (Class Only / Both / Personal Only) are implemented as a t
 
 ```bash
 flutter pub get
-dart run build_runner build --delete-conflicting-outputs   # after ANY model change
-flutter analyze
+dart run build_runner build --delete-conflicting-outputs
 flutter run
 ```
 
 ---
 
-## Git History (MVP milestones)
+## Git History (Milestones)
 
-| Commit | Message |
+| Commit | Summary |
 |---|---|
-| Phase 1 | `feat: Phase 1 complete — CWA Target Planner` |
-| Phase 2 | `feat: Phase 2 complete — Class Timetable + Free Time Detection` |
-| Phase 3 | `feat: Phase 3 complete — Personal Timetable + Dual Layer View` |
-| Phase 4 S1 | `feat(session): StudySession Isar model + domain analyser + global timer state` |
-| Phase 4 S2 | `feat(session): course picker, timer widgets, analytics cards, floating mini-timer` |
-| Phase 4 | `feat: Phase 4 complete — Study Session Tracking + Analytics Dashboard` |
-| Phase 5 S1 | `feat(streak): Phase 5 Session 1 — Streak domain models + Isar setup` |
-| Phase 5 S2 | `feat(streak): Phase 5 Session 2 — Streak UI widgets` |
-| Phase 5 | `feat: Phase 5 complete — Streak System. CampusIQ MVP done.` |
-| Post-MVP UX | `Timetable Add Class UX Improvements (CWA Course Fast-Select)` |
-| Phase 12 | `ai chat bot updated with option to choose past conversations` |
-| Phase 14 | `phase 14 exam prep plus notification` |
-
----
-
-## What Comes Next (Post-MVP)
-
-| Feature | Notes |
-|---|---|
-| Notifications | Study reminders, streak-at-risk alerts |
-| Semester switcher | Archive/restore courses and timetable per semester |
-| What-if scenario planner | Uses `CwaCalculator.whatIf()` already in domain layer |
-| Onboarding flow | University + programme picker, initial target CWA setup |
-| Multi-university support | Extend beyond KNUST |
-| Cloud sync | Optional backup of Isar data |
+| Phase 1-5 | MVP Core (CWA, Table, Sessions, Streak) |
+| Phase 12 | AI Infrastructure & Context-Aware Chat |
+| Phase 13 | CWA AI Coach & Goal Analysis |
+| Phase 14 | Exam Prep & Workmanager Notifications |
+| Phase 15 | AI Study Planning & Weekly Performance Reviews |
