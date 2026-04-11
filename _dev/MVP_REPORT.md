@@ -132,6 +132,31 @@ lib/
 │               ├── next_milestone_card.dart
 │               ├── streak_hero_card.dart
 │               └── streak_summary_mini.dart
+│   ├── ai/                                        — Phase 12
+│   │   ├── data/
+│   │   │   ├── models/
+│   │   │   │   ├── ai_message_model.dart
+│   │   │   │   ├── ai_chat_session_model.dart
+│   │   │   │   └── ai_usage_model.dart
+│   │   │   └── repositories/
+│   │   │       ├── ai_chat_repository.dart
+│   │   │       └── ai_usage_repository.dart
+│   │   ├── domain/
+│   │   │   ├── context_builder.dart
+│   │   │   ├── deepseek_api_client.dart
+│   │   │   └── prompt_templates.dart
+│   │   └── presentation/
+│   │       ├── providers/
+│   │       │   ├── ai_chat_provider.dart
+│   │       │   ├── ai_usage_provider.dart
+│   │       │   └── ai_providers.dart
+│   │       ├── screens/ai_chat_screen.dart
+│   │       └── widgets/
+│   │           ├── ai_chat_history_drawer.dart
+│   │           ├── ai_message_bubble.dart
+│   │           ├── ai_typing_indicator.dart
+│   │           ├── premium_gate_widget.dart
+│   │           └── usage_counter_chip.dart
 └── shared/
     ├── extensions/double_extensions.dart
     └── widgets/empty_state_widget.dart
@@ -147,6 +172,7 @@ lib/
 | `/timetable` | Class + Personal Timetable (dual layer, swipe) |
 | `/sessions` | Study Session Tracker + Analytics Dashboard |
 | `/streak` | Streak System + Milestone Gallery |
+| `/ai_chat` | AI Coach & Academic Assistant Chatbot |
 
 Navigation uses a `ShellRoute` so the bottom nav bar and floating mini-timer persist across tab switches.
 
@@ -260,6 +286,24 @@ Navigation uses a `ShellRoute` so the bottom nav bar and floating mini-timer per
 
 ---
 
+### Phase 12 — AI Integration & Chat History
+
+**Route:** `/ai_chat` (accessible via bottom nav or floating action)
+
+| Feature | Description |
+|---|---|
+| DeepSeek Integration | Direct integration with DeepSeek API via `dart:convert` and `http`. |
+| Context Builder | Injects user's academic context implicitly into AI prompts for personalization. |
+| AI Chat Interface | Streamlined messaging UI with user/assistant bubbles and a typing indicator. |
+| Chat History Tracker | Automatically tracks individual conversations, storing them in Isar as unified sessions. |
+| Chat Sesssion Drawer | `endDrawer` interface listing previous conversations allowing users to switch chats. |
+| AI Usage Limits | Local usage counter (`ai_usage_table`) capping non-premium users to 3 generic prompts per day. |
+| Premium Paywall | Gateway widget substituting chat inputs when free-tier users exceed their limit. |
+
+**Isar schemas:** `AiMessageModel`, `AiChatSessionModel`, `AiUsageModel`
+
+---
+
 ## Isar Collections (full list)
 
 | Collection | Feature | Purpose |
@@ -269,6 +313,9 @@ Navigation uses a `ShellRoute` so the bottom nav bar and floating mini-timer per
 | `PersonalSlotModel` | Timetable | Personal/recurring slots (Layer 2) |
 | `StudySessionModel` | Sessions | Completed study session records |
 | `UserPrefsModel` | Core / Streak | Single-row key/value persistent flags (attended days, etc.) |
+| `AiMessageModel` | AI Chat | Individual user/assistant chat messages |
+| `AiChatSessionModel` | AI Chat | Individual chat session containers mapping history |
+| `AiUsageModel` | AI Limits | Tracks daily usage and limits for free-tier queries |
 
 ---
 
@@ -287,6 +334,8 @@ Navigation uses a `ShellRoute` so the bottom nav bar and floating mini-timer per
 | google_fonts | ^6.2.1 | Inter typeface |
 | flutter_animate | ^4.5.0 | Animation utilities |
 | intl | ^0.19.0 | Number / date formatting |
+| http | ^1.2.0 | DeepSeek API integration |
+| flutter_dotenv | ^5.1.0 | Environment Variables / API Key isolation |
 
 ### Dev
 
@@ -348,6 +397,7 @@ flutter run
 | Phase 5 S2 | `feat(streak): Phase 5 Session 2 — Streak UI widgets` |
 | Phase 5 | `feat: Phase 5 complete — Streak System. CampusIQ MVP done.` |
 | Post-MVP UX | `Timetable Add Class UX Improvements (CWA Course Fast-Select)` |
+| Phase 12 | `ai chat bot updated with option to choose past conversations` |
 
 ---
 
