@@ -31,24 +31,27 @@ class CourseCard extends ConsumerStatefulWidget {
 
 class _CourseCardState extends ConsumerState<CourseCard> {
   late double _sliderValue;
+  late double _savedScore; // score at the time this card was mounted — does not change during drag
 
   @override
   void initState() {
     super.initState();
     _sliderValue = widget.course.expectedScore;
+    _savedScore = widget.course.expectedScore;
   }
 
   @override
   void didUpdateWidget(CourseCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If saved score changed externally (e.g., different course), reset slider
+    // Only reset when the card switches to a different course entirely
     if (oldWidget.course.id != widget.course.id) {
       _sliderValue = widget.course.expectedScore;
+      _savedScore = widget.course.expectedScore;
     }
   }
 
   String get _courseId => widget.course.id.toString();
-  bool get _isAdjusted => (_sliderValue - widget.course.expectedScore).abs() > 0.5;
+  bool get _isAdjusted => (_sliderValue - _savedScore).abs() >= 1.0;
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +132,7 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                 ref.read(whatifProvider.notifier).setAdjustedScore(
                   _courseId,
                   value,
-                  widget.course.expectedScore,
+                  _savedScore,
                 );
                 widget.onScoreChanged(value);
               },
@@ -166,7 +169,7 @@ class _CourseCardState extends ConsumerState<CourseCard> {
         courseCode: widget.course.code,
         courseName: widget.course.name,
         creditHours: widget.course.creditHours.toInt(),
-        originalScore: widget.course.expectedScore,
+        originalScore: _savedScore,
         newScore: _sliderValue,
         originalCwa: originalCwa,
         newCwa: newCwa,
