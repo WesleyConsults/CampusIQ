@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/features/settings/presentation/providers/settings_provider.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 
@@ -128,6 +130,11 @@ class SettingsScreen extends ConsumerWidget {
 
             const SizedBox(height: 32),
 
+            // ── DEV ONLY: premium toggle ──────────────────────────────────
+            if (kDebugMode) _DevPremiumTile(),
+
+            const SizedBox(height: 32),
+
             // ── Cancel all button ────────────────────────────────────────
             OutlinedButton.icon(
               onPressed: () async {
@@ -156,6 +163,47 @@ class SettingsScreen extends ConsumerWidget {
     final suffix = hour < 12 ? 'AM' : 'PM';
     final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
     return '${h.toString()}:${minute.toString().padLeft(2, '0')} $suffix';
+  }
+}
+
+class _DevPremiumTile extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPremiumAsync = ref.watch(isPremiumProvider);
+    return isPremiumAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (isPremium) => Card(
+        color: Colors.amber.shade50,
+        child: ListTile(
+          leading: const Icon(Icons.developer_mode, color: Colors.amber),
+          title: const Text('DEV: Premium status',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          subtitle: Text(
+            isPremium ? 'Currently: Premium' : 'Currently: Free',
+            style: TextStyle(
+              fontSize: 12,
+              color: isPremium ? Colors.green.shade700 : Colors.grey,
+            ),
+          ),
+          trailing: Switch(
+            value: isPremium,
+            activeThumbColor: AppTheme.primary,
+            onChanged: (v) async {
+              final repo = await ref.read(subscriptionRepositoryProvider.future);
+              await repo.devSetPremium(v);
+              ref.invalidate(isPremiumProvider);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(v ? 'Premium ON' : 'Premium OFF'),
+                  duration: const Duration(seconds: 1),
+                ));
+              }
+            },
+          ),
+        ),
+      ),
+    );
   }
 }
 
