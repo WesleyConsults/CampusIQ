@@ -1,4 +1,4 @@
-# CampusIQ — Phase 11: AI Infrastructure
+# CampusIQ — Phase 12: AI Infrastructure
 ## DeepSeek Client · Quota System · Subscription Model · AI Chat Screen
 
 ---
@@ -8,7 +8,7 @@
 **Phase:** 11 of 16  
 **Sessions required:** 2  
 **Depends on:** Phases 1–5 complete (MVP done)  
-**Unlocks:** Phases 12–14 (all AI features depend on this phase)
+**Unlocks:** Phases 13–15 (all AI features depend on this phase)
 
 **What this phase delivers:**
 - DeepSeek API client (pure Dart, no Flutter deps)
@@ -508,7 +508,7 @@ Run build_runner after all providers are annotated.
 ---
 
 ### Session 1 Checkpoint
-Commit: `feat(phase-11): AI backend — DeepSeek client, context builder, usage quota, subscription model`
+Commit: `feat(phase-12): AI backend — DeepSeek client, context builder, usage quota, subscription model`
 
 Verify before committing:
 - [ ] `.env` is in `.gitignore`
@@ -725,7 +725,7 @@ Also call `subscriptionRepository.checkAndDowngrade()` in `app.dart` or `main.da
 ---
 
 ### Session 2 Checkpoint
-Commit: `feat(phase-11): AI chat screen, premium gate, usage counter, bottom nav update`
+Commit: `feat(phase-12): AI chat screen, premium gate, usage counter, bottom nav update`
 
 Verify before committing:
 - [ ] AI tab visible in bottom nav
@@ -738,8 +738,8 @@ Verify before committing:
 
 ---
 
-## Phase 11 Done — Final Commit
-`feat: Phase 11 complete — AI infrastructure, DeepSeek client, chat screen, subscription model`
+## Phase 12 Done — Final Commit
+`feat: Phase 12 complete — AI infrastructure, DeepSeek client, chat screen, subscription model`
 
 Update `CLAUDE.md` with:
 - DeepSeek client location and usage pattern

@@ -1,13 +1,13 @@
-# CampusIQ — Phase 12: Smart CWA Coach + What-If AI Explainer
+# CampusIQ — Phase 13: Smart CWA Coach + What-If AI Explainer
 
 ---
 
 ## Session Overview
 
-**Phase:** 12 of 16  
+**Phase:** 13 of 16  
 **Sessions required:** 1  
 **Depends on:** Phase 11 complete (DeepSeek client, context builder, usage quota, subscription provider all working)  
-**Unlocks:** Phase 13
+**Unlocks:** Phase 14
 
 **What this phase delivers:**
 - AI-powered CWA coach accessible from the existing CWA screen
@@ -264,7 +264,7 @@ Pass slider value changes to `WhatIfProvider` via `ref.read(whatifProvider.notif
 
 ## Commit
 
-`feat: Phase 12 complete — CWA AI coach + what-if explainer`
+`feat: Phase 13 complete — CWA AI coach + what-if explainer`
 
 Update `CLAUDE.md` with:
 - `CwaCoachSheet` location and how to open it

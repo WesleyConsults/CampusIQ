@@ -1,4 +1,4 @@
-# CampusIQ — Phase 15: Subscription Paywall + Payment Integration
+# CampusIQ — Phase 17: Subscription Paywall + Payment Integration
 
 ---
 
@@ -7,7 +7,7 @@
 **Phase:** 15 of 16  
 **Sessions required:** 2  
 **Depends on:** Phase 11 (subscription model in Isar), Phases 12–14 (premium gates to unlock)  
-**Unlocks:** Phase 16
+**Unlocks:** Phase 18
 
 **What this phase delivers:**
 - Full subscription screen replacing the Phase 11 stub
@@ -306,7 +306,7 @@ Use `flutter_animate` for a scale + fade entrance animation on the checkmark.
 
 ### Session 1 Checkpoint
 
-Commit: `feat(phase-15): subscribe screen, Paystack integration, payment success`
+Commit: `feat(phase-17): subscribe screen, Paystack integration, payment success`
 
 Verify:
 - [ ] Paystack checkout opens successfully (test in sandbox mode first)
@@ -442,7 +442,7 @@ On tap "Restore Access":
 5. Show success snackbar: "Premium restored successfully"
 6. Close the sheet
 
-> **Note:** Phase 15 does not do server-side verification of the transaction reference. This is acceptable for early launch — the number of fraudulent attempts will be near zero at small scale. Server verification can be added in a future patch if needed.
+> **Note:** Phase 17 does not do server-side verification of the transaction reference. This is acceptable for early launch — the number of fraudulent attempts will be near zero at small scale. Server verification can be added in a future patch if needed.
 
 ---
 
@@ -480,7 +480,7 @@ This handles expired subscriptions automatically every launch. If a monthly subs
 
 ### Session 2 Checkpoint
 
-Commit: `feat(phase-15): account screen, subscription status, restore purchase, support email`
+Commit: `feat(phase-17): account screen, subscription status, restore purchase, support email`
 
 Verify:
 - [ ] Account screen shows correct tier and expiry for both free and premium states
@@ -493,9 +493,9 @@ Verify:
 
 ---
 
-## Phase 15 Done — Final Commit
+## Phase 17 Done — Final Commit
 
-`feat: Phase 15 complete — subscription paywall, Paystack MoMo, account management`
+`feat: Phase 17 complete — subscription paywall, Paystack MoMo, account management`
 
 Update `CLAUDE.md` with:
 - Paystack initialisation in `main.dart`

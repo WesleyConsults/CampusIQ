@@ -1,4 +1,4 @@
-# CampusIQ — Phase 13: Auto-Generated Study Plan + Weekly AI Review
+# CampusIQ — Phase 15: Auto-Generated Study Plan + Weekly AI Review
 
 ---
 
@@ -7,7 +7,7 @@
 **Phase:** 13 of 16  
 **Sessions required:** 2  
 **Depends on:** Phase 11 (AI infrastructure), Phase 12 (context builder patterns established)  
-**Unlocks:** Phase 14
+**Unlocks:** Phase 16
 
 **What this phase delivers:**
 - Auto-generated 7-day study plan using real timetable free block data
@@ -240,7 +240,7 @@ For free users on the Plan tab: render `PlanFreeGateCard` instead of the real pl
 
 ### Session 1 Checkpoint
 
-Commit: `feat(phase-13): study plan — Isar schemas, provider, plan generation, sessions tab`
+Commit: `feat(phase-15): study plan — Isar schemas, provider, plan generation, sessions tab`
 
 Verify:
 - [ ] `dart run build_runner build --delete-conflicting-outputs` runs clean
@@ -464,7 +464,7 @@ In `ai_chat_screen.dart`, add `WeeklyReviewBanner` at the very top of the screen
 
 ### Session 2 Checkpoint
 
-Commit: `feat(phase-13): weekly review — Isar schema, generation, screen, free gate, AI tab banner`
+Commit: `feat(phase-15): weekly review — Isar schema, generation, screen, free gate, AI tab banner`
 
 Verify:
 - [ ] Weekly review generates correctly on first Monday open
@@ -477,9 +477,9 @@ Verify:
 
 ---
 
-## Phase 13 Done — Final Commit
+## Phase 15 Done — Final Commit
 
-`feat: Phase 13 complete — auto study plan + weekly AI review`
+`feat: Phase 15 complete — auto study plan + weekly AI review`
 
 Update `CLAUDE.md` with:
 - `StudyPlanModel`, `StudyPlanSlotModel`, `WeeklyReviewModel` added to Isar
