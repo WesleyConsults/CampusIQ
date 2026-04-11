@@ -101,61 +101,81 @@ class _AppShell extends ConsumerWidget {
             FloatingMiniTimer(onTap: () => context.go('/sessions')),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _locationToIndex(context),
-        onDestinationSelected: (i) {
-          switch (i) {
-            case 0: context.go('/plan');
-            case 1: context.go('/cwa');
-            case 2: context.go('/timetable');
-            case 3: context.go('/sessions');
-            case 4: context.go('/streak');
-            case 5: context.go('/ai');
-          }
-        },
-        destinations: [
-          NavigationDestination(
-            icon: examModeActive
-                ? const Icon(Icons.whatshot, color: Colors.deepOrange)
-                : const Icon(Icons.checklist_rounded),
-            selectedIcon: examModeActive
-                ? const Icon(Icons.whatshot, color: Colors.deepOrange)
-                : const Icon(Icons.checklist_rounded),
-            label: examModeActive ? 'Exam Mode' : 'Plan',
+      bottomNavigationBar: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            final isSelected = states.contains(WidgetState.selected);
+            return TextStyle(
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              overflow: TextOverflow.ellipsis,
+            );
+          }),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            return const IconThemeData(size: 20);
+          }),
+          indicatorShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.school_outlined),
-            selectedIcon: Icon(Icons.school),
-            label: 'CWA',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.calendar_today_outlined),
-            selectedIcon: Icon(Icons.calendar_today),
-            label: 'Timetable',
-          ),
-          NavigationDestination(
-            icon: isSessionActive
-                ? const Icon(Icons.timer, color: Colors.red)
-                : const Icon(Icons.timer_outlined),
-            selectedIcon: const Icon(Icons.timer),
-            label: 'Sessions',
-          ),
-          NavigationDestination(
-            icon: hasLossRisk
-                ? const Badge(
-                    label: Text('!'),
-                    child: Icon(Icons.local_fire_department_outlined),
-                  )
-                : const Icon(Icons.local_fire_department_outlined),
-            selectedIcon: const Icon(Icons.local_fire_department),
-            label: 'Streak',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.auto_awesome_outlined),
-            selectedIcon: Icon(Icons.auto_awesome),
-            label: 'AI Coach',
-          ),
-        ],
+        ),
+        child: NavigationBar(
+          height: 64,
+          selectedIndex: _locationToIndex(context),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          onDestinationSelected: (i) {
+            switch (i) {
+              case 0: context.go('/plan');
+              case 1: context.go('/cwa');
+              case 2: context.go('/timetable');
+              case 3: context.go('/sessions');
+              case 4: context.go('/streak');
+              case 5: context.go('/ai');
+            }
+          },
+          destinations: [
+            NavigationDestination(
+              icon: examModeActive
+                  ? const Icon(Icons.whatshot, color: Colors.deepOrange, size: 20)
+                  : const Icon(Icons.checklist_rounded, size: 20),
+              selectedIcon: examModeActive
+                  ? const Icon(Icons.whatshot, color: Colors.deepOrange, size: 20)
+                  : const Icon(Icons.checklist_rounded, size: 20),
+              label: examModeActive ? 'Exam' : 'Plan',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.school_outlined, size: 20),
+              selectedIcon: Icon(Icons.school, size: 20),
+              label: 'CWA',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.calendar_today_outlined, size: 20),
+              selectedIcon: Icon(Icons.calendar_today, size: 20),
+              label: 'Table',
+            ),
+            NavigationDestination(
+              icon: isSessionActive
+                  ? const Icon(Icons.timer, color: Colors.red, size: 20)
+                  : const Icon(Icons.timer_outlined, size: 20),
+              selectedIcon: const Icon(Icons.timer, size: 20),
+              label: 'Sessions',
+            ),
+            NavigationDestination(
+              icon: hasLossRisk
+                  ? const Badge(
+                      label: Text('!', style: TextStyle(fontSize: 8)),
+                      child: Icon(Icons.local_fire_department_outlined, size: 20),
+                    )
+                  : const Icon(Icons.local_fire_department_outlined, size: 20),
+              selectedIcon: const Icon(Icons.local_fire_department, size: 20),
+              label: 'Streak',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.auto_awesome_outlined, size: 20),
+              selectedIcon: Icon(Icons.auto_awesome, size: 20),
+              label: 'AI',
+            ),
+          ],
+        ),
       ),
     );
   }
