@@ -16,6 +16,11 @@ class UserPrefsModel {
   DateTime? lastOpenedDate;
 
   // ── Notification preferences ─────────────────────────────────────────────
+
+  /// Whether the user has already been shown the notification permission dialog.
+  /// Set to true after they tap either "Allow" or "Not now".
+  bool notificationPermissionAsked = false;
+
   bool notifyStudyReminders = true;
   bool notifyStreakAlerts = true;
   bool notifyMilestoneAlerts = true;

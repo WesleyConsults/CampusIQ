@@ -54,6 +54,12 @@ class UserPrefsRepository {
   /// Returns the full prefs object (for reading notification settings).
   Future<UserPrefsModel> getPrefs() => _getOrCreate();
 
+  Future<void> setNotificationPermissionAsked(bool value) async {
+    final prefs = await _getOrCreate();
+    prefs.notificationPermissionAsked = value;
+    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+  }
+
   Future<void> setNotifyStudyReminders(bool value) async {
     final prefs = await _getOrCreate();
     prefs.notifyStudyReminders = value;

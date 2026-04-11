@@ -62,28 +62,33 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'lastReviewShownWeek',
       type: IsarType.string,
     ),
-    r'notifyMilestoneAlerts': PropertySchema(
+    r'notificationPermissionAsked': PropertySchema(
       id: 9,
+      name: r'notificationPermissionAsked',
+      type: IsarType.bool,
+    ),
+    r'notifyMilestoneAlerts': PropertySchema(
+      id: 10,
       name: r'notifyMilestoneAlerts',
       type: IsarType.bool,
     ),
     r'notifyStreakAlerts': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'notifyStreakAlerts',
       type: IsarType.bool,
     ),
     r'notifyStudyReminders': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'notifyStudyReminders',
       type: IsarType.bool,
     ),
     r'notifyWeeklyReview': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'notifyWeeklyReview',
       type: IsarType.bool,
     ),
     r'weeklyNotesJson': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'weeklyNotesJson',
       type: IsarType.string,
     )
@@ -129,11 +134,12 @@ void _userPrefsModelSerialize(
   writer.writeDateTime(offsets[6], object.examModeStart);
   writer.writeDateTime(offsets[7], object.lastOpenedDate);
   writer.writeString(offsets[8], object.lastReviewShownWeek);
-  writer.writeBool(offsets[9], object.notifyMilestoneAlerts);
-  writer.writeBool(offsets[10], object.notifyStreakAlerts);
-  writer.writeBool(offsets[11], object.notifyStudyReminders);
-  writer.writeBool(offsets[12], object.notifyWeeklyReview);
-  writer.writeString(offsets[13], object.weeklyNotesJson);
+  writer.writeBool(offsets[9], object.notificationPermissionAsked);
+  writer.writeBool(offsets[10], object.notifyMilestoneAlerts);
+  writer.writeBool(offsets[11], object.notifyStreakAlerts);
+  writer.writeBool(offsets[12], object.notifyStudyReminders);
+  writer.writeBool(offsets[13], object.notifyWeeklyReview);
+  writer.writeString(offsets[14], object.weeklyNotesJson);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -153,11 +159,12 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.id = id;
   object.lastOpenedDate = reader.readDateTimeOrNull(offsets[7]);
   object.lastReviewShownWeek = reader.readString(offsets[8]);
-  object.notifyMilestoneAlerts = reader.readBool(offsets[9]);
-  object.notifyStreakAlerts = reader.readBool(offsets[10]);
-  object.notifyStudyReminders = reader.readBool(offsets[11]);
-  object.notifyWeeklyReview = reader.readBool(offsets[12]);
-  object.weeklyNotesJson = reader.readString(offsets[13]);
+  object.notificationPermissionAsked = reader.readBool(offsets[9]);
+  object.notifyMilestoneAlerts = reader.readBool(offsets[10]);
+  object.notifyStreakAlerts = reader.readBool(offsets[11]);
+  object.notifyStudyReminders = reader.readBool(offsets[12]);
+  object.notifyWeeklyReview = reader.readBool(offsets[13]);
+  object.weeklyNotesJson = reader.readString(offsets[14]);
   return object;
 }
 
@@ -195,6 +202,8 @@ P _userPrefsModelDeserializeProp<P>(
     case 12:
       return (reader.readBool(offset)) as P;
     case 13:
+      return (reader.readBool(offset)) as P;
+    case 14:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1025,6 +1034,16 @@ extension UserPrefsModelQueryFilter
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      notificationPermissionAskedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'notificationPermissionAsked',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
       notifyMilestoneAlertsEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1336,6 +1355,20 @@ extension UserPrefsModelQuerySortBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByNotificationPermissionAsked() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notificationPermissionAsked', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByNotificationPermissionAskedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notificationPermissionAsked', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       sortByNotifyMilestoneAlerts() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notifyMilestoneAlerts', Sort.asc);
@@ -1547,6 +1580,20 @@ extension UserPrefsModelQuerySortThenBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByNotificationPermissionAsked() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notificationPermissionAsked', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByNotificationPermissionAskedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notificationPermissionAsked', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       thenByNotifyMilestoneAlerts() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notifyMilestoneAlerts', Sort.asc);
@@ -1685,6 +1732,13 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByNotificationPermissionAsked() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'notificationPermissionAsked');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByNotifyMilestoneAlerts() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'notifyMilestoneAlerts');
@@ -1789,6 +1843,13 @@ extension UserPrefsModelQueryProperty
       lastReviewShownWeekProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastReviewShownWeek');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, bool, QQueryOperations>
+      notificationPermissionAskedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'notificationPermissionAsked');
     });
   }
 

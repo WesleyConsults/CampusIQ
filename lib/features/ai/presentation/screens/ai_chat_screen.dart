@@ -10,6 +10,9 @@ import 'package:campusiq/features/ai/presentation/widgets/usage_counter_chip.dar
 import 'package:campusiq/features/ai/presentation/widgets/premium_gate_widget.dart';
 import 'package:campusiq/features/ai/presentation/widgets/ai_chat_history_drawer.dart';
 import 'package:campusiq/features/ai/presentation/widgets/weekly_review_banner.dart';
+import 'package:campusiq/core/services/notification_service.dart';
+import 'package:campusiq/features/ai/domain/notification_scheduler.dart';
+import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 
 class AiChatScreen extends ConsumerStatefulWidget {
   const AiChatScreen();
@@ -30,7 +33,53 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
     Future.microtask(() {
       ref.read(aiChatProvider.notifier).loadSessions();
+      _maybeShowNotificationPermissionDialog();
     });
+  }
+
+  Future<void> _maybeShowNotificationPermissionDialog() async {
+    final prefsRepo = ref.read(userPrefsRepositoryProvider);
+    if (prefsRepo == null) return;
+
+    final prefs = await prefsRepo.getPrefs();
+    if (prefs.notificationPermissionAsked) return;
+
+    // Mark as asked immediately so we never show again
+    await prefsRepo.setNotificationPermissionAsked(true);
+
+    if (!mounted) return;
+
+    final allowed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.notifications_outlined, size: 36),
+        title: const Text('Stay on track with CampusIQ',
+            textAlign: TextAlign.center),
+        content: const Text(
+          "We'll remind you when your streak is at risk, "
+          "when you have a free study block, and when your "
+          "weekly review is ready.",
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Allow notifications →'),
+          ),
+        ],
+      ),
+    );
+
+    if (allowed == true) {
+      await NotificationService.instance.requestPermission();
+      await NotificationScheduler.scheduleStreakRiskCheck();
+    }
   }
 
   @override

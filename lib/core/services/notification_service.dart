@@ -77,6 +77,16 @@ class NotificationService {
     );
   }
 
+  /// Explicitly request the POST_NOTIFICATIONS permission on Android 13+.
+  /// Returns true if granted. Safe to call multiple times.
+  Future<bool> requestPermission() async {
+    final result = await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+    return result ?? false;
+  }
+
   // ── Public scheduling methods ─────────────────────────────────────────────
 
   /// Schedule free-block reminders for today.
@@ -221,6 +231,25 @@ class NotificationService {
   Future<void> cancelStudiedTodayAlerts() async {
     await _plugin.cancel(id: 200);
     await _plugin.cancel(id: 201);
+  }
+
+  /// Generic immediate notification — used by background isolate
+  /// (callbackDispatcher) where channel info is passed explicitly.
+  Future<void> showImmediate({
+    required int id,
+    required String title,
+    required String body,
+    required String channelId,
+    required String channelName,
+  }) async {
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: _androidDetails(channelId, channelName),
+      ),
+    );
   }
 
   /// Fire an immediate "streak secured" notification after the first session
