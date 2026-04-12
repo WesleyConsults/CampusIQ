@@ -156,9 +156,30 @@ class CwaScreen extends ConsumerWidget {
           builder: (ctx, setState) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '${temp.toInt()}',
-                style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: AppTheme.primary),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline),
+                    color: AppTheme.primary,
+                    iconSize: 32,
+                    onPressed: temp > 40
+                        ? () => setState(() => temp = (temp - 1).clamp(40, 100))
+                        : null,
+                  ),
+                  Text(
+                    '${temp.toInt()}',
+                    style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: AppTheme.primary),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle_outline),
+                    color: AppTheme.primary,
+                    iconSize: 32,
+                    onPressed: temp < 100
+                        ? () => setState(() => temp = (temp + 1).clamp(40, 100))
+                        : null,
+                  ),
+                ],
               ),
               Slider(
                 value: temp,
