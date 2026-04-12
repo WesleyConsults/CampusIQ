@@ -16,10 +16,12 @@ class AiChatRepository {
         .findAll();
   }
 
-  Future<int> createSession(String feature, String title) async {
+  Future<int> createSession(String feature, String title,
+      {String? courseCode}) async {
     final session = AiChatSessionModel()
       ..feature = feature
       ..title = title
+      ..courseCode = courseCode
       ..createdAt = DateTime.now()
       ..updatedAt = DateTime.now();
 

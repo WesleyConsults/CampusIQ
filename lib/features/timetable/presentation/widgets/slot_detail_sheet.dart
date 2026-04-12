@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
@@ -63,6 +64,22 @@ class SlotDetailSheet extends StatelessWidget {
             label: TimetableConstants.dayFullLabels[slot.dayIndex],
           ),
           const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                context.push('/course/${slot.courseCode}');
+              },
+              icon: const Icon(Icons.open_in_new, size: 16),
+              label: const Text('Open Workspace'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.primary,
+                side: const BorderSide(color: AppTheme.primary, width: 0.5),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(

@@ -18,23 +18,28 @@ const AiChatSessionModelSchema = CollectionSchema(
   name: r'AiChatSessionModel',
   id: 3136819479149659837,
   properties: {
-    r'createdAt': PropertySchema(
+    r'courseCode': PropertySchema(
       id: 0,
+      name: r'courseCode',
+      type: IsarType.string,
+    ),
+    r'createdAt': PropertySchema(
+      id: 1,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'feature': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'feature',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -70,6 +75,19 @@ const AiChatSessionModelSchema = CollectionSchema(
           caseSensitive: false,
         )
       ],
+    ),
+    r'courseCode': IndexSchema(
+      id: -3801750468446762910,
+      name: r'courseCode',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'courseCode',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -86,6 +104,12 @@ int _aiChatSessionModelEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.courseCode;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.feature.length * 3;
   bytesCount += 3 + object.title.length * 3;
   return bytesCount;
@@ -97,10 +121,11 @@ void _aiChatSessionModelSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.createdAt);
-  writer.writeString(offsets[1], object.feature);
-  writer.writeString(offsets[2], object.title);
-  writer.writeDateTime(offsets[3], object.updatedAt);
+  writer.writeString(offsets[0], object.courseCode);
+  writer.writeDateTime(offsets[1], object.createdAt);
+  writer.writeString(offsets[2], object.feature);
+  writer.writeString(offsets[3], object.title);
+  writer.writeDateTime(offsets[4], object.updatedAt);
 }
 
 AiChatSessionModel _aiChatSessionModelDeserialize(
@@ -110,11 +135,12 @@ AiChatSessionModel _aiChatSessionModelDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = AiChatSessionModel();
-  object.createdAt = reader.readDateTime(offsets[0]);
-  object.feature = reader.readString(offsets[1]);
+  object.courseCode = reader.readStringOrNull(offsets[0]);
+  object.createdAt = reader.readDateTime(offsets[1]);
+  object.feature = reader.readString(offsets[2]);
   object.id = id;
-  object.title = reader.readString(offsets[2]);
-  object.updatedAt = reader.readDateTime(offsets[3]);
+  object.title = reader.readString(offsets[3]);
+  object.updatedAt = reader.readDateTime(offsets[4]);
   return object;
 }
 
@@ -126,12 +152,14 @@ P _aiChatSessionModelDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -377,10 +405,231 @@ extension AiChatSessionModelQueryWhere
       ));
     });
   }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      courseCodeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'courseCode',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      courseCodeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'courseCode',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      courseCodeEqualTo(String? courseCode) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'courseCode',
+        value: [courseCode],
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterWhereClause>
+      courseCodeNotEqualTo(String? courseCode) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'courseCode',
+              lower: [],
+              upper: [courseCode],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'courseCode',
+              lower: [courseCode],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'courseCode',
+              lower: [courseCode],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'courseCode',
+              lower: [],
+              upper: [courseCode],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
 }
 
 extension AiChatSessionModelQueryFilter
     on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QFilterCondition> {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'courseCode',
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'courseCode',
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'courseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'courseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'courseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'courseCode',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'courseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'courseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'courseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'courseCode',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'courseCode',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
+      courseCodeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'courseCode',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterFilterCondition>
       createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -831,6 +1080,20 @@ extension AiChatSessionModelQueryLinks
 extension AiChatSessionModelQuerySortBy
     on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QSortBy> {
   QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      sortByCourseCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'courseCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      sortByCourseCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'courseCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
       sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
@@ -889,6 +1152,20 @@ extension AiChatSessionModelQuerySortBy
 
 extension AiChatSessionModelQuerySortThenBy
     on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QSortThenBy> {
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      thenByCourseCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'courseCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
+      thenByCourseCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'courseCode', Sort.desc);
+    });
+  }
+
   QueryBuilder<AiChatSessionModel, AiChatSessionModel, QAfterSortBy>
       thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
@@ -963,6 +1240,13 @@ extension AiChatSessionModelQuerySortThenBy
 extension AiChatSessionModelQueryWhereDistinct
     on QueryBuilder<AiChatSessionModel, AiChatSessionModel, QDistinct> {
   QueryBuilder<AiChatSessionModel, AiChatSessionModel, QDistinct>
+      distinctByCourseCode({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'courseCode', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, AiChatSessionModel, QDistinct>
       distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
@@ -996,6 +1280,13 @@ extension AiChatSessionModelQueryProperty
   QueryBuilder<AiChatSessionModel, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<AiChatSessionModel, String?, QQueryOperations>
+      courseCodeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'courseCode');
     });
   }
 

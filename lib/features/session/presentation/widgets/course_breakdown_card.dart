@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/session/domain/planned_actual_analyser.dart';
 
@@ -39,56 +40,60 @@ class _CourseRow extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(stats.courseCode,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13)),
+      child: InkWell(
+        onTap: () => context.push('/course/${stats.courseCode}'),
+        borderRadius: BorderRadius.circular(4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(stats.courseCode,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 13)),
+                ),
+                Text(
+                  stats.plannedMinutes > 0
+                      ? '${stats.formattedActual} / ${stats.formattedPlanned}'
+                      : stats.formattedActual,
+                  style: const TextStyle(
+                      fontSize: 12, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: barFill,
+                minHeight: 6,
+                backgroundColor: Colors.grey.shade200,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isOver
+                      ? AppTheme.success
+                      : barFill > 0.7
+                          ? AppTheme.accent
+                          : AppTheme.warning,
+                ),
               ),
+            ),
+            if (stats.plannedMinutes > 0) ...[
+              const SizedBox(height: 3),
               Text(
-                stats.plannedMinutes > 0
-                    ? '${stats.formattedActual} / ${stats.formattedPlanned}'
-                    : stats.formattedActual,
-                style: const TextStyle(
-                    fontSize: 12, color: AppTheme.textSecondary),
+                isOver
+                    ? 'Extra study — great!'
+                    : 'Need ${_fmt(stats.gapMinutes)} more',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isOver
+                      ? AppTheme.success
+                      : AppTheme.textSecondary,
+                ),
               ),
             ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: barFill,
-              minHeight: 6,
-              backgroundColor: Colors.grey.shade200,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                isOver
-                    ? AppTheme.success
-                    : barFill > 0.7
-                        ? AppTheme.accent
-                        : AppTheme.warning,
-              ),
-            ),
-          ),
-          if (stats.plannedMinutes > 0) ...[
-            const SizedBox(height: 3),
-            Text(
-              isOver
-                  ? 'Extra study — great!'
-                  : 'Need ${_fmt(stats.gapMinutes)} more',
-              style: TextStyle(
-                fontSize: 10,
-                color: isOver
-                    ? AppTheme.success
-                    : AppTheme.textSecondary,
-              ),
-            ),
           ],
-        ],
+        ),
       ),
     );
   }

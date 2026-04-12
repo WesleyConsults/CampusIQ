@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/ai/domain/context_builder.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
@@ -112,8 +113,25 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                   style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                 ),
                 PopupMenuButton<String>(
-                  onSelected: (v) => v == 'edit' ? widget.onEdit() : widget.onDelete(),
+                  onSelected: (v) {
+                    if (v == 'edit') {
+                      widget.onEdit();
+                    } else if (v == 'delete') {
+                      widget.onDelete();
+                    } else if (v == 'workspace') {
+                      context.push('/course/${widget.course.code}');
+                    }
+                  },
                   itemBuilder: (_) => const [
+                    PopupMenuItem(
+                        value: 'workspace',
+                        child: Row(
+                          children: [
+                            Icon(Icons.open_in_new, size: 16),
+                            SizedBox(width: 8),
+                            Text('Open Workspace'),
+                          ],
+                        )),
                     PopupMenuItem(value: 'edit', child: Text('Edit')),
                     PopupMenuItem(value: 'delete', child: Text('Delete')),
                   ],

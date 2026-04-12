@@ -7,12 +7,15 @@ class AiChatSessionModel {
   Id id = Isar.autoIncrement;
 
   @Index()
-  late String feature; // 'chat' | 'insight' etc
-  
+  late String feature; // 'chat' | 'insight' | 'course_<code>' etc
+
   late String title;
-  
+
   late DateTime createdAt;
-  
+
   @Index()
   late DateTime updatedAt;
+
+  @Index()
+  String? courseCode; // non-null for course-scoped hub sessions
 }

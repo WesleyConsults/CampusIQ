@@ -31,6 +31,10 @@ dependencies:
   flutter_animate: ^4.5.0
   intl: ^0.19.0
 
+  # File picking and opening
+  file_picker: ^8.1.2
+  open_filex: ^4.4.1
+
   # Notifications
   flutter_local_notifications: ^21.0.0
   flutter_timezone: ^5.0.2

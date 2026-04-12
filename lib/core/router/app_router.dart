@@ -16,6 +16,7 @@ import 'package:campusiq/features/ai/presentation/screens/ai_chat_screen.dart';
 import 'package:campusiq/features/ai/presentation/screens/exam_prep_screen.dart';
 import 'package:campusiq/features/ai/presentation/screens/subscribe_screen_stub.dart';
 import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.dart';
+import 'package:campusiq/features/course_hub/presentation/screens/course_hub_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/plan',
@@ -79,6 +80,14 @@ final appRouter = GoRouter(
       path: '/ai/exam-prep',
       name: 'exam-prep',
       builder: (context, state) => const ExamPrepScreen(),
+    ),
+    GoRoute(
+      path: '/course/:courseCode',
+      name: 'course-hub',
+      builder: (context, state) {
+        final courseCode = state.pathParameters['courseCode']!;
+        return CourseHubScreen(courseCode: courseCode);
+      },
     ),
   ],
 );
