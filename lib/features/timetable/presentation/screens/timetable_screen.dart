@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/data/models/personal_slot_model.dart';
@@ -171,6 +172,11 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       appBar: AppBar(
         title: const Text('Timetable', style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.document_scanner_outlined),
+            tooltip: 'Import from image',
+            onPressed: () => context.push('/timetable/import'),
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: _onFabTap,

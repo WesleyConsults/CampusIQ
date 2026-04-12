@@ -117,6 +117,11 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Tap an empty time cell on the grid
 - [ ] Add sheet opens with that time pre-filled
 
+### 3.7 Import from image — entry point
+- [ ] Scanner icon (document scanner) is visible in the Timetable AppBar alongside the "+" button
+- [ ] Tap the scanner icon → navigates to `/timetable/import` (no bottom nav visible)
+- [ ] Back arrow returns to the Timetable screen without saving anything
+
 ---
 
 ## 4. Study Sessions (`/sessions`)
@@ -547,7 +552,76 @@ These tests verify features work together correctly.
 
 ---
 
-## 14. Performance & Stability
+## 14. Timetable Image Import (`/timetable/import`)
+
+> **Setup:** requires internet access (DeepSeek Vision API call). Have a clear photo of a university timetable ready — a printed KNUST timetable or a screenshot of one.
+
+### 14.1 Idle screen
+- [ ] Screen shows a scanner icon, a title "Import Timetable", explanatory subtitle text
+- [ ] Two buttons visible: **"Take Photo"** and **"Choose from Gallery"**
+- [ ] No bottom navigation bar is shown
+
+### 14.2 Camera path
+- [ ] Tap **"Take Photo"** → device camera opens
+- [ ] Take a photo of a timetable → camera closes
+- [ ] Screen transitions to **"Extracting timetable…"** loading state (spinner + message)
+- [ ] After API response, screen shows the review list (not a crash or blank screen)
+
+### 14.3 Gallery path
+- [ ] Tap **"Choose from Gallery"** → system image picker opens
+- [ ] Select an existing timetable image → picker closes
+- [ ] Loading state appears ("Extracting timetable…") then review list
+
+### 14.4 Cancel — camera
+- [ ] Tap **"Take Photo"** → camera opens → press back without taking a photo
+- [ ] Returns to the idle screen (no error, no crash)
+
+### 14.5 Cancel — gallery
+- [ ] Tap **"Choose from Gallery"** → picker opens → press back without selecting
+- [ ] Returns to the idle screen
+
+### 14.6 Review screen
+- [ ] At least one slot card is shown for a real timetable image
+- [ ] Each slot tile shows: course code + course name, day, start–end time, venue (if detected), slot type chip
+- [ ] Slot type chip is color-coded: Lecture (navy), Practical (teal), Tutorial (orange)
+- [ ] All slots are pre-selected (checkboxes are ticked) by default
+- [ ] Slot count chip at the top reflects the number found (e.g. "8 slots found")
+- [ ] AppBar shows **"Import (N)"** action button (N = selected count)
+- [ ] Bottom bar shows **"Import N Slot(s)"** button
+
+### 14.7 Select / deselect
+- [ ] Tap a slot tile → checkbox toggles off; "Import (N)" count decrements
+- [ ] Tap again → checkbox toggles back on
+- [ ] Tap **"Deselect All"** → all checkboxes clear; Import button becomes disabled (greyed)
+- [ ] Tap **"Select All"** → all checkboxes re-tick; Import button re-enables
+- [ ] When zero slots selected, bottom bar shows "Select slots to import" (disabled)
+
+### 14.8 Confirm import
+- [ ] With at least one slot selected, tap **"Import N Slot(s)"**
+- [ ] Saving overlay (semi-transparent + spinner) appears briefly
+- [ ] App navigates automatically to `/timetable`
+- [ ] Imported slots appear on the correct days in the Class Timetable grid
+- [ ] No duplicate imports if navigated away and returned
+
+### 14.9 Error — no slots found
+- [ ] Upload a non-timetable image (e.g. a selfie or blank page)
+- [ ] Error state shows: **"No timetable slots found. Try a clearer photo."**
+- [ ] **"Try Again"** button resets to the idle screen
+
+### 14.10 Error — no internet
+- [ ] Turn off internet → pick a timetable image
+- [ ] Error state shows an API error message (not a crash, not a raw stack trace)
+- [ ] **"Try Again"** button resets to idle
+
+### 14.11 Imported slots persist
+- [ ] After a successful import, hot-restart the app
+- [ ] Go to Timetable → imported slots are still present on their respective days
+- [ ] Tap an imported slot → `SlotDetailSheet` opens with correct details
+- [ ] "Open Workspace" on an imported slot navigates to the correct Course Hub
+
+---
+
+## 15. Performance & Stability
 
 - [ ] Scroll the CWA course list quickly — no jank or dropped frames
 - [ ] Scroll the Streak heatmap — no jank

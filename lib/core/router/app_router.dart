@@ -17,6 +17,7 @@ import 'package:campusiq/features/ai/presentation/screens/exam_prep_screen.dart'
 import 'package:campusiq/features/ai/presentation/screens/subscribe_screen_stub.dart';
 import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.dart';
 import 'package:campusiq/features/course_hub/presentation/screens/course_hub_screen.dart';
+import 'package:campusiq/features/timetable/presentation/screens/timetable_import_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/plan',
@@ -88,6 +89,11 @@ final appRouter = GoRouter(
         final courseCode = state.pathParameters['courseCode']!;
         return CourseHubScreen(courseCode: courseCode);
       },
+    ),
+    GoRoute(
+      path: '/timetable/import',
+      name: 'timetable-import',
+      builder: (context, state) => const TimetableImportScreen(),
     ),
   ],
 );

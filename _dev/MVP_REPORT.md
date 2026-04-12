@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-12
 **Package:** com.wesleyconsults.campusiq
-**Status:** MVP Complete (Phases 1–15.1) + Bug Fix Pass
+**Status:** MVP Complete (Phases 1–15.2) + Bug Fix Pass
 
 ---
 
@@ -90,17 +90,22 @@ lib/
 │   │   │   ├── personal_slot_category.dart
 │   │   │   ├── recurrence_type.dart
 │   │   │   ├── slot_expander.dart
-│   │   │   └── timetable_constants.dart
+│   │   │   ├── timetable_constants.dart
+│   │   │   ├── timetable_slot_import.dart          — Phase 15.2: parsed slot value object
+│   │   │   └── timetable_vision_parser.dart        — Phase 15.2: DeepSeek VL2 image → slots
 │   │   └── presentation/
 │   │       ├── providers/timetable_provider.dart
 │   │       ├── providers/personal_slot_provider.dart
+│   │       ├── providers/timetable_import_provider.dart — Phase 15.2: import state machine
 │   │       ├── screens/timetable_screen.dart
+│   │       ├── screens/timetable_import_screen.dart    — Phase 15.2: full-screen import UI
 │   │       └── widgets/
 │   │           ├── add_slot_sheet.dart
 │   │           ├── add_personal_slot_sheet.dart
 │   │           ├── day_selector.dart
 │   │           ├── dual_layer_grid.dart
 │   │           ├── free_block_indicator.dart
+│   │           ├── import_slot_review_tile.dart         — Phase 15.2: review list tile
 │   │           ├── personal_slot_card.dart
 │   │           ├── personal_slot_detail_sheet.dart
 │   │           ├── slot_detail_sheet.dart
@@ -230,7 +235,7 @@ lib/
 │               ├── study_plan_tab.dart            — Phase 15
 │               ├── usage_counter_chip.dart
 │               └── weekly_review_banner.dart      — Phase 15: banner in AI tab
-│   └── course_hub/                                — Phase 15.1
+│   └── course_hub/                                — Phase 15.1 (timetable import lives in timetable/)
 │       ├── data/
 │       │   ├── models/course_note_model.dart      — Isar @collection: notes per course
 │       │   ├── models/course_file_model.dart      — Isar @collection: attached files per course
@@ -275,6 +280,7 @@ lib/
 | `/settings` | Notification Settings + DEV premium toggle | 14 |
 | `/subscribe` | Premium subscription upsell stub | 12+ |
 | `/course/:courseCode` | Course Hub Workspace (6-tab per-course workspace) | 15.1 |
+| `/timetable/import` | Timetable Image Import (full-screen, no bottom nav) | 15.2 |
 
 Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating mini-timer and exam mode nav icon state are rendered inside `_AppShell` and persist across all tab switches. The bottom nav shows: Plan, CWA, Table, Sessions, Streak, AI.
 
@@ -548,6 +554,31 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 
 ---
 
+### Phase 15.2 — DeepSeek Vision Timetable Import
+
+**Route:** `/timetable/import` (full-screen push, no bottom nav; entered via scanner icon in Timetable AppBar)
+
+| Feature | Description |
+|---|---|
+| Image picker | `image_picker` package — student picks from device camera or gallery; `imageQuality: 85` to balance quality and payload size |
+| Size guard | Rejects images over 4 MB before sending to the API — shows a user-friendly error with a retry prompt |
+| TimetableVisionParser | Pure Dart; base64-encodes the image bytes and POSTs a vision-format request to the DeepSeek `deepseek-vl2` model; strips markdown code fences from the response before JSON decoding |
+| TimetableSlotImport | Pure Dart value object; `fromJson` normalises day strings ("Monday", "Mon", "MON", int 0–5), parses 24-hour `HH:MM` time strings to minutes, defaults missing `slot_type` to "Lecture", skips malformed entries silently |
+| Import state machine | `TimetableImportNotifier` (Riverpod `@riverpod` class notifier) drives 7 states: `idle → picking → parsing → reviewing → saving → done → error`; each state renders a different UI body automatically |
+| Review screen | After parsing, shows all extracted slots in a checklist — student can toggle individual slots on/off, or select/deselect all; slot count chip updates live |
+| Confirm & save | Selected slots are assigned cycling colors from `TimetableConstants.slotColorValues` and written to `TimetableRepository.addSlot()` using the active semester key from `activeSemesterProvider` |
+| Auto-navigate | On `done`, resets provider state and `context.go('/timetable')` — no manual navigation needed |
+| Error recovery | Every failure path (no internet, empty parse, oversized image) lands in `error` state with a descriptive message and a "Try Again" button that resets to `idle` |
+| Entry point | Scanner icon (`Icons.document_scanner_outlined`) added to the Timetable screen AppBar alongside the existing "+" button |
+
+**New files:** `domain/timetable_slot_import.dart`, `domain/timetable_vision_parser.dart`, `presentation/providers/timetable_import_provider.dart`, `presentation/screens/timetable_import_screen.dart`, `presentation/widgets/import_slot_review_tile.dart`
+
+**Modified files:** `timetable_screen.dart` (scanner icon), `app_router.dart` (new route), `pubspec.yaml` (`image_picker` dependency)
+
+**Isar schemas:** None (imports directly into existing `TimetableSlotModel`)
+
+---
+
 ## Isar Collections (full list)
 
 | Collection | Feature | Phase | Purpose |
@@ -594,6 +625,7 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | workmanager | ^0.9.0 | Background task execution |
 | file_picker | ^8.1.2 | Native file picker (PDF, images, docs) for Course Hub file attachments |
 | open_filex | ^4.4.1 | Open attached files with the device's default app handler |
+| image_picker | ^1.1.2 | Camera and gallery image picker for timetable image import (Phase 15.2) |
 
 ### Dev
 
