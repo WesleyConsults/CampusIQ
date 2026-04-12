@@ -27,7 +27,7 @@ flutter analyze
 flutter run
 
 ## Current phase
-Phase 14 complete — Exam Prep + Smart Notifications
+Phase 15.1 complete — Course Hub Workspace
 
 ## MVP feature set
 - CWA Target Planner (offline, live calculation)
@@ -37,17 +37,16 @@ Phase 14 complete — Exam Prep + Smart Notifications
 - AI Coach (DeepSeek integration, context-aware chat, history)
 - Exam Prep Generator (MCQ, Short Answer, Flashcards)
 - Smart Notifications (Workmanager, streak protection, personalized alerts)
-
-## Phase 15 (next)
-Weekly review — Isar schema, generation, screen, free gate, AI tab banner
+- Course Hub Workspace (per-course notes, files, sessions, AI chat, flashcards)
 
 ## Routes live
-/cwa          → CWA Target Planner
-/timetable    → Class + Personal Timetable (swipe layers)
-/sessions     → Session Tracker + Analytics Dashboard
-/streak       → Streak System
-/ai_chat      → AI Coach & Academic Assistant Chatbot
-/ai/exam-prep → AI Exam Prep Question Generator
+/cwa                  → CWA Target Planner
+/timetable            → Class + Personal Timetable (swipe layers)
+/sessions             → Session Tracker + Analytics Dashboard
+/streak               → Streak System
+/ai_chat              → AI Coach & Academic Assistant Chatbot
+/ai/exam-prep         → AI Exam Prep Question Generator
+/course/:courseCode   → Course Hub Workspace (full-screen, no bottom nav)
 
 ## Timetable views
 Swipe left/right: Class Only ↔ Both ↔ Personal Only

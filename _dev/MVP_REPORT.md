@@ -1,14 +1,14 @@
 # CampusIQ — MVP Completion Report
 
-**Date:** 2026-04-11
+**Date:** 2026-04-12
 **Package:** com.wesleyconsults.campusiq
-**Status:** MVP Complete (Phases 1–15)
+**Status:** MVP Complete (Phases 1–15.1) + Bug Fix Pass
 
 ---
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking, Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, and Study Plan + Exam Mode.
+CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases plus Phase 15.1: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking, Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, Study Plan + Exam Mode, and Course Hub Workspace (per-course notes, files, sessions, AI chat, and flashcards).
 
 ---
 
@@ -230,6 +230,28 @@ lib/
 │               ├── study_plan_tab.dart            — Phase 15
 │               ├── usage_counter_chip.dart
 │               └── weekly_review_banner.dart      — Phase 15: banner in AI tab
+│   └── course_hub/                                — Phase 15.1
+│       ├── data/
+│       │   ├── models/course_note_model.dart      — Isar @collection: notes per course
+│       │   ├── models/course_file_model.dart      — Isar @collection: attached files per course
+│       │   ├── repositories/course_note_repository.dart
+│       │   └── repositories/course_file_repository.dart
+│       ├── domain/course_hub_context_builder.dart — pure Dart: builds AI system prompt context string
+│       └── presentation/
+│           ├── providers/
+│           │   ├── course_note_provider.dart      — @riverpod Stream family per courseCode
+│           │   ├── course_file_provider.dart      — @riverpod Stream family per courseCode
+│           │   └── hub_ai_provider.dart           — HubAiNotifier.family per courseCode
+│           ├── screens/course_hub_screen.dart     — 6-tab DefaultTabController screen
+│           └── widgets/
+│               ├── hub_overview_tab.dart          — course info, expected score, CWA impact, stats, streak
+│               ├── hub_sessions_tab.dart          — course-scoped bar chart + session history
+│               ├── hub_notes_tab.dart             — note list with FAB, Dismissible delete, edit sheet
+│               ├── hub_files_tab.dart             — file attach (FilePicker), open (OpenFilex), delete
+│               ├── hub_flashcards_tab.dart        — per-course exam prep (hubExamPrepProvider family)
+│               ├── hub_ai_tab.dart                — per-course AI chat (hubAiProvider family)
+│               ├── note_editor_sheet.dart         — DraggableScrollableSheet for create/edit notes
+│               └── file_tile.dart                 — PDF/image file row with open + delete actions
 └── shared/
     ├── extensions/double_extensions.dart
     └── widgets/empty_state_widget.dart
@@ -252,6 +274,7 @@ lib/
 | `/ai/weekly-review` | AI-powered Weekly Review (full screen) | 15 |
 | `/settings` | Notification Settings + DEV premium toggle | 14 |
 | `/subscribe` | Premium subscription upsell stub | 12+ |
+| `/course/:courseCode` | Course Hub Workspace (6-tab per-course workspace) | 15.1 |
 
 Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating mini-timer and exam mode nav icon state are rendered inside `_AppShell` and persist across all tab switches. The bottom nav shows: Plan, CWA, Table, Sessions, Streak, AI.
 
@@ -271,8 +294,8 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | Live CWA calculation | Riverpod stream recalculates instantly on every change |
 | Score slider per course | Drag to adjust expected score; CWA updates in real time |
 | CWA summary bar | Projected CWA, target CWA, gap indicator |
-| High-impact badge | Flags the course with the most credit hours |
-| Target CWA dialog | Set a personal target; gap indicator updates accordingly |
+| High-impact badge | Flags all courses tied for the highest credit hours (previously only the first) |
+| Target CWA dialog | Set a personal target via slider **or** `−`/`+` buttons (±1 step); gap indicator updates accordingly |
 | Isar persistence | Courses survive hot restart and app relaunch |
 | What-if logic | `CwaCalculator.whatIf()` available for future scenario screens |
 
@@ -286,9 +309,11 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 
 | Feature | Description |
 |---|---|
-| Day selector | Swipe or tap to switch between Mon–Sat |
-| Time grid | 6AM–8PM, hourly rows, 30-min resolution |
-| Add class slot | Bottom sheet with fast-select CWA course chips for instant autofill (course code, name, venue, type, time, color) |
+| Day selector | Tap pill to switch day; swipe left/right on the grid to navigate days |
+| Time grid | 6AM–8PM, hourly rows at 60px/hr (1.0 px/min); 30-min resolution |
+| Add class slot | Bottom sheet with fast-select CWA course chips for instant autofill (course code, name, venue, type, time, color); time picker auto-promotes sub-6AM selections to PM; end time auto-advances if ≤ start |
+| Slot card | Shows course code, name, venue, and (for slots ≥ 80 min) start time · type; 3-tier layout avoids overflow on 1-hour slots |
+| Slot overlap handling | Overlapping same-day class slots are split into equal side-by-side lanes via `_assignColumns` — no stacked/unreadable text |
 | Slot detail sheet | Tap slot to view/delete |
 | Free time detector | `FreeTimeDetector` computes contiguous free blocks per day — pure Dart |
 | Free block indicator | Displays free blocks in the grid when no class is scheduled |
@@ -307,18 +332,18 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | Personal slot categories | Study, Gym, Rest, Meal, Side Project, Devotion, Errand, Custom |
 | Recurrence types | One-off, Daily, Weekly |
 | Slot expander | `SlotExpander` expands recurring slots into concrete instances for the active day — no duplicated rows in Isar |
-| Dual layer grid | `DualLayerGrid` renders class slots (Layer 1) and personal slots (Layer 2) in the same `Stack` |
-| Three views | Class Only / Both / Personal Only — implemented as a `PageView` (swipe left/right) |
-| Page indicator | Shows which layer view is active |
-| Add personal slot | Bottom sheet with category, recurrence, time, color |
+| Dual layer grid | `DualLayerGrid` renders class slots (Layer 1) and personal slots (Layer 2) in the same `Stack`; overlapping cross-layer slots (e.g. a class and a study block at the same time) are split into side-by-side lanes in Both view |
+| Three views | Class Only / Both / Personal Only — switched by tapping the `TimetablePageIndicator` labels |
+| Page indicator | Tappable `Class` / `Both` / `Personal` labels; active view highlighted |
+| Add personal slot | Bottom sheet with category, recurrence, time, color; Sunday included in weekly day picker; same AM/PM and time-order validation as class slots |
 | Personal slot detail | Tap to view / delete |
 
 **Isar schemas:** `PersonalSlotModel`
 
 **Timetable views:**
-- Page 0 = Class Only
-- Page 1 = Both (default)
-- Page 2 = Personal Only
+- Index 0 = Class Only
+- Index 1 = Both (default)
+- Index 2 = Personal Only
 
 ---
 
@@ -419,7 +444,7 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 
 | Feature | Description |
 |---|---|
-| CWA Coach sheet | Bottom sheet that calls DeepSeek with the student's full course context and returns personalised academic advice |
+| CWA Coach sheet | Bottom sheet that calls DeepSeek with the student's full course context and returns personalised academic advice; "Ask a follow-up" seeds the AI chat with the coaching advice as an initial assistant message so follow-up questions have full context |
 | What-If Explainer | When a course score slider is dragged away from its saved value, an "Explain" chip appears; tapping it calls DeepSeek for a concise natural-language impact explanation |
 | WhatIfState | `StateNotifier` tracking per-course adjusted scores, loading states, and cached explanations — avoids redundant API calls if the slider hasn't changed |
 | Usage quota | CWA coach shares the `chat` quota (3/day free); what-if uses a separate `whatif` quota (2/day free); premium bypasses both |
@@ -502,6 +527,27 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 
 ---
 
+### Phase 15.1 — Course Hub Workspace
+
+**Route:** `/course/:courseCode` (full-screen push, no bottom nav; entered from CWA course card → Open Workspace, timetable slot detail → Open Workspace, or sessions breakdown → course row tap)
+
+| Feature | Description |
+|---|---|
+| Course Hub Screen | `DefaultTabController(length: 6)` wrapping a Scaffold with a scrollable `TabBar`; resolves the route `courseCode` parameter against `coursesProvider` before rendering |
+| Overview tab | Course info card, expected score with `LinearProgressIndicator` + grade chip, CWA impact card (contribution points, current CWA, weight %), study stats (session count, total time, last studied), streak mini-card |
+| Sessions tab | Course-scoped `WeeklyBarChart` using `PlannedActualAnalyser` with empty class/personal slots; reverse-chronological session list; swipe-to-delete |
+| Notes tab | `StreamProvider`-backed note list; FAB opens `NoteEditorSheet` (create); tap opens edit mode; `Dismissible` swipe to delete |
+| Files tab | `StreamProvider`-backed file list; attach button opens `FilePicker` (PDF, images, docs); file is copied to `appDir/course_files/<courseCode>/`; `OpenFilex` opens file; swipe/delete removes record and physical file |
+| Flashcards tab | Reuses `ExamPrepNotifier` via a separate `hubExamPrepProvider` family (one per courseCode); course chip is pre-seeded and fixed — no course picker shown; reuses all Phase 14 question-type widgets |
+| AI Chat tab | Per-course AI chat backed by `hubAiProvider` family; blue "Focused on [Code] — [Name]" banner at top; shares `chat` quota (3/day free); `HubAiNotifier._buildSystemPrompt()` injects full course context via `CourseHubContextBuilder` |
+| CourseHubContextBuilder | Pure Dart; builds a multi-line context string from `CourseModel`, filtered `StudySessionModel` list, `CourseNoteModel` list, and `StreakResult`; injected into the AI system prompt for focused, context-aware responses |
+| Entry points | CWA screen: "Open Workspace" as first item in course card `PopupMenuButton`; Timetable: "Open Workspace" `OutlinedButton` in slot detail sheet; Sessions: `InkWell` tap on each course row in `CourseBreakdownCard` |
+| History isolation | Hub AI sessions use feature key `'course_<code>'`; `AiChatRepository.createSession` now accepts optional `courseCode` param; `AiChatSessionModel` has a new `@Index() String? courseCode` field |
+
+**Isar schemas:** `CourseNoteModel`, `CourseFileModel` (new); `AiChatSessionModel` (updated — added `courseCode` field)
+
+---
+
 ## Isar Collections (full list)
 
 | Collection | Feature | Phase | Purpose |
@@ -512,7 +558,7 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | `StudySessionModel` | Sessions | 4 | Completed study session records |
 | `UserPrefsModel` | Core / Streak | 5 | Single-row key/value persistent flags (attended days, notification prefs, reflection notes, exam mode, daily goal) |
 | `AiMessageModel` | AI Chat | 12 | Individual user/assistant chat messages |
-| `AiChatSessionModel` | AI Chat | 12 | Individual chat session containers mapping history |
+| `AiChatSessionModel` | AI Chat | 12 | Individual chat session containers; `courseCode` field added in 15.1 for hub session isolation |
 | `AiUsageModel` | AI Limits | 12 | Tracks daily usage and limits per quota type (chat, whatif) |
 | `SubscriptionModel` | Payments | 12 | Tracks premium status and subscription details |
 | `StudyPlanModel` | AI Planner | 15 | Container for AI-generated study plans |
@@ -520,6 +566,8 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | `WeeklyReviewModel` | AI Weekly Review | 15 | Stores AI-generated weekly review text and metadata |
 | `DailyPlanTaskModel` | Daily Plan | 15 | Daily tasks and checklist items with completion state |
 | `ExamModel` | Exam Mode | 15 | Exam dates, course codes, and estimated study hours |
+| `CourseNoteModel` | Course Hub | 15.1 | Per-course markdown notes with title, body, timestamps |
+| `CourseFileModel` | Course Hub | 15.1 | Attached file records (PDF/image) with app-local path |
 
 ---
 
@@ -544,6 +592,8 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | flutter_timezone | ^5.0.2 | Device timezone detection |
 | timezone | ^0.11.0 | Timezone data for scheduling |
 | workmanager | ^0.9.0 | Background task execution |
+| file_picker | ^8.1.2 | Native file picker (PDF, images, docs) for Course Hub file attachments |
+| open_filex | ^4.4.1 | Open attached files with the device's default app handler |
 
 ### Dev
 
@@ -575,8 +625,11 @@ Streak state is computed entirely from existing data. Study streak reads `StudyS
 ### 6. AGP 8.x namespace error for `isar_flutter_libs`
 `isar_flutter_libs 3.1.0+1` ships a Groovy `build.gradle` without a `namespace` declaration. AGP 8+ requires it. Fixed with a `plugins.withId("com.android.library")` hook in `android/build.gradle.kts` that injects the namespace from the project group before evaluation. Using `afterEvaluate` failed because `evaluationDependsOn(":app")` had already triggered sibling project evaluation.
 
-### 7. Dual-layer timetable as PageView
-Three timetable views (Class Only / Both / Personal Only) are implemented as a three-page `PageView` rather than toggle buttons. This gives a natural swipe gesture and avoids conditional render complexity in the grid.
+### 7. Timetable navigation: swipe = days, tap = view mode
+Horizontal swipe on the grid navigates between days (Mon → Tue → … → Sun) via a `GestureDetector` with a 300 velocity threshold. View mode switching (Class / Both / Personal) is handled by tapping the `TimetablePageIndicator` labels. This separates the two concerns cleanly — the original `PageView` approach conflated swipe with view switching, which users found unintuitive.
+
+### 12. Slot overlap detection with greedy column assignment
+Overlapping timetable slots (same layer or cross-layer in Both view) are rendered side-by-side using a greedy column-assignment algorithm in `DualLayerGrid._assignColumns`. Slots are sorted by start time; each is assigned to the first column whose last occupant has already ended. A second pass finds the highest column index used by any overlapping slot, giving each slot its `totalColumns` count. In Both mode, class and personal slots are pooled into a single call (personal IDs encoded as `-id - 1` to avoid Isar ID collisions) so cross-layer conflicts are resolved together.
 
 ### 8. Workmanager init without auto permission request
 `callbackDispatcher` is a top-level function registered with Workmanager for background streak checks. The `NotificationService.init()` call was removed from the Workmanager dispatcher's first-run hook to prevent the OS permission dialog firing before the app's custom permission dialog, which rendered the Allow button non-functional. Permission is now only requested from within the app UI flow.
@@ -627,6 +680,8 @@ flutter run
 | Phase 14 fix | `fix(phase-14): remove auto permission request from init()` |
 | Phase 15 S1 | `feat(phase-15): weekly review — Isar schema, generation, screen, free gate, AI tab banner` |
 | Phase 15 S2 | `feat(phase-15): study plan — Isar schemas, provider, plan generation, sessions tab` |
+| Bug fix pass | `fix: close all 11 bugs — CWA planner UX, AI coaching context, timetable grid overhaul` |
+| Phase 15.1 | `feat(phase-15.1): course hub workspace — notes, files, sessions tab, flashcards, per-course AI chat` |
 
 ---
 

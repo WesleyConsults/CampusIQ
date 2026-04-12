@@ -12,8 +12,8 @@
 | BUG-008 | Overlapping slots cause unreadable mixed text on grid | Timetable | Bug | High | Closed |
 | BUG-009 | Personal and class slots overlap in Both view | Timetable | Bug | High | Closed |
 | BUG-010 | Class slot grid shows no venue information | Timetable | Missing Feature | Medium | Open |
-| BUG-011 | Swipe gesture switches views instead of days | Timetable | UX Friction | Medium | Open |
+| BUG-011 | Swipe gesture switches days instead of views | Timetable | UX Friction | Medium | Open |
 
-**Total: 11 bugs — 4 High, 4 Medium, 2 Low**
+**Total: 11 bugs — 4 High, 4 Medium, 2 Low**S
 
 Heavy concentration in **Timetable** (7 bugs) and **CWA Planner** (3 bugs). Good time to pause and fix before moving forward.

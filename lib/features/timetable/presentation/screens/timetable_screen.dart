@@ -24,8 +24,6 @@ class TimetableScreen extends ConsumerStatefulWidget {
 }
 
 class _TimetableScreenState extends ConsumerState<TimetableScreen> {
-  late final PageController _pageController;
-
   /// Page order: 0=Class Only, 1=Both, 2=Personal Only
   static const _modeForPage = [
     GridLayerMode.classOnly,
@@ -37,16 +35,23 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
   void initState() {
     super.initState();
     // Start on "Both" (page 1)
-    _pageController = PageController(initialPage: 1);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(timetablePageProvider.notifier).state = 1;
     });
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  void _onDaySwipe(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity.abs() < 300) return; // ignore slow drags
+    final day = ref.read(activeDayProvider);
+    final maxDay = TimetableConstants.dayLabels.length - 1;
+    if (velocity < 0) {
+      // Swipe left → next day
+      ref.read(activeDayProvider.notifier).state = (day + 1).clamp(0, maxDay);
+    } else {
+      // Swipe right → previous day
+      ref.read(activeDayProvider.notifier).state = (day - 1).clamp(0, maxDay);
+    }
   }
 
   // ── Class slot actions ──────────────────────────────────────────────────
@@ -176,10 +181,14 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
         children: [
           const DaySelector(),
 
-          // Page indicator
+          // View mode indicator — tap to switch Class / Both / Personal
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
-            child: TimetablePageIndicator(currentPage: currentPage),
+            child: TimetablePageIndicator(
+              currentPage: currentPage,
+              onPageSelected: (page) =>
+                  ref.read(timetablePageProvider.notifier).state = page,
+            ),
           ),
 
           // Day label + free block count
@@ -205,24 +214,20 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
             ),
           ),
 
-          // Swiped PageView — Class / Both / Personal
+          // Grid — swipe left/right to change day, tap indicator to switch view
           Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: 3,
-              onPageChanged: (page) =>
-                  ref.read(timetablePageProvider.notifier).state = page,
-              itemBuilder: (context, page) {
-                final pageMode = _modeForPage[page];
-                final isEmpty = (pageMode == GridLayerMode.classOnly && classSlots.isEmpty) ||
-                    (pageMode == GridLayerMode.personalOnly && personalSlots.isEmpty) ||
-                    (pageMode == GridLayerMode.both && classSlots.isEmpty && personalSlots.isEmpty);
+            child: GestureDetector(
+              onHorizontalDragEnd: _onDaySwipe,
+              child: () {
+                final isEmpty =
+                    (mode == GridLayerMode.classOnly && classSlots.isEmpty) ||
+                    (mode == GridLayerMode.personalOnly && personalSlots.isEmpty) ||
+                    (mode == GridLayerMode.both &&
+                        classSlots.isEmpty &&
+                        personalSlots.isEmpty);
 
                 if (isEmpty) {
-                  return _EmptyPage(
-                    mode: pageMode,
-                    onAdd: _onFabTap,
-                  );
+                  return _EmptyPage(mode: mode, onAdd: _onFabTap);
                 }
 
                 return Padding(
@@ -231,14 +236,14 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                     classSlots: classSlots,
                     personalSlots: personalSlots,
                     freeBlocks: freeBlocks,
-                    mode: pageMode,
+                    mode: mode,
                     onClassSlotTap: _showClassDetail,
                     onPersonalSlotTap: _showPersonalDetail,
                     onFreeBlockTap: _onFreeBlockTap,
                     onEmptyTap: _onEmptyTap,
                   ),
                 );
-              },
+              }(),
             ),
           ),
         ],

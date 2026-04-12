@@ -28,7 +28,8 @@ class TimetableSlotCard extends StatelessWidget {
         TimetableConstants.pixelsPerMinute;
     final height = slot.durationMinutes * TimetableConstants.pixelsPerMinute;
     final color = Color(slot.colorValue);
-    final isShort = height < 40;
+    final isShort      = height < 40;  // < 40 min: code only
+    final showFooter   = height >= 80; // >= 80 min: show time · type footer
 
     return Positioned(
       top: topOffset,
@@ -57,6 +58,7 @@ class TimetableSlotCard extends StatelessWidget {
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       slot.courseCode,
@@ -76,14 +78,26 @@ class TimetableSlotCard extends StatelessWidget {
                       ),
                       maxLines: 1,
                     ),
-                    const Spacer(),
-                    Text(
-                      '${slot.startTimeLabel} · ${slot.slotType}',
-                      style: TextStyle(
-                        color: color.withValues(alpha: 0.7),
-                        fontSize: 9,
+                    if (slot.venue.isNotEmpty)
+                      Text(
+                        slot.venue,
+                        style: TextStyle(
+                          color: color.withValues(alpha: 0.7),
+                          fontSize: 9,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        maxLines: 1,
                       ),
-                    ),
+                    if (showFooter) ...[
+                      const Spacer(),
+                      Text(
+                        '${slot.startTimeLabel} · ${slot.slotType}',
+                        style: TextStyle(
+                          color: color.withValues(alpha: 0.7),
+                          fontSize: 9,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
         ),
