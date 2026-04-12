@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
+import 'package:campusiq/features/ai/presentation/providers/ai_chat_provider.dart';
 import 'package:campusiq/features/ai/presentation/widgets/premium_gate_widget.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 
@@ -181,9 +182,13 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
           ),
           const SizedBox(height: 24),
           TextButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.push('/ai');
+            onPressed: () async {
+              final nav = Navigator.of(context);
+              final router = GoRouter.of(context);
+              await ref.read(aiChatProvider.notifier).seedWithCoachingContext(_advice!);
+              if (!mounted) return;
+              nav.pop();
+              router.push('/ai');
             },
             icon: const Icon(Icons.arrow_forward, size: 16),
             label: const Text('Ask a follow-up'),

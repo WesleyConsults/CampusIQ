@@ -270,8 +270,8 @@ class _AddPersonalSlotSheetState extends State<AddPersonalSlotSheet> {
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(6, (i) {
-                    final labels = ['M', 'T', 'W', 'T', 'F', 'S'];
+                  children: List.generate(7, (i) {
+                    final labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
                     final isSelected = _weeklyDays.contains(i);
                     return GestureDetector(
                       onTap: () => setState(() {

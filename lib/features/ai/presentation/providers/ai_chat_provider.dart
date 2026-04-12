@@ -188,6 +188,29 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
     }
   }
 
+  /// Seeds the chat with coaching advice as the first assistant message so
+  /// the AI has full context when the user asks a follow-up question.
+  Future<void> seedWithCoachingContext(String advice) async {
+    final chatRepo = await ref.read(aiChatRepositoryProvider.future);
+    final sessionId = await chatRepo.createSession(_feature, 'CWA Coaching Follow-up');
+
+    final assistantMsg = AiMessageModel()
+      ..feature = _feature
+      ..sessionId = sessionId
+      ..role = 'assistant'
+      ..content = advice
+      ..createdAt = DateTime.now();
+
+    await chatRepo.saveMessage(assistantMsg);
+
+    final sessions = await chatRepo.getSessions(_feature);
+    state = AiChatState(
+      sessions: sessions,
+      messages: [assistantMsg],
+      currentSessionId: sessionId,
+    );
+  }
+
   // Maintained for backward compat, though `deleteSession` replaces this
   Future<void> clearChat() async {
     await createNewChat();

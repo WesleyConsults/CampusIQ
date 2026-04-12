@@ -144,9 +144,6 @@ Plain English only. No markdown.''';
         freeBlockLines.add('${dayNames[i]}: $blockStr');
       }
     }
-    // Sunday always free (KNUST day 6 not in grid)
-    freeBlockLines.add('Sunday: (no free blocks — rest day)');
-
     // 3. Past 4 weeks of sessions — extract day/time preferences
     final now = DateTime.now();
     final fourWeeksAgo = now.subtract(const Duration(days: 28));

@@ -1,8 +1,8 @@
 class TimetableConstants {
-  /// Days shown in the timetable grid. KNUST runs Monday to Saturday.
-  static const List<String> dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  /// Days shown in the timetable grid. KNUST classes run Mon–Sat; Sun shown for personal slots.
+  static const List<String> dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   static const List<String> dayFullLabels = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
   ];
 
   /// Grid time range: 6AM to 8PM

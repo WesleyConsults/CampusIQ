@@ -5,12 +5,10 @@ import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dar
 import 'package:campusiq/features/timetable/data/repositories/timetable_repository.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 
-/// Currently viewed day index (0=Mon … 5=Sat). Drives the paged grid.
+/// Currently viewed day index (0=Mon … 6=Sun). Drives the paged grid.
 final activeDayProvider = StateProvider<int>((ref) {
-  /// Default to today if it's a weekday, otherwise Monday.
-  final weekday = DateTime.now().weekday; // 1=Mon … 7=Sun
-  if (weekday >= 1 && weekday <= 6) return weekday - 1;
-  return 0;
+  /// Default to today's day index. weekday 1=Mon…7=Sun maps directly to index 0…6.
+  return DateTime.now().weekday - 1;
 });
 
 /// Repository provider.

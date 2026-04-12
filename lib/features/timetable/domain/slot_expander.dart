@@ -5,7 +5,7 @@ import 'package:campusiq/features/timetable/domain/recurrence_type.dart';
 /// for a given day. Keeps Isar clean — no duplicate rows for recurring slots.
 class SlotExpander {
   /// Returns all personal slots that are active on [targetDate] with [dayIndex].
-  /// [dayIndex] is 0=Mon … 5=Sat.
+  /// [dayIndex] is 0=Mon … 6=Sun.
   static List<PersonalSlotModel> expandForDay({
     required List<PersonalSlotModel> stored,
     required DateTime targetDate,

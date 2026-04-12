@@ -5,8 +5,8 @@
 | BUG-001 | Target CWA slider needs +/− buttons | CWA Planner | UX Friction | Low | Closed |
 | BUG-002 | High-impact badge shows only one course | CWA Planner | UX Friction | Medium | Closed |
 | BUG-003 | Edit sheet does not save expected score changes | CWA Planner | Bug | High | Closed |
-| BUG-004 | AI Coach follow-up loses coaching context in chat | AI Chat | Bug | High | Open |
-| BUG-005 | Timetable day picker missing Sunday | Timetable | Bug | Medium | Open |
+| BUG-004 | AI Coach follow-up loses coaching context in chat | AI Chat | Bug | High | Closed |
+| BUG-005 | Timetable day picker missing Sunday | Timetable | Bug | Medium | Closed |
 | BUG-006 | Timetable time grid rows too tall | Timetable | UX Friction | Low | Open |
 | BUG-007 | No AM/PM or time order validation on slot creation | Timetable | Bug | High | Open |
 | BUG-008 | Overlapping slots cause unreadable mixed text on grid | Timetable | Bug | High | Open |
