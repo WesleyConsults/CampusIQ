@@ -64,6 +64,11 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Delete a course (swipe or delete button) — card disappears, CWA recalculates
 - [ ] Re-add the course so you have at least 3 for later tests
 
+### 2.6 Open Course Hub from CWA
+- [ ] Tap the **⋮ menu** on any course card → menu shows "Open Workspace", Edit, Delete
+- [ ] Tap **"Open Workspace"** → navigates to that course's Course Hub
+- [ ] Back arrow returns to the CWA screen
+
 ### 2.6 AI Coaching
 - [ ] Tap **"Get AI Coaching"** button
 - [ ] `CwaCoachSheet` opens with AI-generated advice
@@ -105,6 +110,8 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Edit the venue — saves correctly
 - [ ] Tap a personal block → `PersonalSlotDetailSheet` opens
 - [ ] Delete the personal block — it disappears from the grid
+- [ ] Tap **"Open Workspace"** on a class slot → navigates to that course's Course Hub (no bottom nav visible)
+- [ ] Back arrow on Course Hub returns to the Timetable screen
 
 ### 3.6 Tap empty grid area
 - [ ] Tap an empty time cell on the grid
@@ -147,15 +154,20 @@ Mark each item `[x]` as you confirm it works.
   - Course breakdown
   - Weekly bar chart (may show one bar)
 
-### 4.6 History management
+### 4.6 Open Course Hub from Sessions breakdown
+- [ ] Scroll to the **"By course"** breakdown card
+- [ ] Tap any course row → navigates to that course's Course Hub
+- [ ] Back arrow returns to the Sessions screen
+
+### 4.7 History management
 - [ ] History list shows saved sessions
 - [ ] Swipe a history item to **delete** it — it disappears
 
-### 4.7 Plan tab
+### 4.8 Plan tab
 - [ ] Tap the **Plan** tab inside Sessions
 - [ ] AI study plan displays (or empty state if no data yet)
 
-### 4.8 Insights
+### 4.9 Insights
 - [ ] Tap the **Insights** icon in the AppBar (if visible)
 - [ ] Navigates to `/insights` screen with insight cards
 - [ ] Back arrow returns to Sessions
@@ -444,11 +456,98 @@ These tests verify features work together correctly.
 - [ ] From Exam Prep, press system back — returns to AI Chat (not to Plan or a blank screen)
 - [ ] From Settings, press system back — returns to the screen you came from
 - [ ] From Weekly Review, press system back — returns to AI Chat
+- [ ] From Course Hub, press system back — returns to the screen that opened it
 - [ ] No "back press" results in a blank screen
 
 ---
 
-## 13. Performance & Stability
+## 13. Course Hub Workspace (`/course/:courseCode`)
+
+> **Setup:** complete Steps 2, 3, and 4 first — courses, timetable slots, sessions, and streaks must exist.
+
+### 13.1 Entry points
+- [ ] Timetable → tap a class slot → tap **"Open Workspace"** → hub opens for that course, no bottom nav visible
+- [ ] CWA → tap **⋮** on a course card → tap **"Open Workspace"** → hub opens for that course
+- [ ] Sessions → tap any course row in the "By course" breakdown → hub opens for that course
+- [ ] Back arrow on the hub returns to the screen that launched it
+- [ ] Open hub for Course A → back → open hub for Course B → Course B's data is shown (no stale data from A)
+
+### 13.2 Overview tab
+- [ ] Course code, name, and credit hours are correct
+- [ ] Expected score % and grade letter chip match the CWA planner
+- [ ] "This course contributes X pts" is shown under CWA Impact
+- [ ] Current CWA figure is shown
+- [ ] Session count and total study time are accurate (cross-check with Sessions history)
+- [ ] "Last studied" shows a sensible day count, or "Not studied yet" for an unused course
+- [ ] Streak mini-card shows the correct per-course streak and alive/broken status
+
+### 13.3 Sessions tab
+- [ ] Only sessions for **this** course appear — sessions from other courses are absent
+- [ ] Sessions are in reverse-chronological order
+- [ ] Weekly bar chart reflects only this course's study time
+- [ ] Empty state shows for a course that has never been studied
+
+### 13.4 Notes tab — create
+- [ ] Tap the **+** FAB → `NoteEditorSheet` opens
+- [ ] Enter a title and body → tap **Save** → note appears in the list immediately (Isar stream, no refresh needed)
+- [ ] Note tile shows: title, first line of body as a preview, and timestamp
+
+### 13.5 Notes tab — edit & delete
+- [ ] Tap an existing note → editor opens pre-filled with the title and body
+- [ ] Edit the body → Save → list shows updated content
+- [ ] Swipe a note left → it disappears from the list immediately
+- [ ] Notes from Course A do **not** appear in Course B's Notes tab
+- [ ] Empty state shows when no notes exist
+
+### 13.6 Files tab — attach
+- [ ] Tap **"Attach File"** → system file picker opens
+- [ ] Pick a **PDF** → appears in the list with a red PDF icon
+- [ ] Tap **"Attach File"** again → pick an **image** (JPG/PNG) → appears with a blue image icon
+
+### 13.7 Files tab — open & delete
+- [ ] Tap a PDF tile → PDF opens in the device's PDF viewer
+- [ ] Tap an image tile → image opens fullscreen / in an image viewer
+- [ ] Tap 🗑 on a file → file disappears from the list and the physical copy is deleted from storage
+- [ ] Files from Course A do **not** appear in Course B's Files tab
+- [ ] Empty state shows when no files are attached
+
+### 13.8 Flashcards tab
+- [ ] Course chip at the top shows the correct course and **cannot be changed** (no course picker)
+- [ ] Select **MCQ** → Generate → 5 MCQ cards appear; tap an option → correct answer and explanation revealed
+- [ ] Select **Short Answer** → Generate → cards show question + "Reveal Answer" button
+- [ ] Select **Flashcard** → Generate → tap a card → 3D flip reveals the answer
+- [ ] Free quota gate (`PremiumGateWidget`) appears after the daily limit is exhausted
+- [ ] Generating in the hub does **not** affect the state of the global Exam Prep screen (`/ai/exam-prep`)
+
+### 13.9 AI Chat tab — basic interaction
+- [ ] Blue "Focused on [Code] — [Name]" banner is visible at the top
+- [ ] Send a message → AI responds with content relevant to the course
+- [ ] Ask **"What course are we focusing on?"** → AI correctly names the course
+- [ ] Typing indicator appears while waiting for the response
+
+### 13.10 AI Chat tab — context injection
+- [ ] Add a note on the Notes tab (e.g. "Thevenin's theorem — voltage divider")
+- [ ] Switch to AI Chat tab → ask the AI about the note topic → AI references it
+- [ ] Ask **"Summarise what you know about my study situation for this course"** → AI describes sessions, streak, and notes
+
+### 13.11 AI Chat tab — history isolation
+- [ ] Open hub for Course A, send a message → back → open hub for Course B → AI Chat is empty (separate history)
+- [ ] Global AI Coach chat (`/ai`) history is **not mixed** with hub chat history
+- [ ] Hot restart → hub chat history for Course A is preserved
+
+### 13.12 AI Chat tab — quota
+- [ ] Usage counter chip shows remaining free messages (shared with global AI chat)
+- [ ] Premium gate appears after the shared daily limit is reached
+
+### 13.13 Stability
+- [ ] Hot restart → all notes and files are still present on their respective tabs
+- [ ] Full app restart → all notes and files are still present
+- [ ] No red-screen errors on any of the 6 tabs
+- [ ] No overflow or render errors on a standard ~360 dp width screen
+
+---
+
+## 14. Performance & Stability
 
 - [ ] Scroll the CWA course list quickly — no jank or dropped frames
 - [ ] Scroll the Streak heatmap — no jank
@@ -457,6 +556,8 @@ These tests verify features work together correctly.
 - [ ] Switch between all 6 bottom nav tabs rapidly — no crash, state is preserved
 - [ ] Leave the session timer running for 5+ minutes — timer is still accurate on return
 - [ ] Kill and reopen the app during an active session — session state is restored (timer continues or session is recoverable)
+- [ ] Switch rapidly between Course Hub tabs — no crash, tab state is preserved
+- [ ] Open and close the Course Hub for 3 different courses in sequence — correct data each time
 
 ---
 
@@ -476,7 +577,8 @@ These tests verify features work together correctly.
 | 10. Weekly Review | | |
 | 11. Cross-Feature Tests | | |
 | 12. Edge Cases | | |
-| 13. Performance | | |
+| 13. Course Hub Workspace | | |
+| 14. Performance | | |
 
 **Tester:** ___________________  
 **Date:** ___________________  
