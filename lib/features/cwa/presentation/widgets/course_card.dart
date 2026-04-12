@@ -43,10 +43,18 @@ class _CourseCardState extends ConsumerState<CourseCard> {
   @override
   void didUpdateWidget(CourseCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only reset when the card switches to a different course entirely
     if (oldWidget.course.id != widget.course.id) {
+      // Entirely different course — full reset
       _sliderValue = widget.course.expectedScore;
       _savedScore = widget.course.expectedScore;
+    } else if (widget.course.expectedScore != _savedScore) {
+      // Same course but score changed externally (e.g., edit sheet saved)
+      final userIsDragging = (_sliderValue - _savedScore).abs() >= 1.0;
+      _savedScore = widget.course.expectedScore;
+      if (!userIsDragging) {
+        // Not mid-drag — sync slider to the newly saved value
+        _sliderValue = widget.course.expectedScore;
+      }
     }
   }
 

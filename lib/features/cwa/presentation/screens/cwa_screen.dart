@@ -60,7 +60,7 @@ class CwaScreen extends ConsumerWidget {
           final pairs = courses
               .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
               .toList();
-          final highImpactIdx = CwaCalculator.highestImpactCourseIndex(pairs);
+          final highImpactIndices = CwaCalculator.highestImpactCourseIndices(pairs);
 
           return CustomScrollView(
             slivers: [
@@ -121,7 +121,7 @@ class CwaScreen extends ConsumerWidget {
                       final repo = ref.read(cwaRepositoryProvider);
                       return CourseCard(
                         course: course,
-                        isHighImpact: i == highImpactIdx,
+                        isHighImpact: highImpactIndices.contains(i),
                         onEdit: () => _openAddSheet(context, ref, existing: course),
                         onDelete: () => repo?.deleteCourse(course.id),
                         onScoreChanged: (newScore) async {

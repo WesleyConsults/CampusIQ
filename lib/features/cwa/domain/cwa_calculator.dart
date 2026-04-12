@@ -19,18 +19,14 @@ class CwaCalculator {
   /// How far projected CWA is from target. Positive = below target.
   static double gap(double projected, double target) => target - projected;
 
-  /// Returns index of course with highest credit weight — most CWA impact.
-  static int highestImpactCourseIndex(List<({double creditHours, double score})> courses) {
-    if (courses.isEmpty) return -1;
-    int idx = 0;
-    double maxCredits = 0;
-    for (int i = 0; i < courses.length; i++) {
-      if (courses[i].creditHours > maxCredits) {
-        maxCredits = courses[i].creditHours;
-        idx = i;
-      }
-    }
-    return idx;
+  /// Returns all indices of courses tied for the highest credit weight.
+  static Set<int> highestImpactCourseIndices(List<({double creditHours, double score})> courses) {
+    if (courses.isEmpty) return {};
+    double maxCredits = courses.map((c) => c.creditHours).reduce((a, b) => a > b ? a : b);
+    return {
+      for (int i = 0; i < courses.length; i++)
+        if (courses[i].creditHours == maxCredits) i,
+    };
   }
 
   /// Simulates new CWA if one course score changes.
