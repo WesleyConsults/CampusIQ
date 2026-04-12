@@ -67,26 +67,26 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
     super.dispose();
   }
 
-  String _minutesToTime(int minutes) {
-    final h = minutes ~/ 60;
-    final m = minutes % 60;
-    return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
-  }
-
   Future<void> _pickTime(bool isStart) async {
-    final initial = TimeOfDay(
-      hour: (isStart ? _startMinutes : _endMinutes) ~/ 60,
-      minute: (isStart ? _startMinutes : _endMinutes) % 60,
-    );
+    final currentMinutes = isStart ? _startMinutes : _endMinutes;
+    final initial = TimeOfDay(hour: currentMinutes ~/ 60, minute: currentMinutes % 60);
     final picked = await showTimePicker(context: context, initialTime: initial);
     if (picked == null) return;
-    final totalMinutes = picked.hour * 60 + picked.minute;
+    int total = picked.hour * 60 + picked.minute;
+    // Auto-promote sub-grid times (before 6 AM) to PM only when the picker
+    // opened in AM mode. If the picker opened in PM the user explicitly
+    // switched to AM — honour that choice.
+    final openedInAm = currentMinutes < 12 * 60;
+    if (total < TimetableConstants.gridStartMinutes && openedInAm) {
+      total += 12 * 60;
+    }
     setState(() {
       if (isStart) {
-        _startMinutes = totalMinutes;
+        _startMinutes = total;
         if (_endMinutes <= _startMinutes) _endMinutes = _startMinutes + 60;
       } else {
-        _endMinutes = totalMinutes;
+        _endMinutes = total;
+        if (_endMinutes <= _startMinutes) _endMinutes = _startMinutes + 60;
       }
     });
   }
@@ -214,7 +214,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                   Expanded(
                     child: _TimeTile(
                       label: 'Start time',
-                      value: _minutesToTime(_startMinutes),
+                      value: TimetableConstants.minutesToLabel(_startMinutes),
                       onTap: () => _pickTime(true),
                     ),
                   ),
@@ -222,7 +222,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                   Expanded(
                     child: _TimeTile(
                       label: 'End time',
-                      value: _minutesToTime(_endMinutes),
+                      value: TimetableConstants.minutesToLabel(_endMinutes),
                       onTap: () => _pickTime(false),
                     ),
                   ),

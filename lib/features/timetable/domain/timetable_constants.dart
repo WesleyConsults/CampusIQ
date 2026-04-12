@@ -13,7 +13,7 @@ class TimetableConstants {
   static const int totalGridMinutes = gridEndMinutes - gridStartMinutes; // 840
 
   /// Height in pixels per minute in the grid
-  static const double pixelsPerMinute = 1.5;
+  static const double pixelsPerMinute = 1.0;
 
   /// Total grid height in pixels
   static const double totalGridHeight = totalGridMinutes * pixelsPerMinute; // 1260px

@@ -4,16 +4,20 @@ import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
 /// A positioned slot card rendered inside the timetable grid.
 /// Uses absolute positioning based on startMinutes/endMinutes.
+/// [left] and [right] are pixel offsets from the parent Stack edges —
+/// computed by DualLayerGrid to handle overlapping slots.
 class TimetableSlotCard extends StatelessWidget {
   final TimetableSlotModel slot;
-  final double columnWidth;
+  final double left;
+  final double right;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
   const TimetableSlotCard({
     super.key,
     required this.slot,
-    required this.columnWidth,
+    required this.left,
+    required this.right,
     required this.onTap,
     required this.onLongPress,
   });
@@ -28,8 +32,8 @@ class TimetableSlotCard extends StatelessWidget {
 
     return Positioned(
       top: topOffset,
-      left: 2,
-      right: 2,
+      left: left,
+      right: right,
       height: height,
       child: GestureDetector(
         onTap: onTap,
@@ -63,25 +67,23 @@ class TimetableSlotCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (!isShort) ...[
-                      Text(
-                        slot.courseName,
-                        style: TextStyle(
-                          color: color.withValues(alpha: 0.8),
-                          fontSize: 10,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        maxLines: 1,
+                    Text(
+                      slot.courseName,
+                      style: TextStyle(
+                        color: color.withValues(alpha: 0.8),
+                        fontSize: 10,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const Spacer(),
-                      Text(
-                        '${slot.startTimeLabel} · ${slot.slotType}',
-                        style: TextStyle(
-                          color: color.withValues(alpha: 0.7),
-                          fontSize: 9,
-                        ),
+                      maxLines: 1,
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${slot.startTimeLabel} · ${slot.slotType}',
+                      style: TextStyle(
+                        color: color.withValues(alpha: 0.7),
+                        fontSize: 9,
                       ),
-                    ],
+                    ),
                   ],
                 ),
         ),

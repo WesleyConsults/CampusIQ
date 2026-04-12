@@ -5,8 +5,11 @@ import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
 /// Personal slot card rendered in the grid.
 /// Lighter opacity than class slots — visually recedes behind them in dual view.
+/// [left] and [right] are pixel offsets computed by DualLayerGrid.
 class PersonalSlotCard extends StatelessWidget {
   final PersonalSlotModel slot;
+  final double left;
+  final double right;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
   /// When true (dual view), render at reduced opacity so class slots read first
@@ -15,6 +18,8 @@ class PersonalSlotCard extends StatelessWidget {
   const PersonalSlotCard({
     super.key,
     required this.slot,
+    required this.left,
+    required this.right,
     required this.onTap,
     required this.onLongPress,
     this.isDimmed = false,
@@ -32,8 +37,8 @@ class PersonalSlotCard extends StatelessWidget {
 
     return Positioned(
       top: topOffset,
-      left: 2,
-      right: 2,
+      left: left,
+      right: right,
       height: height,
       child: Opacity(
         opacity: opacity,
@@ -42,10 +47,10 @@ class PersonalSlotCard extends StatelessWidget {
           onLongPress: onLongPress,
           child: Container(
             decoration: BoxDecoration(
-              color: color.withValues(alpha:0.10),
+              color: color.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: color.withValues(alpha:0.5),
+                color: color.withValues(alpha: 0.5),
                 width: 1.0,
               ),
             ),
@@ -76,7 +81,7 @@ class PersonalSlotCard extends StatelessWidget {
                       Text(
                         slot.startTimeLabel,
                         style: TextStyle(
-                          color: color.withValues(alpha:0.7),
+                          color: color.withValues(alpha: 0.7),
                           fontSize: 9,
                         ),
                       ),

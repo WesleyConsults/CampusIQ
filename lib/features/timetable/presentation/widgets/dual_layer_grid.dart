@@ -47,40 +47,94 @@ class DualLayerGrid extends StatelessWidget {
           Expanded(
             child: GestureDetector(
               onTap: onEmptyTap,
-              child: SizedBox(
-                height: TimetableConstants.totalGridHeight,
-                child: Stack(
-                  children: [
-                    _HourLines(),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final totalWidth = constraints.maxWidth;
 
-                    // Free blocks (only in class view or both)
-                    if (showClass)
-                      ...freeBlocks.map((b) => FreeBlockIndicator(
-                            block: b,
-                            onTap: () => onFreeBlockTap(b),
-                          )),
+                  // In "both" mode pool all slots together so cross-layer
+                  // overlaps (e.g. a class and a study block at 8 AM) are
+                  // split side-by-side. Negative IDs are used for personal
+                  // slots to avoid collisions with class slot IDs (Isar ≥ 1).
+                  final Map<int, _OverlapPos> classPositions;
+                  final Map<int, _OverlapPos> personalPositions;
 
-                    // Personal slots — rendered first (below class slots)
-                    if (showPersonal)
-                      ...personalSlots.map((s) => PersonalSlotCard(
-                            slot: s,
-                            onTap: () => onPersonalSlotTap(s),
-                            onLongPress: () => onPersonalSlotTap(s),
-                            isDimmed: isDimmed,
-                          )),
+                  if (mode == GridLayerMode.both) {
+                    final combined = _assignColumns([
+                      ...classSlots.map(
+                        (s) => (id: s.id, start: s.startMinutes, end: s.endMinutes),
+                      ),
+                      ...personalSlots.map(
+                        (s) => (id: -s.id - 1, start: s.startMinutes, end: s.endMinutes),
+                      ),
+                    ]);
+                    classPositions = {
+                      for (final s in classSlots) s.id: combined[s.id]!,
+                    };
+                    personalPositions = {
+                      for (final s in personalSlots) s.id: combined[-s.id - 1]!,
+                    };
+                  } else {
+                    classPositions = _assignColumns(
+                      classSlots
+                          .map((s) => (id: s.id, start: s.startMinutes, end: s.endMinutes))
+                          .toList(),
+                    );
+                    personalPositions = _assignColumns(
+                      personalSlots
+                          .map((s) => (id: s.id, start: s.startMinutes, end: s.endMinutes))
+                          .toList(),
+                    );
+                  }
 
-                    // Class slots — rendered on top
-                    if (showClass)
-                      ...classSlots.map((s) => TimetableSlotCard(
-                            slot: s,
-                            columnWidth: double.infinity,
-                            onTap: () => onClassSlotTap(s),
-                            onLongPress: () => onClassSlotTap(s),
-                          )),
+                  return SizedBox(
+                    height: TimetableConstants.totalGridHeight,
+                    child: Stack(
+                      children: [
+                        _HourLines(),
 
-                    _CurrentTimeIndicator(),
-                  ],
-                ),
+                        // Free blocks (only in class view or both)
+                        if (showClass)
+                          ...freeBlocks.map((b) => FreeBlockIndicator(
+                                block: b,
+                                onTap: () => onFreeBlockTap(b),
+                              )),
+
+                        // Personal slots — rendered first (below class slots)
+                        if (showPersonal)
+                          ...personalSlots.map((s) {
+                            final pos = personalPositions[s.id] ??
+                                const _OverlapPos(0, 1);
+                            final laneWidth = totalWidth / pos.totalColumns;
+                            return PersonalSlotCard(
+                              slot: s,
+                              left: pos.columnIndex * laneWidth + 2,
+                              right: totalWidth - (pos.columnIndex + 1) * laneWidth + 2,
+                              onTap: () => onPersonalSlotTap(s),
+                              onLongPress: () => onPersonalSlotTap(s),
+                              isDimmed: isDimmed,
+                            );
+                          }),
+
+                        // Class slots — rendered on top
+                        if (showClass)
+                          ...classSlots.map((s) {
+                            final pos = classPositions[s.id] ??
+                                const _OverlapPos(0, 1);
+                            final laneWidth = totalWidth / pos.totalColumns;
+                            return TimetableSlotCard(
+                              slot: s,
+                              left: pos.columnIndex * laneWidth + 2,
+                              right: totalWidth - (pos.columnIndex + 1) * laneWidth + 2,
+                              onTap: () => onClassSlotTap(s),
+                              onLongPress: () => onClassSlotTap(s),
+                            );
+                          }),
+
+                        _CurrentTimeIndicator(),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -90,7 +144,67 @@ class DualLayerGrid extends StatelessWidget {
   }
 }
 
-// ── Private helpers (copied from timetable_grid.dart for self-containment) ──
+// ── Overlap detection ─────────────────────────────────────────────────────────
+
+class _OverlapPos {
+  final int columnIndex;
+  final int totalColumns;
+  const _OverlapPos(this.columnIndex, this.totalColumns);
+}
+
+/// Assigns each slot a column index and total column count so overlapping
+/// slots are rendered side-by-side instead of stacked on top of each other.
+///
+/// Algorithm:
+/// 1. Sort by start time.
+/// 2. Greedy column assignment — each slot takes the first column whose last
+///    occupant has already ended.
+/// 3. For each slot, scan all overlapping slots to find the highest column
+///    index used — that determines the total column count for that slot.
+Map<int, _OverlapPos> _assignColumns(
+  List<({int id, int start, int end})> items,
+) {
+  if (items.isEmpty) return {};
+
+  final sorted = [...items]..sort((a, b) => a.start.compareTo(b.start));
+  final colAssign = <int, int>{}; // id → column index
+  final colEnds = <int>[];        // end-minute of the last slot in each column
+
+  for (final item in sorted) {
+    // Find the first column that is free at item.start
+    int col = -1;
+    for (int i = 0; i < colEnds.length; i++) {
+      if (colEnds[i] <= item.start) {
+        col = i;
+        colEnds[i] = item.end;
+        break;
+      }
+    }
+    if (col == -1) {
+      col = colEnds.length;
+      colEnds.add(item.end);
+    }
+    colAssign[item.id] = col;
+  }
+
+  // Determine totalColumns for each slot: highest column index used by any
+  // slot that overlaps with this slot (including itself), plus one.
+  final result = <int, _OverlapPos>{};
+  for (final item in sorted) {
+    int maxCol = colAssign[item.id]!;
+    for (final other in sorted) {
+      if (other.start < item.end && other.end > item.start) {
+        final c = colAssign[other.id]!;
+        if (c > maxCol) maxCol = c;
+      }
+    }
+    result[item.id] = _OverlapPos(colAssign[item.id]!, maxCol + 1);
+  }
+
+  return result;
+}
+
+// ── Private helpers ───────────────────────────────────────────────────────────
 
 class _TimeLabels extends StatelessWidget {
   @override
@@ -149,7 +263,7 @@ class _CurrentTimeIndicator extends StatelessWidget {
       top: top, left: 0, right: 0,
       child: Row(children: [
         Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
-        Expanded(child: Container(height: 1, color: Colors.red.withValues(alpha:0.6))),
+        Expanded(child: Container(height: 1, color: Colors.red.withValues(alpha: 0.6))),
       ]),
     );
   }

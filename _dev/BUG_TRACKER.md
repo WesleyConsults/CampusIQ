@@ -7,10 +7,10 @@
 | BUG-003 | Edit sheet does not save expected score changes | CWA Planner | Bug | High | Closed |
 | BUG-004 | AI Coach follow-up loses coaching context in chat | AI Chat | Bug | High | Closed |
 | BUG-005 | Timetable day picker missing Sunday | Timetable | Bug | Medium | Closed |
-| BUG-006 | Timetable time grid rows too tall | Timetable | UX Friction | Low | Open |
-| BUG-007 | No AM/PM or time order validation on slot creation | Timetable | Bug | High | Open |
-| BUG-008 | Overlapping slots cause unreadable mixed text on grid | Timetable | Bug | High | Open |
-| BUG-009 | Personal and class slots overlap in Both view | Timetable | Bug | High | Open |
+| BUG-006 | Timetable time grid rows too tall | Timetable | UX Friction | Low | Closed |
+| BUG-007 | No AM/PM or time order validation on slot creation | Timetable | Bug | High | Closed |
+| BUG-008 | Overlapping slots cause unreadable mixed text on grid | Timetable | Bug | High | Closed |
+| BUG-009 | Personal and class slots overlap in Both view | Timetable | Bug | High | Closed |
 | BUG-010 | Class slot grid shows no venue information | Timetable | Missing Feature | Medium | Open |
 | BUG-011 | Swipe gesture switches views instead of days | Timetable | UX Friction | Medium | Open |
 
