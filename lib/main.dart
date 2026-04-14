@@ -91,7 +91,10 @@ Future<void> _handleStreakRiskCheck() async {
     String body;
     if (apiKey.isNotEmpty) {
       try {
-        final client = DeepSeekClient(apiKey: apiKey);
+        final client = DeepSeekClient(
+          apiKey: apiKey,
+          model: dotenv.env['DEEPSEEK_MODEL'] ?? 'deepseek-chat',
+        );
         body = await client.complete(
           systemPrompt:
               'You write short motivational push notification messages.',

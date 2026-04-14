@@ -17,7 +17,8 @@ part 'ai_providers.g.dart';
 Future<DeepSeekClient> deepseekClient(Ref ref) async {
   final key = dotenv.env['DEEPSEEK_API_KEY'] ?? '';
   if (key.isEmpty) throw Exception('DEEPSEEK_API_KEY not set in .env');
-  return DeepSeekClient(apiKey: key);
+  final model = dotenv.env['DEEPSEEK_MODEL'] ?? 'deepseek-chat';
+  return DeepSeekClient(apiKey: key, model: model);
 }
 
 @riverpod

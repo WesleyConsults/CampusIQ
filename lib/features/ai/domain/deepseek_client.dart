@@ -4,15 +4,15 @@ import 'deepseek_exception.dart';
 
 class DeepSeekClient {
   final String apiKey;
+  final String model;
   static const _baseUrl = 'https://api.deepseek.com/v1/chat/completions';
   static const _timeout = Duration(seconds: 30);
 
-  const DeepSeekClient({required this.apiKey});
+  const DeepSeekClient({required this.apiKey, required this.model});
 
   Future<String> complete({
     required String systemPrompt,
     required List<Map<String, String>> messages,
-    String model = 'deepseek-chat',
     int maxTokens = 800,
   }) async {
     final body = jsonEncode({

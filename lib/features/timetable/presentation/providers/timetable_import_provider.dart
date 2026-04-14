@@ -74,7 +74,8 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
 
       final base64Image = base64Encode(bytes);
       final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
-      final slots = await TimetableVisionParser(apiKey: apiKey).parse(base64Image);
+      final model = dotenv.env['OPENAI_VISION_MODEL'] ?? 'gpt-4o';
+      final slots = await TimetableVisionParser(apiKey: apiKey, model: model).parse(base64Image);
 
       if (slots.isEmpty) {
         state = state.copyWith(
