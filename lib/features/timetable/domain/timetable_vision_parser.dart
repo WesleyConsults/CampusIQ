@@ -1,15 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:campusiq/features/ai/domain/deepseek_exception.dart';
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 
-/// Calls the DeepSeek vision API with a timetable image and returns parsed slots.
+/// Calls the OpenAI vision API with a timetable image and returns parsed slots.
 /// Pure Dart — no Flutter dependencies.
 class TimetableVisionParser {
   final String apiKey;
 
-  static const _baseUrl = 'https://api.deepseek.com/v1/chat/completions';
-  static const _model = 'deepseek-vl2';
+  static const _model = 'gpt-4o';
   static const _timeout = Duration(seconds: 60);
 
   static const _prompt =
@@ -30,18 +28,27 @@ class TimetableVisionParser {
   const TimetableVisionParser({required this.apiKey});
 
   Future<List<TimetableSlotImport>> parse(String imageBase64) async {
+    final url = Uri.parse('https://api.openai.com/v1/chat/completions');
+
     final body = jsonEncode({
       'model': _model,
-      'max_tokens': 2000,
+      'max_tokens': 4096,
+      'temperature': 0.1,
       'messages': [
         {
           'role': 'user',
           'content': [
             {
               'type': 'image_url',
-              'image_url': {'url': 'data:image/jpeg;base64,$imageBase64'},
+              'image_url': {
+                'url': 'data:image/jpeg;base64,$imageBase64',
+                'detail': 'high',
+              },
             },
-            {'type': 'text', 'text': _prompt},
+            {
+              'type': 'text',
+              'text': _prompt,
+            },
           ],
         },
       ],
@@ -49,7 +56,7 @@ class TimetableVisionParser {
 
     final response = await http
         .post(
-          Uri.parse(_baseUrl),
+          url,
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $apiKey',
@@ -59,15 +66,24 @@ class TimetableVisionParser {
         .timeout(_timeout);
 
     if (response.statusCode != 200) {
-      throw DeepSeekException(
-        'Vision API error (${response.statusCode}): ${response.body}',
-        statusCode: response.statusCode,
+      throw Exception(
+        'OpenAI Vision error (${response.statusCode}): ${response.body}',
       );
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
-    final rawContent =
-        data['choices'][0]['message']['content'] as String;
+    final choice = data['choices'][0] as Map<String, dynamic>;
+
+    // Detect token-limit truncation before trying to parse
+    final finishReason = choice['finish_reason'] as String? ?? '';
+    if (finishReason == 'length') {
+      throw Exception(
+        'Timetable is too large for one scan. '
+        'Try cropping the image into two halves and importing each separately.',
+      );
+    }
+
+    final rawContent = choice['message']['content'] as String;
 
     // Strip markdown code fences if the model added them
     final cleaned = rawContent

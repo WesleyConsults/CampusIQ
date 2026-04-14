@@ -73,7 +73,7 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
       }
 
       final base64Image = base64Encode(bytes);
-      final apiKey = dotenv.env['DEEPSEEK_API_KEY'] ?? '';
+      final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
       final slots = await TimetableVisionParser(apiKey: apiKey).parse(base64Image);
 
       if (slots.isEmpty) {
