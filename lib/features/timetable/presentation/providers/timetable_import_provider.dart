@@ -9,6 +9,7 @@ import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 import 'package:campusiq/features/timetable/domain/timetable_vision_parser.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
+import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 
 part 'timetable_import_provider.g.dart';
@@ -121,6 +122,7 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
     if (repo == null) return;
 
     final semesterKey = ref.read(activeSemesterProvider);
+    final cwaRepo = ref.read(cwaRepositoryProvider);
 
     state = state.copyWith(step: ImportStep.saving);
 
@@ -132,6 +134,30 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
         await repo
             .addSlot(slot.toModel(colorValue: color, semesterKey: semesterKey));
       }
+
+      // Populate CWA with unique courses from the import (skip duplicates).
+      if (cwaRepo != null) {
+        final seen = <String>{};
+        for (final i in ordered) {
+          final slot = state.slots[i];
+          final code = slot.courseCode.trim().toUpperCase();
+          if (code.isEmpty || seen.contains(code)) continue;
+          seen.add(code);
+          final exists = await cwaRepo.courseExistsByCode(code, semesterKey);
+          if (!exists) {
+            await cwaRepo.addCourse(
+              CourseModel.create(
+                name: slot.courseName,
+                code: code,
+                creditHours: 3.0,
+                expectedScore: 70.0,
+                semesterKey: semesterKey,
+              ),
+            );
+          }
+        }
+      }
+
       state = state.copyWith(step: ImportStep.done);
     } catch (e) {
       state = state.copyWith(

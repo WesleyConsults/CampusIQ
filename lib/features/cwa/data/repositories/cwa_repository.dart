@@ -24,4 +24,13 @@ class CwaRepository {
   Future<void> deleteCourse(Id id) async {
     await _isar.writeTxn(() => _isar.courseModels.delete(id));
   }
+
+  Future<bool> courseExistsByCode(String code, String semesterKey) async {
+    final count = await _isar.courseModels
+        .filter()
+        .codeEqualTo(code)
+        .semesterKeyEqualTo(semesterKey)
+        .count();
+    return count > 0;
+  }
 }
