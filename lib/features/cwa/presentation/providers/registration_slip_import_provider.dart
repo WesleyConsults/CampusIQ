@@ -66,12 +66,32 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
     }
   }
 
+  Future<void> pickFromGallery() async {
+    state = state.copyWith(step: SlipImportStep.picking);
+    try {
+      final picker = ImagePicker();
+      final picked =
+          await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      if (picked == null) {
+        state = const SlipImportState();
+        return;
+      }
+      final bytes = await picked.readAsBytes();
+      await _parse(bytes, 'image/jpeg');
+    } catch (e) {
+      state = state.copyWith(
+        step: SlipImportStep.error,
+        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+      );
+    }
+  }
+
   Future<void> pickFromGalleryOrFile() async {
     state = state.copyWith(step: SlipImportStep.picking);
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+        allowedExtensions: ['pdf'],
         withData: true,
       );
       if (result == null || result.files.isEmpty) {
