@@ -9,6 +9,7 @@ import 'package:campusiq/features/cwa/presentation/widgets/cwa_summary_bar.dart'
 import 'package:campusiq/features/cwa/presentation/widgets/course_card.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/cwa_coach_sheet.dart';
+import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
 
 class CwaScreen extends ConsumerWidget {
   const CwaScreen({super.key});
@@ -46,6 +47,15 @@ class CwaScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text(AppConstants.appName, style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.document_scanner_outlined),
+            tooltip: 'Scan registration slip',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const RegistrationSlipImportScreen(),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.tune),
             tooltip: 'Set target CWA',
