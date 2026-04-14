@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 
 /// Calls the OpenAI vision API with a timetable image and returns parsed slots.
@@ -11,8 +10,7 @@ class TimetableVisionParser {
 
   static const _timeout = Duration(seconds: 60);
 
-  static const _prompt =
-      'You are a university timetable parser. '
+  static const _prompt = 'You are a university timetable parser. '
       'Extract every class slot from the timetable image and return ONLY a JSON array. '
       'Each object must have these exact keys: '
       'day (string: "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"), '
@@ -26,10 +24,7 @@ class TimetableVisionParser {
       'Example: [{"day":"Monday","course_code":"CS 101","course_name":"Intro to Computing",'
       '"venue":"LT1","start_time":"08:00","end_time":"10:00","slot_type":"Lecture"}]';
 
-  TimetableVisionParser({
-    required this.apiKey,
-    String? model,
-  }) : model = model ?? dotenv.env['OPENAI_VISION_MODEL'] ?? 'gpt-4.1-nano';
+  const TimetableVisionParser({required this.apiKey, required this.model});
 
   Future<List<TimetableSlotImport>> parse(String imageBase64) async {
     final url = Uri.parse('https://api.openai.com/v1/chat/completions');

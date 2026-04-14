@@ -74,8 +74,9 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
 
       final base64Image = base64Encode(bytes);
       final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
-      final model = dotenv.env['OPENAI_VISION_MODEL'] ?? 'gpt-4o';
-      final slots = await TimetableVisionParser(apiKey: apiKey, model: model).parse(base64Image);
+      final model = dotenv.env['OPENAI_VISION_MODEL'] ?? 'gpt-4.1-nano';
+      final slots = await TimetableVisionParser(apiKey: apiKey, model: model)
+          .parse(base64Image);
 
       if (slots.isEmpty) {
         state = state.copyWith(
@@ -106,7 +107,8 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
 
   void selectAll() {
     state = state.copyWith(
-      selectedIndexes: Set<int>.from(List.generate(state.slots.length, (i) => i)),
+      selectedIndexes:
+          Set<int>.from(List.generate(state.slots.length, (i) => i)),
     );
   }
 
@@ -127,7 +129,8 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
       for (var i = 0; i < ordered.length; i++) {
         final slot = state.slots[ordered[i]];
         final color = TimetableConstants.colorForIndex(i);
-        await repo.addSlot(slot.toModel(colorValue: color, semesterKey: semesterKey));
+        await repo
+            .addSlot(slot.toModel(colorValue: color, semesterKey: semesterKey));
       }
       state = state.copyWith(step: ImportStep.done);
     } catch (e) {
