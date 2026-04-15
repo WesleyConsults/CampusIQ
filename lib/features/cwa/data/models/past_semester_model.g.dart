@@ -28,8 +28,28 @@ const PastSemesterModelSchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'semesterLabel': PropertySchema(
+    r'cumulativeCreditsCalc': PropertySchema(
       id: 2,
+      name: r'cumulativeCreditsCalc',
+      type: IsarType.double,
+    ),
+    r'cumulativeWeightedMarks': PropertySchema(
+      id: 3,
+      name: r'cumulativeWeightedMarks',
+      type: IsarType.double,
+    ),
+    r'reportedCumulativeCwa': PropertySchema(
+      id: 4,
+      name: r'reportedCumulativeCwa',
+      type: IsarType.double,
+    ),
+    r'reportedSemesterCwa': PropertySchema(
+      id: 5,
+      name: r'reportedSemesterCwa',
+      type: IsarType.double,
+    ),
+    r'semesterLabel': PropertySchema(
+      id: 6,
       name: r'semesterLabel',
       type: IsarType.string,
     )
@@ -80,7 +100,11 @@ void _pastSemesterModelSerialize(
     object.courses,
   );
   writer.writeDateTime(offsets[1], object.createdAt);
-  writer.writeString(offsets[2], object.semesterLabel);
+  writer.writeDouble(offsets[2], object.cumulativeCreditsCalc);
+  writer.writeDouble(offsets[3], object.cumulativeWeightedMarks);
+  writer.writeDouble(offsets[4], object.reportedCumulativeCwa);
+  writer.writeDouble(offsets[5], object.reportedSemesterCwa);
+  writer.writeString(offsets[6], object.semesterLabel);
 }
 
 PastSemesterModel _pastSemesterModelDeserialize(
@@ -98,8 +122,12 @@ PastSemesterModel _pastSemesterModelDeserialize(
       ) ??
       [];
   object.createdAt = reader.readDateTime(offsets[1]);
+  object.cumulativeCreditsCalc = reader.readDoubleOrNull(offsets[2]);
+  object.cumulativeWeightedMarks = reader.readDoubleOrNull(offsets[3]);
   object.id = id;
-  object.semesterLabel = reader.readString(offsets[2]);
+  object.reportedCumulativeCwa = reader.readDoubleOrNull(offsets[4]);
+  object.reportedSemesterCwa = reader.readDoubleOrNull(offsets[5]);
+  object.semesterLabel = reader.readString(offsets[6]);
   return object;
 }
 
@@ -121,6 +149,14 @@ P _pastSemesterModelDeserializeProp<P>(
     case 1:
       return (reader.readDateTime(offset)) as P;
     case 2:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 3:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 4:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 5:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 6:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -369,6 +405,174 @@ extension PastSemesterModelQueryFilter
   }
 
   QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeCreditsCalcIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'cumulativeCreditsCalc',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeCreditsCalcIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'cumulativeCreditsCalc',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeCreditsCalcEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cumulativeCreditsCalc',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeCreditsCalcGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cumulativeCreditsCalc',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeCreditsCalcLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cumulativeCreditsCalc',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeCreditsCalcBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cumulativeCreditsCalc',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeWeightedMarksIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'cumulativeWeightedMarks',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeWeightedMarksIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'cumulativeWeightedMarks',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeWeightedMarksEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cumulativeWeightedMarks',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeWeightedMarksGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cumulativeWeightedMarks',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeWeightedMarksLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cumulativeWeightedMarks',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      cumulativeWeightedMarksBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cumulativeWeightedMarks',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
       idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -420,6 +624,174 @@ extension PastSemesterModelQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedCumulativeCwaIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'reportedCumulativeCwa',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedCumulativeCwaIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'reportedCumulativeCwa',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedCumulativeCwaEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'reportedCumulativeCwa',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedCumulativeCwaGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'reportedCumulativeCwa',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedCumulativeCwaLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'reportedCumulativeCwa',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedCumulativeCwaBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'reportedCumulativeCwa',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedSemesterCwaIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'reportedSemesterCwa',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedSemesterCwaIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'reportedSemesterCwa',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedSemesterCwaEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'reportedSemesterCwa',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedSemesterCwaGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'reportedSemesterCwa',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedSemesterCwaLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'reportedSemesterCwa',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      reportedSemesterCwaBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'reportedSemesterCwa',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -591,6 +963,62 @@ extension PastSemesterModelQuerySortBy
   }
 
   QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByCumulativeCreditsCalc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cumulativeCreditsCalc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByCumulativeCreditsCalcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cumulativeCreditsCalc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByCumulativeWeightedMarks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cumulativeWeightedMarks', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByCumulativeWeightedMarksDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cumulativeWeightedMarks', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByReportedCumulativeCwa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reportedCumulativeCwa', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByReportedCumulativeCwaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reportedCumulativeCwa', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByReportedSemesterCwa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reportedSemesterCwa', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByReportedSemesterCwaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reportedSemesterCwa', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
       sortBySemesterLabel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterLabel', Sort.asc);
@@ -621,6 +1049,34 @@ extension PastSemesterModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByCumulativeCreditsCalc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cumulativeCreditsCalc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByCumulativeCreditsCalcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cumulativeCreditsCalc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByCumulativeWeightedMarks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cumulativeWeightedMarks', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByCumulativeWeightedMarksDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cumulativeWeightedMarks', Sort.desc);
+    });
+  }
+
   QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -631,6 +1087,34 @@ extension PastSemesterModelQuerySortThenBy
       thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByReportedCumulativeCwa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reportedCumulativeCwa', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByReportedCumulativeCwaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reportedCumulativeCwa', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByReportedSemesterCwa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reportedSemesterCwa', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByReportedSemesterCwaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reportedSemesterCwa', Sort.desc);
     });
   }
 
@@ -655,6 +1139,34 @@ extension PastSemesterModelQueryWhereDistinct
       distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QDistinct>
+      distinctByCumulativeCreditsCalc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cumulativeCreditsCalc');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QDistinct>
+      distinctByCumulativeWeightedMarks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cumulativeWeightedMarks');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QDistinct>
+      distinctByReportedCumulativeCwa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'reportedCumulativeCwa');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QDistinct>
+      distinctByReportedSemesterCwa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'reportedSemesterCwa');
     });
   }
 
@@ -686,6 +1198,34 @@ extension PastSemesterModelQueryProperty
       createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, double?, QQueryOperations>
+      cumulativeCreditsCalcProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cumulativeCreditsCalc');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, double?, QQueryOperations>
+      cumulativeWeightedMarksProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cumulativeWeightedMarks');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, double?, QQueryOperations>
+      reportedCumulativeCwaProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reportedCumulativeCwa');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, double?, QQueryOperations>
+      reportedSemesterCwaProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reportedSemesterCwa');
     });
   }
 
@@ -728,8 +1268,13 @@ const PastCourseEntrySchema = Schema(
       name: r'grade',
       type: IsarType.string,
     ),
-    r'score': PropertySchema(
+    r'mark': PropertySchema(
       id: 4,
+      name: r'mark',
+      type: IsarType.double,
+    ),
+    r'score': PropertySchema(
+      id: 5,
       name: r'score',
       type: IsarType.double,
     )
@@ -762,7 +1307,8 @@ void _pastCourseEntrySerialize(
   writer.writeString(offsets[1], object.courseName);
   writer.writeDouble(offsets[2], object.creditHours);
   writer.writeString(offsets[3], object.grade);
-  writer.writeDouble(offsets[4], object.score);
+  writer.writeDouble(offsets[4], object.mark);
+  writer.writeDouble(offsets[5], object.score);
 }
 
 PastCourseEntry _pastCourseEntryDeserialize(
@@ -776,6 +1322,7 @@ PastCourseEntry _pastCourseEntryDeserialize(
   object.courseName = reader.readString(offsets[1]);
   object.creditHours = reader.readDouble(offsets[2]);
   object.grade = reader.readString(offsets[3]);
+  object.mark = reader.readDoubleOrNull(offsets[4]);
   return object;
 }
 
@@ -795,6 +1342,8 @@ P _pastCourseEntryDeserializeProp<P>(
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 5:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1273,6 +1822,90 @@ extension PastCourseEntryQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'grade',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<PastCourseEntry, PastCourseEntry, QAfterFilterCondition>
+      markIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'mark',
+      ));
+    });
+  }
+
+  QueryBuilder<PastCourseEntry, PastCourseEntry, QAfterFilterCondition>
+      markIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'mark',
+      ));
+    });
+  }
+
+  QueryBuilder<PastCourseEntry, PastCourseEntry, QAfterFilterCondition>
+      markEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mark',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastCourseEntry, PastCourseEntry, QAfterFilterCondition>
+      markGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mark',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastCourseEntry, PastCourseEntry, QAfterFilterCondition>
+      markLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mark',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastCourseEntry, PastCourseEntry, QAfterFilterCondition>
+      markBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mark',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }

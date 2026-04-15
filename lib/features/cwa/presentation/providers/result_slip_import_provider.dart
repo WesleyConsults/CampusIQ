@@ -22,6 +22,8 @@ class ResultImportState {
   final String? errorMessage;
   final double? reportedSemesterCwa;
   final double? reportedCumulativeCwa;
+  final double? cumulativeCreditsCalc;
+  final double? cumulativeWeightedMarks;
 
   const ResultImportState({
     this.step = ResultImportStep.idle,
@@ -31,6 +33,8 @@ class ResultImportState {
     this.errorMessage,
     this.reportedSemesterCwa,
     this.reportedCumulativeCwa,
+    this.cumulativeCreditsCalc,
+    this.cumulativeWeightedMarks,
   });
 
   ResultImportState copyWith({
@@ -41,6 +45,8 @@ class ResultImportState {
     String? errorMessage,
     double? reportedSemesterCwa,
     double? reportedCumulativeCwa,
+    double? cumulativeCreditsCalc,
+    double? cumulativeWeightedMarks,
   }) =>
       ResultImportState(
         step: step ?? this.step,
@@ -50,6 +56,8 @@ class ResultImportState {
         errorMessage: errorMessage,
         reportedSemesterCwa: reportedSemesterCwa ?? this.reportedSemesterCwa,
         reportedCumulativeCwa: reportedCumulativeCwa ?? this.reportedCumulativeCwa,
+        cumulativeCreditsCalc: cumulativeCreditsCalc ?? this.cumulativeCreditsCalc,
+        cumulativeWeightedMarks: cumulativeWeightedMarks ?? this.cumulativeWeightedMarks,
       );
 }
 
@@ -161,6 +169,8 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
         selectedIndexes: Set.from(List.generate(parseResult.courses.length, (i) => i)),
         reportedSemesterCwa: parseResult.reportedSemesterCwa,
         reportedCumulativeCwa: parseResult.reportedCumulativeCwa,
+        cumulativeCreditsCalc: parseResult.cumulativeCreditsCalc,
+        cumulativeWeightedMarks: parseResult.cumulativeWeightedMarks,
       );
     } catch (e) {
       state = state.copyWith(
@@ -232,6 +242,8 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
         courses: entries,
         reportedSemesterCwa: state.reportedSemesterCwa,
         reportedCumulativeCwa: state.reportedCumulativeCwa,
+        cumulativeCreditsCalc: state.cumulativeCreditsCalc,
+        cumulativeWeightedMarks: state.cumulativeWeightedMarks,
       ));
 
       state = state.copyWith(step: ResultImportStep.done);

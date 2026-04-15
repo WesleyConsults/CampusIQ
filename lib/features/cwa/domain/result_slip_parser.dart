@@ -8,10 +8,18 @@ class ResultSlipParseResult {
   final double? reportedSemesterCwa;
   final double? reportedCumulativeCwa;
 
+  /// From the "Credits Calc" cumulative column in the slip summary table.
+  final double? cumulativeCreditsCalc;
+
+  /// From the "Weighted Marks" cumulative column in the slip summary table.
+  final double? cumulativeWeightedMarks;
+
   const ResultSlipParseResult({
     required this.courses,
     this.reportedSemesterCwa,
     this.reportedCumulativeCwa,
+    this.cumulativeCreditsCalc,
+    this.cumulativeWeightedMarks,
   });
 }
 
@@ -25,18 +33,29 @@ class ResultSlipParser {
   static const _timeout = Duration(seconds: 90);
 
   static const _prompt =
-      'You are a university academic result slip parser for KNUST. '
-      'Extract every course from this result slip, and also find the Semester Weighted Average and Cumulative Weighted Average. '
-      'Return ONLY a JSON object with the following exact keys: '
-      '"courses" (array of objects), "semester_cwa" (number or null), "cumulative_cwa" (number or null). '
-      'For each object in the "courses" array, it must have these exact keys: '
-      'course_code (string: the module code, e.g. "CS 101"), '
-      'course_name (string: full course title), '
-      'credit_hours (number: credit units for the course, default 3 if not visible), '
-      'grade (string: the letter grade earned — must be one of A, B, C, D, or F), '
-      'mark (number or null: the exact numerical mark scored, e.g., 79 or 61. Look for the "MARKS" column). '
-      'Return nothing except the JSON object. No explanation. No markdown. No code fences. '
-      'Example: {"semester_cwa": 65.05, "cumulative_cwa": 50.03, "courses": [{"course_code":"CS 101","course_name":"Intro to Computing","credit_hours":3,"mark":79,"grade":"A"}]}';
+      'You are a KNUST result slip data extractor. Read every number exactly as printed — do NOT estimate or infer. '
+      'Extract the following from the slip:\n\n'
+      '1. COURSE TABLE — every row in the course table:\n'
+      '   - course_code: module code (e.g. "COE 261")\n'
+      '   - course_name: full title\n'
+      '   - credit_hours: number from CREDITS column (default 3 only if column is missing)\n'
+      '   - mark: integer/decimal from MARKS column — MUST be copied exactly. null ONLY if no MARKS column exists.\n'
+      '   - grade: letter from GRADE column (use F for any failing grade)\n\n'
+      '2. SUMMARY TABLE (the Semester / Cumulative box at the bottom):\n'
+      '   - semester_cwa: the Weighted Average from the SEMESTER column\n'
+      '   - cumulative_cwa: the Weighted Average from the CUMULATIVE column\n'
+      '   - cumulative_credits_calc: the Credits Calc value from the CUMULATIVE column\n'
+      '   - cumulative_weighted_marks: the Weighted Marks value from the CUMULATIVE column\n\n'
+      'Return ONLY a JSON object with these exact top-level keys:\n'
+      '"courses", "semester_cwa", "cumulative_cwa", "cumulative_credits_calc", "cumulative_weighted_marks".\n'
+      'All five keys must be present. Use null for any value not visible on the slip.\n'
+      'Return nothing except the JSON. No explanation. No markdown. No code fences.\n\n'
+      'Example for a slip showing Weighted Marks 8655 and Credits Calc 173 in the cumulative column:\n'
+      '{"semester_cwa":65.05,"cumulative_cwa":50.03,"cumulative_credits_calc":173,"cumulative_weighted_marks":8655,'
+      '"courses":['
+      '{"course_code":"COE 454","course_name":"SOFTWARE ENGINEERING","credit_hours":3,"mark":79,"grade":"A"},'
+      '{"course_code":"COE 480","course_name":"FAULT DIAGNOSIS AND FAILURE TOLERANCE","credit_hours":3,"mark":40,"grade":"D"}'
+      ']}';
 
   const ResultSlipParser({required this.apiKey, required this.model});
 
@@ -133,6 +152,8 @@ class ResultSlipParser {
       courses: courses,
       reportedSemesterCwa: (parsedObj['semester_cwa'] as num?)?.toDouble(),
       reportedCumulativeCwa: (parsedObj['cumulative_cwa'] as num?)?.toDouble(),
+      cumulativeCreditsCalc: (parsedObj['cumulative_credits_calc'] as num?)?.toDouble(),
+      cumulativeWeightedMarks: (parsedObj['cumulative_weighted_marks'] as num?)?.toDouble(),
     );
   }
 }

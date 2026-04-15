@@ -608,7 +608,8 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                               color: AppTheme.textPrimary),
                         ),
                         Text(
-                          '${widget.semester.courses.length} courses',
+                          '${widget.semester.courses.length} courses'
+                          '${widget.semester.reportedSemesterCwa != null ? ' • Slip: ${widget.semester.reportedSemesterCwa!.toStringAsFixed(2)}' : ''}',
                           style: const TextStyle(
                               fontSize: 12, color: AppTheme.textSecondary),
                         ),
@@ -670,7 +671,12 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                       style: const TextStyle(
                           fontSize: 12, color: AppTheme.textSecondary),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
+                    // Show the actual score used in CWA calculation.
+                    // If mark is null the code falls back to a grade midpoint —
+                    // flag that so the user knows to enter the real mark.
+                    _ScorePill(mark: c.mark, score: c.score),
+                    const SizedBox(width: 6),
                     _GradePill(grade: c.grade),
                   ],
                 ),
@@ -743,6 +749,60 @@ class _CurrentCourseRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Score pill (shows exact mark or grade approximation with warning) ────────
+
+class _ScorePill extends StatelessWidget {
+  /// Null means no mark was imported; [score] is then a grade midpoint estimate.
+  final double? mark;
+  final double score;
+
+  const _ScorePill({required this.mark, required this.score});
+
+  @override
+  Widget build(BuildContext context) {
+    final isApprox = mark == null;
+    return Tooltip(
+      message: isApprox
+          ? 'Estimated from grade — enter the exact mark in Result History for accuracy'
+          : 'Exact mark used in CWA calculation',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        decoration: BoxDecoration(
+          color: isApprox
+              ? const Color(0xFFF57F17).withValues(alpha: 0.10)
+              : AppTheme.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(
+            color: isApprox
+                ? const Color(0xFFF57F17).withValues(alpha: 0.35)
+                : Colors.transparent,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              score.toStringAsFixed(1),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: isApprox
+                    ? const Color(0xFFF57F17)
+                    : AppTheme.primary,
+              ),
+            ),
+            if (isApprox) ...[
+              const SizedBox(width: 2),
+              const Icon(Icons.warning_amber_rounded,
+                  size: 10, color: Color(0xFFF57F17)),
+            ],
+          ],
+        ),
       ),
     );
   }

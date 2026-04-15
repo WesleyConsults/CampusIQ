@@ -19,6 +19,14 @@ class PastSemesterModel {
   /// Optional: what the slip actually says for cumulative CWA
   double? reportedCumulativeCwa;
 
+  /// Credits Calc from the CUMULATIVE column of the slip summary table.
+  /// When present, used directly instead of reconstructing from individual marks.
+  double? cumulativeCreditsCalc;
+
+  /// Weighted Marks from the CUMULATIVE column of the slip summary table.
+  /// When present, used directly instead of reconstructing from individual marks.
+  double? cumulativeWeightedMarks;
+
   DateTime createdAt = DateTime.now();
 
   PastSemesterModel();
@@ -28,6 +36,8 @@ class PastSemesterModel {
     required this.courses,
     this.reportedSemesterCwa,
     this.reportedCumulativeCwa,
+    this.cumulativeCreditsCalc,
+    this.cumulativeWeightedMarks,
   });
 }
 
