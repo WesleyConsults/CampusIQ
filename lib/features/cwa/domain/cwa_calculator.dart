@@ -39,4 +39,36 @@ class CwaCalculator {
     modified[index] = (creditHours: modified[index].creditHours, score: newScore);
     return calculate(modified);
   }
+
+  /// True cumulative CWA across all past semesters + current semester courses.
+  /// [pastSemesters] — each entry is a list of (creditHours, score) pairs for one past semester.
+  /// [currentCourses] — current semester courses (same shape as [calculate]).
+  static double calculateCumulative({
+    required List<List<({double creditHours, double score})>> pastSemesters,
+    required List<({double creditHours, double score})> currentCourses,
+  }) {
+    final all = <({double creditHours, double score})>[];
+    for (final sem in pastSemesters) {
+      all.addAll(sem);
+    }
+    all.addAll(currentCourses);
+    return calculate(all);
+  }
+
+  /// Total credit hours across all past semesters + current semester.
+  static double totalCredits({
+    required List<List<({double creditHours, double score})>> pastSemesters,
+    required List<({double creditHours, double score})> currentCourses,
+  }) {
+    double total = 0;
+    for (final sem in pastSemesters) {
+      for (final c in sem) {
+        total += c.creditHours;
+      }
+    }
+    for (final c in currentCourses) {
+      total += c.creditHours;
+    }
+    return total;
+  }
 }

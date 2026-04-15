@@ -7,11 +7,15 @@ class CwaSummaryBar extends StatelessWidget {
   final double target;
   final double gap;
 
+  /// Label shown above the projected CWA value. Defaults to 'Projected CWA'.
+  final String label;
+
   const CwaSummaryBar({
     super.key,
     required this.projected,
     required this.target,
     required this.gap,
+    this.label = 'Projected CWA',
   });
 
   @override
@@ -30,7 +34,7 @@ class CwaSummaryBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _StatBox(label: 'Projected CWA', value: projected.toCwaString(), valueColor: Colors.white),
+              _StatBox(label: label, value: projected.toCwaString(), valueColor: Colors.white),
               _StatBox(label: 'Target CWA', value: target.toCwaString(), valueColor: AppTheme.accent),
               _StatBox(
                 label: 'Gap',
