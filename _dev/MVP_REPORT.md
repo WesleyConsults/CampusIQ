@@ -1,14 +1,14 @@
 # CampusIQ — MVP Completion Report
 
-**Date:** 2026-04-12
+**Date:** 2026-04-15
 **Package:** com.wesleyconsults.campusiq
-**Status:** MVP Complete (Phases 1–15.2) + Bug Fix Pass
+**Status:** MVP Complete (Phases 1–15.3) + Bug Fix Pass
 
 ---
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases plus Phase 15.1: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking, Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, Study Plan + Exam Mode, and Course Hub Workspace (per-course notes, files, sessions, AI chat, and flashcards).
+CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases plus Phases 15.1–15.3: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking, Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, Study Plan + Exam Mode, Course Hub Workspace (per-course notes, files, sessions, AI chat, and flashcards), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, and Cumulative CWA with Past Result Slip Import.
 
 ---
 
@@ -65,19 +65,30 @@ lib/
 │   ├── services/notification_service.dart         — centralized local notifications singleton
 │   └── theme/app_theme.dart                       — Material 3 + Inter
 ├── features/
-│   ├── cwa/                                       — Phase 1 + Phase 13
+│   ├── cwa/                                       — Phase 1 + Phase 13 + Phase 15.3
 │   │   ├── data/models/course_model.dart
+│   │   ├── data/models/past_semester_model.dart   — Phase 15.3: @collection + embedded PastCourseEntry
 │   │   ├── data/repositories/cwa_repository.dart
-│   │   ├── domain/cwa_calculator.dart
+│   │   ├── data/repositories/past_result_repository.dart — Phase 15.3: CRUD for past semesters
+│   │   ├── domain/cwa_calculator.dart             — Phase 15.3: +calculateCumulative(), +totalCredits()
+│   │   ├── domain/past_course_result.dart         — Phase 15.3: PastCourseResult value object
+│   │   ├── domain/registration_course_import.dart — Phase 15.3: RegistrationCourseImport value object
+│   │   ├── domain/registration_slip_parser.dart   — Phase 15.3: OpenAI vision → courses
+│   │   ├── domain/result_slip_parser.dart         — Phase 15.3: OpenAI vision → grades
 │   │   └── presentation/
-│   │       ├── providers/cwa_provider.dart
+│   │       ├── providers/cwa_provider.dart        — Phase 15.3: +cwaViewModeProvider, +pastSemestersProvider
 │   │       ├── providers/whatif_provider.dart     — Phase 13: WhatIfState + WhatIfNotifier
-│   │       ├── screens/cwa_screen.dart
+│   │       ├── providers/registration_slip_import_provider.dart — Phase 15.3: slip import state machine
+│   │       ├── providers/result_slip_import_provider.dart       — Phase 15.3: result slip state machine
+│   │       ├── screens/cwa_screen.dart            — Phase 15.3: view mode toggle, scan icon
+│   │       ├── screens/registration_slip_import_screen.dart     — Phase 15.3: AI course import flow
+│   │       ├── screens/result_slip_import_screen.dart           — Phase 15.3: AI result import flow
+│   │       ├── screens/past_semesters_screen.dart               — Phase 15.3: result history list
 │   │       └── widgets/
 │   │           ├── add_course_sheet.dart
 │   │           ├── course_card.dart
 │   │           ├── cwa_coach_sheet.dart           — Phase 13: AI CWA coach bottom sheet
-│   │           ├── cwa_summary_bar.dart
+│   │           ├── cwa_summary_bar.dart           — Phase 15.3: cumulative CWA display
 │   │           ├── whatif_explain_chip.dart       — Phase 13: AI explanation chip
 │   │           └── whatif_result_card.dart        — Phase 13: what-if result display
 │   ├── timetable/                                 — Phase 2 + 3
@@ -554,7 +565,7 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 
 ---
 
-### Phase 15.2 — DeepSeek Vision Timetable Import
+### Phase 15.2 — OpenAI Vision Timetable Import
 
 **Route:** `/timetable/import` (full-screen push, no bottom nav; entered via scanner icon in Timetable AppBar)
 
@@ -562,13 +573,13 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 |---|---|
 | Image picker | `image_picker` package — student picks from device camera or gallery; `imageQuality: 85` to balance quality and payload size |
 | Size guard | Rejects images over 4 MB before sending to the API — shows a user-friendly error with a retry prompt |
-| TimetableVisionParser | Pure Dart; base64-encodes the image bytes and POSTs a vision-format request to the DeepSeek `deepseek-vl2` model; strips markdown code fences from the response before JSON decoding |
+| TimetableVisionParser | Pure Dart; base64-encodes the image bytes and POSTs a vision-format request to the OpenAI Chat Completions API (`/v1/chat/completions`); model name loaded from `.env`; strips markdown code fences from the response before JSON decoding; detects token-limit truncation (`finish_reason: "length"`) and surfaces a user-friendly crop-and-retry message |
 | TimetableSlotImport | Pure Dart value object; `fromJson` normalises day strings ("Monday", "Mon", "MON", int 0–5), parses 24-hour `HH:MM` time strings to minutes, defaults missing `slot_type` to "Lecture", skips malformed entries silently |
 | Import state machine | `TimetableImportNotifier` (Riverpod `@riverpod` class notifier) drives 7 states: `idle → picking → parsing → reviewing → saving → done → error`; each state renders a different UI body automatically |
 | Review screen | After parsing, shows all extracted slots in a checklist — student can toggle individual slots on/off, or select/deselect all; slot count chip updates live |
-| Confirm & save | Selected slots are assigned cycling colors from `TimetableConstants.slotColorValues` and written to `TimetableRepository.addSlot()` using the active semester key from `activeSemesterProvider` |
+| Confirm & save | Selected slots are assigned cycling colors from `TimetableConstants.slotColorValues` and written to `TimetableRepository.addSlot()` using the active semester key from `activeSemesterProvider`; imported courses are also synced one-way to CWA (missing courses added automatically) |
 | Auto-navigate | On `done`, resets provider state and `context.go('/timetable')` — no manual navigation needed |
-| Error recovery | Every failure path (no internet, empty parse, oversized image) lands in `error` state with a descriptive message and a "Try Again" button that resets to `idle` |
+| Error recovery | Every failure path (no internet, empty parse, oversized image, truncation) lands in `error` state with a descriptive message and a "Try Again" button that resets to `idle` |
 | Entry point | Scanner icon (`Icons.document_scanner_outlined`) added to the Timetable screen AppBar alongside the existing "+" button |
 
 **New files:** `domain/timetable_slot_import.dart`, `domain/timetable_vision_parser.dart`, `presentation/providers/timetable_import_provider.dart`, `presentation/screens/timetable_import_screen.dart`, `presentation/widgets/import_slot_review_tile.dart`
@@ -576,6 +587,57 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 **Modified files:** `timetable_screen.dart` (scanner icon), `app_router.dart` (new route), `pubspec.yaml` (`image_picker` dependency)
 
 **Isar schemas:** None (imports directly into existing `TimetableSlotModel`)
+
+---
+
+### Phase 15.3 — CWA Registration Slip Import + Cumulative CWA
+
+**Routes:** No new GoRouter routes — all new screens pushed via `MaterialPageRoute` from the CWA screen.
+
+#### Registration Slip Import
+
+| Feature | Description |
+|---|---|
+| Entry point | Document scanner icon in CWA AppBar (visible in Semester view only) → opens `RegistrationSlipImportScreen` |
+| 3 input options | Camera (take photo), Gallery (pick JPG/PNG), PDF (file picker) |
+| AI extraction | `RegistrationSlipParser` base64-encodes the image/PDF page and calls OpenAI vision with a course-extraction prompt; returns a list of `RegistrationCourseImport` value objects (courseCode, courseName, creditHours) |
+| State machine | `RegistrationSlipImportNotifier` drives 6 states: `idle → picking → parsing → reviewing → saving → done → error` |
+| Review screen | Lists all extracted courses with checkboxes; each selected course shows an inline credit-hours stepper (1–6); student can adjust before importing |
+| Select / Deselect All | Header TextButton toggles all checkboxes |
+| Confirm & save | Selected courses are written directly to `CwaRepository.addCourse()` — they land in the active semester CWA list |
+| Done screen | Confirms count of courses added; instructs user to set expected scores from the CWA screen |
+
+**New files:** `domain/registration_course_import.dart`, `domain/registration_slip_parser.dart`, `presentation/providers/registration_slip_import_provider.dart`, `presentation/screens/registration_slip_import_screen.dart`
+
+**Isar schemas:** None (imports into existing `CourseModel` via `CwaRepository`)
+
+---
+
+#### Cumulative CWA + Past Result Slip Import
+
+| Feature | Description |
+|---|---|
+| CWA view mode toggle | CWA screen has a `SegmentedButton` (Semester / Cumulative) stored in `cwaViewModeProvider`; changes AppBar actions and the summary bar display |
+| PastSemesterModel | New Isar `@collection`; stores `semesterLabel`, `List<PastCourseEntry>` (embedded), `reportedSemesterCwa?`, `reportedCumulativeCwa?`, `createdAt` |
+| PastCourseEntry | Embedded object: courseCode, courseName, creditHours, grade (A–F), mark? (exact %) — `score` getter prefers `mark` over letter-grade approximation |
+| PastResultRepository | CRUD: save, getAll, update, delete for `PastSemesterModel` |
+| CwaCalculator updates | `+calculateCumulative()` — flat-pools all past semester course entries + current courses then calls `calculate()`; `+totalCredits()` — sums credit hours across all semesters |
+| CwaSummaryBar update | In cumulative mode shows: Cumulative CWA, total credit hours, semester count |
+| Result Slip Import flow | Full 7-state machine (`idle → picking → parsing → labelling → reviewing → saving → done → error`) |
+| 3 input options | Camera, Gallery (JPG/PNG), PDF — consistent with Registration Slip Import |
+| AI extraction | `ResultSlipParser` calls OpenAI vision; extracts course code, course name, credit hours, grade, mark (if visible), plus slip-level `reportedSemesterCwa` and `reportedCumulativeCwa` if printed on the slip |
+| Label step | After AI parsing, student names the semester (text input + quick-pick chips: "Year 1 Sem 1" through "Year 4 Sem 2") |
+| Review screen | Shows courses found, reported CWA chips; each selected course shows inline grade dropdown (A/B/C/D/F, colour-coded), mark input field, and credit-hours stepper; all corrections auto-save as you edit |
+| Confirm & save | Selected courses are packaged into a `PastSemesterModel` and written to `PastResultRepository` |
+| Done screen | Confirms label saved and prompts user to switch to Cumulative view |
+| Past Semesters Screen | History list at `/cwa → history icon`; expandable semester cards showing all courses; inline grade/mark/credits editing that auto-saves; delete with confirmation dialog |
+| CWA recalculation | Adding or deleting a past semester triggers a live recalculation — cumulative CWA in the summary bar updates immediately via `pastSemestersProvider` stream |
+
+**New files:** `data/models/past_semester_model.dart`, `data/repositories/past_result_repository.dart`, `domain/past_course_result.dart`, `domain/result_slip_parser.dart`, `presentation/providers/result_slip_import_provider.dart`, `presentation/screens/result_slip_import_screen.dart`, `presentation/screens/past_semesters_screen.dart`
+
+**Modified files:** `cwa_screen.dart` (view mode toggle, conditional AppBar icons), `cwa_provider.dart` (pastSemestersProvider, pastResultRepositoryProvider, cwaViewModeProvider), `cwa_summary_bar.dart` (cumulative display), `cwa_calculator.dart` (calculateCumulative, totalCredits), `isar_provider.dart` (registers PastSemesterModel schema)
+
+**Isar schemas:** `PastSemesterModel` (new)
 
 ---
 
@@ -599,6 +661,7 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | `ExamModel` | Exam Mode | 15 | Exam dates, course codes, and estimated study hours |
 | `CourseNoteModel` | Course Hub | 15.1 | Per-course markdown notes with title, body, timestamps |
 | `CourseFileModel` | Course Hub | 15.1 | Attached file records (PDF/image) with app-local path |
+| `PastSemesterModel` | CWA | 15.3 | Past semester results (embedded `PastCourseEntry` list, reported CWA fields) |
 
 ---
 
@@ -714,10 +777,17 @@ flutter run
 | Phase 15 S2 | `feat(phase-15): study plan — Isar schemas, provider, plan generation, sessions tab` |
 | Bug fix pass | `fix: close all 11 bugs — CWA planner UX, AI coaching context, timetable grid overhaul` |
 | Phase 15.1 | `feat(phase-15.1): course hub workspace — notes, files, sessions tab, flashcards, per-course AI chat` |
+| Phase 15.2 S1 | `phase 15.2 DeepSeek Timetable Vision` |
+| Phase 15.2 S2 | `open ai vision intergration` / `open ai vision intergration part 2 with model name` |
+| Phase 15.2 fix | `vision model 2 updated with model name from .env` |
+| Phase 15.2 link | `cwa linked with timetable oneway` / `timetable model success` |
+| Phase 15.3 S1 | `registration slip integrated into CWA` / `split slip import idle into 3 options` |
+| Phase 15.3 S2 | `add cumulative CWA tracking with past result slip import` |
+| Phase 15.3 S3 | `cumulative cwa updated` |
 
 ---
 
-## What Comes Next (Post-Phase 15)
+## What Comes Next (Post-Phase 15.3)
 
 | Feature | Notes |
 |---|---|
@@ -727,3 +797,4 @@ flutter run
 | Multi-university support | Extend beyond KNUST |
 | Cloud sync | Optional backup of Isar data |
 | Push notifications (remote) | Server-triggered alerts via FCM for AI-personalized content |
+| CWA grade scale config | Allow student to set their university's A/B/C/D score bands (currently KNUST defaults) |

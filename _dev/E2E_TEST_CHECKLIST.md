@@ -39,8 +39,9 @@ Mark each item `[x]` as you confirm it works.
 
 ### 2.1 Empty state
 - [ ] Screen shows empty state message and a "+" FAB
+- [ ] AppBar shows a document scanner icon (Semester view) and a tune icon
 
-### 2.2 Add a course
+### 2.2 Add a course manually
 - [ ] Tap the **FAB (+)**
 - [ ] `AddCourseSheet` opens from the bottom
 - [ ] Fill in: Course name (e.g. "Engineering Mathematics"), credit hours (e.g. 3), expected score (e.g. 72)
@@ -69,11 +70,66 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Tap **"Open Workspace"** → navigates to that course's Course Hub
 - [ ] Back arrow returns to the CWA screen
 
-### 2.6 AI Coaching
+### 2.7 AI Coaching
 - [ ] Tap **"Get AI Coaching"** button
 - [ ] `CwaCoachSheet` opens with AI-generated advice
 - [ ] Advice is relevant to your current courses and gap
 - [ ] Sheet dismisses on back/swipe
+
+### 2.8 Registration Slip Import
+- [ ] Tap the **document scanner icon** in the AppBar (visible in Semester view only)
+- [ ] `RegistrationSlipImportScreen` opens (no bottom nav)
+- [ ] Three option tiles visible: **Take a photo**, **Upload image from gallery**, **Choose a PDF**
+- [ ] Tap **"Choose a PDF"** (or camera/gallery) — file picker / camera opens
+- [ ] Cancel without selecting — returns to idle screen (no crash)
+- [ ] Select a valid registration slip image → loading state shows "AI is reading your slip…"
+- [ ] Review screen appears listing all extracted courses with checkboxes
+- [ ] Each course shows: course code, course name, credit hours (stepper, 1–6)
+- [ ] Adjust credit hours on one course using the stepper — value updates
+- [ ] Deselect one course — it greys out
+- [ ] Tap **"Select all"** — all checkboxes re-tick
+- [ ] Tap **"Import N courses"** → saving overlay → Done screen
+- [ ] Done screen confirms count of courses added
+- [ ] Tap **Done** → returns to CWA screen
+- [ ] Imported courses are now visible in the CWA course list
+- [ ] Back button at any step resets the flow and returns to CWA without crash
+
+### 2.9 Cumulative CWA view mode
+- [ ] `SegmentedButton` at the top of the CWA screen shows **Semester** and **Cumulative** options
+- [ ] Default is **Semester** — existing course list and summary bar are shown
+- [ ] Tap **Cumulative** — AppBar icon changes to a history icon; summary bar switches to Cumulative CWA display
+- [ ] In Cumulative mode, summary bar shows: Cumulative CWA value, total credit hours, semester count
+- [ ] With no past semesters imported, cumulative CWA equals the current semester CWA
+- [ ] Tap the **history icon** (cumulative mode AppBar) → `PastSemestersScreen` opens
+- [ ] Empty state shows "No past results yet" with an **Import First Result** button
+- [ ] Back arrow returns to CWA
+
+### 2.10 Result Slip Import (Cumulative CWA)
+- [ ] On `PastSemestersScreen`, tap the **FAB (+ Add Semester)**
+- [ ] `ResultSlipImportScreen` opens
+- [ ] Three option tiles visible: **Take a photo**, **Upload image from gallery**, **Choose a PDF**
+- [ ] Select a valid result slip image → loading state shows "AI is reading your result slip…"
+- [ ] **Label step** appears — text field with placeholder "e.g. Year 1 Sem 1"
+- [ ] Quick-pick chips shown (Year 1 Sem 1 … Year 4 Sem 2) — tap one to fill the field
+- [ ] Type a label manually → **Continue to Review** button enables
+- [ ] Tap Continue — Review screen appears
+- [ ] Review screen shows: semester label, courses found count, optional "Reported Sem CWA" and "Reported Cum CWA" chips (if printed on slip)
+- [ ] Each selected course shows: course code, course name, mark input (numeric), grade dropdown (A/B/C/D/F, colour-coded), credit hours stepper
+- [ ] Change a grade to 'A' → grade chip turns green
+- [ ] Type a mark (e.g. 82) — mark field updates
+- [ ] Deselect a course — controls hide; row greys out
+- [ ] Tap **"Import N courses"** → saving → Done screen confirming label saved
+- [ ] Tap Done → returns to `PastSemestersScreen`
+- [ ] Imported semester card appears with: label, course count, calculated CWA badge
+
+### 2.11 Past Semesters Screen management
+- [ ] Semester card is collapsed by default — tap to expand, reveals course rows
+- [ ] Each course row shows: code, name, mark field, credit stepper, grade dropdown — all editable inline
+- [ ] Edit a grade inline → card CWA badge recalculates immediately
+- [ ] Tap **delete icon** on semester card → confirmation dialog appears
+- [ ] Confirm delete → semester card disappears; cumulative CWA on CWA screen updates
+- [ ] Import a second past semester — both cards appear; cumulative CWA updates to include both
+- [ ] Cumulative CWA on the main CWA screen now reflects all past semesters + current semester
 
 ---
 
