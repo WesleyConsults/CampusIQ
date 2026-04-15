@@ -362,6 +362,39 @@ class _ReviewView extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 13, color: AppTheme.textSecondary),
                     ),
+                    if (state.reportedSemesterCwa != null || state.reportedCumulativeCwa != null) ...[
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          if (state.reportedSemesterCwa != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'Reported Sem CWA: ${state.reportedSemesterCwa?.toStringAsFixed(2)}',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primary),
+                              ),
+                            ),
+                          if (state.reportedCumulativeCwa != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'Reported Cum CWA: ${state.reportedCumulativeCwa?.toStringAsFixed(2)}',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primary),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -399,6 +432,7 @@ class _ReviewView extends StatelessWidget {
                 onToggle: () => notifier.toggleCourse(i),
                 onCreditChanged: (v) => notifier.setCreditHours(i, v),
                 onGradeChanged: (g) => notifier.setGrade(i, g),
+                onMarkChanged: (m) => notifier.setMark(i, m),
               );
             },
           ),
@@ -440,6 +474,7 @@ class _ReviewCourseCard extends StatelessWidget {
   final VoidCallback onToggle;
   final ValueChanged<double> onCreditChanged;
   final ValueChanged<String> onGradeChanged;
+  final ValueChanged<double?> onMarkChanged;
 
   const _ReviewCourseCard({
     required this.course,
@@ -447,6 +482,7 @@ class _ReviewCourseCard extends StatelessWidget {
     required this.onToggle,
     required this.onCreditChanged,
     required this.onGradeChanged,
+    required this.onMarkChanged,
   });
 
   @override
@@ -495,6 +531,18 @@ class _ReviewCourseCard extends StatelessWidget {
                       const SizedBox(height: 10),
                       Row(
                         children: [
+                          // Mark input
+                          const Text(
+                            'Mark',
+                            style: TextStyle(
+                                fontSize: 12, color: AppTheme.textSecondary),
+                          ),
+                          const SizedBox(width: 6),
+                          _MarkInput(
+                            mark: course.mark,
+                            onChanged: onMarkChanged,
+                          ),
+                          const Spacer(),
                           // Grade picker
                           const Text(
                             'Grade',
@@ -506,7 +554,11 @@ class _ReviewCourseCard extends StatelessWidget {
                             grade: course.grade,
                             onChanged: onGradeChanged,
                           ),
-                          const Spacer(),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
                           // Credit hours stepper
                           const Text(
                             'Credits',
@@ -586,6 +638,77 @@ class _GradeDropdown extends StatelessWidget {
             if (v != null) onChanged(v);
           },
         ),
+      ),
+    );
+  }
+}
+
+class _MarkInput extends StatefulWidget {
+  final double? mark;
+  final ValueChanged<double?> onChanged;
+
+  const _MarkInput({required this.mark, required this.onChanged});
+
+  @override
+  State<_MarkInput> createState() => _MarkInputState();
+}
+
+class _MarkInputState extends State<_MarkInput> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.mark != null ? widget.mark!.toStringAsFixed(0) : '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _MarkInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.mark != oldWidget.mark) {
+      final newText = widget.mark != null ? widget.mark!.toStringAsFixed(0) : '';
+      if (_controller.text != newText) {
+        _controller.text = newText;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 50,
+      height: 32,
+      child: TextField(
+        controller: _controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.primary,
+        ),
+        textAlign: TextAlign.center,
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.zero,
+          filled: true,
+          fillColor: AppTheme.primary.withValues(alpha: 0.1),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+          hintText: '-',
+        ),
+        onChanged: (val) {
+          final number = double.tryParse(val);
+          widget.onChanged(number);
+        },
       ),
     );
   }

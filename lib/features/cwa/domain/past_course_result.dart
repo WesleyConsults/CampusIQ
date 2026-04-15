@@ -8,15 +8,22 @@ class PastCourseResult {
   /// Letter grade: A, B, C, D, or F.
   final String grade;
 
+  /// Exact number grade (e.g., 79.0).
+  final double? mark;
+
   const PastCourseResult({
     required this.courseCode,
     required this.courseName,
     required this.creditHours,
     required this.grade,
+    this.mark,
   });
 
   /// KNUST letter-grade → numeric score used in CWA calculation.
-  double get score => gradeToScore(grade);
+  double get score {
+    if (mark != null) return mark!;
+    return gradeToScore(grade);
+  }
 
   static double gradeToScore(String grade) {
     switch (grade.trim().toUpperCase()) {
@@ -40,6 +47,7 @@ class PastCourseResult {
       creditHours:
           ((json['credit_hours'] as num?) ?? 3).toDouble().clamp(1.0, 6.0),
       grade: (json['grade'] as String? ?? 'F').trim().toUpperCase(),
+      mark: (json['mark'] as num?)?.toDouble(),
     );
   }
 
@@ -48,11 +56,13 @@ class PastCourseResult {
     String? courseName,
     double? creditHours,
     String? grade,
+    double? mark,
   }) =>
       PastCourseResult(
         courseCode: courseCode ?? this.courseCode,
         courseName: courseName ?? this.courseName,
         creditHours: creditHours ?? this.creditHours,
         grade: grade ?? this.grade,
+        mark: mark ?? this.mark,
       );
 }

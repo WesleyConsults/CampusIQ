@@ -20,6 +20,8 @@ class ResultImportState {
   final Set<int> selectedIndexes;
   final String semesterLabel;
   final String? errorMessage;
+  final double? reportedSemesterCwa;
+  final double? reportedCumulativeCwa;
 
   const ResultImportState({
     this.step = ResultImportStep.idle,
@@ -27,6 +29,8 @@ class ResultImportState {
     this.selectedIndexes = const {},
     this.semesterLabel = '',
     this.errorMessage,
+    this.reportedSemesterCwa,
+    this.reportedCumulativeCwa,
   });
 
   ResultImportState copyWith({
@@ -35,6 +39,8 @@ class ResultImportState {
     Set<int>? selectedIndexes,
     String? semesterLabel,
     String? errorMessage,
+    double? reportedSemesterCwa,
+    double? reportedCumulativeCwa,
   }) =>
       ResultImportState(
         step: step ?? this.step,
@@ -42,6 +48,8 @@ class ResultImportState {
         selectedIndexes: selectedIndexes ?? this.selectedIndexes,
         semesterLabel: semesterLabel ?? this.semesterLabel,
         errorMessage: errorMessage,
+        reportedSemesterCwa: reportedSemesterCwa ?? this.reportedSemesterCwa,
+        reportedCumulativeCwa: reportedCumulativeCwa ?? this.reportedCumulativeCwa,
       );
 }
 
@@ -136,9 +144,9 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
       final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
       final model = dotenv.env['OPENAI_MODEL'] ?? 'gpt-4o';
       final parser = ResultSlipParser(apiKey: apiKey, model: model);
-      final courses = await parser.parse(bytes, mimeType);
+      final parseResult = await parser.parse(bytes, mimeType);
 
-      if (courses.isEmpty) {
+      if (parseResult.courses.isEmpty) {
         state = state.copyWith(
           step: ResultImportStep.error,
           errorMessage:
@@ -149,8 +157,10 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
 
       state = ResultImportState(
         step: ResultImportStep.labelling,
-        courses: courses,
-        selectedIndexes: Set.from(List.generate(courses.length, (i) => i)),
+        courses: parseResult.courses,
+        selectedIndexes: Set.from(List.generate(parseResult.courses.length, (i) => i)),
+        reportedSemesterCwa: parseResult.reportedSemesterCwa,
+        reportedCumulativeCwa: parseResult.reportedCumulativeCwa,
       );
     } catch (e) {
       state = state.copyWith(
@@ -193,6 +203,12 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
     state = state.copyWith(courses: updated);
   }
 
+  void setMark(int index, double? mark) {
+    final updated = List<PastCourseResult>.from(state.courses);
+    updated[index] = updated[index].copyWith(mark: mark);
+    state = state.copyWith(courses: updated);
+  }
+
   Future<void> confirmImport() async {
     final repo = ref.read(pastResultRepositoryProvider);
     if (repo == null) return;
@@ -207,12 +223,15 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
           courseName: c.courseName,
           creditHours: c.creditHours,
           grade: c.grade.trim().toUpperCase(),
+          mark: c.mark,
         );
       }).toList();
 
       await repo.add(PastSemesterModel.create(
         semesterLabel: state.semesterLabel,
         courses: entries,
+        reportedSemesterCwa: state.reportedSemesterCwa,
+        reportedCumulativeCwa: state.reportedCumulativeCwa,
       ));
 
       state = state.copyWith(step: ResultImportStep.done);

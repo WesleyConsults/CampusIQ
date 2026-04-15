@@ -13,6 +13,12 @@ class PastSemesterModel {
   /// Ordered list of courses from that semester.
   late List<PastCourseEntry> courses;
 
+  /// Optional: what the slip actually says for semester CWA
+  double? reportedSemesterCwa;
+
+  /// Optional: what the slip actually says for cumulative CWA
+  double? reportedCumulativeCwa;
+
   DateTime createdAt = DateTime.now();
 
   PastSemesterModel();
@@ -20,6 +26,8 @@ class PastSemesterModel {
   PastSemesterModel.create({
     required this.semesterLabel,
     required this.courses,
+    this.reportedSemesterCwa,
+    this.reportedCumulativeCwa,
   });
 }
 
@@ -33,6 +41,9 @@ class PastCourseEntry {
   /// Letter grade: A, B, C, D, or F.
   late String grade;
 
+  /// Exact number grade (e.g., 79.0) if parsed/entered, giving exact CWA.
+  double? mark;
+
   PastCourseEntry();
 
   PastCourseEntry.create({
@@ -40,10 +51,13 @@ class PastCourseEntry {
     required this.courseName,
     required this.creditHours,
     required this.grade,
+    this.mark,
   });
 
   /// KNUST letter-grade → numeric score used in CWA calculation.
+  /// If mark is available, use it directly (as KNUST CWA uses actual marks).
   double get score {
+    if (mark != null) return mark!;
     switch (grade.trim().toUpperCase()) {
       case 'A':
         return 85.0;

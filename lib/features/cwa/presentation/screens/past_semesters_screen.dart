@@ -144,7 +144,10 @@ class _SemesterCardState extends State<_SemesterCard> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '$courseCount course${courseCount == 1 ? '' : 's'}',
+                          '$courseCount course${courseCount == 1 ? '' : 's'}' +
+                              (widget.semester.reportedSemesterCwa != null
+                                  ? ' • Reported CWA: ${widget.semester.reportedSemesterCwa?.toStringAsFixed(2)}'
+                                  : ''),
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppTheme.textSecondary,
@@ -216,6 +219,7 @@ class _CourseRow extends ConsumerStatefulWidget {
 class _CourseRowState extends ConsumerState<_CourseRow> {
   late String _grade;
   late double _credits;
+  double? _mark;
 
   static const _grades = ['A', 'B', 'C', 'D', 'F'];
   static const _gradeColors = {
@@ -231,6 +235,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
     super.initState();
     _grade = widget.course.grade.toUpperCase();
     _credits = widget.course.creditHours;
+    _mark = widget.course.mark;
   }
 
   Future<void> _save() async {
@@ -247,6 +252,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
           courseName: c.courseName,
           creditHours: _credits,
           grade: _grade,
+          mark: _mark,
         );
       }
       return c;
@@ -287,6 +293,16 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
               ],
             ),
           ),
+          // Mark input
+          const SizedBox(width: 8),
+          _MarkInput(
+            mark: _mark,
+            onChanged: (val) {
+              setState(() => _mark = val);
+              _save();
+            },
+          ),
+          const SizedBox(width: 8),
           // Credits stepper (compact)
           Row(
             children: [
@@ -396,6 +412,77 @@ class _MiniButton extends StatelessWidget {
         icon,
         size: 13,
         color: enabled ? AppTheme.primary : AppTheme.textSecondary,
+      ),
+    );
+  }
+}
+
+class _MarkInput extends StatefulWidget {
+  final double? mark;
+  final ValueChanged<double?> onChanged;
+
+  const _MarkInput({required this.mark, required this.onChanged});
+
+  @override
+  State<_MarkInput> createState() => _MarkInputState();
+}
+
+class _MarkInputState extends State<_MarkInput> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.mark != null ? widget.mark!.toStringAsFixed(0) : '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _MarkInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.mark != oldWidget.mark) {
+      final newText = widget.mark != null ? widget.mark!.toStringAsFixed(0) : '';
+      if (_controller.text != newText) {
+        _controller.text = newText;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 48,
+      height: 28,
+      child: TextField(
+        controller: _controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.primary,
+        ),
+        textAlign: TextAlign.center,
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.zero,
+          filled: true,
+          fillColor: AppTheme.primary.withValues(alpha: 0.1),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide.none,
+          ),
+          hintText: '-',
+        ),
+        onChanged: (val) {
+          final number = double.tryParse(val);
+          widget.onChanged(number);
+        },
       ),
     );
   }
