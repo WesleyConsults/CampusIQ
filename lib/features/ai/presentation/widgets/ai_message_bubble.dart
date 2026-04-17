@@ -5,24 +5,42 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:campusiq/features/ai/data/models/ai_message_model.dart';
 import 'package:intl/intl.dart';
 
-// Matches $$...$$ (display) OR $...$ (inline), single-line only.
-// Multi-line display math is handled by _DisplayMathBlockSyntax below.
-class _MathInlineSyntax extends md.InlineSyntax {
-  _MathInlineSyntax() : super(r'\$\$(.+?)\$\$|\$([^\$\n]+?)\$');
+// ── Inline math: $...$ ───────────────────────────────────────────────────────
+
+class _InlineMathSyntax extends md.InlineSyntax {
+  _InlineMathSyntax() : super(r'\$(?!\$)([^\$\n]+?)\$(?!\$)');
 
   @override
   bool onMatch(md.InlineParser parser, Match match) {
-    final isDisplay = match[1] != null;
-    final tex = (match[1] ?? match[2])!.trim();
-    parser.addNode(md.Element.text(isDisplay ? 'displaymath' : 'inlinemath', tex));
+    parser.addNode(md.Element.text('inlinemath', match[1]!.trim()));
     return true;
   }
 }
 
-// Handles fenced display math:
-//   $$
-//   \begin{pmatrix}...\end{pmatrix}
-//   $$
+class _InlineMathBuilder extends MarkdownElementBuilder {
+  @override
+  bool isBlockElement() => false;
+
+  @override
+  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
+    return _buildMath(element.textContent, display: false);
+  }
+}
+
+// ── Display (block) math: $$ ... $$ ─────────────────────────────────────────
+
+// Single-line $$...$$ handled as inline syntax
+class _DisplayMathInlineSyntax extends md.InlineSyntax {
+  _DisplayMathInlineSyntax() : super(r'\$\$(.+?)\$\$');
+
+  @override
+  bool onMatch(md.InlineParser parser, Match match) {
+    parser.addNode(md.Element.text('displaymath', match[1]!.trim()));
+    return true;
+  }
+}
+
+// Multi-line fenced $$\n...\n$$ handled as block syntax
 class _DisplayMathBlockSyntax extends md.BlockSyntax {
   @override
   RegExp get pattern => RegExp(r'^\$\$\s*$');
@@ -44,29 +62,37 @@ class _DisplayMathBlockSyntax extends md.BlockSyntax {
   }
 }
 
-class _MathBuilder extends MarkdownElementBuilder {
+// MUST declare isBlockElement = true so flutter_markdown treats displaymath
+// as a block node — otherwise it crashes accessing _inlines.last on an empty list.
+class _DisplayMathBuilder extends MarkdownElementBuilder {
+  @override
+  bool isBlockElement() => true;
+
   @override
   Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
-    final isDisplay = element.tag == 'displaymath';
-    final tex = element.textContent;
     return Padding(
-      padding: isDisplay
-          ? const EdgeInsets.symmetric(vertical: 6)
-          : EdgeInsets.zero,
-      child: Math.tex(
-        tex,
-        mathStyle: isDisplay ? MathStyle.display : MathStyle.text,
-        textStyle: (preferredStyle ?? const TextStyle(fontSize: 14))
-            .copyWith(color: Colors.black87),
-        onErrorFallback: (_) => SelectableText(
-          tex,
-          style: const TextStyle(
-              fontFamily: 'monospace', fontSize: 13, color: Colors.black87),
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: _buildMath(element.textContent, display: true),
     );
   }
 }
+
+// ── Shared math renderer ─────────────────────────────────────────────────────
+
+Widget _buildMath(String tex, {required bool display}) {
+  return Math.tex(
+    tex,
+    mathStyle: display ? MathStyle.display : MathStyle.text,
+    textStyle: const TextStyle(fontSize: 14, color: Colors.black87),
+    onErrorFallback: (_) => Text(
+      tex,
+      style: const TextStyle(
+          fontFamily: 'monospace', fontSize: 13, color: Colors.black54),
+    ),
+  );
+}
+
+// ── Message bubble ───────────────────────────────────────────────────────────
 
 class AiMessageBubble extends StatelessWidget {
   final AiMessageModel message;
@@ -105,7 +131,6 @@ class AiMessageBubble extends StatelessWidget {
                     )
                   : MarkdownBody(
                       data: message.content,
-                      selectable: true,
                       styleSheet: MarkdownStyleSheet(
                         p: const TextStyle(
                             color: Colors.black87, fontSize: 14, height: 1.4),
@@ -131,8 +156,8 @@ class AiMessageBubble extends StatelessWidget {
                         ),
                       ),
                       builders: {
-                        'inlinemath': _MathBuilder(),
-                        'displaymath': _MathBuilder(),
+                        'inlinemath': _InlineMathBuilder(),
+                        'displaymath': _DisplayMathBuilder(),
                       },
                       extensionSet: md.ExtensionSet(
                         [
@@ -140,7 +165,8 @@ class AiMessageBubble extends StatelessWidget {
                           ...md.ExtensionSet.gitHubFlavored.blockSyntaxes,
                         ],
                         [
-                          _MathInlineSyntax(),
+                          _DisplayMathInlineSyntax(),
+                          _InlineMathSyntax(),
                           ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
                         ],
                       ),
