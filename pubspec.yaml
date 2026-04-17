@@ -31,6 +31,11 @@ dependencies:
   flutter_animate: ^4.5.0
   intl: ^0.19.0
 
+  # Markdown + math rendering for AI chat
+  flutter_markdown: ^0.7.3
+  flutter_math_fork: ^0.7.2
+  markdown: ^7.2.2
+
   # File picking and opening
   file_picker: ^8.1.2
   open_filex: ^4.4.1
