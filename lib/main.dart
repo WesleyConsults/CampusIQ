@@ -137,6 +137,7 @@ Future<void> _handleStreakRiskCheck() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await dotenv.load(fileName: '.env');
   await NotificationService.instance.init();
   await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);

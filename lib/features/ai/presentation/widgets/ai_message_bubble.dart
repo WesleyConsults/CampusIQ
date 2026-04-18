@@ -27,56 +27,6 @@ class _InlineMathBuilder extends MarkdownElementBuilder {
   }
 }
 
-// ── Display (block) math: $$ ... $$ ─────────────────────────────────────────
-
-// Single-line $$...$$ handled as inline syntax
-class _DisplayMathInlineSyntax extends md.InlineSyntax {
-  _DisplayMathInlineSyntax() : super(r'\$\$(.+?)\$\$');
-
-  @override
-  bool onMatch(md.InlineParser parser, Match match) {
-    parser.addNode(md.Element.text('displaymath', match[1]!.trim()));
-    return true;
-  }
-}
-
-// Multi-line fenced $$\n...\n$$ handled as block syntax
-class _DisplayMathBlockSyntax extends md.BlockSyntax {
-  @override
-  RegExp get pattern => RegExp(r'^\$\$\s*$');
-
-  @override
-  md.Node? parse(md.BlockParser parser) {
-    final lines = <String>[];
-    parser.advance(); // skip opening $$
-    while (!parser.isDone) {
-      final line = parser.current.content;
-      if (line.trim() == r'$$') {
-        parser.advance(); // skip closing $$
-        break;
-      }
-      lines.add(line);
-      parser.advance();
-    }
-    return md.Element.text('displaymath', lines.join('\n').trim());
-  }
-}
-
-// MUST declare isBlockElement = true so flutter_markdown treats displaymath
-// as a block node — otherwise it crashes accessing _inlines.last on an empty list.
-class _DisplayMathBuilder extends MarkdownElementBuilder {
-  @override
-  bool isBlockElement() => true;
-
-  @override
-  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: _buildMath(element.textContent, display: true),
-    );
-  }
-}
-
 // ── Shared math renderer ─────────────────────────────────────────────────────
 
 Widget _buildMath(String tex, {required bool display}) {
@@ -93,6 +43,41 @@ Widget _buildMath(String tex, {required bool display}) {
           fontFamily: 'monospace', fontSize: 13, color: Colors.black54),
     ),
   );
+}
+
+// ── Display-math pre-processor ───────────────────────────────────────────────
+// Split the message text on $$...$$ BEFORE handing anything to MarkdownBody.
+// This keeps 'displaymath' entirely out of flutter_markdown's tag machinery,
+// which avoids the styleSheet.styles['displaymath'] == null crash at builder:345.
+
+abstract class _Segment {}
+
+class _TextSegment extends _Segment {
+  final String text;
+  _TextSegment(this.text);
+}
+
+class _MathSegment extends _Segment {
+  final String tex;
+  _MathSegment(this.tex);
+}
+
+List<_Segment> _splitByDisplayMath(String text) {
+  final segments = <_Segment>[];
+  final pattern = RegExp(r'\$\$([\s\S]+?)\$\$');
+  int lastEnd = 0;
+  for (final match in pattern.allMatches(text)) {
+    if (match.start > lastEnd) {
+      segments.add(_TextSegment(text.substring(lastEnd, match.start)));
+    }
+    segments.add(_MathSegment(match.group(1)!.trim()));
+    lastEnd = match.end;
+  }
+  if (lastEnd < text.length) {
+    segments.add(_TextSegment(text.substring(lastEnd)));
+  }
+  if (segments.isEmpty) segments.add(_TextSegment(text));
+  return segments;
 }
 
 // ── Message bubble ───────────────────────────────────────────────────────────
@@ -132,50 +117,7 @@ class AiMessageBubble extends StatelessWidget {
                       message.content,
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                     )
-                  : MarkdownBody(
-                      data: message.content,
-                      styleSheet: MarkdownStyleSheet.fromTheme(
-                        Theme.of(context),
-                      ).copyWith(
-                        p: const TextStyle(
-                            color: Colors.black87, fontSize: 14, height: 1.4),
-                        strong: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold),
-                        em: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 14,
-                            fontStyle: FontStyle.italic),
-                        listBullet: const TextStyle(
-                            color: Colors.black87, fontSize: 14),
-                        code: TextStyle(
-                          fontSize: 13,
-                          fontFamily: 'monospace',
-                          color: Colors.black87,
-                          backgroundColor: Colors.grey.shade100,
-                        ),
-                        codeblockDecoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      builders: {
-                        'inlinemath': _InlineMathBuilder(),
-                        'displaymath': _DisplayMathBuilder(),
-                      },
-                      extensionSet: md.ExtensionSet(
-                        [
-                          _DisplayMathBlockSyntax(),
-                          ...md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                        ],
-                        [
-                          _DisplayMathInlineSyntax(),
-                          _InlineMathSyntax(),
-                          ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
-                        ],
-                      ),
-                    ),
+                  : _buildAssistantContent(context, message.content),
             ),
             const SizedBox(height: 4),
             Text(
@@ -184,6 +126,71 @@ class AiMessageBubble extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAssistantContent(BuildContext context, String content) {
+    final segments = _splitByDisplayMath(content);
+
+    // Fast path: no display math — skip the Column wrapper entirely.
+    if (segments.length == 1 && segments[0] is _TextSegment) {
+      return _buildMarkdown(context, (segments[0] as _TextSegment).text);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: segments.map((seg) {
+        if (seg is _MathSegment) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Center(child: _buildMath(seg.tex, display: true)),
+          );
+        }
+        final text = (seg as _TextSegment).text.trim();
+        if (text.isEmpty) return const SizedBox.shrink();
+        return _buildMarkdown(context, text);
+      }).toList(),
+    );
+  }
+
+  Widget _buildMarkdown(BuildContext context, String text) {
+    return MarkdownBody(
+      data: text,
+      styleSheet: MarkdownStyleSheet.fromTheme(
+        Theme.of(context),
+      ).copyWith(
+        p: const TextStyle(color: Colors.black87, fontSize: 14, height: 1.4),
+        strong: const TextStyle(
+            color: Colors.black87,
+            fontSize: 14,
+            fontWeight: FontWeight.bold),
+        em: const TextStyle(
+            color: Colors.black87,
+            fontSize: 14,
+            fontStyle: FontStyle.italic),
+        listBullet: const TextStyle(color: Colors.black87, fontSize: 14),
+        code: TextStyle(
+          fontSize: 13,
+          fontFamily: 'monospace',
+          color: Colors.black87,
+          backgroundColor: Colors.grey.shade100,
+        ),
+        codeblockDecoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+      builders: {
+        'inlinemath': _InlineMathBuilder(),
+      },
+      extensionSet: md.ExtensionSet(
+        md.ExtensionSet.gitHubFlavored.blockSyntaxes,
+        [
+          _InlineMathSyntax(),
+          ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
+        ],
       ),
     );
   }
