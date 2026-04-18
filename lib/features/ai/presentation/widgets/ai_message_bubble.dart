@@ -83,7 +83,10 @@ Widget _buildMath(String tex, {required bool display}) {
   return Math.tex(
     tex,
     mathStyle: display ? MathStyle.display : MathStyle.text,
-    textStyle: const TextStyle(fontSize: 14, color: Colors.black87),
+    // inherit: false prevents Math.build() from merging with DefaultTextStyle,
+    // which can have null fontSize/color inside MarkdownBody and crash on !.
+    textStyle: const TextStyle(
+        fontSize: 14, color: Colors.black87, inherit: false),
     onErrorFallback: (_) => Text(
       tex,
       style: const TextStyle(
