@@ -131,7 +131,9 @@ class AiMessageBubble extends StatelessWidget {
                     )
                   : MarkdownBody(
                       data: message.content,
-                      styleSheet: MarkdownStyleSheet(
+                      styleSheet: MarkdownStyleSheet.fromTheme(
+                        Theme.of(context),
+                      ).copyWith(
                         p: const TextStyle(
                             color: Colors.black87, fontSize: 14, height: 1.4),
                         strong: const TextStyle(
