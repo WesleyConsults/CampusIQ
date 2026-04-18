@@ -27,20 +27,30 @@ const CourseFileModelSchema = CollectionSchema(
       name: r'courseCode',
       type: IsarType.string,
     ),
-    r'fileName': PropertySchema(
+    r'extractedText': PropertySchema(
       id: 2,
+      name: r'extractedText',
+      type: IsarType.string,
+    ),
+    r'fileName': PropertySchema(
+      id: 3,
       name: r'fileName',
       type: IsarType.string,
     ),
     r'filePath': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'filePath',
       type: IsarType.string,
     ),
     r'fileType': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'fileType',
       type: IsarType.string,
+    ),
+    r'isTextExtractable': PropertySchema(
+      id: 6,
+      name: r'isTextExtractable',
+      type: IsarType.bool,
     )
   },
   estimateSize: _courseFileModelEstimateSize,
@@ -78,6 +88,12 @@ int _courseFileModelEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.courseCode.length * 3;
+  {
+    final value = object.extractedText;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.fileName.length * 3;
   bytesCount += 3 + object.filePath.length * 3;
   bytesCount += 3 + object.fileType.length * 3;
@@ -92,9 +108,11 @@ void _courseFileModelSerialize(
 ) {
   writer.writeDateTime(offsets[0], object.addedAt);
   writer.writeString(offsets[1], object.courseCode);
-  writer.writeString(offsets[2], object.fileName);
-  writer.writeString(offsets[3], object.filePath);
-  writer.writeString(offsets[4], object.fileType);
+  writer.writeString(offsets[2], object.extractedText);
+  writer.writeString(offsets[3], object.fileName);
+  writer.writeString(offsets[4], object.filePath);
+  writer.writeString(offsets[5], object.fileType);
+  writer.writeBool(offsets[6], object.isTextExtractable);
 }
 
 CourseFileModel _courseFileModelDeserialize(
@@ -106,10 +124,12 @@ CourseFileModel _courseFileModelDeserialize(
   final object = CourseFileModel();
   object.addedAt = reader.readDateTime(offsets[0]);
   object.courseCode = reader.readString(offsets[1]);
-  object.fileName = reader.readString(offsets[2]);
-  object.filePath = reader.readString(offsets[3]);
-  object.fileType = reader.readString(offsets[4]);
+  object.extractedText = reader.readStringOrNull(offsets[2]);
+  object.fileName = reader.readString(offsets[3]);
+  object.filePath = reader.readString(offsets[4]);
+  object.fileType = reader.readString(offsets[5]);
   object.id = id;
+  object.isTextExtractable = reader.readBool(offsets[6]);
   return object;
 }
 
@@ -125,11 +145,15 @@ P _courseFileModelDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
       return (reader.readString(offset)) as P;
+    case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -462,6 +486,160 @@ extension CourseFileModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'courseCode',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'extractedText',
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'extractedText',
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'extractedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'extractedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'extractedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'extractedText',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'extractedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'extractedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'extractedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'extractedText',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'extractedText',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      extractedTextIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'extractedText',
         value: '',
       ));
     });
@@ -930,6 +1108,16 @@ extension CourseFileModelQueryFilter
       ));
     });
   }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterFilterCondition>
+      isTextExtractableEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isTextExtractable',
+        value: value,
+      ));
+    });
+  }
 }
 
 extension CourseFileModelQueryObject
@@ -964,6 +1152,20 @@ extension CourseFileModelQuerySortBy
       sortByCourseCodeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'courseCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterSortBy>
+      sortByExtractedText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extractedText', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterSortBy>
+      sortByExtractedTextDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extractedText', Sort.desc);
     });
   }
 
@@ -1008,6 +1210,20 @@ extension CourseFileModelQuerySortBy
       return query.addSortBy(r'fileType', Sort.desc);
     });
   }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterSortBy>
+      sortByIsTextExtractable() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTextExtractable', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterSortBy>
+      sortByIsTextExtractableDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTextExtractable', Sort.desc);
+    });
+  }
 }
 
 extension CourseFileModelQuerySortThenBy
@@ -1036,6 +1252,20 @@ extension CourseFileModelQuerySortThenBy
       thenByCourseCodeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'courseCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterSortBy>
+      thenByExtractedText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extractedText', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterSortBy>
+      thenByExtractedTextDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extractedText', Sort.desc);
     });
   }
 
@@ -1092,6 +1322,20 @@ extension CourseFileModelQuerySortThenBy
       return query.addSortBy(r'id', Sort.desc);
     });
   }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterSortBy>
+      thenByIsTextExtractable() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTextExtractable', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QAfterSortBy>
+      thenByIsTextExtractableDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTextExtractable', Sort.desc);
+    });
+  }
 }
 
 extension CourseFileModelQueryWhereDistinct
@@ -1107,6 +1351,14 @@ extension CourseFileModelQueryWhereDistinct
       distinctByCourseCode({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'courseCode', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QDistinct>
+      distinctByExtractedText({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'extractedText',
+          caseSensitive: caseSensitive);
     });
   }
 
@@ -1128,6 +1380,13 @@ extension CourseFileModelQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'fileType', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CourseFileModel, CourseFileModel, QDistinct>
+      distinctByIsTextExtractable() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isTextExtractable');
     });
   }
 }
@@ -1152,6 +1411,13 @@ extension CourseFileModelQueryProperty
     });
   }
 
+  QueryBuilder<CourseFileModel, String?, QQueryOperations>
+      extractedTextProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'extractedText');
+    });
+  }
+
   QueryBuilder<CourseFileModel, String, QQueryOperations> fileNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'fileName');
@@ -1167,6 +1433,13 @@ extension CourseFileModelQueryProperty
   QueryBuilder<CourseFileModel, String, QQueryOperations> fileTypeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'fileType');
+    });
+  }
+
+  QueryBuilder<CourseFileModel, bool, QQueryOperations>
+      isTextExtractableProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isTextExtractable');
     });
   }
 }

@@ -18,6 +18,15 @@ class CourseFileRepository {
     await _isar.writeTxn(() => _isar.courseFileModels.put(file));
   }
 
+  Future<List<CourseFileModel>> getExtractableFiles(String courseCode) async {
+    return await _isar.courseFileModels
+        .filter()
+        .courseCodeEqualTo(courseCode)
+        .and()
+        .isTextExtractableEqualTo(true)
+        .findAll();
+  }
+
   Future<void> deleteFile(int id) async {
     final file = await _isar.courseFileModels.get(id);
     if (file != null) {

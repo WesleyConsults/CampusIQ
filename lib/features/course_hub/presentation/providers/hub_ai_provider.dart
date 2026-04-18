@@ -7,6 +7,8 @@ import 'package:campusiq/features/session/presentation/providers/session_provide
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 import 'package:campusiq/features/course_hub/data/models/course_note_model.dart';
 import 'package:campusiq/features/course_hub/domain/course_hub_context_builder.dart';
+import 'package:campusiq/features/course_hub/data/models/course_file_model.dart';
+import 'package:campusiq/features/course_hub/presentation/providers/course_file_provider.dart';
 import 'package:campusiq/features/course_hub/presentation/providers/course_note_provider.dart';
 
 class HubAiState {
@@ -15,6 +17,7 @@ class HubAiState {
   final bool isLoading;
   final String? error;
   final bool isAtLimit;
+  final bool isSourceGrounded;
 
   const HubAiState({
     this.messages = const [],
@@ -22,6 +25,7 @@ class HubAiState {
     this.isLoading = false,
     this.error,
     this.isAtLimit = false,
+    this.isSourceGrounded = false,
   });
 
   HubAiState copyWith({
@@ -30,6 +34,7 @@ class HubAiState {
     bool? isLoading,
     String? error,
     bool? isAtLimit,
+    bool? isSourceGrounded,
     bool clearError = false,
   }) {
     return HubAiState(
@@ -38,6 +43,7 @@ class HubAiState {
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
       isAtLimit: isAtLimit ?? this.isAtLimit,
+      isSourceGrounded: isSourceGrounded ?? this.isSourceGrounded,
     );
   }
 }
@@ -49,9 +55,17 @@ class HubAiNotifier extends StateNotifier<HubAiState> {
   final String courseCode;
   final Ref _ref;
 
+  List<CourseFileModel> _extractableFiles = [];
+
   HubAiNotifier(this.courseCode, this._ref) : super(const HubAiState());
 
   String get _feature => 'course_$courseCode';
+
+  List<CourseFileModel> get extractableFiles => _extractableFiles;
+
+  void toggleSourceGrounded() {
+    state = state.copyWith(isSourceGrounded: !state.isSourceGrounded);
+  }
 
   Future<void> loadSession() async {
     try {
@@ -65,6 +79,11 @@ class HubAiNotifier extends StateNotifier<HubAiState> {
           messages: messages,
           currentSessionId: session.id,
         );
+      }
+
+      final fileRepo = _ref.read(courseFileRepositoryProvider);
+      if (fileRepo != null) {
+        _extractableFiles = await fileRepo.getExtractableFiles(courseCode);
       }
     } catch (_) {
       // Silent fail — start fresh
@@ -81,6 +100,14 @@ class HubAiNotifier extends StateNotifier<HubAiState> {
       if (!isUnder) {
         state = state.copyWith(isAtLimit: true);
         return;
+      }
+    }
+
+    // Refresh extractable files so deleted files are excluded from context
+    if (state.isSourceGrounded) {
+      final fileRepo = _ref.read(courseFileRepositoryProvider);
+      if (fileRepo != null) {
+        _extractableFiles = await fileRepo.getExtractableFiles(courseCode);
       }
     }
 
@@ -151,11 +178,38 @@ class HubAiNotifier extends StateNotifier<HubAiState> {
   Future<String> _buildSystemPrompt() async {
     final courses = _ref.read(coursesProvider).valueOrNull ?? [];
     final course = courses.where((c) => c.code == courseCode).firstOrNull;
+    final notes = _ref.read(courseNotesProvider(courseCode)).valueOrNull
+        ?? <CourseNoteModel>[];
+
+    if (state.isSourceGrounded) {
+      final hasNotes = notes.isNotEmpty;
+      final hasFiles = _extractableFiles.isNotEmpty;
+
+      if (!hasNotes && !hasFiles) {
+        return '__EMPTY_SOURCE_CONTEXT__';
+      }
+
+      final context = CourseHubContextBuilder().buildSourceGroundedContext(
+        notes: notes,
+        extractableFiles: _extractableFiles,
+        course: course!,
+      );
+
+      final courseName = course.name;
+      return '''You are a focused academic assistant for ${course.code} — $courseName.
+Answer ONLY using the student's materials provided below.
+Do NOT use general knowledge from your training.
+If the answer is not found in the materials, respond with:
+"I don't see this in your notes. Try switching to General mode for a broader answer."
+Always mention which note title or PDF filename your answer came from.
+
+STUDENT MATERIALS:
+$context''';
+    }
+
     final allSessions = _ref.read(allSessionsProvider).valueOrNull ?? [];
     final courseSessions =
         allSessions.where((s) => s.courseCode == courseCode).toList();
-    final notesAsync = _ref.read(courseNotesProvider(courseCode));
-    final notes = notesAsync.valueOrNull ?? <CourseNoteModel>[];
     final perCourseStreak = _ref.read(perCourseStreakProvider);
     final fallbackStreak = _ref.read(studyStreakProvider);
     final courseStreak = perCourseStreak[courseCode] ?? fallbackStreak;

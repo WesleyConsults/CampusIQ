@@ -572,8 +572,11 @@ These tests verify features work together correctly.
 
 ### 13.6 Files tab — attach
 - [ ] Tap **"Attach File"** → system file picker opens
-- [ ] Pick a **PDF** → appears in the list with a red PDF icon
-- [ ] Tap **"Attach File"** again → pick an **image** (JPG/PNG) → appears with a blue image icon
+- [ ] Pick a **text-based PDF** (e.g. lecture notes with selectable text) → button label changes to **"Reading PDF…"** and is disabled while extracting
+- [ ] After save: tile shows a green **"📄 Text indexed"** chip below the filename
+- [ ] Pick a **scanned PDF** (photo of a page, no selectable text) → no loading delay, tile shows grey **"🖼 Visual only — AI cannot read this"** chip
+- [ ] Pick an **image** (JPG/PNG) → appears with a blue image icon, **no chip shown**
+- [ ] Pick a large PDF (40+ pages) → no crash; extraction completes; chip reflects result correctly
 
 ### 13.7 Files tab — open & delete
 - [ ] Tap a PDF tile → PDF opens in the device's PDF viewer
@@ -590,33 +593,58 @@ These tests verify features work together correctly.
 - [ ] Free quota gate (`PremiumGateWidget`) appears after the daily limit is exhausted
 - [ ] Generating in the hub does **not** affect the state of the global Exam Prep screen (`/ai/exam-prep`)
 
-### 13.9 AI Chat tab — basic interaction
-- [ ] Blue "Focused on [Code] — [Name]" banner is visible at the top
-- [ ] Send a message → AI responds with content relevant to the course
+### 13.9 AI Chat tab — mode selector
+- [ ] Two chips visible at the top: **📚 From My Notes** and **🌐 General**
+- [ ] **🌐 General** is selected by default (navy background, white text)
+- [ ] Old blue "Focused on [Code]" indigo banner is **gone**
+- [ ] Tapping **📚 From My Notes** selects it (navy); **🌐 General** deselects
+- [ ] Tapping **🌐 General** switches back
+
+### 13.10 AI Chat tab — General mode (unchanged behaviour)
+- [ ] In **🌐 General** mode, send a message → AI responds with content relevant to the course
 - [ ] Ask **"What course are we focusing on?"** → AI correctly names the course
 - [ ] Typing indicator appears while waiting for the response
-- [ ] Ask a math question relevant to the course (e.g. "Show me the quadratic formula") → response renders typeset math, no red screen
-- [ ] Bold text and bullet lists in AI responses render correctly (not as raw `**` / `-`)
+- [ ] Ask a math question → response renders typeset math, no red screen
+- [ ] Bold text and bullet lists render correctly (not as raw `**` / `-`)
+- [ ] Ask **"Summarise my study situation"** → AI describes sessions, streak, and notes
 
-### 13.10 AI Chat tab — context injection
-- [ ] Add a note on the Notes tab (e.g. "Thevenin's theorem — voltage divider")
-- [ ] Switch to AI Chat tab → ask the AI about the note topic → AI references it
-- [ ] Ask **"Summarise what you know about my study situation for this course"** → AI describes sessions, streak, and notes
+### 13.11 AI Chat tab — From My Notes mode (empty state)
+- [ ] On a course with **no notes and no indexed PDFs**, tap **📚 From My Notes**
+- [ ] Chat area is replaced with a folder icon and instructions to add notes or attach a text PDF
+- [ ] Text input field is **hidden** — no way to send a message
+- [ ] Switching back to **🌐 General** restores the normal chat input
 
-### 13.11 AI Chat tab — history isolation
+### 13.12 AI Chat tab — From My Notes mode (with materials)
+- [ ] Add at least one note on the Notes tab (e.g. "Newton's second law: F = ma")
+- [ ] Attach a text-based PDF with indexed content
+- [ ] Switch to the AI Chat tab → tap **📚 From My Notes**
+- [ ] A grey source summary strip appears: *"Reading: 1 notes · 1 PDFs indexed"*
+- [ ] If a scanned PDF was also attached, strip shows *"(1 visual only — not included)"*
+- [ ] Send a question covered by the note or PDF → AI answers and **cites the note title or PDF filename**
+- [ ] Ask something not in your materials → AI responds: *"I don't see this in your notes. Try switching to General mode for a broader answer."*
+- [ ] Switch back to **🌐 General** → general system prompt is used; AI does not cite note titles
+
+### 13.13 AI Chat tab — source context refresh
+- [ ] In **📚 From My Notes** mode, delete an indexed PDF from the Files tab
+- [ ] Return to the AI Chat tab and send a message → the deleted file is no longer referenced
+- [ ] Add a new note → the next message in grounded mode includes the new note's content
+
+### 13.14 AI Chat tab — history isolation
 - [ ] Open hub for Course A, send a message → back → open hub for Course B → AI Chat is empty (separate history)
 - [ ] Global AI Coach chat (`/ai`) history is **not mixed** with hub chat history
 - [ ] Hot restart → hub chat history for Course A is preserved
 
-### 13.12 AI Chat tab — quota
+### 13.15 AI Chat tab — quota
 - [ ] Usage counter chip shows remaining free messages (shared with global AI chat)
-- [ ] Premium gate appears after the shared daily limit is reached
+- [ ] Source-grounded messages count against the same 3/day `chat` quota
+- [ ] Premium gate appears after the shared daily limit is reached — in both General and From My Notes mode
 
-### 13.13 Stability
+### 13.16 Stability
 - [ ] Hot restart → all notes and files are still present on their respective tabs
-- [ ] Full app restart → all notes and files are still present
+- [ ] Full app restart → all notes and files are still present; indexed/visual-only chips still show correctly
 - [ ] No red-screen errors on any of the 6 tabs
 - [ ] No overflow or render errors on a standard ~360 dp width screen
+- [ ] Attaching a non-PDF file does not show any extraction UI or chip
 
 ---
 
@@ -721,6 +749,8 @@ These tests verify features work together correctly.
 | 11. Cross-Feature Tests | | |
 | 12. Edge Cases | | |
 | 13. Course Hub Workspace | | |
+| 13a. PDF Text Extraction (15.4) | | |
+| 13b. Source-Grounded AI Mode (15.4) | | |
 | 14. Timetable Image Import | | |
 | 15. Performance & Stability | | |
 

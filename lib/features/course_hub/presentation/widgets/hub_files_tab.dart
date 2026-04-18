@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/course_hub/data/models/course_file_model.dart';
+import 'package:campusiq/features/course_hub/domain/course_pdf_extractor.dart';
 import 'package:campusiq/features/course_hub/presentation/providers/course_file_provider.dart';
 import 'package:campusiq/features/course_hub/presentation/widgets/file_tile.dart';
 import 'package:file_picker/file_picker.dart';
@@ -20,6 +21,8 @@ class HubFilesTab extends ConsumerStatefulWidget {
 
 class _HubFilesTabState extends ConsumerState<HubFilesTab> {
   bool _isAttaching = false;
+  String _attachLabel = 'Attach File';
+  final _extractor = CoursePdfExtractor();
 
   Future<String> _copyFileToAppDir(
       String sourcePath, String fileName) async {
@@ -38,7 +41,10 @@ class _HubFilesTabState extends ConsumerState<HubFilesTab> {
   }
 
   Future<void> _attachFile() async {
-    setState(() => _isAttaching = true);
+    setState(() {
+      _isAttaching = true;
+      _attachLabel = 'Attach File';
+    });
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -48,11 +54,20 @@ class _HubFilesTabState extends ConsumerState<HubFilesTab> {
       if (result != null && result.files.single.path != null) {
         final sourcePath = result.files.single.path!;
         final fileName = result.files.single.name;
-        final ext =
-            result.files.single.extension?.toLowerCase() ?? '';
+        final ext = result.files.single.extension?.toLowerCase() ?? '';
         final fileType = ext == 'pdf' ? 'pdf' : 'image';
 
         final destPath = await _copyFileToAppDir(sourcePath, fileName);
+
+        String? extractedText;
+        bool isTextExtractable = false;
+
+        if (ext == 'pdf') {
+          if (mounted) setState(() => _attachLabel = 'Reading PDF...');
+          final extraction = await _extractor.extract(destPath);
+          extractedText = extraction.isExtractable ? extraction.text : null;
+          isTextExtractable = extraction.isExtractable;
+        }
 
         final repo = ref.read(courseFileRepositoryProvider);
         if (repo != null) {
@@ -61,6 +76,8 @@ class _HubFilesTabState extends ConsumerState<HubFilesTab> {
             ..fileName = fileName
             ..filePath = destPath
             ..fileType = fileType
+            ..extractedText = extractedText
+            ..isTextExtractable = isTextExtractable
             ..addedAt = DateTime.now();
           await repo.saveFile(fileModel);
         }
@@ -72,7 +89,12 @@ class _HubFilesTabState extends ConsumerState<HubFilesTab> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isAttaching = false);
+      if (mounted) {
+        setState(() {
+          _isAttaching = false;
+          _attachLabel = 'Attach File';
+        });
+      }
     }
   }
 
@@ -114,7 +136,7 @@ class _HubFilesTabState extends ConsumerState<HubFilesTab> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.attach_file, size: 18),
-                  label: const Text('Attach File'),
+                  label: Text(_attachLabel),
                 ),
               ),
             ),

@@ -44,10 +44,33 @@ class FileTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      subtitle: Text(
-        '${isPdf ? 'PDF' : 'Image'} · $dateLabel',
-        style: const TextStyle(
-            fontSize: 12, color: AppTheme.textSecondary),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${isPdf ? 'PDF' : 'Image'} · $dateLabel',
+            style: const TextStyle(
+                fontSize: 12, color: AppTheme.textSecondary),
+          ),
+          if (file.isTextExtractable)
+            Chip(
+              label: const Text('📄 Text indexed',
+                  style: TextStyle(fontSize: 11)),
+              backgroundColor: Colors.green.shade50,
+              side: BorderSide(color: Colors.green.shade200),
+              padding: EdgeInsets.zero,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            )
+          else if (isPdf)
+            Chip(
+              label: const Text('🖼 Visual only — AI cannot read this',
+                  style: TextStyle(fontSize: 11)),
+              backgroundColor: Colors.grey.shade100,
+              side: BorderSide(color: Colors.grey.shade300),
+              padding: EdgeInsets.zero,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+        ],
       ),
       trailing: IconButton(
         icon: const Icon(Icons.delete_outline,

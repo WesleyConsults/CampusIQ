@@ -13,4 +13,7 @@ class CourseFileModel {
   late String filePath; // absolute path on device storage
   late String fileType; // 'pdf' | 'image'
   late DateTime addedAt;
+
+  String? extractedText;
+  bool isTextExtractable = false;
 }

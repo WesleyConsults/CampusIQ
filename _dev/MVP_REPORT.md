@@ -2,13 +2,13 @@
 
 **Date:** 2026-04-18
 **Package:** com.wesleyconsults.campusiq
-**Status:** MVP Complete (Phases 1–15.3) + Bug Fix Pass + AI Rendering Fix
+**Status:** MVP Complete (Phases 1–15.4) + Bug Fix Pass + AI Rendering Fix
 
 ---
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases plus Phases 15.1–15.3: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking, Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, Study Plan + Exam Mode, Course Hub Workspace (per-course notes, files, sessions, AI chat, and flashcards), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, and Cumulative CWA with Past Result Slip Import. A post-15.3 AI rendering fix delivered full markdown and LaTeX math rendering in the AI chat bubble.
+CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases plus Phases 15.1–15.4: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking, Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, Study Plan + Exam Mode, Course Hub Workspace (per-course notes, files, sessions, AI chat, and flashcards), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, Cumulative CWA with Past Result Slip Import, and Source-Grounded AI (PDF text extraction + "From My Notes" mode). A post-15.3 AI rendering fix delivered full markdown and LaTeX math rendering in the AI chat bubble.
 
 ---
 
@@ -246,28 +246,30 @@ lib/
 │               ├── study_plan_tab.dart            — Phase 15
 │               ├── usage_counter_chip.dart
 │               └── weekly_review_banner.dart      — Phase 15: banner in AI tab
-│   └── course_hub/                                — Phase 15.1 (timetable import lives in timetable/)
+│   └── course_hub/                                — Phase 15.1 + 15.4
 │       ├── data/
 │       │   ├── models/course_note_model.dart      — Isar @collection: notes per course
-│       │   ├── models/course_file_model.dart      — Isar @collection: attached files per course
+│       │   ├── models/course_file_model.dart      — Isar @collection: attached files; +extractedText, +isTextExtractable (15.4)
 │       │   ├── repositories/course_note_repository.dart
-│       │   └── repositories/course_file_repository.dart
-│       ├── domain/course_hub_context_builder.dart — pure Dart: builds AI system prompt context string
+│       │   └── repositories/course_file_repository.dart — +getExtractableFiles() (15.4)
+│       ├── domain/
+│       │   ├── course_hub_context_builder.dart    — pure Dart: build() for general mode; +buildSourceGroundedContext() (15.4)
+│       │   └── course_pdf_extractor.dart          — Phase 15.4: pure Dart syncfusion PDF extractor; 150-char min, 40k-char cap
 │       └── presentation/
 │           ├── providers/
 │           │   ├── course_note_provider.dart      — @riverpod Stream family per courseCode
 │           │   ├── course_file_provider.dart      — @riverpod Stream family per courseCode
-│           │   └── hub_ai_provider.dart           — HubAiNotifier.family per courseCode
+│           │   └── hub_ai_provider.dart           — HubAiNotifier.family; +isSourceGrounded state, +toggleSourceGrounded(), source-grounded prompt branch (15.4)
 │           ├── screens/course_hub_screen.dart     — 6-tab DefaultTabController screen
 │           └── widgets/
 │               ├── hub_overview_tab.dart          — course info, expected score, CWA impact, stats, streak
 │               ├── hub_sessions_tab.dart          — course-scoped bar chart + session history
 │               ├── hub_notes_tab.dart             — note list with FAB, Dismissible delete, edit sheet
-│               ├── hub_files_tab.dart             — file attach (FilePicker), open (OpenFilex), delete
+│               ├── hub_files_tab.dart             — file attach with PDF extraction + "Reading PDF…" loading state (15.4)
 │               ├── hub_flashcards_tab.dart        — per-course exam prep (hubExamPrepProvider family)
-│               ├── hub_ai_tab.dart                — per-course AI chat (hubAiProvider family)
+│               ├── hub_ai_tab.dart                — per-course AI chat; From My Notes / General toggle chips, source summary strip, empty state (15.4)
 │               ├── note_editor_sheet.dart         — DraggableScrollableSheet for create/edit notes
-│               └── file_tile.dart                 — PDF/image file row with open + delete actions
+│               └── file_tile.dart                 — PDF/image file row; +"📄 Text indexed" / "🖼 Visual only" chips (15.4)
 └── shared/
     ├── extensions/double_extensions.dart
     └── widgets/empty_state_widget.dart
@@ -644,6 +646,43 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 
 ---
 
+### Phase 15.4 — Source-Grounded AI ("From My Notes" Mode)
+
+**No new routes. No new screens. No new Isar collections.** All changes are inside the Course Hub feature.
+
+#### Session 1 — PDF Text Extraction Pipeline
+
+| Feature | Description |
+|---|---|
+| `syncfusion_flutter_pdf` dependency | Local PDF text extraction — offline, no API key |
+| `CourseFileModel` updated | Two new fields: `String? extractedText` and `bool isTextExtractable` — Isar handles migration automatically (nullable / default false) |
+| `CoursePdfExtractor` | New pure Dart domain class; reads PDF bytes, iterates pages via `sf.PdfTextExtractor`, enforces a 150-char minimum (filters scanned/image-only PDFs) and a 40,000-char storage cap (silent truncation for large docs) |
+| `getExtractableFiles()` | New `CourseFileRepository` method — queries Isar for all files in a course where `isTextExtractable == true` |
+| PDF upload flow | `hub_files_tab.dart`: after copying PDF to local storage, runs `CoursePdfExtractor.extract()` before the Isar write; button label changes to **"Reading PDF…"** and is disabled during extraction; non-PDF files skip the extractor entirely |
+| `file_tile.dart` chip | Text-indexed PDFs show a green **"📄 Text indexed"** chip; scanned/image-only PDFs show a grey **"🖼 Visual only — AI cannot read this"** chip; non-PDF files show no chip |
+
+#### Session 2 — Source-Grounded Mode in Hub AI Tab
+
+| Feature | Description |
+|---|---|
+| `buildSourceGroundedContext()` | New instance method on `CourseHubContextBuilder`; assembles a structured context block from notes and extractable PDF text; hard-capped at 15,000 chars to stay within DeepSeek's context window |
+| `isSourceGrounded` state | New field on `HubAiState`; defaults to `false`; persists across messages within the same notifier instance |
+| `toggleSourceGrounded()` | New method on `HubAiNotifier`; flips the state flag |
+| Updated `_buildSystemPrompt()` | When `isSourceGrounded` is true: loads notes from the stream cache + refreshes `_extractableFiles` from Isar; if no materials exist, returns the sentinel `'__EMPTY_SOURCE_CONTEXT__'`; otherwise returns the grounded system prompt instructing the AI to cite note title or PDF filename; falls back to the existing general prompt when `isSourceGrounded` is false |
+| Context refresh on send | `_extractableFiles` is re-fetched from Isar on every `sendMessage()` call while in grounded mode — deleted files are excluded from the next response |
+| Two-chip mode selector | Replaces the old "Focused on [Code]" indigo banner; **📚 From My Notes** and **🌐 General** `FilterChip` widgets; selected chip is navy (`Color(0xFF0A1F44)`) with white text |
+| Source summary strip | Shown when grounded mode is ON and materials exist; displays note count, indexed PDF count, and a "(N visual only — not included)" note if applicable |
+| Empty state | When grounded mode is ON but there are zero notes and zero extractable PDFs, the chat area is replaced with a folder icon + instructions; text input is hidden; no messages can be sent |
+| Quota unchanged | Source-grounded messages share the existing `chat` quota (3/day free); `PremiumGateWidget` behaviour is unchanged |
+
+**Modified files:** `course_file_model.dart`, `course_file_model.g.dart` (regenerated), `course_file_repository.dart`, `course_hub_context_builder.dart`, `hub_ai_provider.dart`, `hub_files_tab.dart`, `hub_ai_tab.dart`, `file_tile.dart`, `pubspec.yaml`
+
+**New file:** `domain/course_pdf_extractor.dart`
+
+**Isar schemas:** `CourseFileModel` updated (two new fields — no manual migration needed)
+
+---
+
 ## Isar Collections (full list)
 
 | Collection | Feature | Phase | Purpose |
@@ -663,7 +702,7 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | `DailyPlanTaskModel` | Daily Plan | 15 | Daily tasks and checklist items with completion state |
 | `ExamModel` | Exam Mode | 15 | Exam dates, course codes, and estimated study hours |
 | `CourseNoteModel` | Course Hub | 15.1 | Per-course markdown notes with title, body, timestamps |
-| `CourseFileModel` | Course Hub | 15.1 | Attached file records (PDF/image) with app-local path |
+| `CourseFileModel` | Course Hub | 15.1 / 15.4 | Attached file records (PDF/image) with app-local path; `extractedText` and `isTextExtractable` added in 15.4 |
 | `PastSemesterModel` | CWA | 15.3 | Past semester results (embedded `PastCourseEntry` list, reported CWA fields) |
 
 ---
@@ -695,6 +734,7 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | flutter_markdown | ^0.7.3 | Markdown rendering for AI chat assistant bubbles |
 | flutter_math_fork | ^0.7.2 | LaTeX math rendering (`Math.tex()`) for inline and display math in AI chat |
 | markdown | ^7.2.2 | Custom `InlineSyntax` extension for `$...$` detection inside `MarkdownBody` |
+| syncfusion_flutter_pdf | ^26.2.14 | Offline PDF text extraction for Course Hub source-grounded AI (Phase 15.4) |
 
 ### Dev
 
@@ -794,6 +834,8 @@ flutter run
 | AI rendering fix S2 | `fix: use MarkdownStyleSheet.fromTheme to prevent null-check crash on list render` |
 | AI rendering fix S3 | `fix: split display-math builder from inline-math builder to prevent _inlines crash` |
 | AI rendering fix S4 | `fix: eliminate display-math crash in AI chat bubble` (pre-split $$...$$ before MarkdownBody; remove debug ErrorWidget.builder) |
+| Phase 15.4 S1 | `feat(phase-15.4): session 1 — PDF text extraction pipeline` |
+| Phase 15.4 S2 | `feat(phase-15.4): session 2 — source-grounded AI mode in course hub` |
 
 ---
 
