@@ -1,14 +1,14 @@
 # CampusIQ — MVP Completion Report
 
-**Date:** 2026-04-15
+**Date:** 2026-04-18
 **Package:** com.wesleyconsults.campusiq
-**Status:** MVP Complete (Phases 1–15.3) + Bug Fix Pass
+**Status:** MVP Complete (Phases 1–15.3) + Bug Fix Pass + AI Rendering Fix
 
 ---
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases plus Phases 15.1–15.3: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking, Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, Study Plan + Exam Mode, Course Hub Workspace (per-course notes, files, sessions, AI chat, and flashcards), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, and Cumulative CWA with Past Result Slip Import.
+CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases plus Phases 15.1–15.3: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking, Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, Study Plan + Exam Mode, Course Hub Workspace (per-course notes, files, sessions, AI chat, and flashcards), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, and Cumulative CWA with Past Result Slip Import. A post-15.3 AI rendering fix delivered full markdown and LaTeX math rendering in the AI chat bubble.
 
 ---
 
@@ -213,9 +213,9 @@ lib/
 │       │   ├── deepseek_client.dart
 │       │   ├── deepseek_exception.dart
 │       │   ├── exam_prep_models.dart              — Phase 14: MCQ/ShortAnswer/Flashcard types
-│       │   ├── latex_sanitizer.dart               — strips LaTeX from AI responses
+│       │   ├── latex_sanitizer.dart               — strips LaTeX from plain-text AI surfaces (CWA coach)
 │       │   ├── notification_scheduler.dart        — Phase 14: schedules smart alerts
-│       │   └── prompt_templates.dart
+│       │   └── prompt_templates.dart              — AI rendering fix: updated system prompt with markdown + $...$ math rules
 │       └── presentation/
 │           ├── providers/
 │           │   ├── ai_chat_provider.dart
@@ -231,7 +231,7 @@ lib/
 │           │   └── weekly_review_screen.dart      — Phase 15: AI weekly review + free gate
 │           └── widgets/
 │               ├── ai_chat_history_drawer.dart
-│               ├── ai_message_bubble.dart
+│               ├── ai_message_bubble.dart         — AI rendering fix: MarkdownBody + Math.tex() for inline ($) and display ($$) LaTeX
 │               ├── ai_typing_indicator.dart
 │               ├── flashcard_widget.dart          — Phase 14: 3D flip animation
 │               ├── mcq_card.dart                  — Phase 14: MCQ with reveal animation
@@ -451,9 +451,12 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | Context Builder | Injects user's academic context implicitly into AI prompts for personalization. |
 | AI Chat Interface | Streamlined messaging UI with user/assistant bubbles and a typing indicator. |
 | Chat History Tracker | Automatically tracks individual conversations, storing them in Isar as unified sessions. |
-| Chat Sesssion Drawer | `endDrawer` interface listing previous conversations allowing users to switch chats. |
+| Chat Session Drawer | `endDrawer` interface listing previous conversations allowing users to switch chats. |
 | AI Usage Limits | Local usage counter (`ai_usage_table`) capping non-premium users to 3 generic prompts per day. |
 | Premium Paywall | Gateway widget substituting chat inputs when free-tier users exceed their limit. |
+| Markdown rendering | Assistant bubbles now rendered with `MarkdownBody` — supports **bold**, *italic*, bullet lists, and inline code blocks. |
+| Math rendering | Inline `$...$` expressions rendered with `Math.tex()` (text style); display `$$...$$` blocks pre-split before `MarkdownBody` and rendered centred with `Math.tex()` (display style). `onErrorFallback` shows raw monospace text if the expression is unparseable. |
+| AI prompt rules | `prompt_templates.dart` system prompt updated: instructs DeepSeek to use `$...$` for inline math and `$$...$$` for display/block math; never output bare LaTeX commands. |
 
 ### Phase 13 — CWA AI Coach + What-If Explainer
 
@@ -689,6 +692,9 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | file_picker | ^8.1.2 | Native file picker (PDF, images, docs) for Course Hub file attachments |
 | open_filex | ^4.4.1 | Open attached files with the device's default app handler |
 | image_picker | ^1.1.2 | Camera and gallery image picker for timetable image import (Phase 15.2) |
+| flutter_markdown | ^0.7.3 | Markdown rendering for AI chat assistant bubbles |
+| flutter_math_fork | ^0.7.2 | LaTeX math rendering (`Math.tex()`) for inline and display math in AI chat |
+| markdown | ^7.2.2 | Custom `InlineSyntax` extension for `$...$` detection inside `MarkdownBody` |
 
 ### Dev
 
@@ -783,7 +789,11 @@ flutter run
 | Phase 15.2 link | `cwa linked with timetable oneway` / `timetable model success` |
 | Phase 15.3 S1 | `registration slip integrated into CWA` / `split slip import idle into 3 options` |
 | Phase 15.3 S2 | `add cumulative CWA tracking with past result slip import` |
-| Phase 15.3 S3 | `cumulative cwa updated` |
+| Phase 15.3 S3 | `cumulative cwa updated` / `cumulative cwa patched` |
+| AI rendering fix S1 | `feat: add markdown + LaTeX math rendering to AI chat bubble` |
+| AI rendering fix S2 | `fix: use MarkdownStyleSheet.fromTheme to prevent null-check crash on list render` |
+| AI rendering fix S3 | `fix: split display-math builder from inline-math builder to prevent _inlines crash` |
+| AI rendering fix S4 | `fix: eliminate display-math crash in AI chat bubble` (pre-split $$...$$ before MarkdownBody; remove debug ErrorWidget.builder) |
 
 ---
 

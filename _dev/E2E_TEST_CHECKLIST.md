@@ -282,6 +282,16 @@ Mark each item `[x]` as you confirm it works.
 - [ ] AI response appears on the left
 - [ ] Response is readable, relevant, no crash
 
+### 6.2a Markdown & math rendering
+- [ ] Ask **"Explain compound interest with the formula"** — response uses **bold** text and bullet points rendered correctly (not as raw `**` or `-`)
+- [ ] Ask **"What is the quadratic formula?"** — formula renders as typeset math (not raw LaTeX like `\frac{-b \pm ...}`)
+- [ ] Ask **"Find the eigenvalues of the matrix [[2,1],[1,2]]"** — eigenvalue expressions render inline
+- [ ] Ask **"Show me step-by-step Gaussian elimination on a 2×2 system"** — display math blocks (`$$...$$`) render centered, no red crash screen
+- [ ] Ask **"What are the roots of x² - 5x + 6 = 0, show working"** — mixed markdown steps + math renders without crash
+- [ ] Confirm no red error screen on any math-heavy response
+- [ ] Inline code in AI responses (e.g. variable names) renders with monospace grey background
+- [ ] If AI outputs an unparseable LaTeX expression, it falls back to monospace plain text (not a crash)
+
 ### 6.3 Usage counter
 - [ ] A counter near the top or input shows remaining free queries (e.g. "2 queries left today")
 - [ ] Counter decrements with each message sent
@@ -585,6 +595,8 @@ These tests verify features work together correctly.
 - [ ] Send a message → AI responds with content relevant to the course
 - [ ] Ask **"What course are we focusing on?"** → AI correctly names the course
 - [ ] Typing indicator appears while waiting for the response
+- [ ] Ask a math question relevant to the course (e.g. "Show me the quadratic formula") → response renders typeset math, no red screen
+- [ ] Bold text and bullet lists in AI responses render correctly (not as raw `**` / `-`)
 
 ### 13.10 AI Chat tab — context injection
 - [ ] Add a note on the Notes tab (e.g. "Thevenin's theorem — voltage divider")
@@ -701,6 +713,7 @@ These tests verify features work together correctly.
 | 4. Study Sessions | | |
 | 5. Streak System | | |
 | 6. AI Coach & Chat | | |
+| 6a. AI Markdown & Math Rendering | | |
 | 7. Exam Prep Generator | | |
 | 8. Plan Screen | | |
 | 9. Settings | | |
@@ -708,7 +721,8 @@ These tests verify features work together correctly.
 | 11. Cross-Feature Tests | | |
 | 12. Edge Cases | | |
 | 13. Course Hub Workspace | | |
-| 14. Performance | | |
+| 14. Timetable Image Import | | |
+| 15. Performance & Stability | | |
 
 **Tester:** ___________________  
 **Date:** ___________________  
