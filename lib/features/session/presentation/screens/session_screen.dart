@@ -48,6 +48,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     Duration shortBreakDuration = const Duration(minutes: 5),
     Duration longBreakDuration = const Duration(minutes: 15),
   }) async {
+    if (isPomodoroMode) {
+      await NotificationService.instance.requestPermission();
+      if (!context.mounted) return;
+    }
+
     final picked = await showModalBottomSheet<PickedCourse>(
       context: context,
       isScrollControlled: true,
@@ -328,8 +333,8 @@ class _StartCard extends StatefulWidget {
 
 class _StartCardState extends State<_StartCard> {
   bool _isPomodoroMode = false;
-  int _focusMinutes = 25;
-  int _shortBreakMinutes = 5;
+  int _focusMinutes = 1;
+  int _shortBreakMinutes = 1;
   int _longBreakMinutes = 15;
 
   void _adjust(int current, int delta, int min, int max, void Function(int) update) {
