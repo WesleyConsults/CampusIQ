@@ -20,7 +20,6 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
   @override
   void initState() {
     super.initState();
-    // Tick every second to update the elapsed display
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -37,20 +36,39 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
     final session = ref.watch(activeSessionProvider);
     if (session == null) return const SizedBox.shrink();
 
+    final isPomodoro = session.isPomodoroMode;
+    final isBreak = isPomodoro && session.isBreak;
+    final pillColor = isBreak ? AppTheme.success : AppTheme.primary;
+
+    // Mini label: "R2 Focus" or "R2 Break"
+    String? pomodoroLabel;
+    String timerDisplay;
+    if (isPomodoro && !session.isComplete) {
+      final phase = isBreak ? 'Break' : 'Focus';
+      pomodoroLabel = 'R${session.currentRound} $phase';
+      timerDisplay = session.formattedPhaseRemaining;
+    } else if (isPomodoro && session.isComplete) {
+      pomodoroLabel = 'Done!';
+      timerDisplay = '${session.pomodoroRoundsCompleted}×25m';
+    } else {
+      timerDisplay = session.formattedElapsed;
+    }
+
     return Positioned(
       left: 16,
       right: 16,
       bottom: 12,
       child: GestureDetector(
         onTap: widget.onTap,
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: AppTheme.primary,
+            color: pillColor,
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primary.withValues(alpha: 0.3),
+                color: pillColor.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -58,7 +76,6 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
           ),
           child: Row(
             children: [
-              // Pulsing red dot
               _PulsingDot(),
               const SizedBox(width: 10),
               Expanded(
@@ -74,16 +91,24 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    Text(
-                      session.courseName,
-                      style: const TextStyle(color: Colors.white60, fontSize: 10),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    if (pomodoroLabel != null)
+                      Text(
+                        pomodoroLabel,
+                        style:
+                            const TextStyle(color: Colors.white70, fontSize: 10),
+                      )
+                    else
+                      Text(
+                        session.courseName,
+                        style: const TextStyle(
+                            color: Colors.white60, fontSize: 10),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                   ],
                 ),
               ),
               Text(
-                session.formattedElapsed,
+                timerDisplay,
                 style: const TextStyle(
                   color: AppTheme.accent,
                   fontSize: 16,
@@ -134,7 +159,8 @@ class _PulsingDotState extends State<_PulsingDot>
       child: Container(
         width: 8,
         height: 8,
-        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+        decoration:
+            const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
       ),
     );
   }

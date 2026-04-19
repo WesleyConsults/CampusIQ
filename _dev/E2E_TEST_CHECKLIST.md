@@ -233,6 +233,62 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Navigates to `/insights` screen with insight cards
 - [ ] Back arrow returns to Sessions
 
+### 4.10 Pomodoro mode — setup and UI
+
+- [ ] Start card shows a **Normal / Pomodoro** segmented toggle at the top
+- [ ] Default selection is **Normal** — button reads "Start Session" with a play icon
+- [ ] Tap the **Pomodoro** chip — button changes to "Start Pomodoro" with an hourglass icon
+- [ ] Subtitle below toggle reads "25 min focus · 5 min break · 4 rounds"
+- [ ] Tap **"Start Pomodoro"** — `CoursePickerSheet` opens; select a course
+- [ ] Active timer card appears — background is **primary blue** (same as Normal)
+- [ ] Timer shows a **countdown** (24:59, 24:58…) not a count-up
+- [ ] Label below countdown reads **"Round 1 of 4  ·  Focus"**
+- [ ] Four progress dots are visible — first dot filled (accent color), rest hollow
+- [ ] Buttons show **Cancel** (left) and **Stop & Save** (right)
+
+### 4.11 Pomodoro mode — floating mini-timer
+
+- [ ] Navigate to another tab while Pomodoro is running
+- [ ] Floating pill shows **"R1 Focus · 24:xx"** with a countdown (not a count-up)
+- [ ] Pill color is **primary blue** during focus phase
+- [ ] Tapping the pill navigates back to Sessions
+- [ ] Timer count is still accurate after returning
+
+### 4.12 Pomodoro mode — break phase transition
+
+> To test this quickly, set a short focus duration manually in code or wait; for manual testing use a real 25-min focus block. The key behaviors to verify:
+
+- [ ] When the focus countdown reaches **0:00**, the card background changes to **green**
+- [ ] Label updates to **"Round 1 of 4  ·  Short Break"** with a 5:00 countdown
+- [ ] Left button changes to **"Skip Break"**; right button remains **"Stop & Save"**
+- [ ] Floating mini-timer pill turns **green** and shows "R1 Break · 04:xx"
+- [ ] Tap **"Skip Break"** — immediately transitions to Round 2 focus (primary blue card, Round 2 of 4 label)
+- [ ] Round 2 progress dot fills; Round 1 dot remains filled
+
+### 4.13 Pomodoro mode — session complete state
+
+- [ ] After Round 4 focus ends, the card enters a **Long Break** (green, "Round 4 of 4 · Long Break")
+- [ ] When long break ends (or after skipping it), card shows **"Session Complete!"** in accent color
+- [ ] Below the title: "4 rounds · 100m focused" (or actual rounds completed × minutes)
+- [ ] Only a **"Stop & Save"** button is shown (no Cancel or Skip)
+- [ ] Tap **"Stop & Save"** — session is saved and appears in History
+
+### 4.14 Pomodoro mode — save and history
+
+- [ ] Pomodoro session tile in History shows a **small hourglass icon** next to the duration
+- [ ] Duration shown reflects **focus time only** — 25 min × completed rounds (break time excluded)
+- [ ] Stopping mid-round (during a focus phase) includes partial focus time in the saved duration
+- [ ] Stopping during a break saves only the focus time accumulated so far (break minutes not counted)
+- [ ] A Pomodoro session where the user stops with < 1 minute of focus **does NOT** appear in history
+- [ ] Normal sessions in the same history list show **no hourglass icon**
+
+### 4.15 Pomodoro — analytics and weekly summary
+
+- [ ] After saving a Pomodoro session, **today's analytics card** shows the correct focus minutes
+- [ ] The **weekly bar chart** includes Pomodoro focus minutes for the correct day
+- [ ] Tap **"This Week"** in the AppBar → weekly review sheet shows total minutes including Pomodoro focus time
+- [ ] No double-counting of break time in any summary
+
 ---
 
 ## 5. Streak System (`/streak`)
@@ -502,6 +558,15 @@ These tests verify features work together correctly.
 - [ ] Timer count is still running (not reset)
 - [ ] Return to Sessions — active session card is still live
 
+### 11.8 Pomodoro → Streak update
+- [ ] Complete a Pomodoro session (at least 1 focus round saved)
+- [ ] Go to Streak tab — study streak count reflects the session logged today
+
+### 11.9 Pomodoro → Weekly Review minutes
+- [ ] Log a Pomodoro session (e.g. 2 rounds = 50 min focus)
+- [ ] Tap **"This Week"** on the Sessions AppBar
+- [ ] Weekly Review sheet total minutes includes the 50 min (not 60 min with breaks, not 0)
+
 ---
 
 ## 12. Edge Cases & Error States
@@ -738,7 +803,8 @@ These tests verify features work together correctly.
 | 1. App Launch & Navigation | | |
 | 2. CWA Planner | | |
 | 3. Timetable | | |
-| 4. Study Sessions | | |
+| 4. Study Sessions — Normal mode | | |
+| 4a. Pomodoro mode (4.10–4.15) | | |
 | 5. Streak System | | |
 | 6. AI Coach & Chat | | |
 | 6a. AI Markdown & Math Rendering | | |
@@ -747,6 +813,7 @@ These tests verify features work together correctly.
 | 9. Settings | | |
 | 10. Weekly Review | | |
 | 11. Cross-Feature Tests | | |
+| 11a. Pomodoro cross-feature (11.8–11.9) | | |
 | 12. Edge Cases | | |
 | 13. Course Hub Workspace | | |
 | 13a. PDF Text Extraction (15.4) | | |

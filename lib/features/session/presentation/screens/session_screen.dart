@@ -41,7 +41,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     super.dispose();
   }
 
-  Future<void> _startSession(BuildContext context) async {
+  Future<void> _startSession(
+    BuildContext context, {
+    bool isPomodoroMode = false,
+    Duration focusDuration = const Duration(minutes: 25),
+    Duration shortBreakDuration = const Duration(minutes: 5),
+    Duration longBreakDuration = const Duration(minutes: 15),
+  }) async {
     final picked = await showModalBottomSheet<PickedCourse>(
       context: context,
       isScrollControlled: true,
@@ -55,10 +61,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     if (picked == null || !context.mounted) return;
 
     ref.read(activeSessionProvider.notifier).startSession(
-      courseCode: picked.courseCode,
-      courseName: picked.courseName,
-      courseSource: picked.source,
-    );
+          courseCode: picked.courseCode,
+          courseName: picked.courseName,
+          courseSource: picked.source,
+          isPomodoroMode: isPomodoroMode,
+          focusDuration: focusDuration,
+          shortBreakDuration: shortBreakDuration,
+          longBreakDuration: longBreakDuration,
+        );
   }
 
   Future<void> _stopSession(String semesterKey) async {
@@ -69,16 +79,18 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final durationMins = completed.elapsedMinutes;
     if (durationMins < 1) return;
 
-    // Check if this will be the first session of today (before saving)
     final existingSessions = ref.read(allSessionsProvider).valueOrNull ?? [];
     final today = DateTime.now();
     final hadSessionToday = existingSessions.any((s) {
       final d = s.startTime;
-      return d.year == today.year && d.month == today.month && d.day == today.day;
+      return d.year == today.year &&
+          d.month == today.month &&
+          d.day == today.day;
     });
 
     final todaySlots = ref.read(activeDaySlotsProvider);
-    final wasPlanned = todaySlots.any((s) => s.courseCode == completed.courseCode);
+    final wasPlanned =
+        todaySlots.any((s) => s.courseCode == completed.courseCode);
 
     final session = StudySessionModel()
       ..courseCode = completed.courseCode
@@ -88,19 +100,25 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       ..durationMinutes = durationMins
       ..wasPlanned = wasPlanned
       ..courseSource = completed.courseSource
-      ..semesterKey = semesterKey;
+      ..semesterKey = semesterKey
+      ..sessionType = completed.isPomodoroMode ? 'pomodoro' : 'normal'
+      ..pomodoroRoundsCompleted = completed.isPomodoroMode
+          ? completed.pomodoroRoundsCompleted
+          : null;
 
     final repo = ref.read(sessionRepositoryProvider);
     await repo?.saveSession(session);
 
-    // Cancel at-risk alerts since the user has now studied today
     await NotificationService.instance.cancelStudiedTodayAlerts();
 
-    // Fire streak-secured notification only after the first session of the day
     if (!hadSessionToday) {
       final streak = ref.read(studyStreakProvider);
       await NotificationService.instance.showStreakSecured(streak.currentStreak);
     }
+  }
+
+  void _onPhaseExpired() {
+    ref.read(activeSessionProvider.notifier).advancePhase();
   }
 
   @override
@@ -143,15 +161,24 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Tab 0: History — all existing content
           _HistoryTab(
             activeSession: activeSession,
             semester: semester,
-            onStart: () => _startSession(context),
+            onStart: (isPomodoroMode, focus, shortBreak, longBreak) =>
+                _startSession(
+              context,
+              isPomodoroMode: isPomodoroMode,
+              focusDuration: focus,
+              shortBreakDuration: shortBreak,
+              longBreakDuration: longBreak,
+            ),
             onStop: () => _stopSession(semester),
-            onCancel: () => ref.read(activeSessionProvider.notifier).cancelSession(),
+            onCancel: () =>
+                ref.read(activeSessionProvider.notifier).cancelSession(),
+            onPhaseExpired: _onPhaseExpired,
+            onSkipBreak: () =>
+                ref.read(activeSessionProvider.notifier).skipBreak(),
           ),
-          // Tab 1: Plan
           const StudyPlanTab(),
         ],
       ),
@@ -159,14 +186,16 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   }
 }
 
-// ── History tab — extracted so it can be kept as-is ─────────────────────────
+// ── History tab ───────────────────────────────────────────────────────────────
 
 class _HistoryTab extends ConsumerWidget {
   final dynamic activeSession;
   final String semester;
-  final VoidCallback onStart;
+  final void Function(bool isPomodoroMode, Duration focus, Duration shortBreak, Duration longBreak) onStart;
   final VoidCallback onStop;
   final VoidCallback onCancel;
+  final VoidCallback onPhaseExpired;
+  final VoidCallback onSkipBreak;
 
   const _HistoryTab({
     required this.activeSession,
@@ -174,6 +203,8 @@ class _HistoryTab extends ConsumerWidget {
     required this.onStart,
     required this.onStop,
     required this.onCancel,
+    required this.onPhaseExpired,
+    required this.onSkipBreak,
   });
 
   @override
@@ -192,6 +223,8 @@ class _HistoryTab extends ConsumerWidget {
                     session: activeSession,
                     onStop: onStop,
                     onCancel: onCancel,
+                    onPhaseExpired: onPhaseExpired,
+                    onSkipBreak: onSkipBreak,
                   )
                 : _StartCard(onStart: onStart),
           ),
@@ -227,7 +260,8 @@ class _HistoryTab extends ConsumerWidget {
             child: Row(
               children: [
                 const Text('History',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                 const Spacer(),
                 sessionsAsync.whenOrNull(
                       data: (s) => Text('${s.length} sessions',
@@ -265,8 +299,9 @@ class _HistoryTab extends ConsumerWidget {
                   final session = sessions[i];
                   return SessionTile(
                     session: session,
-                    onDelete: () =>
-                        ref.read(sessionRepositoryProvider)?.deleteSession(session.id),
+                    onDelete: () => ref
+                        .read(sessionRepositoryProvider)
+                        ?.deleteSession(session.id),
                   );
                 },
                 childCount: sessions.length,
@@ -281,9 +316,26 @@ class _HistoryTab extends ConsumerWidget {
   }
 }
 
-class _StartCard extends StatelessWidget {
-  final VoidCallback onStart;
+// ── Start card with mode toggle ───────────────────────────────────────────────
+
+class _StartCard extends StatefulWidget {
+  final void Function(bool isPomodoroMode, Duration focus, Duration shortBreak, Duration longBreak) onStart;
   const _StartCard({required this.onStart});
+
+  @override
+  State<_StartCard> createState() => _StartCardState();
+}
+
+class _StartCardState extends State<_StartCard> {
+  bool _isPomodoroMode = false;
+  int _focusMinutes = 25;
+  int _shortBreakMinutes = 5;
+  int _longBreakMinutes = 15;
+
+  void _adjust(int current, int delta, int min, int max, void Function(int) update) {
+    final next = current + delta;
+    if (next >= min && next <= max) setState(() => update(next));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -296,21 +348,79 @@ class _StartCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(Icons.timer_outlined, size: 48, color: AppTheme.textSecondary),
-          const SizedBox(height: 12),
-          const Text('Ready to study?',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          const Text('Pick a course and start your session',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+          // Mode toggle
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: Row(
+              children: [
+                _ModeChip(
+                  label: 'Normal',
+                  icon: Icons.timer_outlined,
+                  selected: !_isPomodoroMode,
+                  onTap: () => setState(() => _isPomodoroMode = false),
+                ),
+                _ModeChip(
+                  label: 'Pomodoro',
+                  icon: Icons.hourglass_bottom_rounded,
+                  selected: _isPomodoroMode,
+                  onTap: () => setState(() => _isPomodoroMode = true),
+                ),
+              ],
+            ),
+          ),
+
           const SizedBox(height: 20),
+
+          if (_isPomodoroMode) ...[
+            _DurationStepper(
+              label: 'Focus',
+              minutes: _focusMinutes,
+              onDecrement: () => _adjust(_focusMinutes, -5, 10, 60, (v) => _focusMinutes = v),
+              onIncrement: () => _adjust(_focusMinutes, 5, 10, 60, (v) => _focusMinutes = v),
+            ),
+            const SizedBox(height: 8),
+            _DurationStepper(
+              label: 'Short Break',
+              minutes: _shortBreakMinutes,
+              onDecrement: () => _adjust(_shortBreakMinutes, -5, 5, 30, (v) => _shortBreakMinutes = v),
+              onIncrement: () => _adjust(_shortBreakMinutes, 5, 5, 30, (v) => _shortBreakMinutes = v),
+            ),
+            const SizedBox(height: 8),
+            _DurationStepper(
+              label: 'Long Break',
+              minutes: _longBreakMinutes,
+              onDecrement: () => _adjust(_longBreakMinutes, -5, 10, 60, (v) => _longBreakMinutes = v),
+              onIncrement: () => _adjust(_longBreakMinutes, 5, 10, 60, (v) => _longBreakMinutes = v),
+            ),
+            const SizedBox(height: 16),
+          ] else ...[
+            const Text(
+              'Pick a course and start your session',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: onStart,
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Start Session',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
+              onPressed: () => widget.onStart(
+                _isPomodoroMode,
+                Duration(minutes: _focusMinutes),
+                Duration(minutes: _shortBreakMinutes),
+                Duration(minutes: _longBreakMinutes),
+              ),
+              icon: Icon(_isPomodoroMode
+                  ? Icons.hourglass_bottom_rounded
+                  : Icons.play_arrow),
+              label: Text(
+                _isPomodoroMode ? 'Start Pomodoro' : 'Start Session',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,
                 foregroundColor: Colors.white,
@@ -322,6 +432,106 @@ class _StartCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ModeChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ModeChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? AppTheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(7),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon,
+                  size: 16,
+                  color: selected ? Colors.white : AppTheme.textSecondary),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? Colors.white : AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DurationStepper extends StatelessWidget {
+  final String label;
+  final int minutes;
+  final VoidCallback onDecrement;
+  final VoidCallback onIncrement;
+
+  const _DurationStepper({
+    required this.label,
+    required this.minutes,
+    required this.onDecrement,
+    required this.onIncrement,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 90,
+          child: Text(label,
+              style: const TextStyle(
+                  fontSize: 13, color: AppTheme.textSecondary)),
+        ),
+        const Spacer(),
+        IconButton(
+          onPressed: onDecrement,
+          icon: const Icon(Icons.remove_circle_outline, size: 20),
+          color: AppTheme.primary,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+        SizedBox(
+          width: 52,
+          child: Text(
+            '$minutes min',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ),
+        IconButton(
+          onPressed: onIncrement,
+          icon: const Icon(Icons.add_circle_outline, size: 20),
+          color: AppTheme.primary,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+      ],
     );
   }
 }

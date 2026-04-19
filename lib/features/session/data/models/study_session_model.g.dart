@@ -47,18 +47,33 @@ const StudySessionModelSchema = CollectionSchema(
       name: r'formattedDuration',
       type: IsarType.string,
     ),
-    r'semesterKey': PropertySchema(
+    r'isPomodoro': PropertySchema(
       id: 6,
+      name: r'isPomodoro',
+      type: IsarType.bool,
+    ),
+    r'pomodoroRoundsCompleted': PropertySchema(
+      id: 7,
+      name: r'pomodoroRoundsCompleted',
+      type: IsarType.long,
+    ),
+    r'semesterKey': PropertySchema(
+      id: 8,
       name: r'semesterKey',
       type: IsarType.string,
     ),
+    r'sessionType': PropertySchema(
+      id: 9,
+      name: r'sessionType',
+      type: IsarType.string,
+    ),
     r'startTime': PropertySchema(
-      id: 7,
+      id: 10,
       name: r'startTime',
       type: IsarType.dateTime,
     ),
     r'wasPlanned': PropertySchema(
-      id: 8,
+      id: 11,
       name: r'wasPlanned',
       type: IsarType.bool,
     )
@@ -88,6 +103,12 @@ int _studySessionModelEstimateSize(
   bytesCount += 3 + object.courseSource.length * 3;
   bytesCount += 3 + object.formattedDuration.length * 3;
   bytesCount += 3 + object.semesterKey.length * 3;
+  {
+    final value = object.sessionType;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -103,9 +124,12 @@ void _studySessionModelSerialize(
   writer.writeLong(offsets[3], object.durationMinutes);
   writer.writeDateTime(offsets[4], object.endTime);
   writer.writeString(offsets[5], object.formattedDuration);
-  writer.writeString(offsets[6], object.semesterKey);
-  writer.writeDateTime(offsets[7], object.startTime);
-  writer.writeBool(offsets[8], object.wasPlanned);
+  writer.writeBool(offsets[6], object.isPomodoro);
+  writer.writeLong(offsets[7], object.pomodoroRoundsCompleted);
+  writer.writeString(offsets[8], object.semesterKey);
+  writer.writeString(offsets[9], object.sessionType);
+  writer.writeDateTime(offsets[10], object.startTime);
+  writer.writeBool(offsets[11], object.wasPlanned);
 }
 
 StudySessionModel _studySessionModelDeserialize(
@@ -121,9 +145,11 @@ StudySessionModel _studySessionModelDeserialize(
   object.durationMinutes = reader.readLong(offsets[3]);
   object.endTime = reader.readDateTime(offsets[4]);
   object.id = id;
-  object.semesterKey = reader.readString(offsets[6]);
-  object.startTime = reader.readDateTime(offsets[7]);
-  object.wasPlanned = reader.readBool(offsets[8]);
+  object.pomodoroRoundsCompleted = reader.readLongOrNull(offsets[7]);
+  object.semesterKey = reader.readString(offsets[8]);
+  object.sessionType = reader.readStringOrNull(offsets[9]);
+  object.startTime = reader.readDateTime(offsets[10]);
+  object.wasPlanned = reader.readBool(offsets[11]);
   return object;
 }
 
@@ -147,10 +173,16 @@ P _studySessionModelDeserializeProp<P>(
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 7:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 8:
+      return (reader.readString(offset)) as P;
+    case 9:
+      return (reader.readStringOrNull(offset)) as P;
+    case 10:
+      return (reader.readDateTime(offset)) as P;
+    case 11:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -966,6 +998,90 @@ extension StudySessionModelQueryFilter
   }
 
   QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      isPomodoroEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isPomodoro',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      pomodoroRoundsCompletedIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'pomodoroRoundsCompleted',
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      pomodoroRoundsCompletedIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'pomodoroRoundsCompleted',
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      pomodoroRoundsCompletedEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'pomodoroRoundsCompleted',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      pomodoroRoundsCompletedGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'pomodoroRoundsCompleted',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      pomodoroRoundsCompletedLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'pomodoroRoundsCompleted',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      pomodoroRoundsCompletedBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'pomodoroRoundsCompleted',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
       semesterKeyEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1096,6 +1212,160 @@ extension StudySessionModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'semesterKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'sessionType',
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'sessionType',
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sessionType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sessionType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sessionType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sessionType',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'sessionType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'sessionType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'sessionType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'sessionType',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sessionType',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      sessionTypeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'sessionType',
         value: '',
       ));
     });
@@ -1261,6 +1531,34 @@ extension StudySessionModelQuerySortBy
   }
 
   QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      sortByIsPomodoro() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPomodoro', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      sortByIsPomodoroDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPomodoro', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      sortByPomodoroRoundsCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroRoundsCompleted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      sortByPomodoroRoundsCompletedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroRoundsCompleted', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
       sortBySemesterKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.asc);
@@ -1271,6 +1569,20 @@ extension StudySessionModelQuerySortBy
       sortBySemesterKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      sortBySessionType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sessionType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      sortBySessionTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sessionType', Sort.desc);
     });
   }
 
@@ -1403,6 +1715,34 @@ extension StudySessionModelQuerySortThenBy
   }
 
   QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      thenByIsPomodoro() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPomodoro', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      thenByIsPomodoroDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPomodoro', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      thenByPomodoroRoundsCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroRoundsCompleted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      thenByPomodoroRoundsCompletedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroRoundsCompleted', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
       thenBySemesterKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.asc);
@@ -1413,6 +1753,20 @@ extension StudySessionModelQuerySortThenBy
       thenBySemesterKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      thenBySessionType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sessionType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      thenBySessionTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sessionType', Sort.desc);
     });
   }
 
@@ -1491,9 +1845,30 @@ extension StudySessionModelQueryWhereDistinct
   }
 
   QueryBuilder<StudySessionModel, StudySessionModel, QDistinct>
+      distinctByIsPomodoro() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isPomodoro');
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QDistinct>
+      distinctByPomodoroRoundsCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroRoundsCompleted');
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QDistinct>
       distinctBySemesterKey({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'semesterKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QDistinct>
+      distinctBySessionType({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sessionType', caseSensitive: caseSensitive);
     });
   }
 
@@ -1562,10 +1937,30 @@ extension StudySessionModelQueryProperty
     });
   }
 
+  QueryBuilder<StudySessionModel, bool, QQueryOperations> isPomodoroProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isPomodoro');
+    });
+  }
+
+  QueryBuilder<StudySessionModel, int?, QQueryOperations>
+      pomodoroRoundsCompletedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroRoundsCompleted');
+    });
+  }
+
   QueryBuilder<StudySessionModel, String, QQueryOperations>
       semesterKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'semesterKey');
+    });
+  }
+
+  QueryBuilder<StudySessionModel, String?, QQueryOperations>
+      sessionTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sessionType');
     });
   }
 

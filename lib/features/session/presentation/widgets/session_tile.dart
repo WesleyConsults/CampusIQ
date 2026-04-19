@@ -39,6 +39,12 @@ class SessionTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (session.isPomodoro)
+            const Padding(
+              padding: EdgeInsets.only(right: 4),
+              child: Icon(Icons.hourglass_bottom_rounded,
+                  size: 13, color: AppTheme.textSecondary),
+            ),
           Text(
             session.formattedDuration,
             style: const TextStyle(

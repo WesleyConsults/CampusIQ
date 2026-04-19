@@ -1,14 +1,14 @@
 # CampusIQ — MVP Completion Report
 
-**Date:** 2026-04-18
+**Date:** 2026-04-19
 **Package:** com.wesleyconsults.campusiq
-**Status:** MVP Complete (Phases 1–15.4) + Bug Fix Pass + AI Rendering Fix
+**Status:** MVP Complete (Phases 1–15.4) + Bug Fix Pass + AI Rendering Fix + Pomodoro Study Mode
 
 ---
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases plus Phases 15.1–15.4: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking, Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, Study Plan + Exam Mode, Course Hub Workspace (per-course notes, files, sessions, AI chat, and flashcards), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, Cumulative CWA with Past Result Slip Import, and Source-Grounded AI (PDF text extraction + "From My Notes" mode). A post-15.3 AI rendering fix delivered full markdown and LaTeX math rendering in the AI chat bubble.
+CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases plus Phases 15.1–15.4: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking (Normal + Pomodoro modes), Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, Study Plan + Exam Mode, Course Hub Workspace (per-course notes, files, sessions, AI chat, and flashcards), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, Cumulative CWA with Past Result Slip Import, and Source-Grounded AI (PDF text extraction + "From My Notes" mode). A post-15.3 AI rendering fix delivered full markdown and LaTeX math rendering in the AI chat bubble. A post-15.4 Pomodoro update added a 25/5/15-minute focus-break timer with round tracking directly into the Study Session screen.
 
 ---
 
@@ -373,15 +373,20 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | Feature | Description |
 |---|---|
 | Course picker | Merged list of CWA courses + today's timetable slots |
-| Start / stop timer | Tapping a course starts the global session timer |
-| Wall-clock anchor | Timer stores `sessionStartTime` as `DateTime`; elapsed = `DateTime.now().difference(sessionStartTime)` — survives Android app pauses |
+| Mode toggle | Normal / Pomodoro segmented toggle on the start card; button label and icon update to match the selected mode |
+| Start / stop timer — Normal | Open-ended count-up timer; stores `startTime` as `DateTime` anchor; elapsed = `DateTime.now().difference(startTime)` — survives Android app pauses |
+| Pomodoro timer | Count-down per phase (25 min focus → 5 min short break → repeat × 4 → 15 min long break); `phaseEndsAt` `DateTime` anchor used for remaining time — same Android-reliable pattern as Normal mode |
+| Pomodoro round tracking | `currentRound` (1-based), `totalRounds` (default 4), `isBreak`, `isComplete` flags held in `ActiveSessionState`; `advancePhase()` / `skipBreak()` on the notifier drive transitions |
+| Phase auto-transition | `ActiveTimerCard` ticker detects `phaseRemaining == Duration.zero` exactly once per phase (guarded by `_lastFiredPhaseEnd`) and calls `onPhaseExpired` → notifier advances to the next phase |
+| Pomodoro UI | Focus phase: primary blue card, accent countdown, round progress dots; Break phase: green card, white countdown, "Skip Break" button; Complete state: "Session Complete!" with rounds + minutes summary |
+| Floating mini-timer — Pomodoro | Pill shows "R2 Focus · 18:42" (countdown) during focus; turns green with "R2 Break · 04:31" during break |
+| Focus-only save | `elapsedMinutes` returns accumulated focus seconds ÷ 60 for Pomodoro sessions — break time is never counted |
 | Global session state | `activeSessionProvider` lives above `ShellRoute`, survives tab switches |
-| Floating mini-timer | Visible in the `_AppShell` body overlay when a session is active; tapping returns to Sessions tab |
-| Session history | Chronological list of past sessions with duration and course |
-| Analytics dashboard | Daily total, weekly bar chart, per-course breakdown |
+| Session history | Chronological list of past sessions; Pomodoro sessions display a hourglass icon next to the duration |
+| Analytics dashboard | Daily total, weekly bar chart, per-course breakdown — Pomodoro minutes feed in identically to Normal minutes |
 | Planned vs actual | `PlannedActualAnalyser` compares session records against timetable slots — pure Dart |
 
-**Isar schemas:** `StudySessionModel`
+**Isar schemas:** `StudySessionModel` (updated: nullable `sessionType` "normal"/"pomodoro", nullable `pomodoroRoundsCompleted`)
 
 ---
 
@@ -690,7 +695,7 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | `CourseModel` | CWA | 1 | Courses with credit hours + expected scores |
 | `TimetableSlotModel` | Timetable | 2 | Official class slots (Layer 1) |
 | `PersonalSlotModel` | Timetable | 3 | Personal/recurring slots (Layer 2) |
-| `StudySessionModel` | Sessions | 4 | Completed study session records |
+| `StudySessionModel` | Sessions | 4 | Completed study session records; `sessionType` ("normal"/"pomodoro") and `pomodoroRoundsCompleted` added for Pomodoro tracking |
 | `UserPrefsModel` | Core / Streak | 5 | Single-row key/value persistent flags (attended days, notification prefs, reflection notes, exam mode, daily goal) |
 | `AiMessageModel` | AI Chat | 12 | Individual user/assistant chat messages |
 | `AiChatSessionModel` | AI Chat | 12 | Individual chat session containers; `courseCode` field added in 15.1 for hub session isolation |
@@ -836,6 +841,7 @@ flutter run
 | AI rendering fix S4 | `fix: eliminate display-math crash in AI chat bubble` (pre-split $$...$$ before MarkdownBody; remove debug ErrorWidget.builder) |
 | Phase 15.4 S1 | `feat(phase-15.4): session 1 — PDF text extraction pipeline` |
 | Phase 15.4 S2 | `feat(phase-15.4): session 2 — source-grounded AI mode in course hub` |
+| Pomodoro | `feat(phase-15.4): PDF text extraction pipeline + source-grounded AI mode` → `feat(sessions): Pomodoro study mode — countdown timer, round tracking, focus-only save` |
 
 ---
 

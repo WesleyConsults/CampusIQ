@@ -25,6 +25,10 @@ class NotificationService {
   // Milestone approaching: 300–399
   // Weekly review        : 400
   // Session reminders    : 500–599
+  // Pomodoro phase end   : 600
+
+  static const String _channelPomodoro = 'pomodoro_timer';
+  static const int _pomodoroNotifId = 600;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -261,6 +265,47 @@ class NotificationService {
         android: _androidDetails(_channelStreakAlert, 'Streak Alerts'),
       ),
     );
+  }
+
+  /// Schedule a notification for when the current Pomodoro phase ends.
+  /// Call this every time a new phase begins. Replaces any previous one.
+  Future<void> schedulePomodoroPhaseEnd({
+    required DateTime phaseEndsAt,
+    required bool isBreak,
+    required bool isLongBreak,
+    required int round,
+    required int totalRounds,
+  }) async {
+    await _plugin.cancel(id: _pomodoroNotifId);
+    if (phaseEndsAt.isBefore(DateTime.now())) return;
+
+    final String title;
+    final String body;
+    if (isBreak) {
+      title = isLongBreak ? 'Long break over' : 'Break time over';
+      body = isLongBreak
+          ? 'Great work! Your Pomodoro session is complete.'
+          : 'Back to focus — round ${round + 1} of $totalRounds starting now.';
+    } else {
+      title = 'Focus phase complete 🍅';
+      body = round >= totalRounds
+          ? 'All $totalRounds rounds done — enjoy your long break!'
+          : 'Round $round done — take a short break.';
+    }
+
+    await _schedule(
+      _pomodoroNotifId,
+      title,
+      body,
+      phaseEndsAt,
+      _channelPomodoro,
+      'Pomodoro Timer',
+    );
+  }
+
+  /// Cancel the pending Pomodoro phase notification (call on stop/cancel).
+  Future<void> cancelPomodoroPhaseNotification() async {
+    await _plugin.cancel(id: _pomodoroNotifId);
   }
 
   Future<void> cancelAllReminders() async {
