@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 
@@ -53,53 +55,67 @@ class TimetableVisionParser {
       ],
     });
 
-    final response = await http
-        .post(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $apiKey',
-          },
-          body: body,
-        )
-        .timeout(_timeout);
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $apiKey',
+            },
+            body: body,
+          )
+          .timeout(_timeout);
 
-    if (response.statusCode != 200) {
-      throw Exception(
-        'OpenAI Vision error (${response.statusCode}): ${response.body}',
-      );
-    }
-
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    final choice = data['choices'][0] as Map<String, dynamic>;
-
-    // Detect token-limit truncation before trying to parse
-    final finishReason = choice['finish_reason'] as String? ?? '';
-    if (finishReason == 'length') {
-      throw Exception(
-        'Timetable is too large for one scan. '
-        'Try cropping the image into two halves and importing each separately.',
-      );
-    }
-
-    final rawContent = choice['message']['content'] as String;
-
-    // Strip markdown code fences if the model added them
-    final cleaned = rawContent
-        .replaceAll(RegExp(r'```json\s*'), '')
-        .replaceAll(RegExp(r'```\s*'), '')
-        .trim();
-
-    final List<dynamic> jsonList = jsonDecode(cleaned) as List<dynamic>;
-
-    final slots = <TimetableSlotImport>[];
-    for (final item in jsonList) {
-      try {
-        slots.add(TimetableSlotImport.fromJson(item as Map<String, dynamic>));
-      } catch (_) {
-        // Skip malformed individual slots; import the rest
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Vision service returned an error (${response.statusCode}). Try again later.',
+        );
       }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final choice = data['choices'][0] as Map<String, dynamic>;
+
+      // Detect token-limit truncation before trying to parse
+      final finishReason = choice['finish_reason'] as String? ?? '';
+      if (finishReason == 'length') {
+        throw Exception(
+          'Timetable is too large for one scan. '
+          'Try cropping the image into two halves and importing each separately.',
+        );
+      }
+
+      final rawContent = choice['message']['content'] as String;
+
+      // Strip markdown code fences if the model added them
+      final cleaned = rawContent
+          .replaceAll(RegExp(r'```json\s*'), '')
+          .replaceAll(RegExp(r'```\s*'), '')
+          .trim();
+
+      final List<dynamic> jsonList = jsonDecode(cleaned) as List<dynamic>;
+
+      final slots = <TimetableSlotImport>[];
+      for (final item in jsonList) {
+        try {
+          slots.add(TimetableSlotImport.fromJson(item as Map<String, dynamic>));
+        } catch (_) {
+          // Skip malformed individual slots; import the rest
+        }
+      }
+      return slots;
+    } on TimeoutException {
+      throw Exception(
+        'Request timed out. Check your connection and try again.',
+      );
+    } on SocketException {
+      throw Exception(
+        'No internet connection. AI features require a connection.',
+      );
+    } on FormatException {
+      throw Exception(
+        'Received an unexpected response. Please try again.',
+      );
     }
-    return slots;
   }
 }

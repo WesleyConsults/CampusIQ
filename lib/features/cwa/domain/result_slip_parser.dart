@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:campusiq/features/cwa/domain/past_course_result.dart';
@@ -101,59 +103,78 @@ class ResultSlipParser {
       ],
     });
 
-    final response = await http
-        .post(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $apiKey',
-          },
-          body: body,
-        )
-        .timeout(_timeout);
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $apiKey',
+            },
+            body: body,
+          )
+          .timeout(_timeout);
 
-    if (response.statusCode != 200) {
-      throw Exception(
-        'OpenAI error (${response.statusCode}): ${response.body}',
-      );
-    }
-
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    final choice = data['choices'][0] as Map<String, dynamic>;
-
-    if ((choice['finish_reason'] as String? ?? '') == 'length') {
-      throw Exception(
-        'Slip has too many courses for one scan. '
-        'Try importing in two halves.',
-      );
-    }
-
-    final rawContent = choice['message']['content'] as String;
-    final cleaned = rawContent
-        .replaceAll(RegExp(r'```json\s*'), '')
-        .replaceAll(RegExp(r'```\s*'), '')
-        .trim();
-
-    final Map<String, dynamic> parsedObj = jsonDecode(cleaned) as Map<String, dynamic>;
-    final List<dynamic> jsonList = (parsedObj['courses'] as List<dynamic>?) ?? [];
-
-    final courses = <PastCourseResult>[];
-    for (final item in jsonList) {
-      try {
-        courses.add(
-          PastCourseResult.fromJson(item as Map<String, dynamic>),
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Vision service returned an error (${response.statusCode}). Try again later.',
         );
-      } catch (_) {
-        // Skip malformed entries.
       }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final choice = data['choices'][0] as Map<String, dynamic>;
+
+      if ((choice['finish_reason'] as String? ?? '') == 'length') {
+        throw Exception(
+          'Slip has too many courses for one scan. '
+          'Try importing in two halves.',
+        );
+      }
+
+      final rawContent = choice['message']['content'] as String;
+      final cleaned = rawContent
+          .replaceAll(RegExp(r'```json\s*'), '')
+          .replaceAll(RegExp(r'```\s*'), '')
+          .trim();
+
+      final Map<String, dynamic> parsedObj =
+          jsonDecode(cleaned) as Map<String, dynamic>;
+      final List<dynamic> jsonList =
+          (parsedObj['courses'] as List<dynamic>?) ?? [];
+
+      final courses = <PastCourseResult>[];
+      for (final item in jsonList) {
+        try {
+          courses.add(
+            PastCourseResult.fromJson(item as Map<String, dynamic>),
+          );
+        } catch (_) {
+          // Skip malformed entries.
+        }
+      }
+
+      return ResultSlipParseResult(
+        courses: courses,
+        reportedSemesterCwa: (parsedObj['semester_cwa'] as num?)?.toDouble(),
+        reportedCumulativeCwa:
+            (parsedObj['cumulative_cwa'] as num?)?.toDouble(),
+        cumulativeCreditsCalc:
+            (parsedObj['cumulative_credits_calc'] as num?)?.toDouble(),
+        cumulativeWeightedMarks:
+            (parsedObj['cumulative_weighted_marks'] as num?)?.toDouble(),
+      );
+    } on TimeoutException {
+      throw Exception(
+        'Request timed out. Check your connection and try again.',
+      );
+    } on SocketException {
+      throw Exception(
+        'No internet connection. AI features require a connection.',
+      );
+    } on FormatException {
+      throw Exception(
+        'Received an unexpected response. Please try again.',
+      );
     }
-    
-    return ResultSlipParseResult(
-      courses: courses,
-      reportedSemesterCwa: (parsedObj['semester_cwa'] as num?)?.toDouble(),
-      reportedCumulativeCwa: (parsedObj['cumulative_cwa'] as num?)?.toDouble(),
-      cumulativeCreditsCalc: (parsedObj['cumulative_credits_calc'] as num?)?.toDouble(),
-      cumulativeWeightedMarks: (parsedObj['cumulative_weighted_marks'] as num?)?.toDouble(),
-    );
   }
 }

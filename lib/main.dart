@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -138,8 +139,19 @@ Future<void> _handleStreakRiskCheck() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  FlutterError.onError = (FlutterErrorDetails details) {
+    debugPrint('🔴 FLUTTER ERROR: ${details.exceptionAsString()}');
+    debugPrint('${details.stack}');
+  };
+
   await dotenv.load(fileName: '.env');
   await NotificationService.instance.init();
   await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
-  runApp(const ProviderScope(child: CampusIQApp()));
+
+  runZonedGuarded(() {
+    runApp(const ProviderScope(child: CampusIQApp()));
+  }, (error, stackTrace) {
+    debugPrint('🔴 UNCAUGHT ERROR: $error');
+    debugPrint('$stackTrace');
+  });
 }
