@@ -1,8 +1,8 @@
 # CampusIQ — MVP Completion Report
 
-**Date:** 2026-04-19
+**Date:** 2026-04-20
 **Package:** com.wesleyconsults.campusiq
-**Status:** MVP Complete (Phases 1–15.4) + Bug Fix Pass + AI Rendering Fix + Pomodoro Study Mode
+**Status:** Play Store Ready (Phases 1–15.5) — Pre-Launch Stability Hardening complete
 
 ---
 
@@ -60,8 +60,10 @@ lib/
 │   │   ├── repositories/user_prefs_repository.dart
 │   │   └── repositories/subscription_repository.dart
 │   ├── providers/isar_provider.dart               — singleton FutureProvider<Isar>
+│   ├── providers/connectivity_provider.dart       — Phase 15.5: isOnlineProvider (FutureProvider<bool>)
 │   ├── providers/subscription_provider.dart       — isPremiumProvider
-│   ├── router/app_router.dart                     — GoRouter + ShellRoute
+│   ├── router/app_router.dart                     — GoRouter + ShellRoute; null-safe /course/:courseCode (15.5)
+│   ├── services/connectivity_service.dart         — Phase 15.5: ConnectivityService.isOnline() via connectivity_plus
 │   ├── services/notification_service.dart         — centralized local notifications singleton
 │   └── theme/app_theme.dart                       — Material 3 + Inter
 ├── features/
@@ -272,7 +274,9 @@ lib/
 │               └── file_tile.dart                 — PDF/image file row; +"📄 Text indexed" / "🖼 Visual only" chips (15.4)
 └── shared/
     ├── extensions/double_extensions.dart
-    └── widgets/empty_state_widget.dart
+    ├── widgets/empty_state_widget.dart
+    ├── widgets/error_retry_widget.dart            — Phase 15.5: shared error card (message + "Try Again" button)
+    └── widgets/offline_banner.dart               — Phase 15.5: animated offline banner widget
 ```
 
 ---
@@ -688,6 +692,59 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 
 ---
 
+### Phase 15.5 — Pre-Launch Stability & Production Hardening
+
+**No new features. No new routes. No new Isar collections.** All changes harden existing code against crashes, silent failures, and bad UI states before Play Store release.
+
+#### Session 1 — Global Error Capture + API/AI Call Hardening
+
+| Change | Description |
+|---|---|
+| `runZonedGuarded` in `main.dart` | Wraps the entire `runApp` call; all uncaught Dart errors are logged with `🔴 UNCAUGHT ERROR:` prefix |
+| `FlutterError.onError` in `main.dart` | Captures Flutter framework errors (layout overflow, null widget, etc.) before they silently disappear |
+| DeepSeek client timeout | `.timeout(Duration(seconds: 10))` on every `http.post()` in `deepseek_client.dart`; `TimeoutException`, `SocketException`, and generic `Exception` all map to typed `DeepSeekException` with human-readable messages |
+| Vision parser timeouts | `timetable_vision_parser.dart`, `registration_slip_parser.dart`, `result_slip_parser.dart` all have 15-second timeouts and typed error results (not bare throws) |
+| DeepSeek call site audit | All call sites confirmed to route `DeepSeekException` to provider error state — none swallow silently |
+
+#### Session 2 — Offline Detection + Isar Write Safety + Provider Audit
+
+| Change | Description |
+|---|---|
+| `connectivity_plus` dependency | Added `^6.0.3` to `pubspec.yaml` |
+| `ConnectivityService` | New `core/services/connectivity_service.dart`; `isOnline()` static method checks connectivity on-demand |
+| `isOnlineProvider` | New `core/providers/connectivity_provider.dart`; `FutureProvider<bool>` for Riverpod-integrated connectivity checks |
+| `OfflineBanner` widget | New `shared/widgets/offline_banner.dart`; `AnimatedContainer` grey banner shown when offline — used in AI screens |
+| Offline guard in AI providers | All 9 AI-calling providers check `ConnectivityService.isOnline()` before making any API call; offline → error state with user-friendly message instead of a hung spinner |
+| Isar write safety | All 13 repository files audited; every `.put()`, `.putAll()`, `.delete()` call wrapped in try-catch with `debugPrint('🔴 Isar write failed: $e')` and re-throw so providers surface the error |
+| Riverpod async provider audit | All `AsyncNotifier` and `FutureProvider` `build()` methods verified to have `AsyncValue.guard` or try-catch; no provider returns empty data on failure |
+
+#### Session 3 — UI State Coverage + Navigation Safety
+
+| Change | Description |
+|---|---|
+| `ErrorRetryWidget` | New `shared/widgets/error_retry_widget.dart`; reusable error card with icon, message, and "Try Again" `ElevatedButton`; used across all screens |
+| Full state coverage | All 14 screens audited and updated to handle `loading`, `error`, and `data.isEmpty` states via `ref.watch(provider).when(...)` pattern — no screen can appear blank |
+| `/course/:courseCode` null safety | `app_router.dart`: empty/null `courseCode` redirects to `/cwa` with snackbar; unresolved `CourseModel` shows a fallback `Scaffold` with back button instead of crashing |
+| Snackbars for silent failures | All user-triggered writes (save, delete, swipe-to-dismiss) that previously swallowed exceptions now show `ScaffoldMessenger` snackbars with human-readable messages |
+
+#### Session 4 — Timer Reliability + File/PDF/Image Safety
+
+| Change | Description |
+|---|---|
+| Timer reliability verified | `startTime` confirmed as `DateTime.now()` anchor; `elapsed` = `DateTime.now().difference(startTime)`; `phaseRemaining` already clamped to `Duration.zero`; `_lastFiredPhaseEnd` guard confirmed preventing double phase-fire; `advancePhase()` confirmed idempotent via state checks; app-kill mid-Pomodoro cleanly abandons session on relaunch (no phantom state) |
+| 50 MB file size guard | `hub_files_tab.dart`: checks `result.files.single.size > 50 MB` before copying; shows snackbar and aborts — no partial writes |
+| PDF extraction timeout | `hub_files_tab.dart`: `.timeout(Duration(seconds: 30))` wrapping `CoursePdfExtractor.extract()` with `onTimeout: () => (text: '', isExtractable: false)` — "Reading PDF…" state always resolves |
+| `OpenFilex` hardened | `_openFile()` wrapped in try-catch; updated snackbar message: `"Could not open file. You may need an app to view this type of file."` |
+| PDF extractor logging | `course_pdf_extractor.dart`: `debugPrint('🔴 PDF extraction failed: $e')` in catch block |
+| Timetable import error message | Updated empty-parse message to `"No timetable slots could be detected. Try a clearer image."` (aligns with guide spec) |
+| Slip import guards confirmed | Both `registration_slip_import_provider.dart` and `result_slip_import_provider.dart` already route empty parse to error state — confirmed no change needed |
+
+**New files (Phase 15.5):** `core/services/connectivity_service.dart`, `core/providers/connectivity_provider.dart`, `shared/widgets/offline_banner.dart`, `shared/widgets/error_retry_widget.dart`
+
+**Modified files (Phase 15.5):** `main.dart`, `app_router.dart`, all 9 AI provider files (offline guard), all 13 repository files (Isar write safety), all 14 screen files (state coverage), `deepseek_client.dart`, `timetable_vision_parser.dart`, `registration_slip_parser.dart`, `result_slip_parser.dart`, `hub_files_tab.dart`, `course_pdf_extractor.dart`, `timetable_import_provider.dart`
+
+---
+
 ## Isar Collections (full list)
 
 | Collection | Feature | Phase | Purpose |
@@ -740,6 +797,7 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 | flutter_math_fork | ^0.7.2 | LaTeX math rendering (`Math.tex()`) for inline and display math in AI chat |
 | markdown | ^7.2.2 | Custom `InlineSyntax` extension for `$...$` detection inside `MarkdownBody` |
 | syncfusion_flutter_pdf | ^26.2.14 | Offline PDF text extraction for Course Hub source-grounded AI (Phase 15.4) |
+| connectivity_plus | ^6.0.3 | On-demand network connectivity check for offline guards before AI/API calls (Phase 15.5) |
 
 ### Dev
 
@@ -842,15 +900,20 @@ flutter run
 | Phase 15.4 S1 | `feat(phase-15.4): session 1 — PDF text extraction pipeline` |
 | Phase 15.4 S2 | `feat(phase-15.4): session 2 — source-grounded AI mode in course hub` |
 | Pomodoro | `feat(phase-15.4): PDF text extraction pipeline + source-grounded AI mode` → `feat(sessions): Pomodoro study mode — countdown timer, round tracking, focus-only save` |
+| Phase 15.5 S1 | `fix(15.5-S1): global error capture + API/AI call hardening` |
+| Phase 15.5 S2 | `fix(15.5-S2): offline detection, Isar write safety, provider error state coverage` |
+| Phase 15.5 S3 | `fix(15.5-S3): full loading/empty/error UI coverage + route safety` |
+| Phase 15.5 S4 | `fix(15.5-S4): timer edge cases, file import safety, final stability checklist complete` |
 
 ---
 
-## What Comes Next (Post-Phase 15.3)
+## What Comes Next (Post-Phase 15.5)
 
 | Feature | Notes |
 |---|---|
-| Semester switcher | Archive/restore courses and timetable per semester |
+| **Phase 16 — Play Store Release** | App signing (`upload-keystore.jks`), `build.gradle` production config (minify, shrink, version codes), store listing assets (screenshots, icon, short description, privacy policy URL) |
 | Onboarding flow | University + programme picker, initial target CWA setup |
+| Semester switcher | Archive/restore courses and timetable per semester |
 | Premium payment integration | Replace `SubscribeScreenStub` with real in-app purchase flow |
 | Multi-university support | Extend beyond KNUST |
 | Cloud sync | Optional backup of Isar data |

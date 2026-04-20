@@ -796,6 +796,66 @@ These tests verify features work together correctly.
 
 ---
 
+## 16. Phase 15.5 — Stability Hardening Smoke Tests
+
+> These tests verify the hardening work from Phase 15.5. Run them after completing sections 1–15.
+
+### 16.1 Offline detection — AI features
+
+- [ ] Turn on **airplane mode**
+- [ ] Go to **AI Chat** → type a message and send → error state appears with `"You are offline. AI features require a connection."` — no crash, no stuck spinner
+- [ ] Go to **Exam Prep** → tap Generate → same offline error state appears
+- [ ] Go to **CWA screen** → tap "Get AI Coaching" → error message shown — app does not hang
+- [ ] Go to **Course Hub** → AI Chat tab → send a message → offline error, not crash
+- [ ] Go to **Timetable Import** → pick an image → offline error state shown before any API call
+- [ ] Go to **Registration Slip Import** → pick an image → offline error shown
+- [ ] Turn airplane mode **off** → retry each feature → it works normally
+
+### 16.2 Error states — every screen shows feedback on failure
+
+- [ ] Simulate a provider failure (or fresh-install with empty Isar) and verify each screen shows a spinner or empty state — **no blank white screen**
+- [ ] On any screen with an `ErrorRetryWidget`, tap **"Try Again"** — provider reloads and content appears (or shows loading)
+- [ ] **CWA screen**: delete all courses → empty state message visible, no crash
+- [ ] **Sessions screen**: no sessions → empty state message visible
+- [ ] **Streak screen**: no study days → empty state message (not a blank card)
+- [ ] **Plan screen**: no tasks → empty state visible
+- [ ] **Course Hub — Notes tab**: no notes → empty state visible
+- [ ] **Course Hub — Files tab**: no files → empty state visible
+
+### 16.3 Navigation safety — invalid course code
+
+- [ ] Manually navigate to `/course/` (empty code) — redirects to `/cwa` with a snackbar "Course not found."
+- [ ] Navigate to `/course/FAKE999` (nonexistent course) → fallback scaffold appears: "This course no longer exists" with a back button — no crash
+- [ ] Back button on the fallback scaffold navigates correctly (no stuck nav stack)
+
+### 16.4 File import safety
+
+- [ ] In **Course Hub → Files tab**, try to attach a file larger than 50 MB → snackbar: `"File is too large. Maximum size is 50 MB."` — no copy, no Isar write
+- [ ] Attach a **corrupted PDF** (rename a .txt file to .pdf) → `"Reading PDF…"` state resolves (either extracts or shows "🖼 Visual only") — no crash within 30 seconds
+- [ ] Tap **Open** on a file with no viewer installed → snackbar: `"Could not open file. You may need an app to view this type of file."` — no crash
+- [ ] Attach then immediately delete a file — no ghost entry remains in the list
+
+### 16.5 Timer reliability — edge cases
+
+- [ ] Start a **Normal session** → background the app for 2+ minutes → return → elapsed time is correct (not reset to zero, not stuck)
+- [ ] Start a **Pomodoro session** → background the app mid-countdown → return → countdown is still accurate (time not frozen)
+- [ ] During Pomodoro focus, rapidly tap **Skip Break** (when break starts) multiple times → only one phase transition fires — no double advance
+- [ ] Kill the app during an active Pomodoro → relaunch → no active session shown, no crash, no phantom timer
+
+### 16.6 Isar write safety
+
+- [ ] In **CWA screen**, add a course → summary bar updates → hot restart → course persists
+- [ ] In **Course Hub → Notes tab**, add a note → hot restart → note persists
+- [ ] In **Session screen**, stop & save a session → hot restart → session appears in history
+- [ ] No red-screen or crash on any of the above — if an Isar write fails, a snackbar is shown
+
+### 16.7 Global crash capture
+
+- [ ] Check logcat (or flutter logs) during normal use — no unhandled `🔴 UNCAUGHT ERROR:` lines during normal flows
+- [ ] App recovers from any in-app error without showing a red debug screen to the user
+
+---
+
 ## Sign-Off
 
 | Section | Status | Notes |
@@ -820,6 +880,12 @@ These tests verify features work together correctly.
 | 13b. Source-Grounded AI Mode (15.4) | | |
 | 14. Timetable Image Import | | |
 | 15. Performance & Stability | | |
+| 16a. Offline detection (15.5) | | |
+| 16b. Error/empty states (15.5) | | |
+| 16c. Navigation safety (15.5) | | |
+| 16d. File import safety (15.5) | | |
+| 16e. Timer reliability (15.5) | | |
+| 16f. Isar write safety (15.5) | | |
 
 **Tester:** ___________________  
 **Date:** ___________________  
