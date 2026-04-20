@@ -70,8 +70,17 @@ class PastSemestersScreen extends ConsumerWidget {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              final repo = ref.read(pastResultRepositoryProvider);
-              await repo?.delete(semester.id);
+              try {
+                final repo = ref.read(pastResultRepositoryProvider);
+                await repo?.delete(semester.id);
+              } catch (e) {
+                debugPrint('🔴 PastSemestersScreen delete failed: $e');
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not remove semester. Please try again.')),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.warning,
@@ -241,25 +250,34 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
   Future<void> _save() async {
     final repo = ref.read(pastResultRepositoryProvider);
     if (repo == null) return;
-    final all = await repo.getAll();
-    final model = all.firstWhere((s) => s.id == widget.semesterId);
+    try {
+      final all = await repo.getAll();
+      final model = all.firstWhere((s) => s.id == widget.semesterId);
 
-    final updatedCourses = model.courses.map((c) {
-      if (c.courseCode == widget.course.courseCode &&
-          c.courseName == widget.course.courseName) {
-        return PastCourseEntry.create(
-          courseCode: c.courseCode,
-          courseName: c.courseName,
-          creditHours: _credits,
-          grade: _grade,
-          mark: _mark,
+      final updatedCourses = model.courses.map((c) {
+        if (c.courseCode == widget.course.courseCode &&
+            c.courseName == widget.course.courseName) {
+          return PastCourseEntry.create(
+            courseCode: c.courseCode,
+            courseName: c.courseName,
+            creditHours: _credits,
+            grade: _grade,
+            mark: _mark,
+          );
+        }
+        return c;
+      }).toList();
+
+      model.courses = updatedCourses;
+      await repo.update(model);
+    } catch (e) {
+      debugPrint('🔴 PastSemestersScreen _save failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save changes. Please try again.')),
         );
       }
-      return c;
-    }).toList();
-
-    model.courses = updatedCourses;
-    await repo.update(model);
+    }
   }
 
   @override

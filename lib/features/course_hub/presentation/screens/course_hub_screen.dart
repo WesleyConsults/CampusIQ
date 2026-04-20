@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 import 'package:campusiq/features/course_hub/presentation/widgets/hub_overview_tab.dart';
 import 'package:campusiq/features/course_hub/presentation/widgets/hub_sessions_tab.dart';
 import 'package:campusiq/features/course_hub/presentation/widgets/hub_notes_tab.dart';
@@ -24,7 +25,10 @@ class CourseHubScreen extends ConsumerWidget {
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(title: Text(courseCode)),
-        body: Center(child: Text('Error loading course: $e')),
+        body: ErrorRetryWidget(
+          message: 'Could not load course. Please try again.',
+          onRetry: () => ref.invalidate(coursesProvider),
+        ),
       ),
       data: (courses) {
         final course =

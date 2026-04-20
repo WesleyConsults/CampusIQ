@@ -8,6 +8,7 @@ import 'package:campusiq/features/ai/presentation/widgets/short_answer_card.dart
 import 'package:campusiq/features/ai/presentation/widgets/flashcard_widget.dart';
 import 'package:campusiq/features/ai/presentation/widgets/premium_gate_widget.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
 class ExamPrepScreen extends ConsumerStatefulWidget {
   const ExamPrepScreen({super.key});
@@ -70,8 +71,10 @@ class _ExamPrepScreenState extends ConsumerState<ExamPrepScreen> {
                       padding: EdgeInsets.all(8),
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )),
-                    error: (e, _) => Text('Error loading courses: $e',
-                        style: TextStyle(color: Colors.red.shade600)),
+                    error: (e, _) => ErrorRetryWidget(
+                      message: 'Could not load courses. Please try again.',
+                      onRetry: () => ref.invalidate(coursesProvider),
+                    ),
                     data: (courses) {
                       if (courses.isEmpty) {
                         return Container(

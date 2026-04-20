@@ -35,9 +35,18 @@ class CwaScreen extends ConsumerWidget {
     final repo = ref.read(cwaRepositoryProvider);
     if (repo == null) return;
 
-    existing == null
-        ? await repo.addCourse(result)
-        : await repo.updateCourse(result);
+    try {
+      existing == null
+          ? await repo.addCourse(result)
+          : await repo.updateCourse(result);
+    } catch (e) {
+      debugPrint('🔴 CwaScreen _openAddSheet failed: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save course. Please try again.')),
+        );
+      }
+    }
   }
 
   @override
@@ -361,7 +370,18 @@ class _SemesterView extends ConsumerWidget {
                       isHighImpact: highImpactIndices.contains(i),
                       onEdit: () =>
                           onOpenAddSheet(context, ref, existing: course),
-                      onDelete: () => repo?.deleteCourse(course.id),
+                      onDelete: () async {
+                        try {
+                          await repo?.deleteCourse(course.id);
+                        } catch (e) {
+                          debugPrint('🔴 CwaScreen deleteCourse failed: $e');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Could not delete course. Please try again.')),
+                            );
+                          }
+                        }
+                      },
                       onScoreChanged: (newScore) async {
                         course.expectedScore = newScore;
                         await repo?.updateCourse(course);

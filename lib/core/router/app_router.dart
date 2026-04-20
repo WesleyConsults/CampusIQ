@@ -86,7 +86,16 @@ final appRouter = GoRouter(
       path: '/course/:courseCode',
       name: 'course-hub',
       builder: (context, state) {
-        final courseCode = state.pathParameters['courseCode']!;
+        final courseCode = state.pathParameters['courseCode'] ?? '';
+        if (courseCode.isEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Course not found.')),
+            );
+            GoRouter.of(context).go('/cwa');
+          });
+          return const Scaffold(body: SizedBox.shrink());
+        }
         return CourseHubScreen(courseCode: courseCode);
       },
     ),
