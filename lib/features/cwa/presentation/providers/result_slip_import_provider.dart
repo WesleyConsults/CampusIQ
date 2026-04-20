@@ -9,6 +9,7 @@ import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/domain/past_course_result.dart';
 import 'package:campusiq/features/cwa/domain/result_slip_parser.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/core/services/connectivity_service.dart';
 
 part 'result_slip_import_provider.g.dart';
 
@@ -143,6 +144,15 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
       state = state.copyWith(
         step: ResultImportStep.error,
         errorMessage: 'File too large (max 10 MB). Try compressing it first.',
+      );
+      return;
+    }
+
+    final isOnline = await ConnectivityService.isOnline();
+    if (!isOnline) {
+      state = state.copyWith(
+        step: ResultImportStep.error,
+        errorMessage: 'You are offline. AI features require a connection.',
       );
       return;
     }

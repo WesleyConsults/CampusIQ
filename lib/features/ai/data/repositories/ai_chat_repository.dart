@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import '../models/ai_message_model.dart';
 import '../models/ai_chat_session_model.dart';
@@ -25,33 +26,48 @@ class AiChatRepository {
       ..createdAt = DateTime.now()
       ..updatedAt = DateTime.now();
 
-    await _isar.writeTxn(() async {
-      await _isar.aiChatSessionModels.put(session);
-    });
+    try {
+      await _isar.writeTxn(() async {
+        await _isar.aiChatSessionModels.put(session);
+      });
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
     return session.id;
   }
 
   Future<void> updateSession(int id, {String? title, DateTime? updatedAt}) async {
-    await _isar.writeTxn(() async {
-      final session = await _isar.aiChatSessionModels.get(id);
-      if (session != null) {
-        if (title != null) session.title = title;
-        if (updatedAt != null) session.updatedAt = updatedAt;
-        await _isar.aiChatSessionModels.put(session);
-      }
-    });
+    try {
+      await _isar.writeTxn(() async {
+        final session = await _isar.aiChatSessionModels.get(id);
+        if (session != null) {
+          if (title != null) session.title = title;
+          if (updatedAt != null) session.updatedAt = updatedAt;
+          await _isar.aiChatSessionModels.put(session);
+        }
+      });
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> deleteSession(int id) async {
-    await _isar.writeTxn(() async {
-      await _isar.aiChatSessionModels.delete(id);
-      final messageIds = await _isar.aiMessageModels
-          .filter()
-          .sessionIdEqualTo(id)
-          .idProperty()
-          .findAll();
-      await _isar.aiMessageModels.deleteAll(messageIds);
-    });
+    try {
+      await _isar.writeTxn(() async {
+        await _isar.aiChatSessionModels.delete(id);
+        final messageIds = await _isar.aiMessageModels
+            .filter()
+            .sessionIdEqualTo(id)
+            .idProperty()
+            .findAll();
+        await _isar.aiMessageModels.deleteAll(messageIds);
+      });
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   // ---------- MESSAGES ----------
@@ -74,31 +90,34 @@ class AiChatRepository {
   }
 
   Future<void> saveMessage(AiMessageModel message) async {
-    await _isar.writeTxn(() => _isar.aiMessageModels.put(message));
-    
-    if (message.sessionId != null) {
-      // Don't nest writeTxn inside writeTxn.
-      // So don't await updateSession which uses writeTxn. Wait! 
-      // isar nested writeTxn will throw 'Already in a transaction'.
-      // I should update it right here, or we decouple.
+    try {
+      await _isar.writeTxn(() => _isar.aiMessageModels.put(message));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
     }
   }
 
   Future<void> clearHistory(String feature) async {
-    await _isar.writeTxn(() async {
-      final sessionIds = await _isar.aiChatSessionModels
-          .filter()
-          .featureEqualTo(feature)
-          .idProperty()
-          .findAll();
-      await _isar.aiChatSessionModels.deleteAll(sessionIds);
+    try {
+      await _isar.writeTxn(() async {
+        final sessionIds = await _isar.aiChatSessionModels
+            .filter()
+            .featureEqualTo(feature)
+            .idProperty()
+            .findAll();
+        await _isar.aiChatSessionModels.deleteAll(sessionIds);
 
-      final messageIds = await _isar.aiMessageModels
-          .filter()
-          .featureEqualTo(feature)
-          .idProperty()
-          .findAll();
-      await _isar.aiMessageModels.deleteAll(messageIds);
-    });
+        final messageIds = await _isar.aiMessageModels
+            .filter()
+            .featureEqualTo(feature)
+            .idProperty()
+            .findAll();
+        await _isar.aiMessageModels.deleteAll(messageIds);
+      });
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 }

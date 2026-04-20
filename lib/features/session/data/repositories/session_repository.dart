@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
 
@@ -7,7 +8,12 @@ class SessionRepository {
 
   /// Save a completed session
   Future<void> saveSession(StudySessionModel session) async {
-    await _isar.writeTxn(() => _isar.studySessionModels.put(session));
+    try {
+      await _isar.writeTxn(() => _isar.studySessionModels.put(session));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   /// All sessions for a semester, newest first
@@ -42,6 +48,11 @@ class SessionRepository {
   }
 
   Future<void> deleteSession(Id id) async {
-    await _isar.writeTxn(() => _isar.studySessionModels.delete(id));
+    try {
+      await _isar.writeTxn(() => _isar.studySessionModels.delete(id));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 }

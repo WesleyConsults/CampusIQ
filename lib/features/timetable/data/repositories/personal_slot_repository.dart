@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:campusiq/features/timetable/data/models/personal_slot_model.dart';
 
@@ -15,14 +16,29 @@ class PersonalSlotRepository {
   }
 
   Future<void> addSlot(PersonalSlotModel slot) async {
-    await _isar.writeTxn(() => _isar.personalSlotModels.put(slot));
+    try {
+      await _isar.writeTxn(() => _isar.personalSlotModels.put(slot));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> updateSlot(PersonalSlotModel slot) async {
-    await _isar.writeTxn(() => _isar.personalSlotModels.put(slot));
+    try {
+      await _isar.writeTxn(() => _isar.personalSlotModels.put(slot));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> deleteSlot(Id id) async {
-    await _isar.writeTxn(() => _isar.personalSlotModels.delete(id));
+    try {
+      await _isar.writeTxn(() => _isar.personalSlotModels.delete(id));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 }

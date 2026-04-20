@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:campusiq/core/data/models/user_prefs_model.dart';
 
@@ -10,7 +11,12 @@ class UserPrefsRepository {
     final existing = await _isar.userPrefsModels.get(1);
     if (existing != null) return existing;
     final prefs = UserPrefsModel();
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
     return prefs;
   }
 
@@ -42,13 +48,23 @@ class UserPrefsRepository {
     }
 
     prefs.attendedDatesJson = jsonEncode(strList);
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> updateLastOpened(DateTime date) async {
     final prefs = await _getOrCreate();
     prefs.lastOpenedDate = date;
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   /// Returns the full prefs object (for reading notification settings).
@@ -57,38 +73,68 @@ class UserPrefsRepository {
   Future<void> setNotificationPermissionAsked(bool value) async {
     final prefs = await _getOrCreate();
     prefs.notificationPermissionAsked = value;
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> setNotifyStudyReminders(bool value) async {
     final prefs = await _getOrCreate();
     prefs.notifyStudyReminders = value;
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> setNotifyStreakAlerts(bool value) async {
     final prefs = await _getOrCreate();
     prefs.notifyStreakAlerts = value;
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> setNotifyMilestoneAlerts(bool value) async {
     final prefs = await _getOrCreate();
     prefs.notifyMilestoneAlerts = value;
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> setNotifyWeeklyReview(bool value) async {
     final prefs = await _getOrCreate();
     prefs.notifyWeeklyReview = value;
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> setDailyReminderTime(int hour, int minute) async {
     final prefs = await _getOrCreate();
     prefs.dailyReminderHour = hour;
     prefs.dailyReminderMinute = minute;
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   // ── Weekly Review helpers ─────────────────────────────────────────────────
@@ -116,13 +162,23 @@ class UserPrefsRepository {
     }
     map[weekKey] = note;
     prefs.weeklyNotesJson = jsonEncode(map);
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> setLastReviewShownWeek(String weekKey) async {
     final prefs = await _getOrCreate();
     prefs.lastReviewShownWeek = weekKey;
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   // ── Exam Mode ─────────────────────────────────────────────────────────────
@@ -138,7 +194,12 @@ class UserPrefsRepository {
     if (examStart != null) prefs.examModeStart = examStart;
     if (examEnd != null) prefs.examModeEnd = examEnd;
     if (dailyGoal != null) prefs.examDailyGoalMinutes = dailyGoal;
-    await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   static String _toStr(DateTime d) =>

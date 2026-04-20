@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/features/ai/domain/context_builder.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
@@ -79,6 +80,14 @@ class WhatIfNotifier extends StateNotifier<WhatIfState> {
       final newExplanations = Map<String, String?>.from(state.explanations);
       newExplanations[courseId] = '__limit_reached__';
       state = state.copyWith(explanations: newExplanations, clearError: true);
+      return;
+    }
+
+    final isOnline = await _ref.read(isOnlineProvider.future);
+    if (!isOnline) {
+      state = state.copyWith(
+        error: 'You are offline. AI features require a connection.',
+      );
       return;
     }
 

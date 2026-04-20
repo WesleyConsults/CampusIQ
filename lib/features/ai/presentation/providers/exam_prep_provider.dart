@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/features/ai/domain/exam_prep_models.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
+import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
 
 // Free users: 1 exam prep generation per day (shared 'chat' pool)
@@ -103,6 +104,14 @@ class ExamPrepNotifier extends StateNotifier<ExamPrepState> {
         state = state.copyWith(isAtLimit: true);
         return;
       }
+    }
+
+    final isOnline = await _ref.read(isOnlineProvider.future);
+    if (!isOnline) {
+      state = state.copyWith(
+        error: 'You are offline. AI features require a connection.',
+      );
+      return;
     }
 
     state = state.copyWith(isLoading: true, clearError: true);

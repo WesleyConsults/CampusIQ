@@ -22,24 +22,29 @@ class AiUsageRepository {
 
   Future<void> incrementUsage(String feature) async {
     final today = _today();
-    await _isar.writeTxn(() async {
-      final record = await _isar.aiUsageModels
-          .filter()
-          .dateEqualTo(today)
-          .featureEqualTo(feature)
-          .findFirst();
-      if (record == null) {
-        await _isar.aiUsageModels.put(
-          AiUsageModel()
-            ..date = today
-            ..feature = feature
-            ..count = 1,
-        );
-      } else {
-        record.count++;
-        await _isar.aiUsageModels.put(record);
-      }
-    });
+    try {
+      await _isar.writeTxn(() async {
+        final record = await _isar.aiUsageModels
+            .filter()
+            .dateEqualTo(today)
+            .featureEqualTo(feature)
+            .findFirst();
+        if (record == null) {
+          await _isar.aiUsageModels.put(
+            AiUsageModel()
+              ..date = today
+              ..feature = feature
+              ..count = 1,
+          );
+        } else {
+          record.count++;
+          await _isar.aiUsageModels.put(record);
+        }
+      });
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<bool> isUnderLimit(String feature, int freeLimit) async {

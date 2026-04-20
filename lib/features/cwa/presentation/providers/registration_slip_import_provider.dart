@@ -9,6 +9,7 @@ import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/domain/registration_course_import.dart';
 import 'package:campusiq/features/cwa/domain/registration_slip_parser.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/core/services/connectivity_service.dart';
 
 part 'registration_slip_import_provider.g.dart';
 
@@ -124,6 +125,15 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
       state = state.copyWith(
         step: SlipImportStep.error,
         errorMessage: 'File too large (max 10 MB). Try compressing it first.',
+      );
+      return;
+    }
+
+    final isOnline = await ConnectivityService.isOnline();
+    if (!isOnline) {
+      state = state.copyWith(
+        step: SlipImportStep.error,
+        errorMessage: 'You are offline. AI features require a connection.',
       );
       return;
     }

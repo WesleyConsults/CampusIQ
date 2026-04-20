@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
+import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_model.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_slot_model.dart';
@@ -49,24 +50,36 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
   Future<Isar> get _isar => _ref.read(isarProvider.future);
 
   Future<void> loadPlan() async {
-    final isar = await _isar;
-    final plan = await isar.studyPlanModels.get(1);
-    if (plan == null) {
-      state = state.copyWith(isGenerated: false, slots: []);
-      return;
+    try {
+      final isar = await _isar;
+      final plan = await isar.studyPlanModels.get(1);
+      if (plan == null) {
+        state = state.copyWith(isGenerated: false, slots: []);
+        return;
+      }
+      await plan.slots.load();
+      final slots = plan.slots.toList()
+        ..sort((a, b) {
+          const order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+          final di = order.indexOf(a.day).compareTo(order.indexOf(b.day));
+          if (di != 0) return di;
+          return a.startTime.compareTo(b.startTime);
+        });
+      state = state.copyWith(plan: plan, slots: slots, isGenerated: true, clearError: true);
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to load study plan.');
     }
-    await plan.slots.load();
-    final slots = plan.slots.toList()
-      ..sort((a, b) {
-        const order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        final di = order.indexOf(a.day).compareTo(order.indexOf(b.day));
-        if (di != 0) return di;
-        return a.startTime.compareTo(b.startTime);
-      });
-    state = state.copyWith(plan: plan, slots: slots, isGenerated: true, clearError: true);
   }
 
   Future<void> generatePlan() async {
+    final isOnline = await _ref.read(isOnlineProvider.future);
+    if (!isOnline) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'You are offline. AI features require a connection.',
+      );
+      return;
+    }
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final builder = await _ref.read(contextBuilderProvider.future);

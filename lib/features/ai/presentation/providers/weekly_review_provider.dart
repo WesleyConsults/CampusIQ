@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
 import 'package:campusiq/features/ai/data/models/weekly_review_model.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
@@ -52,31 +53,43 @@ class WeeklyReviewNotifier extends StateNotifier<WeeklyReviewState> {
   }
 
   Future<void> _init() async {
-    final mondayDate = currentMondayDate();
-    final isar = await _ref.read(isarProvider.future);
+    try {
+      final mondayDate = currentMondayDate();
+      final isar = await _ref.read(isarProvider.future);
 
-    // Use the generated index extension for a unique lookup
-    final existing = await isar.weeklyReviewModels.getByWeekStartDate(mondayDate);
+      final existing = await isar.weeklyReviewModels.getByWeekStartDate(mondayDate);
 
-    if (existing != null) {
-      // Load from Isar — check if user has already viewed it this week
-      final userPrefsRepo = _ref.read(userPrefsRepositoryProvider);
-      final prefs = await userPrefsRepo?.getPrefs();
-      final viewed = prefs?.lastReviewShownWeek == mondayDate;
+      if (existing != null) {
+        final userPrefsRepo = _ref.read(userPrefsRepositoryProvider);
+        final prefs = await userPrefsRepo?.getPrefs();
+        final viewed = prefs?.lastReviewShownWeek == mondayDate;
 
+        state = state.copyWith(
+          review: existing,
+          hasReviewThisWeek: true,
+          hasViewedReview: viewed,
+        );
+        return;
+      }
+
+      await _generateReview();
+    } catch (e) {
       state = state.copyWith(
-        review: existing,
-        hasReviewThisWeek: true,
-        hasViewedReview: viewed,
+        isLoading: false,
+        error: 'Could not load weekly review.',
       );
-      return;
     }
-
-    // No review for this week — generate one
-    await _generateReview();
   }
 
   Future<void> _generateReview() async {
+    final isOnline = await _ref.read(isOnlineProvider.future);
+    if (!isOnline) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'You are offline. AI features require a connection.',
+      );
+      return;
+    }
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final builder = await _ref.read(contextBuilderProvider.future);

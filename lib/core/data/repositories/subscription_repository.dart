@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import '../models/subscription_model.dart';
 
@@ -31,7 +32,12 @@ class SubscriptionRepository {
       ..transactionRef = transactionRef
       ..purchasedAt = DateTime.now().toIso8601String()
       ..expiresAt = expiresAt.toIso8601String();
-    await _isar.writeTxn(() => _isar.subscriptionModels.put(sub));
+    try {
+      await _isar.writeTxn(() => _isar.subscriptionModels.put(sub));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> checkAndDowngrade() async {
@@ -41,7 +47,12 @@ class SubscriptionRepository {
         final downgraded = SubscriptionModel()
           ..id = 1
           ..tier = 'free';
-        await _isar.writeTxn(() => _isar.subscriptionModels.put(downgraded));
+        try {
+          await _isar.writeTxn(() => _isar.subscriptionModels.put(downgraded));
+        } catch (e) {
+          debugPrint('🔴 Isar write failed: $e');
+          rethrow;
+        }
       }
     }
   }
@@ -54,6 +65,11 @@ class SubscriptionRepository {
       ..expiresAt = premium
           ? DateTime.now().add(const Duration(days: 365)).toIso8601String()
           : null;
-    await _isar.writeTxn(() => _isar.subscriptionModels.put(sub));
+    try {
+      await _isar.writeTxn(() => _isar.subscriptionModels.put(sub));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 
@@ -24,15 +25,30 @@ class TimetableRepository {
   }
 
   Future<void> addSlot(TimetableSlotModel slot) async {
-    await _isar.writeTxn(() => _isar.timetableSlotModels.put(slot));
+    try {
+      await _isar.writeTxn(() => _isar.timetableSlotModels.put(slot));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> updateSlot(TimetableSlotModel slot) async {
-    await _isar.writeTxn(() => _isar.timetableSlotModels.put(slot));
+    try {
+      await _isar.writeTxn(() => _isar.timetableSlotModels.put(slot));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> deleteSlot(Id id) async {
-    await _isar.writeTxn(() => _isar.timetableSlotModels.delete(id));
+    try {
+      await _isar.writeTxn(() => _isar.timetableSlotModels.delete(id));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<List<TimetableSlotModel>> getSlotsForDayOnce(String semesterKey, int dayIndex) async {

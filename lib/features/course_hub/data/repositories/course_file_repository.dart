@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import '../models/course_file_model.dart';
 
@@ -15,7 +16,12 @@ class CourseFileRepository {
   }
 
   Future<void> saveFile(CourseFileModel file) async {
-    await _isar.writeTxn(() => _isar.courseFileModels.put(file));
+    try {
+      await _isar.writeTxn(() => _isar.courseFileModels.put(file));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<List<CourseFileModel>> getExtractableFiles(String courseCode) async {
@@ -35,6 +41,11 @@ class CourseFileRepository {
         await physicalFile.delete();
       }
     }
-    await _isar.writeTxn(() => _isar.courseFileModels.delete(id));
+    try {
+      await _isar.writeTxn(() => _isar.courseFileModels.delete(id));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 }

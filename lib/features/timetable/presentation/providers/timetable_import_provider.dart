@@ -9,6 +9,7 @@ import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 import 'package:campusiq/features/timetable/domain/timetable_vision_parser.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
+import 'package:campusiq/core/services/connectivity_service.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 
@@ -57,6 +58,15 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
 
       if (picked == null) {
         state = const TimetableImportState(); // cancelled → back to idle
+        return;
+      }
+
+      final isOnline = await ConnectivityService.isOnline();
+      if (!isOnline) {
+        state = state.copyWith(
+          step: ImportStep.error,
+          errorMessage: 'You are offline. AI features require a connection.',
+        );
         return;
       }
 

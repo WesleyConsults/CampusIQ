@@ -17,6 +17,7 @@ dependencies:
   # HTTP and Environment
   http: ^1.2.0
   flutter_dotenv: ^5.1.0
+  connectivity_plus: ^6.0.3
 
   # Local storage
   isar: ^3.1.0+1

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/features/ai/data/models/ai_message_model.dart';
 import 'package:campusiq/features/ai/data/models/ai_chat_session_model.dart';
+import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'ai_providers.dart';
 
@@ -102,6 +103,14 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
   }
 
   Future<void> sendMessage(String userText) async {
+    final isOnline = await ref.read(isOnlineProvider.future);
+    if (!isOnline) {
+      state = state.copyWith(
+        error: 'You are offline. AI features require a connection.',
+      );
+      return;
+    }
+
     final isPremium = await ref.read(isPremiumProvider.future);
 
     if (!isPremium) {

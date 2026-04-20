@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 
@@ -18,14 +19,29 @@ class PastResultRepository {
   }
 
   Future<void> add(PastSemesterModel model) async {
-    await _isar.writeTxn(() => _isar.pastSemesterModels.put(model));
+    try {
+      await _isar.writeTxn(() => _isar.pastSemesterModels.put(model));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> update(PastSemesterModel model) async {
-    await _isar.writeTxn(() => _isar.pastSemesterModels.put(model));
+    try {
+      await _isar.writeTxn(() => _isar.pastSemesterModels.put(model));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> delete(Id id) async {
-    await _isar.writeTxn(() => _isar.pastSemesterModels.delete(id));
+    try {
+      await _isar.writeTxn(() => _isar.pastSemesterModels.delete(id));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 }

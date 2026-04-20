@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import '../models/course_note_model.dart';
 
@@ -14,10 +15,20 @@ class CourseNoteRepository {
   }
 
   Future<void> saveNote(CourseNoteModel note) async {
-    await _isar.writeTxn(() => _isar.courseNoteModels.put(note));
+    try {
+      await _isar.writeTxn(() => _isar.courseNoteModels.put(note));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> deleteNote(int id) async {
-    await _isar.writeTxn(() => _isar.courseNoteModels.delete(id));
+    try {
+      await _isar.writeTxn(() => _isar.courseNoteModels.delete(id));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 }

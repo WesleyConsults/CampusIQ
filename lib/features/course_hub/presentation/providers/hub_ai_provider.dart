@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/features/ai/data/models/ai_message_model.dart';
+import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
@@ -91,6 +92,14 @@ class HubAiNotifier extends StateNotifier<HubAiState> {
   }
 
   Future<void> sendMessage(String userText) async {
+    final isOnline = await _ref.read(isOnlineProvider.future);
+    if (!isOnline) {
+      state = state.copyWith(
+        error: 'You are offline. AI features require a connection.',
+      );
+      return;
+    }
+
     final isPremium = await _ref.read(isPremiumProvider.future);
 
     if (!isPremium) {

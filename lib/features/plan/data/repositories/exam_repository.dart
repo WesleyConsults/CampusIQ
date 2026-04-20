@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:campusiq/features/plan/data/models/exam_model.dart';
 
@@ -11,17 +12,32 @@ class ExamRepository {
   Future<List<ExamModel>> getAll() => _isar.examModels.where().findAll();
 
   Future<void> save(ExamModel exam) async {
-    await _isar.writeTxn(() => _isar.examModels.put(exam));
+    try {
+      await _isar.writeTxn(() => _isar.examModels.put(exam));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> delete(Id id) async {
-    await _isar.writeTxn(() => _isar.examModels.delete(id));
+    try {
+      await _isar.writeTxn(() => _isar.examModels.delete(id));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> markComplete(Id id) async {
     final exam = await _isar.examModels.get(id);
     if (exam == null) return;
     exam.isComplete = true;
-    await _isar.writeTxn(() => _isar.examModels.put(exam));
+    try {
+      await _isar.writeTxn(() => _isar.examModels.put(exam));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
   }
 }
