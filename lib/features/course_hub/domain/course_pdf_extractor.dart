@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
 
 class CoursePdfExtractor {
@@ -33,6 +34,7 @@ class CoursePdfExtractor {
 
       return (text: capped, isExtractable: true);
     } catch (e) {
+      debugPrint('🔴 PDF extraction failed: $e');
       return (text: '', isExtractable: false);
     }
   }

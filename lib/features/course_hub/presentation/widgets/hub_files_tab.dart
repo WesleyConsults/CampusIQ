@@ -57,6 +57,18 @@ class _HubFilesTabState extends ConsumerState<HubFilesTab> {
         final ext = result.files.single.extension?.toLowerCase() ?? '';
         final fileType = ext == 'pdf' ? 'pdf' : 'image';
 
+        final fileSize = result.files.single.size;
+        if (fileSize > 50 * 1024 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('File is too large. Maximum size is 50 MB.'),
+              ),
+            );
+          }
+          return;
+        }
+
         final destPath = await _copyFileToAppDir(sourcePath, fileName);
 
         String? extractedText;
@@ -64,7 +76,12 @@ class _HubFilesTabState extends ConsumerState<HubFilesTab> {
 
         if (ext == 'pdf') {
           if (mounted) setState(() => _attachLabel = 'Reading PDF...');
-          final extraction = await _extractor.extract(destPath);
+          final extraction = await _extractor
+              .extract(destPath)
+              .timeout(
+                const Duration(seconds: 30),
+                onTimeout: () => (text: '', isExtractable: false),
+              );
           extractedText = extraction.isExtractable ? extraction.text : null;
           isTextExtractable = extraction.isExtractable;
         }
@@ -99,12 +116,26 @@ class _HubFilesTabState extends ConsumerState<HubFilesTab> {
   }
 
   Future<void> _openFile(CourseFileModel file) async {
-    final result = await OpenFilex.open(file.filePath);
-    if (result.type != ResultType.done && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Could not open file. Is a viewer installed?')),
-      );
+    try {
+      final result = await OpenFilex.open(file.filePath);
+      if (result.type != ResultType.done && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Could not open file. You may need an app to view this type of file.'),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('🔴 OpenFilex failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Could not open file. You may need an app to view this type of file.'),
+          ),
+        );
+      }
     }
   }
 
