@@ -299,7 +299,7 @@ lib/
 | `/course/:courseCode` | Course Hub Workspace (6-tab per-course workspace) | 15.1 |
 | `/timetable/import` | Timetable Image Import (full-screen, no bottom nav) | 15.2 |
 
-Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating mini-timer and exam mode nav icon state are rendered inside `_AppShell` and persist across all tab switches. The bottom nav shows: Plan, CWA, Table, Sessions, Streak, AI.
+Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating mini-timer, AI Assistant FAB, and exam mode nav icon state are rendered inside `_AppShell` and persist across all tab switches. The bottom nav shows: Dashboard, CWA, Table, Sessions. The Streak is located in the AppBar headers.
 
 ---
 
@@ -454,7 +454,7 @@ Navigation uses a `ShellRoute` with a 6-destination bottom nav bar. The floating
 
 ### Phase 12 — AI Integration & Chat History
 
-**Route:** `/ai_chat` (accessible via bottom nav or floating action)
+**Route:** `/ai_chat` (accessible via Floating Action Button)
 
 | Feature | Description |
 |---|---|

@@ -116,8 +116,6 @@ class _AppShell extends ConsumerWidget {
     if (location.startsWith('/cwa'))       return 1;
     if (location.startsWith('/timetable')) return 2;
     if (location.startsWith('/sessions'))  return 3;
-    if (location.startsWith('/streak'))    return 4;
-    if (location.startsWith('/ai'))        return 5;
     return 0; // /plan
   }
 
@@ -130,6 +128,11 @@ class _AppShell extends ConsumerWidget {
         ref.watch(examModeActiveProvider).valueOrNull ?? false;
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.go('/ai'),
+        tooltip: 'AI Assistant',
+        child: const Icon(Icons.auto_awesome),
+      ),
       body: Stack(
         children: [
           child,
@@ -164,8 +167,6 @@ class _AppShell extends ConsumerWidget {
               case 1: context.go('/cwa');
               case 2: context.go('/timetable');
               case 3: context.go('/sessions');
-              case 4: context.go('/streak');
-              case 5: context.go('/ai');
             }
           },
           destinations: [
@@ -176,7 +177,7 @@ class _AppShell extends ConsumerWidget {
               selectedIcon: examModeActive
                   ? const Icon(Icons.whatshot, color: Colors.deepOrange, size: 20)
                   : const Icon(Icons.checklist_rounded, size: 20),
-              label: examModeActive ? 'Exam' : 'Plan',
+              label: examModeActive ? 'Exam' : 'Dashboard',
             ),
             const NavigationDestination(
               icon: Icon(Icons.school_outlined, size: 20),
@@ -194,21 +195,6 @@ class _AppShell extends ConsumerWidget {
                   : const Icon(Icons.timer_outlined, size: 20),
               selectedIcon: const Icon(Icons.timer, size: 20),
               label: 'Sessions',
-            ),
-            NavigationDestination(
-              icon: hasLossRisk
-                  ? const Badge(
-                      label: Text('!', style: TextStyle(fontSize: 8)),
-                      child: Icon(Icons.local_fire_department_outlined, size: 20),
-                    )
-                  : const Icon(Icons.local_fire_department_outlined, size: 20),
-              selectedIcon: const Icon(Icons.local_fire_department, size: 20),
-              label: 'Streak',
-            ),
-            const NavigationDestination(
-              icon: Icon(Icons.auto_awesome_outlined, size: 20),
-              selectedIcon: Icon(Icons.auto_awesome, size: 20),
-              label: 'AI',
             ),
           ],
         ),

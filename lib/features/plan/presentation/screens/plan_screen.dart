@@ -11,6 +11,7 @@ import 'package:campusiq/features/plan/presentation/widgets/exam_manager_sheet.d
 import 'package:campusiq/features/plan/presentation/widgets/exam_mode_activation_sheet.dart';
 import 'package:campusiq/features/plan/presentation/widgets/plan_progress_bar.dart';
 import 'package:campusiq/features/plan/presentation/widgets/plan_task_tile.dart';
+import 'package:campusiq/features/streak/presentation/widgets/streak_action_button.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 
 class PlanScreen extends ConsumerStatefulWidget {
@@ -121,6 +122,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           ],
         ),
         actions: [
+          const StreakActionButton(),
           // Exam manager gear icon
           IconButton(
             icon: const Icon(Icons.event_note_outlined, color: Colors.white),

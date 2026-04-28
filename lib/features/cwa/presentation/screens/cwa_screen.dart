@@ -12,6 +12,7 @@ import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart
 import 'package:campusiq/features/cwa/presentation/widgets/cwa_coach_sheet.dart';
 import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
+import 'package:campusiq/features/streak/presentation/widgets/streak_action_button.dart';
 
 class CwaScreen extends ConsumerWidget {
   const CwaScreen({super.key});
@@ -59,6 +60,7 @@ class CwaScreen extends ConsumerWidget {
         title: const Text(AppConstants.appName,
             style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
+          const StreakActionButton(),
           if (viewMode == CwaViewMode.semester) ...[
             IconButton(
               icon: const Icon(Icons.document_scanner_outlined),

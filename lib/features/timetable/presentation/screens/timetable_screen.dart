@@ -16,6 +16,7 @@ import 'package:campusiq/features/timetable/presentation/widgets/add_personal_sl
 import 'package:campusiq/features/timetable/presentation/widgets/slot_detail_sheet.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/personal_slot_detail_sheet.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/timetable_page_indicator.dart';
+import 'package:campusiq/features/streak/presentation/widgets/streak_action_button.dart';
 
 class TimetableScreen extends ConsumerStatefulWidget {
   const TimetableScreen({super.key});
@@ -172,6 +173,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       appBar: AppBar(
         title: const Text('Timetable', style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
+          const StreakActionButton(),
           IconButton(
             icon: const Icon(Icons.document_scanner_outlined),
             tooltip: 'Import from image',

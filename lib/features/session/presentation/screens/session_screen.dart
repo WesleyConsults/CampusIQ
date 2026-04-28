@@ -16,6 +16,7 @@ import 'package:campusiq/features/review/presentation/widgets/weekly_review_shee
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 import 'package:campusiq/features/ai/presentation/widgets/study_plan_tab.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
+import 'package:campusiq/features/streak/presentation/widgets/streak_action_button.dart';
 import 'package:go_router/go_router.dart';
 
 class SessionScreen extends ConsumerStatefulWidget {
@@ -137,6 +138,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         title: const Text('Study Sessions',
             style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
+          const StreakActionButton(),
           TextButton(
             onPressed: () => showModalBottomSheet(
               context: context,

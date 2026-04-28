@@ -19,17 +19,19 @@ Mark each item `[x]` as you confirm it works.
 ### 1.1 Cold launch
 - [ ] App opens without crash
 - [ ] Lands on the **Plan** screen (not a blank screen)
-- [ ] Bottom navigation bar shows 6 tabs: Plan, CWA, Table, Sessions, Streak, AI
+- [ ] Bottom navigation bar shows 4 tabs: Dashboard, CWA, Table, Sessions
+- [ ] AI Assistant is visible as a Floating Action Button (FAB)
+- [ ] Streak (🔥) is visible in the top-right AppBar header
 
 ### 1.2 Bottom navigation
 - [ ] Tap **CWA** — navigates to CWA screen
 - [ ] Tap **Table** — navigates to Timetable screen
 - [ ] Tap **Sessions** — navigates to Sessions screen
-- [ ] Tap **Streak** — navigates to Streak screen
-- [ ] Tap **AI** — navigates to AI Chat screen
-- [ ] Tap **Plan** — navigates back to Plan screen
-- [ ] Active tab is visually highlighted
-- [ ] No crash or blank screen on any tab
+- [ ] Tap **Streak** (in the top-right header) — navigates to Streak screen
+- [ ] Tap **AI** (FAB) — navigates to AI Chat screen
+- [ ] Tap **Dashboard** — navigates back to Dashboard screen
+- [ ] Active bottom tab is visually highlighted
+- [ ] No crash or blank screen on any tab or FAB
 
 ---
 
