@@ -1,44 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:campusiq/features/timetable/data/models/personal_slot_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/timetable_slot_card.dart';
-import 'package:campusiq/features/timetable/presentation/widgets/personal_slot_card.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/free_block_indicator.dart';
 
-/// Which layers to show.
-enum GridLayerMode { classOnly, personalOnly, both }
-
-/// Renders the combined timetable grid with configurable layer visibility.
-class DualLayerGrid extends StatelessWidget {
+/// Renders the class timetable grid.
+class ClassTimetableGrid extends StatelessWidget {
   final List<TimetableSlotModel> classSlots;
-  final List<PersonalSlotModel> personalSlots;
   final List<FreeBlock> freeBlocks;
-  final GridLayerMode mode;
   final void Function(TimetableSlotModel) onClassSlotTap;
-  final void Function(PersonalSlotModel) onPersonalSlotTap;
   final void Function(FreeBlock) onFreeBlockTap;
   final VoidCallback onEmptyTap;
 
-  const DualLayerGrid({
+  const ClassTimetableGrid({
     super.key,
     required this.classSlots,
-    required this.personalSlots,
     required this.freeBlocks,
-    required this.mode,
     required this.onClassSlotTap,
-    required this.onPersonalSlotTap,
     required this.onFreeBlockTap,
     required this.onEmptyTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final showClass    = mode == GridLayerMode.classOnly || mode == GridLayerMode.both;
-    final showPersonal = mode == GridLayerMode.personalOnly || mode == GridLayerMode.both;
-    final isDimmed     = mode == GridLayerMode.both;
-
     return SingleChildScrollView(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,40 +36,11 @@ class DualLayerGrid extends StatelessWidget {
                 builder: (context, constraints) {
                   final totalWidth = constraints.maxWidth;
 
-                  // In "both" mode pool all slots together so cross-layer
-                  // overlaps (e.g. a class and a study block at 8 AM) are
-                  // split side-by-side. Negative IDs are used for personal
-                  // slots to avoid collisions with class slot IDs (Isar ≥ 1).
-                  final Map<int, _OverlapPos> classPositions;
-                  final Map<int, _OverlapPos> personalPositions;
-
-                  if (mode == GridLayerMode.both) {
-                    final combined = _assignColumns([
-                      ...classSlots.map(
-                        (s) => (id: s.id, start: s.startMinutes, end: s.endMinutes),
-                      ),
-                      ...personalSlots.map(
-                        (s) => (id: -s.id - 1, start: s.startMinutes, end: s.endMinutes),
-                      ),
-                    ]);
-                    classPositions = {
-                      for (final s in classSlots) s.id: combined[s.id]!,
-                    };
-                    personalPositions = {
-                      for (final s in personalSlots) s.id: combined[-s.id - 1]!,
-                    };
-                  } else {
-                    classPositions = _assignColumns(
-                      classSlots
-                          .map((s) => (id: s.id, start: s.startMinutes, end: s.endMinutes))
-                          .toList(),
-                    );
-                    personalPositions = _assignColumns(
-                      personalSlots
-                          .map((s) => (id: s.id, start: s.startMinutes, end: s.endMinutes))
-                          .toList(),
-                    );
-                  }
+                  final classPositions = _assignColumns(
+                    classSlots
+                        .map((s) => (id: s.id, start: s.startMinutes, end: s.endMinutes))
+                        .toList(),
+                  );
 
                   return SizedBox(
                     height: TimetableConstants.totalGridHeight,
@@ -92,43 +48,25 @@ class DualLayerGrid extends StatelessWidget {
                       children: [
                         _HourLines(),
 
-                        // Free blocks (only in class view or both)
-                        if (showClass)
-                          ...freeBlocks.map((b) => FreeBlockIndicator(
-                                block: b,
-                                onTap: () => onFreeBlockTap(b),
-                              )),
+                        // Free blocks
+                        ...freeBlocks.map((b) => FreeBlockIndicator(
+                              block: b,
+                              onTap: () => onFreeBlockTap(b),
+                            )),
 
-                        // Personal slots — rendered first (below class slots)
-                        if (showPersonal)
-                          ...personalSlots.map((s) {
-                            final pos = personalPositions[s.id] ??
-                                const _OverlapPos(0, 1);
-                            final laneWidth = totalWidth / pos.totalColumns;
-                            return PersonalSlotCard(
-                              slot: s,
-                              left: pos.columnIndex * laneWidth + 2,
-                              right: totalWidth - (pos.columnIndex + 1) * laneWidth + 2,
-                              onTap: () => onPersonalSlotTap(s),
-                              onLongPress: () => onPersonalSlotTap(s),
-                              isDimmed: isDimmed,
-                            );
-                          }),
-
-                        // Class slots — rendered on top
-                        if (showClass)
-                          ...classSlots.map((s) {
-                            final pos = classPositions[s.id] ??
-                                const _OverlapPos(0, 1);
-                            final laneWidth = totalWidth / pos.totalColumns;
-                            return TimetableSlotCard(
-                              slot: s,
-                              left: pos.columnIndex * laneWidth + 2,
-                              right: totalWidth - (pos.columnIndex + 1) * laneWidth + 2,
-                              onTap: () => onClassSlotTap(s),
-                              onLongPress: () => onClassSlotTap(s),
-                            );
-                          }),
+                        // Class slots
+                        ...classSlots.map((s) {
+                          final pos = classPositions[s.id] ??
+                              const _OverlapPos(0, 1);
+                          final laneWidth = totalWidth / pos.totalColumns;
+                          return TimetableSlotCard(
+                            slot: s,
+                            left: pos.columnIndex * laneWidth + 2,
+                            right: totalWidth - (pos.columnIndex + 1) * laneWidth + 2,
+                            onTap: () => onClassSlotTap(s),
+                            onLongPress: () => onClassSlotTap(s),
+                          );
+                        }),
 
                         _CurrentTimeIndicator(),
                       ],

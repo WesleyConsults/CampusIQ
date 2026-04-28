@@ -64,7 +64,6 @@ class HubSessionsTab extends ConsumerWidget {
         final weekly = PlannedActualAnalyser.analyseWeek(
           allSessions: courseSessions,
           classSlots: [],
-          personalSlots: [],
           weekStart: weekStart,
         );
 

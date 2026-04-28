@@ -1,7 +1,6 @@
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/plan/domain/plan_task.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
-import 'package:campusiq/features/timetable/data/models/personal_slot_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 
 /// Represents a free gap between class slots (pure Dart, no Flutter).
@@ -26,7 +25,6 @@ class _FreeBlock {
 /// Generates a prioritised list of [PlanTask] for a given day.
 class PlanGenerator {
   final List<TimetableSlotModel> todaySlots;
-  final List<PersonalSlotModel> expandedPersonalSlots;
   final List<CourseModel> courses;
 
   /// Study sessions from the past 14 days used to calculate priority.
@@ -42,7 +40,6 @@ class PlanGenerator {
 
   PlanGenerator({
     required this.todaySlots,
-    required this.expandedPersonalSlots,
     required this.courses,
     required this.recentSessions,
     this.dailyStudyGoalMinutes = 120,
@@ -123,21 +120,6 @@ class PlanGenerator {
       ));
     }
 
-    // ── 5. Personal tasks ────────────────────────────────────────────────────
-    for (final slot in expandedPersonalSlots) {
-      tasks.add(PlanTask(
-        taskType: 'personal',
-        label: slot.displayLabel,
-        courseCode: null,
-        durationMinutes: slot.durationMinutes,
-        startTime: DateTime(
-          date.year, date.month, date.day,
-          slot.startMinutes ~/ 60, slot.startMinutes % 60,
-        ),
-        isManual: false,
-        sortOrder: 0,
-      ));
-    }
 
     // ── 6. Sort by start time; tasks without startTime go last ───────────────
     tasks.sort((a, b) {

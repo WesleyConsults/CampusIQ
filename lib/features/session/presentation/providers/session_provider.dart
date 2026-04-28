@@ -5,7 +5,7 @@ import 'package:campusiq/features/session/data/models/study_session_model.dart';
 import 'package:campusiq/features/session/data/repositories/session_repository.dart';
 import 'package:campusiq/features/session/domain/planned_actual_analyser.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
-import 'package:campusiq/features/timetable/presentation/providers/personal_slot_provider.dart';
+
 
 final sessionRepositoryProvider = Provider<SessionRepository?>((ref) {
   final isarAsync = ref.watch(isarProvider);
@@ -24,7 +24,7 @@ final allSessionsProvider = StreamProvider<List<StudySessionModel>>((ref) {
 final todayAnalyticsProvider = Provider<DayAnalytics?>((ref) {
   final sessions    = ref.watch(allSessionsProvider).valueOrNull ?? [];
   final classSlots  = ref.watch(allSlotsProvider).valueOrNull ?? [];
-  final personalSlots = ref.watch(allPersonalSlotsProvider).valueOrNull ?? [];
+
 
   final today = DateTime.now();
   final todaySessions = sessions.where((s) {
@@ -36,7 +36,6 @@ final todayAnalyticsProvider = Provider<DayAnalytics?>((ref) {
     date: today,
     sessions: todaySessions,
     classSlots: classSlots,
-    personalSlots: personalSlots,
   );
 });
 
@@ -44,7 +43,7 @@ final todayAnalyticsProvider = Provider<DayAnalytics?>((ref) {
 final weeklyAnalyticsProvider = Provider<WeeklyAnalytics?>((ref) {
   final sessions      = ref.watch(allSessionsProvider).valueOrNull ?? [];
   final classSlots    = ref.watch(allSlotsProvider).valueOrNull ?? [];
-  final personalSlots = ref.watch(allPersonalSlotsProvider).valueOrNull ?? [];
+
 
   if (sessions.isEmpty) return null;
 
@@ -56,7 +55,6 @@ final weeklyAnalyticsProvider = Provider<WeeklyAnalytics?>((ref) {
   return PlannedActualAnalyser.analyseWeek(
     allSessions: sessions,
     classSlots: classSlots,
-    personalSlots: personalSlots,
     weekStart: monday,
   );
 });

@@ -11,9 +11,7 @@ import 'package:campusiq/features/session/presentation/widgets/floating_mini_tim
 import 'package:campusiq/features/insights/presentation/screens/insights_screen.dart';
 import 'package:campusiq/features/streak/presentation/screens/streak_screen.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
-import 'package:campusiq/features/plan/presentation/providers/exam_mode_provider.dart';
 import 'package:campusiq/features/ai/presentation/screens/ai_chat_screen.dart';
-import 'package:campusiq/features/ai/presentation/screens/exam_prep_screen.dart';
 import 'package:campusiq/features/ai/presentation/screens/subscribe_screen_stub.dart';
 import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.dart';
 import 'package:campusiq/features/course_hub/presentation/screens/course_hub_screen.dart';
@@ -78,11 +76,6 @@ final appRouter = GoRouter(
       builder: (context, state) => const WeeklyReviewScreen(),
     ),
     GoRoute(
-      path: '/ai/exam-prep',
-      name: 'exam-prep',
-      builder: (context, state) => const ExamPrepScreen(),
-    ),
-    GoRoute(
       path: '/course/:courseCode',
       name: 'course-hub',
       builder: (context, state) {
@@ -124,8 +117,6 @@ class _AppShell extends ConsumerWidget {
     final isSessionActive = ref.watch(activeSessionProvider) != null;
     final studyStreak     = ref.watch(studyStreakProvider);
     final hasLossRisk     = studyStreak.lossAversionMessage != null;
-    final examModeActive  =
-        ref.watch(examModeActiveProvider).valueOrNull ?? false;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -170,14 +161,10 @@ class _AppShell extends ConsumerWidget {
             }
           },
           destinations: [
-            NavigationDestination(
-              icon: examModeActive
-                  ? const Icon(Icons.whatshot, color: Colors.deepOrange, size: 20)
-                  : const Icon(Icons.checklist_rounded, size: 20),
-              selectedIcon: examModeActive
-                  ? const Icon(Icons.whatshot, color: Colors.deepOrange, size: 20)
-                  : const Icon(Icons.checklist_rounded, size: 20),
-              label: examModeActive ? 'Exam' : 'Dashboard',
+            const NavigationDestination(
+              icon: Icon(Icons.checklist_rounded, size: 20),
+              selectedIcon: Icon(Icons.checklist_rounded, size: 20),
+              label: 'Dashboard',
             ),
             const NavigationDestination(
               icon: Icon(Icons.school_outlined, size: 20),

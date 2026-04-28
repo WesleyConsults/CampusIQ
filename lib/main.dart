@@ -15,9 +15,9 @@ import 'package:campusiq/core/data/models/user_prefs_model.dart';
 import 'package:campusiq/core/data/models/subscription_model.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
-import 'package:campusiq/features/timetable/data/models/personal_slot_model.dart';
+
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
-import 'package:campusiq/features/plan/data/models/exam_model.dart';
+
 import 'package:campusiq/features/ai/data/models/ai_message_model.dart';
 import 'package:campusiq/features/ai/data/models/ai_chat_session_model.dart';
 import 'package:campusiq/features/ai/data/models/ai_usage_model.dart';
@@ -52,11 +52,11 @@ Future<void> _handleStreakRiskCheck() async {
     [
       CourseModelSchema,
       TimetableSlotModelSchema,
-      PersonalSlotModelSchema,
+
       StudySessionModelSchema,
       UserPrefsModelSchema,
       DailyPlanTaskModelSchema,
-      ExamModelSchema,
+
       SubscriptionModelSchema,
       AiChatSessionModelSchema,
       AiMessageModelSchema,
@@ -146,7 +146,7 @@ void main() async {
 
   await dotenv.load(fileName: '.env');
   await NotificationService.instance.init();
-  await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+  await Workmanager().initialize(callbackDispatcher);
 
   runZonedGuarded(() {
     runApp(const ProviderScope(child: CampusIQApp()));

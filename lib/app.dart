@@ -5,8 +5,7 @@ import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/constants/app_constants.dart';
 import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
-import 'package:campusiq/features/plan/presentation/providers/exam_mode_provider.dart';
-import 'package:campusiq/features/plan/presentation/widgets/exam_mode_activation_sheet.dart';
+
 import 'package:campusiq/features/review/presentation/providers/review_provider.dart';
 import 'package:campusiq/features/review/presentation/widgets/weekly_review_sheet.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
@@ -45,7 +44,7 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
       _checkSubscriptionStatus();
       _scheduleNotifications();
       _maybeShowWeeklyReview();
-      _maybeAutoActivateExamMode();
+
     }
   }
 
@@ -87,29 +86,7 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
     return DateTime(d.year, d.month, d.day);
   }
 
-  Future<void> _maybeAutoActivateExamMode() async {
-    final shouldActivate =
-        ref.read(shouldAutoActivateExamModeProvider);
-    if (!shouldActivate) return;
 
-    // Delay 1 second so the app settles after resume
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-
-    final navContext =
-        appRouter.routerDelegate.navigatorKey.currentContext;
-    if (navContext == null || !navContext.mounted) return;
-
-    showModalBottomSheet(
-      context: navContext,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) =>
-          const ExamModeActivationSheet(isAutoTriggered: true),
-    );
-  }
 
   Future<void> _scheduleNotifications() async {
     final prefsRepo = ref.read(userPrefsRepositoryProvider);

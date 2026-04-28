@@ -1,7 +1,6 @@
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
-import 'package:campusiq/features/timetable/data/models/personal_slot_model.dart';
-import 'package:campusiq/features/timetable/domain/personal_slot_category.dart';
+
 
 class CourseStats {
   final String courseCode;
@@ -77,7 +76,6 @@ class PlannedActualAnalyser {
   /// Computes planned minutes from timetable slots for a given date/dayIndex.
   static Map<String, int> _plannedMinutesByCourse({
     required List<TimetableSlotModel> classSlots,
-    required List<PersonalSlotModel> personalSlots,
     required int dayIndex,
   }) {
     final planned = <String, int>{};
@@ -86,13 +84,7 @@ class PlannedActualAnalyser {
       planned[s.courseCode] = (planned[s.courseCode] ?? 0) + s.durationMinutes;
     }
 
-    // Personal Study slots count as planned study time
-    for (final s in personalSlots) {
-      if (PersonalSlotCategory.fromString(s.categoryName) == PersonalSlotCategory.study) {
-        const key = 'Personal Study';
-        planned[key] = (planned[key] ?? 0) + s.durationMinutes;
-      }
-    }
+
 
     return planned;
   }
@@ -101,12 +93,10 @@ class PlannedActualAnalyser {
     required DateTime date,
     required List<StudySessionModel> sessions,
     required List<TimetableSlotModel> classSlots,
-    required List<PersonalSlotModel> personalSlots,
   }) {
     final dayIndex = date.weekday - 1; // Mon=0 … Sat=5
     final planned = _plannedMinutesByCourse(
       classSlots: classSlots,
-      personalSlots: personalSlots,
       dayIndex: dayIndex,
     );
 
@@ -140,7 +130,6 @@ class PlannedActualAnalyser {
   static WeeklyAnalytics analyseWeek({
     required List<StudySessionModel> allSessions,
     required List<TimetableSlotModel> classSlots,
-    required List<PersonalSlotModel> personalSlots,
     required DateTime weekStart, // Monday of the week
   }) {
     final days = <DayAnalytics>[];
@@ -154,7 +143,6 @@ class PlannedActualAnalyser {
         date: date,
         sessions: daySessions,
         classSlots: classSlots,
-        personalSlots: personalSlots,
       ));
     }
 

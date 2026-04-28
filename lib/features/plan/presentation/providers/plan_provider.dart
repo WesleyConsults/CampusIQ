@@ -4,15 +4,10 @@ import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 import 'package:campusiq/features/plan/data/repositories/daily_plan_repository.dart';
-import 'package:campusiq/features/plan/domain/exam_prep_planner.dart';
+import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 import 'package:campusiq/features/plan/domain/plan_generator.dart';
 import 'package:campusiq/features/plan/domain/plan_task.dart';
-import 'package:campusiq/features/plan/presentation/providers/exam_mode_provider.dart';
 import 'package:campusiq/features/session/presentation/providers/session_provider.dart';
-import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
-import 'package:campusiq/features/timetable/domain/slot_expander.dart';
-import 'package:campusiq/features/timetable/presentation/providers/personal_slot_provider.dart';
-import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 
 // ── Repository ─────────────────────────────────────────────────────────────
 
@@ -54,32 +49,7 @@ final planProgressProvider = Provider<(int, int)>((ref) {
 
 final generatePlanProvider =
     FutureProvider.family<void, DateTime>((ref, date) async {
-  final examModeActive =
-      ref.read(examModeActiveProvider).valueOrNull ?? false;
-  final upcomingExams = ref.read(upcomingExamsProvider);
-
-  List<PlanTask> tasks;
-
-  if (examModeActive && upcomingExams.isNotEmpty) {
-    // Use exam planner when in exam window
-    final prefsRepo = ref.read(userPrefsRepositoryProvider);
-    final prefs = await prefsRepo?.getPrefs();
-    final goalMinutes = prefs?.examDailyGoalMinutes ?? 360;
-
-    final planner = ExamPrepPlanner(
-      upcomingExams: upcomingExams,
-      examWeekStudyGoalMinutes: goalMinutes,
-      currentDate: date,
-    );
-
-    if (planner.isExamWindow(date)) {
-      tasks = planner.generateExamWeekPlan(date);
-    } else {
-      tasks = _generateNormalPlan(ref, date);
-    }
-  } else {
-    tasks = _generateNormalPlan(ref, date);
-  }
+  List<PlanTask> tasks = _generateNormalPlan(ref, date);
 
   final repo = ref.read(planRepositoryProvider);
   if (repo == null) return;
@@ -101,14 +71,6 @@ List<PlanTask> _generateNormalPlan(Ref ref, DateTime date) {
   final allSlots = ref.read(allSlotsProvider).valueOrNull ?? [];
   final todaySlots = allSlots.where((s) => s.dayIndex == dayIndex).toList();
 
-  final allPersonalSlots =
-      ref.read(allPersonalSlotsProvider).valueOrNull ?? [];
-  final expandedSlots = SlotExpander.expandForDay(
-    stored: allPersonalSlots,
-    targetDate: date,
-    dayIndex: dayIndex,
-  );
-
   final courses = ref.read(coursesProvider).valueOrNull ?? [];
 
   final allSessions = ref.read(allSessionsProvider).valueOrNull ?? [];
@@ -120,7 +82,6 @@ List<PlanTask> _generateNormalPlan(Ref ref, DateTime date) {
 
   return PlanGenerator(
     todaySlots: todaySlots,
-    expandedPersonalSlots: expandedSlots,
     courses: courses,
     recentSessions: recentSessions,
     dailyStudyGoalMinutes: goal,

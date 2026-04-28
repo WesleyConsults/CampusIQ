@@ -6,7 +6,6 @@ import 'package:campusiq/features/course_hub/presentation/widgets/hub_overview_t
 import 'package:campusiq/features/course_hub/presentation/widgets/hub_sessions_tab.dart';
 import 'package:campusiq/features/course_hub/presentation/widgets/hub_notes_tab.dart';
 import 'package:campusiq/features/course_hub/presentation/widgets/hub_files_tab.dart';
-import 'package:campusiq/features/course_hub/presentation/widgets/hub_flashcards_tab.dart';
 import 'package:campusiq/features/course_hub/presentation/widgets/hub_ai_tab.dart';
 
 class CourseHubScreen extends ConsumerWidget {
@@ -65,7 +64,7 @@ class CourseHubScreen extends ConsumerWidget {
         }
 
         return DefaultTabController(
-          length: 6,
+          length: 5,
           child: Scaffold(
             appBar: AppBar(
               title: Column(
@@ -111,10 +110,6 @@ class CourseHubScreen extends ConsumerWidget {
                     text: 'Files',
                   ),
                   Tab(
-                    icon: Icon(Icons.quiz_outlined, size: 18),
-                    text: 'Flashcards',
-                  ),
-                  Tab(
                     icon: Icon(Icons.smart_toy_outlined, size: 18),
                     text: 'AI Chat',
                   ),
@@ -127,7 +122,6 @@ class CourseHubScreen extends ConsumerWidget {
                 HubSessionsTab(courseCode: course.code),
                 HubNotesTab(courseCode: course.code),
                 HubFilesTab(courseCode: course.code),
-                HubFlashcardsTab(course: course),
                 HubAiTab(course: course),
               ],
             ),

@@ -158,7 +158,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       body: Column(
         children: [
           const WeeklyReviewBanner(),
-          const _ExamPrepCard(),
           Expanded(
             child: chatState.messages.isEmpty
                 ? Center(
@@ -253,64 +252,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               ],
             ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Exam Prep feature card ────────────────────────────────────────────────────
-
-class _ExamPrepCard extends StatelessWidget {
-  const _ExamPrepCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/ai/exam-prep'),
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.indigo.shade50,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.indigo.shade100),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.indigo.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.quiz_outlined,
-                  size: 18, color: Colors.indigo.shade700),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Exam Prep',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.indigo.shade800,
-                    ),
-                  ),
-                  Text(
-                    'Generate practice questions for any course',
-                    style: TextStyle(
-                        fontSize: 11, color: Colors.indigo.shade600),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios,
-                size: 14, color: Colors.indigo.shade400),
-          ],
-        ),
       ),
     );
   }

@@ -32,63 +32,43 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'dailyReminderMinute',
       type: IsarType.long,
     ),
-    r'examDailyGoalMinutes': PropertySchema(
-      id: 3,
-      name: r'examDailyGoalMinutes',
-      type: IsarType.long,
-    ),
-    r'examModeActive': PropertySchema(
-      id: 4,
-      name: r'examModeActive',
-      type: IsarType.bool,
-    ),
-    r'examModeEnd': PropertySchema(
-      id: 5,
-      name: r'examModeEnd',
-      type: IsarType.dateTime,
-    ),
-    r'examModeStart': PropertySchema(
-      id: 6,
-      name: r'examModeStart',
-      type: IsarType.dateTime,
-    ),
     r'lastOpenedDate': PropertySchema(
-      id: 7,
+      id: 3,
       name: r'lastOpenedDate',
       type: IsarType.dateTime,
     ),
     r'lastReviewShownWeek': PropertySchema(
-      id: 8,
+      id: 4,
       name: r'lastReviewShownWeek',
       type: IsarType.string,
     ),
     r'notificationPermissionAsked': PropertySchema(
-      id: 9,
+      id: 5,
       name: r'notificationPermissionAsked',
       type: IsarType.bool,
     ),
     r'notifyMilestoneAlerts': PropertySchema(
-      id: 10,
+      id: 6,
       name: r'notifyMilestoneAlerts',
       type: IsarType.bool,
     ),
     r'notifyStreakAlerts': PropertySchema(
-      id: 11,
+      id: 7,
       name: r'notifyStreakAlerts',
       type: IsarType.bool,
     ),
     r'notifyStudyReminders': PropertySchema(
-      id: 12,
+      id: 8,
       name: r'notifyStudyReminders',
       type: IsarType.bool,
     ),
     r'notifyWeeklyReview': PropertySchema(
-      id: 13,
+      id: 9,
       name: r'notifyWeeklyReview',
       type: IsarType.bool,
     ),
     r'weeklyNotesJson': PropertySchema(
-      id: 14,
+      id: 10,
       name: r'weeklyNotesJson',
       type: IsarType.string,
     )
@@ -128,18 +108,14 @@ void _userPrefsModelSerialize(
   writer.writeString(offsets[0], object.attendedDatesJson);
   writer.writeLong(offsets[1], object.dailyReminderHour);
   writer.writeLong(offsets[2], object.dailyReminderMinute);
-  writer.writeLong(offsets[3], object.examDailyGoalMinutes);
-  writer.writeBool(offsets[4], object.examModeActive);
-  writer.writeDateTime(offsets[5], object.examModeEnd);
-  writer.writeDateTime(offsets[6], object.examModeStart);
-  writer.writeDateTime(offsets[7], object.lastOpenedDate);
-  writer.writeString(offsets[8], object.lastReviewShownWeek);
-  writer.writeBool(offsets[9], object.notificationPermissionAsked);
-  writer.writeBool(offsets[10], object.notifyMilestoneAlerts);
-  writer.writeBool(offsets[11], object.notifyStreakAlerts);
-  writer.writeBool(offsets[12], object.notifyStudyReminders);
-  writer.writeBool(offsets[13], object.notifyWeeklyReview);
-  writer.writeString(offsets[14], object.weeklyNotesJson);
+  writer.writeDateTime(offsets[3], object.lastOpenedDate);
+  writer.writeString(offsets[4], object.lastReviewShownWeek);
+  writer.writeBool(offsets[5], object.notificationPermissionAsked);
+  writer.writeBool(offsets[6], object.notifyMilestoneAlerts);
+  writer.writeBool(offsets[7], object.notifyStreakAlerts);
+  writer.writeBool(offsets[8], object.notifyStudyReminders);
+  writer.writeBool(offsets[9], object.notifyWeeklyReview);
+  writer.writeString(offsets[10], object.weeklyNotesJson);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -152,19 +128,15 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.attendedDatesJson = reader.readString(offsets[0]);
   object.dailyReminderHour = reader.readLong(offsets[1]);
   object.dailyReminderMinute = reader.readLong(offsets[2]);
-  object.examDailyGoalMinutes = reader.readLong(offsets[3]);
-  object.examModeActive = reader.readBool(offsets[4]);
-  object.examModeEnd = reader.readDateTimeOrNull(offsets[5]);
-  object.examModeStart = reader.readDateTimeOrNull(offsets[6]);
   object.id = id;
-  object.lastOpenedDate = reader.readDateTimeOrNull(offsets[7]);
-  object.lastReviewShownWeek = reader.readString(offsets[8]);
-  object.notificationPermissionAsked = reader.readBool(offsets[9]);
-  object.notifyMilestoneAlerts = reader.readBool(offsets[10]);
-  object.notifyStreakAlerts = reader.readBool(offsets[11]);
-  object.notifyStudyReminders = reader.readBool(offsets[12]);
-  object.notifyWeeklyReview = reader.readBool(offsets[13]);
-  object.weeklyNotesJson = reader.readString(offsets[14]);
+  object.lastOpenedDate = reader.readDateTimeOrNull(offsets[3]);
+  object.lastReviewShownWeek = reader.readString(offsets[4]);
+  object.notificationPermissionAsked = reader.readBool(offsets[5]);
+  object.notifyMilestoneAlerts = reader.readBool(offsets[6]);
+  object.notifyStreakAlerts = reader.readBool(offsets[7]);
+  object.notifyStudyReminders = reader.readBool(offsets[8]);
+  object.notifyWeeklyReview = reader.readBool(offsets[9]);
+  object.weeklyNotesJson = reader.readString(offsets[10]);
   return object;
 }
 
@@ -182,28 +154,20 @@ P _userPrefsModelDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 4:
-      return (reader.readBool(offset)) as P;
-    case 5:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 6:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 7:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 8:
       return (reader.readString(offset)) as P;
+    case 5:
+      return (reader.readBool(offset)) as P;
+    case 6:
+      return (reader.readBool(offset)) as P;
+    case 7:
+      return (reader.readBool(offset)) as P;
+    case 8:
+      return (reader.readBool(offset)) as P;
     case 9:
       return (reader.readBool(offset)) as P;
     case 10:
-      return (reader.readBool(offset)) as P;
-    case 11:
-      return (reader.readBool(offset)) as P;
-    case 12:
-      return (reader.readBool(offset)) as P;
-    case 13:
-      return (reader.readBool(offset)) as P;
-    case 14:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -546,220 +510,6 @@ extension UserPrefsModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'dailyReminderMinute',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examDailyGoalMinutesEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'examDailyGoalMinutes',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examDailyGoalMinutesGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'examDailyGoalMinutes',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examDailyGoalMinutesLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'examDailyGoalMinutes',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examDailyGoalMinutesBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'examDailyGoalMinutes',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeActiveEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'examModeActive',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeEndIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'examModeEnd',
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeEndIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'examModeEnd',
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeEndEqualTo(DateTime? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'examModeEnd',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeEndGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'examModeEnd',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeEndLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'examModeEnd',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeEndBetween(
-    DateTime? lower,
-    DateTime? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'examModeEnd',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeStartIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'examModeStart',
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeStartIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'examModeStart',
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeStartEqualTo(DateTime? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'examModeStart',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeStartGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'examModeStart',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeStartLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'examModeStart',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
-      examModeStartBetween(
-    DateTime? lower,
-    DateTime? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'examModeStart',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1271,62 +1021,6 @@ extension UserPrefsModelQuerySortBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      sortByExamDailyGoalMinutes() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examDailyGoalMinutes', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      sortByExamDailyGoalMinutesDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examDailyGoalMinutes', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      sortByExamModeActive() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeActive', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      sortByExamModeActiveDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeActive', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      sortByExamModeEnd() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeEnd', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      sortByExamModeEndDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeEnd', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      sortByExamModeStart() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeStart', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      sortByExamModeStartDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeStart', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       sortByLastOpenedDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastOpenedDate', Sort.asc);
@@ -1483,62 +1177,6 @@ extension UserPrefsModelQuerySortThenBy
     });
   }
 
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      thenByExamDailyGoalMinutes() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examDailyGoalMinutes', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      thenByExamDailyGoalMinutesDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examDailyGoalMinutes', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      thenByExamModeActive() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeActive', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      thenByExamModeActiveDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeActive', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      thenByExamModeEnd() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeEnd', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      thenByExamModeEndDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeEnd', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      thenByExamModeStart() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeStart', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
-      thenByExamModeStartDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'examModeStart', Sort.desc);
-    });
-  }
-
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1689,34 +1327,6 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
-      distinctByExamDailyGoalMinutes() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'examDailyGoalMinutes');
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
-      distinctByExamModeActive() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'examModeActive');
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
-      distinctByExamModeEnd() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'examModeEnd');
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
-      distinctByExamModeStart() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'examModeStart');
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByLastOpenedDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastOpenedDate');
@@ -1801,34 +1411,6 @@ extension UserPrefsModelQueryProperty
       dailyReminderMinuteProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dailyReminderMinute');
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, int, QQueryOperations>
-      examDailyGoalMinutesProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'examDailyGoalMinutes');
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, bool, QQueryOperations>
-      examModeActiveProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'examModeActive');
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, DateTime?, QQueryOperations>
-      examModeEndProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'examModeEnd');
-    });
-  }
-
-  QueryBuilder<UserPrefsModel, DateTime?, QQueryOperations>
-      examModeStartProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'examModeStart');
     });
   }
 

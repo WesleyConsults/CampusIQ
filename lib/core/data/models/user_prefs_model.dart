@@ -40,19 +40,5 @@ class UserPrefsModel {
   /// The week key for which the weekly review was last auto-shown. e.g. "2026_W14"
   String lastReviewShownWeek = '';
 
-  // ── Exam Mode ─────────────────────────────────────────────────────────────
-
-  /// Whether Exam Mode is currently active.
-  bool examModeActive = false;
-
-  /// Start of the exam period (set when activating).
-  DateTime? examModeStart;
-
-  /// End of the exam period — last exam date.
-  DateTime? examModeEnd;
-
-  /// Daily study goal in minutes while in Exam Mode. Default 360 = 6 h.
-  int examDailyGoalMinutes = 360;
-
   UserPrefsModel();
 }
