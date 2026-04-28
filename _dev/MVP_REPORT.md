@@ -1,14 +1,14 @@
 # CampusIQ — MVP Completion Report
 
-**Date:** 2026-04-20
+**Date:** 2026-04-28
 **Package:** com.wesleyconsults.campusiq
-**Status:** Play Store Ready (Phases 1–15.5) — Pre-Launch Stability Hardening complete
+**Status:** v1.0 Lean Build — Dead-weight removed; Play Store ready
 
 ---
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The full MVP covers fifteen phases plus Phases 15.1–15.4: CWA Target Planner, Class Timetable, Personal Timetable, Study Session Tracking (Normal + Pomodoro modes), Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Exam Prep Generator, Study Plan + Exam Mode, Course Hub Workspace (per-course notes, files, sessions, AI chat, and flashcards), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, Cumulative CWA with Past Result Slip Import, and Source-Grounded AI (PDF text extraction + "From My Notes" mode). A post-15.3 AI rendering fix delivered full markdown and LaTeX math rendering in the AI chat bubble. A post-15.4 Pomodoro update added a 25/5/15-minute focus-break timer with round tracking directly into the Study Session screen.
+CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The v1.0 build covers: CWA Target Planner, Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes), Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Daily Study Plan, Course Hub Workspace (per-course notes, files, sessions, AI chat), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, Cumulative CWA with Past Result Slip Import, and Source-Grounded AI (PDF text extraction + "From My Notes" mode). **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, and the Course Hub Flashcards tab — all cut to reduce complexity and improve stability for launch.
 
 ---
 
@@ -285,21 +285,20 @@ lib/
 
 | Route | Screen | Phase |
 |---|---|---|
-| `/plan` | Daily Plan + Exam Mode (initial route) | 15 |
+| `/plan` | Daily Study Plan (initial route) | 15 |
 | `/cwa` | CWA Target Planner | 1, 13 |
-| `/timetable` | Class + Personal Timetable (dual layer, swipe) | 2, 3 |
+| `/timetable` | Class Timetable (single-layer grid) | 2 |
 | `/sessions` | Study Session Tracker + Analytics Dashboard | 4 |
 | `/streak` | Streak System + Milestone Gallery | 5 |
 | `/insights` | Insights System (accessible from Sessions screen) | 9 |
 | `/ai` | AI Coach & Academic Assistant Chatbot | 12 |
-| `/ai/exam-prep` | Exam Prep Question Generator | 14 |
 | `/ai/weekly-review` | AI-powered Weekly Review (full screen) | 15 |
 | `/settings` | Notification Settings + DEV premium toggle | 14 |
 | `/subscribe` | Premium subscription upsell stub | 12+ |
-| `/course/:courseCode` | Course Hub Workspace (6-tab per-course workspace) | 15.1 |
+| `/course/:courseCode` | Course Hub Workspace (5-tab per-course workspace) | 15.1 |
 | `/timetable/import` | Timetable Image Import (full-screen, no bottom nav) | 15.2 |
 
-Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating mini-timer, AI Assistant FAB, and exam mode nav icon state are rendered inside `_AppShell` and persist across all tab switches. The bottom nav shows: Dashboard, CWA, Table, Sessions. The Streak is located in the AppBar headers.
+Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating mini-timer and AI Assistant FAB are rendered inside `_AppShell` and persist across all tab switches. The bottom nav shows: Dashboard, CWA, Table, Sessions. The Streak indicator is located in the AppBar headers.
 
 ---
 
@@ -346,27 +345,9 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 
 ---
 
-### Phase 3 — Personal Timetable + Dual Layer View
+### ~~Phase 3 — Personal Timetable + Dual Layer View~~ *(Removed in v1.0)*
 
-**Route:** `/timetable` (Layer 2, swipe to switch)
-
-| Feature | Description |
-|---|---|
-| Personal slot categories | Study, Gym, Rest, Meal, Side Project, Devotion, Errand, Custom |
-| Recurrence types | One-off, Daily, Weekly |
-| Slot expander | `SlotExpander` expands recurring slots into concrete instances for the active day — no duplicated rows in Isar |
-| Dual layer grid | `DualLayerGrid` renders class slots (Layer 1) and personal slots (Layer 2) in the same `Stack`; overlapping cross-layer slots (e.g. a class and a study block at the same time) are split into side-by-side lanes in Both view |
-| Three views | Class Only / Both / Personal Only — switched by tapping the `TimetablePageIndicator` labels |
-| Page indicator | Tappable `Class` / `Both` / `Personal` labels; active view highlighted |
-| Add personal slot | Bottom sheet with category, recurrence, time, color; Sunday included in weekly day picker; same AM/PM and time-order validation as class slots |
-| Personal slot detail | Tap to view / delete |
-
-**Isar schemas:** `PersonalSlotModel`
-
-**Timetable views:**
-- Index 0 = Class Only
-- Index 1 = Both (default)
-- Index 2 = Personal Only
+> This feature was cut for v1.0 to reduce complexity. The timetable is now a single-layer Class grid only. `PersonalSlotModel`, `personal_slot_provider`, `dual_layer_grid`, and all related widgets have been deleted.
 
 ---
 
@@ -486,21 +467,18 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 
 ---
 
-### Phase 14 — Exam Prep Generator + Smart Notifications
+### ~~Phase 14 — Exam Prep Generator~~ + Smart Notifications *(Exam Prep removed in v1.0)*
 
-**Route:** `/ai/exam-prep`
+> The Exam Prep Generator screen (`/ai/exam-prep`), question-type widgets (MCQ, Short Answer, Flashcard), and `exam_prep_provider` were removed in v1.0. The smart notifications infrastructure below remains active.
 
 | Feature | Description |
 |---|---|
-| Exam Prep Generator | AI-powered question generator for any course with 3 formats: MCQ, Short Answer, and Flashcards. |
-| MCQ Interaction | Reveal correct answer and AI explanation on selection with animations. |
-| Flashcard Animation | Realistic 3D-style flip animation using `flutter_animate`. |
-| Background notifications | Periodic background tasks via `Workmanager` checking steak status. |
+| Background notifications | Periodic background tasks via `Workmanager` checking streak status. |
 | Personalized Alerts | DeepSeek-generated motivational messages for streak-at-risk notifications. |
 | Notification Service | Centralized management of local notifications (immediate and scheduled). |
 | Permission Guard | One-time custom dialog for notification permissions before enabling smart features. |
 
-**Isar schemas:** No new schemas (uses ephemeral state for questions; updates `UserPrefsModel`).
+**Isar schemas:** No new schemas (updates `UserPrefsModel`).
 
 ---
 
@@ -512,25 +490,16 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 
 | Feature | Description |
 |---|---|
-| PlanGenerator | Pure Dart: scans today's timetable slots for free blocks (6AM–8PM, 30-min minimum), prioritises courses by days-since-last-session, produces a typed `PlanTask` list (attend / study / personal) |
+| PlanGenerator | Pure Dart: scans today's timetable slots for free blocks (6AM–8PM, 30-min minimum), prioritises courses by days-since-last-session, produces a typed `PlanTask` list (attend / study) |
 | AI plan generation | "Generate" button calls DeepSeek to produce a structured daily plan and persists tasks as `DailyPlanTaskModel` rows |
-| Plan screen | Initial app route; shows date header, progress bar, sectioned task lists (Classes, Study/Exam Prep, Personal) with completion checkboxes |
+| Plan screen | Initial app route; shows date header, progress bar, sectioned task lists (Classes, Study) with completion checkboxes |
 | Progress bar | `PlanProgressBar` shows completed/total tasks with a celebration message when all done |
 | Manual task add | Bottom sheet to add a custom task outside AI generation |
-| Task types | `attend` (class), `study` (course work), `personal` (from personal timetable) |
+| Task types | `attend` (class), `study` (course work) |
 
-#### Exam Mode
+#### ~~Exam Mode~~ *(Removed in v1.0)*
 
-| Feature | Description |
-|---|---|
-| ExamModel | Isar collection storing course name, course code, exam date, and estimated study hours |
-| Exam manager sheet | Add/remove upcoming exams with date picker and study hours estimate |
-| Exam mode activation | Modal with countdown and activation confirmation; stored in `UserPrefsModel` |
-| Exam mode nav icon | Plan tab icon changes to a fire icon (`Icons.whatshot`) and label reads "Exam" when active |
-| Exam mode banner | Orange gradient banner at top of plan screen showing the next exam course and countdown |
-| ExamPrepPlanner | Pure Dart: prioritises exam prep tasks based on proximity and estimated study load |
-| Exam progress card | Per-exam progress bar showing prep session completion for each upcoming exam |
-| Deactivation | "Exit" button on banner deactivates exam mode via `UserPrefsModel` |
+> `ExamModel`, `exam_mode_provider`, `exam_manager_sheet`, `exam_mode_activation_sheet`, and all exam mode UI were removed. `UserPrefsModel` exam fields and `UserPrefsRepository.updateExamModeSettings()` have also been deleted.
 
 #### AI Weekly Review (full screen)
 
@@ -554,7 +523,7 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 | Cancel all button | Cancels all scheduled local notifications |
 | DEV premium toggle | Debug-mode only switch to flip premium status for testing; hidden in release builds |
 
-**Isar schemas:** `DailyPlanTaskModel`, `ExamModel`, `StudyPlanModel`, `StudyPlanSlotModel`, `WeeklyReviewModel`
+**Isar schemas:** `DailyPlanTaskModel`, `StudyPlanModel`, `StudyPlanSlotModel`, `WeeklyReviewModel`
 
 ---
 
@@ -564,13 +533,12 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 
 | Feature | Description |
 |---|---|
-| Course Hub Screen | `DefaultTabController(length: 6)` wrapping a Scaffold with a scrollable `TabBar`; resolves the route `courseCode` parameter against `coursesProvider` before rendering |
+| Course Hub Screen | `DefaultTabController(length: 5)` wrapping a Scaffold with a scrollable `TabBar`; resolves the route `courseCode` parameter against `coursesProvider` before rendering |
 | Overview tab | Course info card, expected score with `LinearProgressIndicator` + grade chip, CWA impact card (contribution points, current CWA, weight %), study stats (session count, total time, last studied), streak mini-card |
 | Sessions tab | Course-scoped `WeeklyBarChart` using `PlannedActualAnalyser` with empty class/personal slots; reverse-chronological session list; swipe-to-delete |
 | Notes tab | `StreamProvider`-backed note list; FAB opens `NoteEditorSheet` (create); tap opens edit mode; `Dismissible` swipe to delete |
 | Files tab | `StreamProvider`-backed file list; attach button opens `FilePicker` (PDF, images, docs); file is copied to `appDir/course_files/<courseCode>/`; `OpenFilex` opens file; swipe/delete removes record and physical file |
-| Flashcards tab | Reuses `ExamPrepNotifier` via a separate `hubExamPrepProvider` family (one per courseCode); course chip is pre-seeded and fixed — no course picker shown; reuses all Phase 14 question-type widgets |
-| AI Chat tab | Per-course AI chat backed by `hubAiProvider` family; blue "Focused on [Code] — [Name]" banner at top; shares `chat` quota (3/day free); `HubAiNotifier._buildSystemPrompt()` injects full course context via `CourseHubContextBuilder` |
+| AI Chat tab | Per-course AI chat backed by `hubAiProvider` family; shares `chat` quota (3/day free); `HubAiNotifier._buildSystemPrompt()` injects full course context via `CourseHubContextBuilder` |
 | CourseHubContextBuilder | Pure Dart; builds a multi-line context string from `CourseModel`, filtered `StudySessionModel` list, `CourseNoteModel` list, and `StreakResult`; injected into the AI system prompt for focused, context-aware responses |
 | Entry points | CWA screen: "Open Workspace" as first item in course card `PopupMenuButton`; Timetable: "Open Workspace" `OutlinedButton` in slot detail sheet; Sessions: `InkWell` tap on each course row in `CourseBreakdownCard` |
 | History isolation | Hub AI sessions use feature key `'course_<code>'`; `AiChatRepository.createSession` now accepts optional `courseCode` param; `AiChatSessionModel` has a new `@Index() String? courseCode` field |
@@ -750,22 +718,22 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 | Collection | Feature | Phase | Purpose |
 |---|---|---|---|
 | `CourseModel` | CWA | 1 | Courses with credit hours + expected scores |
-| `TimetableSlotModel` | Timetable | 2 | Official class slots (Layer 1) |
-| `PersonalSlotModel` | Timetable | 3 | Personal/recurring slots (Layer 2) |
-| `StudySessionModel` | Sessions | 4 | Completed study session records; `sessionType` ("normal"/"pomodoro") and `pomodoroRoundsCompleted` added for Pomodoro tracking |
-| `UserPrefsModel` | Core / Streak | 5 | Single-row key/value persistent flags (attended days, notification prefs, reflection notes, exam mode, daily goal) |
+| `TimetableSlotModel` | Timetable | 2 | Official class slots |
+| ~~`PersonalSlotModel`~~ | ~~Timetable~~ | ~~3~~ | **Removed in v1.0** |
+| `StudySessionModel` | Sessions | 4 | Completed study session records |
+| `UserPrefsModel` | Core / Streak | 5 | Single-row key/value persistent flags (attended days, notification prefs, reflection notes, daily goal) |
 | `AiMessageModel` | AI Chat | 12 | Individual user/assistant chat messages |
-| `AiChatSessionModel` | AI Chat | 12 | Individual chat session containers; `courseCode` field added in 15.1 for hub session isolation |
-| `AiUsageModel` | AI Limits | 12 | Tracks daily usage and limits per quota type (chat, whatif) |
+| `AiChatSessionModel` | AI Chat | 12 | Individual chat session containers; `courseCode` field added in 15.1 |
+| `AiUsageModel` | AI Limits | 12 | Tracks daily usage and limits per quota type |
 | `SubscriptionModel` | Payments | 12 | Tracks premium status and subscription details |
 | `StudyPlanModel` | AI Planner | 15 | Container for AI-generated study plans |
 | `StudyPlanSlotModel` | AI Planner | 15 | Individual tasks/slots within a study plan |
 | `WeeklyReviewModel` | AI Weekly Review | 15 | Stores AI-generated weekly review text and metadata |
 | `DailyPlanTaskModel` | Daily Plan | 15 | Daily tasks and checklist items with completion state |
-| `ExamModel` | Exam Mode | 15 | Exam dates, course codes, and estimated study hours |
-| `CourseNoteModel` | Course Hub | 15.1 | Per-course markdown notes with title, body, timestamps |
-| `CourseFileModel` | Course Hub | 15.1 / 15.4 | Attached file records (PDF/image) with app-local path; `extractedText` and `isTextExtractable` added in 15.4 |
-| `PastSemesterModel` | CWA | 15.3 | Past semester results (embedded `PastCourseEntry` list, reported CWA fields) |
+| ~~`ExamModel`~~ | ~~Exam Mode~~ | ~~15~~ | **Removed in v1.0** |
+| `CourseNoteModel` | Course Hub | 15.1 | Per-course markdown notes |
+| `CourseFileModel` | Course Hub | 15.1 / 15.4 | Attached file records; `extractedText` and `isTextExtractable` added in 15.4 |
+| `PastSemesterModel` | CWA | 15.3 | Past semester results |
 
 ---
 
@@ -844,8 +812,9 @@ Rather than a single daily AI usage counter, each AI feature has its own quota k
 ### 10. PlanGenerator free-block scheduling
 `PlanGenerator` does not just suggest sessions per course — it first computes free gaps between class slots in the 6AM–8PM grid (minimum 30-min block), then fills those gaps with study tasks ordered by days-since-last-session. This ensures generated plans are timetable-aware and never overlap with classes.
 
-### 11. Exam mode as UserPrefsModel flag
-Exam mode state (active/inactive, exam list) is stored in `UserPrefsModel` rather than a new Isar collection. `ExamModel` stores the exam records; the mode toggle is a boolean flag + timestamp. This keeps the schema count low while supporting full persistence across app restarts.
+### 11. ~~Exam mode as UserPrefsModel flag~~ *(Removed in v1.0)*
+
+> `ExamModel` and all exam mode fields on `UserPrefsModel` have been deleted. The `UserPrefsModel` now stores only notification preferences, weekly reflection notes, and attendance data.
 
 ---
 
@@ -903,7 +872,7 @@ flutter run
 | Phase 15.5 S1 | `fix(15.5-S1): global error capture + API/AI call hardening` |
 | Phase 15.5 S2 | `fix(15.5-S2): offline detection, Isar write safety, provider error state coverage` |
 | Phase 15.5 S3 | `fix(15.5-S3): full loading/empty/error UI coverage + route safety` |
-| Phase 15.5 S4 | `fix(15.5-S4): timer edge cases, file import safety, final stability checklist complete` |
+| v1.0 refactor | `refactor: remove Personal Timetable, Exam Mode, and Exam Prep for v1.0` |
 
 ---
 

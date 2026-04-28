@@ -142,13 +142,7 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Tap a different day — grid updates (may be empty for that day)
 - [ ] Today is highlighted by default
 
-### 3.2 Three-page swipe views
-- [ ] Default view is **"Both"** (classes + personal blocks)
-- [ ] Swipe **left** → switches to **Personal Only** view
-- [ ] Swipe **right** from Both → switches to **Classes Only** view
-- [ ] Page indicator at the bottom updates correctly
-
-### 3.3 Add a class slot
+### 3.2 Add a class slot
 - [ ] Swipe to **Classes Only** view (or Both)
 - [ ] Tap the FAB — label reads **"Add Class"**
 - [ ] `AddSlotSheet` opens
@@ -156,26 +150,17 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Tap **Save** — slot appears on the grid for that day/time
 - [ ] Add at least **2 class slots** on different days
 
-### 3.4 Add a personal block
-- [ ] Swipe to **Personal Only** view
-- [ ] Tap the FAB — label reads **"Add Block"**
-- [ ] `AddPersonalSlotSheet` opens
-- [ ] Fill in: Label (e.g. "Gym"), day, start time, end time
-- [ ] Tap **Save** — personal block appears on the grid
-
-### 3.5 Tap on an existing slot
+### 3.4 Tap on an existing slot
 - [ ] Tap a class slot on the grid → `SlotDetailSheet` opens with details
 - [ ] Edit the venue — saves correctly
-- [ ] Tap a personal block → `PersonalSlotDetailSheet` opens
-- [ ] Delete the personal block — it disappears from the grid
 - [ ] Tap **"Open Workspace"** on a class slot → navigates to that course's Course Hub (no bottom nav visible)
 - [ ] Back arrow on Course Hub returns to the Timetable screen
 
-### 3.6 Tap empty grid area
+### 3.5 Tap empty grid area
 - [ ] Tap an empty time cell on the grid
 - [ ] Add sheet opens with that time pre-filled
 
-### 3.7 Import from image — entry point
+### 3.6 Import from image — entry point
 - [ ] Scanner icon (document scanner) is visible in the Timetable AppBar alongside the "+" button
 - [ ] Tap the scanner icon → navigates to `/timetable/import` (no bottom nav visible)
 - [ ] Back arrow returns to the Timetable screen without saving anything
@@ -361,63 +346,9 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Tap a past conversation — chat loads with previous messages
 - [ ] Swipe drawer closed
 
-### 6.5 Exam Prep card
-- [ ] On the AI screen, an **"Exam Prep"** card or button is visible
-- [ ] Tap it — navigates to `/ai/exam-prep`
-- [ ] Back arrow returns to AI screen
+### 6.5 ~~Exam Prep card~~ *(Removed in v1.0)*
 
----
-
-## 7. Exam Prep Generator (`/ai/exam-prep`)
-
-> Requires courses from Step 2.
-
-### 7.1 Course selection
-- [ ] Course chips (FilterChips) are listed — your CWA courses appear
-- [ ] Tap a course chip to select it (chip highlights)
-- [ ] Tap again to deselect
-
-### 7.2 Question type selection
-- [ ] Three buttons visible: **MCQ**, **Short Answer**, **Flashcard**
-- [ ] Tap each — selected button is highlighted
-- [ ] Default is MCQ
-
-### 7.3 Optional topic input
-- [ ] Text field with placeholder "e.g. Thevenin's Theorem" is visible
-- [ ] Type a topic — input is accepted
-- [ ] Leave blank — generation should still work
-
-### 7.4 Generate questions (MCQ)
-- [ ] Select a course, select **MCQ**, (optionally enter a topic)
-- [ ] Tap **"Generate 5 Questions"**
-- [ ] Button shows a loading spinner while generating
-- [ ] Button is disabled while loading (no double-tap spam)
-- [ ] 5 MCQ question cards appear below
-- [ ] Each card shows: question text + 4 radio button options
-
-### 7.5 Answer reveal (MCQ)
-- [ ] Tap a radio option — it selects
-- [ ] Tap **"Reveal Answer"** — correct option highlighted, explanation shown
-
-### 7.6 Short Answer questions
-- [ ] Change type to **Short Answer**, tap **"Generate 5 Questions"**
-- [ ] Cards show question text and a **"Reveal Answer"** button
-- [ ] Tap reveal — answer text appears below
-
-### 7.7 Flashcards
-- [ ] Change type to **Flashcard**, tap **"Generate 5 Questions"**
-- [ ] Cards show the front (question) of the flashcard
-- [ ] Tap a flashcard — it **flips** to show the answer (animation)
-- [ ] Tap again — flips back to the question
-
-### 7.8 Generate more
-- [ ] After first batch, button reads **"Generate 5 More"**
-- [ ] Tap it — 5 additional questions appear below existing ones
-
-### 7.9 Clear questions
-- [ ] Tap the **Clear** button in the AppBar
-- [ ] All questions are removed
-- [ ] Button label resets to "Generate 5 Questions"
+> The Exam Prep feature card and `/ai/exam-prep` route have been removed. The AI screen no longer shows this card.
 
 ---
 
@@ -429,20 +360,19 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Navigate to **Plan** tab
 - [ ] Tap the **Generate** button (AppBar)
 - [ ] Loading state is shown (spinner or shimmer)
-- [ ] Plan cards appear organized into sections: Classes, Study, Personal
+- [ ] Plan cards appear organized into sections: Classes, Study
 - [ ] Tasks are sensible (study tasks for your courses, class tasks matching timetable)
 
 ### 8.2 Task sections
 - [ ] **Classes section** (blue): shows timetabled classes for today
-- [ ] **Study section** (green/orange): shows AI-suggested study tasks
-- [ ] **Personal section** (yellow): shows personal time blocks from timetable
+- [ ] **Study section** (green): shows AI-suggested study tasks
 
 ### 8.3 Mark a task complete
 - [ ] Tap a task — it marks as complete (checkbox/strikethrough)
 - [ ] Progress bar at the top increments
 
 ### 8.4 Add a manual task
-- [ ] Tap the **small FAB** (pencil/plus icon stacked above the main FAB)
+- [ ] Tap the **FAB** (+ icon)
 - [ ] `AddManualTaskSheet` opens
 - [ ] Fill in a task name and optionally a course
 - [ ] Save — task appears in the plan
@@ -451,22 +381,9 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Swipe a task tile left or right to dismiss it
 - [ ] Task is removed from the list
 
-### 8.6 Exam Mode activation
-- [ ] Tap the **main FAB** (exam/fire icon)
-- [ ] `ExamModeActivationSheet` opens (if exams are scheduled) OR `ExamManagerSheet` opens (to add exams)
-- [ ] Add an exam: subject, date (future date)
-- [ ] After saving, **exam mode banner** appears at the top of the Plan screen
-- [ ] Banner shows exam name + countdown
-- [ ] Plan icon in bottom nav changes to a fire/flame icon
+### 8.6 ~~Exam Mode~~ *(Removed in v1.0)*
 
-### 8.7 Exam mode progress
-- [ ] With exam mode active, per-exam progress bars are shown in the Plan screen
-- [ ] Completing study tasks increments the exam's progress bar
-
-### 8.8 Exit exam mode
-- [ ] On the banner, tap **Exit**
-- [ ] Exam mode deactivates
-- [ ] Banner disappears, plan icon reverts to normal
+> Exam Mode FAB, ExamModeActivationSheet, ExamManagerSheet, exam banner, and exam progress cards have been removed.
 
 ---
 
@@ -539,9 +456,9 @@ These tests verify features work together correctly.
 - [ ] Go to Sessions → Start Session
 - [ ] `CoursePickerSheet` lists the same courses you added in CWA (Step 2)
 
-### 11.4 CWA course → Exam Prep course chips
-- [ ] Go to Exam Prep
-- [ ] Course chips match the courses from CWA
+### 11.4 ~~CWA course → Exam Prep course chips~~ *(Removed in v1.0)*
+
+> Exam Prep Generator has been removed; this cross-feature test no longer applies.
 
 ### 11.5 Timetable → Plan screen
 - [ ] Go to Plan, tap Generate
@@ -591,7 +508,6 @@ These tests verify features work together correctly.
 - [ ] AI response that is several paragraphs long — chat scrolls smoothly
 
 ### 12.4 Back navigation
-- [ ] From Exam Prep, press system back — returns to AI Chat (not to Plan or a blank screen)
 - [ ] From Settings, press system back — returns to the screen you came from
 - [ ] From Weekly Review, press system back — returns to AI Chat
 - [ ] From Course Hub, press system back — returns to the screen that opened it
@@ -652,13 +568,9 @@ These tests verify features work together correctly.
 - [ ] Files from Course A do **not** appear in Course B's Files tab
 - [ ] Empty state shows when no files are attached
 
-### 13.8 Flashcards tab
-- [ ] Course chip at the top shows the correct course and **cannot be changed** (no course picker)
-- [ ] Select **MCQ** → Generate → 5 MCQ cards appear; tap an option → correct answer and explanation revealed
-- [ ] Select **Short Answer** → Generate → cards show question + "Reveal Answer" button
-- [ ] Select **Flashcard** → Generate → tap a card → 3D flip reveals the answer
-- [ ] Free quota gate (`PremiumGateWidget`) appears after the daily limit is exhausted
-- [ ] Generating in the hub does **not** affect the state of the global Exam Prep screen (`/ai/exam-prep`)
+### 13.8 ~~Flashcards tab~~ *(Removed in v1.0)*
+
+> The Flashcards tab and `hubExamPrepProvider` family have been removed from the Course Hub. The hub now has 5 tabs: Overview, Sessions, Notes, Files, AI Chat.
 
 ### 13.9 AI Chat tab — mode selector
 - [ ] Two chips visible at the top: **📚 From My Notes** and **🌐 General**
@@ -709,7 +621,7 @@ These tests verify features work together correctly.
 ### 13.16 Stability
 - [ ] Hot restart → all notes and files are still present on their respective tabs
 - [ ] Full app restart → all notes and files are still present; indexed/visual-only chips still show correctly
-- [ ] No red-screen errors on any of the 6 tabs
+- [ ] No red-screen errors on any of the 5 tabs
 - [ ] No overflow or render errors on a standard ~360 dp width screen
 - [ ] Attaching a non-PDF file does not show any extraction UI or chip
 
@@ -790,7 +702,7 @@ These tests verify features work together correctly.
 - [ ] Scroll the Streak heatmap — no jank
 - [ ] Scroll the Sessions history list with 10+ items — smooth
 - [ ] Open and close bottom sheets 5+ times rapidly — no crashes or ghost sheets
-- [ ] Switch between all 6 bottom nav tabs rapidly — no crash, state is preserved
+- [ ] Switch between all 4 bottom nav tabs rapidly — no crash, state is preserved
 - [ ] Leave the session timer running for 5+ minutes — timer is still accurate on return
 - [ ] Kill and reopen the app during an active session — session state is restored (timer continues or session is recoverable)
 - [ ] Switch rapidly between Course Hub tabs — no crash, tab state is preserved
@@ -870,14 +782,14 @@ These tests verify features work together correctly.
 | 5. Streak System | | |
 | 6. AI Coach & Chat | | |
 | 6a. AI Markdown & Math Rendering | | |
-| 7. Exam Prep Generator | | |
+| 7. ~~Exam Prep Generator~~ | REMOVED | Deleted in v1.0 |
 | 8. Plan Screen | | |
 | 9. Settings | | |
 | 10. Weekly Review | | |
 | 11. Cross-Feature Tests | | |
 | 11a. Pomodoro cross-feature (11.8–11.9) | | |
 | 12. Edge Cases | | |
-| 13. Course Hub Workspace | | |
+| 13. Course Hub Workspace (5-tab) | | |
 | 13a. PDF Text Extraction (15.4) | | |
 | 13b. Source-Grounded AI Mode (15.4) | | |
 | 14. Timetable Image Import | | |
