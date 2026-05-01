@@ -1,6 +1,5 @@
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
-import 'package:campusiq/features/course_hub/data/models/course_file_model.dart';
 import 'package:campusiq/features/course_hub/data/models/course_note_model.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
@@ -50,44 +49,6 @@ Total study time: $timeStr
 Course streak: ${courseStreak.currentStreak} days ($streakStatus)
 Student notes summary: $noteSummary''';
   }
-
-  String buildSourceGroundedContext({
-    required List<CourseNoteModel> notes,
-    required List<CourseFileModel> extractableFiles,
-    required CourseModel course,
-  }) {
-    final buffer = StringBuffer();
-
-    buffer.writeln('COURSE: ${course.code} — ${course.name}');
-    buffer.writeln('---');
-
-    if (notes.isNotEmpty) {
-      buffer.writeln('STUDENT NOTES (${notes.length}):');
-      for (final note in notes) {
-        buffer.writeln('[Note: ${note.title}]');
-        buffer.writeln(note.body);
-        buffer.writeln('---');
-      }
-    }
-
-    if (extractableFiles.isNotEmpty) {
-      buffer.writeln('UPLOADED PDF CONTENT (${extractableFiles.length} files):');
-      for (final file in extractableFiles) {
-        buffer.writeln('[File: ${file.fileName}]');
-        buffer.writeln(file.extractedText ?? '');
-        buffer.writeln('---');
-      }
-    }
-
-    final full = buffer.toString();
-
-    if (full.length > 15000) {
-      return '${full.substring(0, 15000)}\n[...content truncated for length]';
-    }
-
-    return full;
-  }
-
   static String _gradeLabel(double score) {
     if (score >= 80) return 'A';
     if (score >= 70) return 'B';
