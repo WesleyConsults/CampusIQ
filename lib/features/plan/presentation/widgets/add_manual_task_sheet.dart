@@ -51,8 +51,11 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
       DateTime? startTime;
       if (_startTime != null) {
         startTime = DateTime(
-          today.year, today.month, today.day,
-          _startTime!.hour, _startTime!.minute,
+          today.year,
+          today.month,
+          today.day,
+          _startTime!.hour,
+          _startTime!.minute,
         );
       }
 
@@ -118,8 +121,9 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                 controller: _labelCtrl,
                 decoration: const InputDecoration(labelText: 'Task label *'),
                 textCapitalization: TextCapitalization.sentences,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Label is required' : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Label is required'
+                    : null,
               ),
               const SizedBox(height: 14),
 
@@ -130,7 +134,8 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                 decoration: const InputDecoration(labelText: 'Task type'),
                 items: const [
                   DropdownMenuItem(value: 'study', child: Text('Study')),
-                  DropdownMenuItem(value: 'attend', child: Text('Attend class')),
+                  DropdownMenuItem(
+                      value: 'attend', child: Text('Attend class')),
                   DropdownMenuItem(value: 'personal', child: Text('Personal')),
                 ],
                 onChanged: (v) {

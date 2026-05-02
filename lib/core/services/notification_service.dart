@@ -14,9 +14,9 @@ class NotificationService {
 
   // ── Channel IDs ──────────────────────────────────────────────────────────
   static const String _channelStudyReminder = 'study_reminder';
-  static const String _channelStreakAlert   = 'streak_alert';
-  static const String _channelMilestone     = 'milestone_alert';
-  static const String _channelWeeklyReview  = 'weekly_review';
+  static const String _channelStreakAlert = 'streak_alert';
+  static const String _channelMilestone = 'milestone_alert';
+  static const String _channelWeeklyReview = 'weekly_review';
 
   // ── ID ranges ────────────────────────────────────────────────────────────
   // Free block reminders : 100–199
@@ -70,8 +70,8 @@ class NotificationService {
       title: title,
       body: body,
       scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
-      notificationDetails: NotificationDetails(
-          android: _androidDetails(channelId, channelName)),
+      notificationDetails:
+          NotificationDetails(android: _androidDetails(channelId, channelName)),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
@@ -103,10 +103,8 @@ class NotificationService {
       if (notifId >= 200) break;
       if (block.durationMinutes < 30) continue;
 
-      final blockStart =
-          today.add(Duration(minutes: block.startMinutes));
-      final notifTime =
-          blockStart.subtract(const Duration(minutes: 5));
+      final blockStart = today.add(Duration(minutes: block.startMinutes));
+      final notifTime = blockStart.subtract(const Duration(minutes: 5));
       if (notifTime.isBefore(now)) continue;
 
       await _schedule(
@@ -127,8 +125,7 @@ class NotificationService {
     if (currentStreak <= 0) return;
 
     final now = DateTime.now();
-    final target =
-        DateTime(now.year, now.month, now.day, 20, 30);
+    final target = DateTime(now.year, now.month, now.day, 20, 30);
     if (target.isBefore(now)) return;
 
     await _schedule(
@@ -150,8 +147,7 @@ class NotificationService {
     await _plugin.cancel(id: 201);
 
     final now = DateTime.now();
-    final target =
-        DateTime(now.year, now.month, now.day, hour, minute);
+    final target = DateTime(now.year, now.month, now.day, hour, minute);
     if (target.isBefore(now)) return;
 
     await _schedule(
@@ -171,8 +167,7 @@ class NotificationService {
     if (daysToNextMilestone <= 0 || daysToNextMilestone > 3) return;
 
     final tomorrow = DateTime.now().add(const Duration(days: 1));
-    final target =
-        DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
+    final target = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
 
     await _schedule(
       300,
@@ -192,8 +187,8 @@ class NotificationService {
     final now = DateTime.now();
     int daysUntilMonday = DateTime.monday - now.weekday;
     if (daysUntilMonday <= 0) daysUntilMonday += 7;
-    final nextMonday = DateTime(
-        now.year, now.month, now.day + daysUntilMonday, 8, 0);
+    final nextMonday =
+        DateTime(now.year, now.month, now.day + daysUntilMonday, 8, 0);
 
     await _schedule(
       400,
@@ -206,12 +201,10 @@ class NotificationService {
   }
 
   /// Schedule a 10-min reminder before a planned study task.
-  Future<void> schedulePlannedSessionReminder(
-      DailyPlanTaskModel task) async {
+  Future<void> schedulePlannedSessionReminder(DailyPlanTaskModel task) async {
     if (task.taskType != 'study' || task.startTime == null) return;
 
-    final notifTime =
-        task.startTime!.subtract(const Duration(minutes: 10));
+    final notifTime = task.startTime!.subtract(const Duration(minutes: 10));
     if (notifTime.isBefore(DateTime.now())) return;
 
     final notifId = (500 + (task.id % 100)).clamp(500, 599);

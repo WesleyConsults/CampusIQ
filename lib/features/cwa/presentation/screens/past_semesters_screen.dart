@@ -77,7 +77,9 @@ class PastSemestersScreen extends ConsumerWidget {
                 debugPrint('🔴 PastSemestersScreen delete failed: $e');
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Could not remove semester. Please try again.')),
+                    const SnackBar(
+                        content: Text(
+                            'Could not remove semester. Please try again.')),
                   );
                 }
               }
@@ -166,8 +168,8 @@ class _SemesterCardState extends State<_SemesterCard> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -274,7 +276,8 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
       debugPrint('🔴 PastSemestersScreen _save failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not save changes. Please try again.')),
+          const SnackBar(
+              content: Text('Could not save changes. Please try again.')),
         );
       }
     }
@@ -363,8 +366,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
           const SizedBox(width: 10),
           // Grade dropdown
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(6),
@@ -388,8 +390,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 13,
-                              color: _gradeColors[g] ??
-                                  AppTheme.textSecondary,
+                              color: _gradeColors[g] ?? AppTheme.textSecondary,
                             ),
                           ),
                         ))
@@ -460,7 +461,8 @@ class _MarkInputState extends State<_MarkInput> {
   void didUpdateWidget(covariant _MarkInput oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.mark != oldWidget.mark) {
-      final newText = widget.mark != null ? widget.mark!.toStringAsFixed(0) : '';
+      final newText =
+          widget.mark != null ? widget.mark!.toStringAsFixed(0) : '';
       if (_controller.text != newText) {
         _controller.text = newText;
       }

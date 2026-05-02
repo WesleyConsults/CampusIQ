@@ -23,8 +23,8 @@ class MilestoneGrid extends StatelessWidget {
             Row(
               children: [
                 const Text('Badges',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 const Spacer(),
                 Text(
                   '${unlocked.length} / ${Milestone.all.length}',
@@ -48,8 +48,7 @@ class MilestoneGrid extends StatelessWidget {
                 final milestone = Milestone.all[i];
                 final isUnlocked = unlocked.contains(milestone);
                 final isNext = !isUnlocked &&
-                    (i == 0 ||
-                        unlocked.contains(Milestone.all[i - 1]));
+                    (i == 0 || unlocked.contains(Milestone.all[i - 1]));
 
                 return _BadgeTile(
                   milestone: milestone,
@@ -118,8 +117,8 @@ class _BadgeTile extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 '${milestone.days - currentStreak} left',
-                style: const TextStyle(
-                    fontSize: 9, color: AppTheme.textSecondary),
+                style:
+                    const TextStyle(fontSize: 9, color: AppTheme.textSecondary),
               ),
             ],
           ],

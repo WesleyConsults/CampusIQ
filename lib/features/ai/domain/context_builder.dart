@@ -54,14 +54,15 @@ class ContextBuilder {
     if (courses.isNotEmpty) {
       final courseLines = courses
           .take(5)
-          .map((c) => '${c.code} (${c.creditHours.toInt()}cr, target ${c.expectedScore.toInt()})')
+          .map((c) =>
+              '${c.code} (${c.creditHours.toInt()}cr, target ${c.expectedScore.toInt()})')
           .toList();
       courseSummary = '- Courses: ${courseLines.join(', ')}';
     }
 
     // Build study session summary
-    final totalHours =
-        sessionsThisWeek.fold<double>(0, (sum, s) => sum + (s.durationMinutes / 60.0));
+    final totalHours = sessionsThisWeek.fold<double>(
+        0, (sum, s) => sum + (s.durationMinutes / 60.0));
     String sessionSummary = sessionsThisWeek.isEmpty
         ? '- This week: No sessions logged this week yet'
         : '- This week: ${totalHours.toStringAsFixed(1)} hours studied';
@@ -72,7 +73,10 @@ class ContextBuilder {
     // Build today's timetable summary
     String timetableSummary = '';
     if (todaySlots.isNotEmpty) {
-      final slots = todaySlots.take(3).map((s) => '${s.title} ${s.startTime.hour}–${s.endTime.hour}').toList();
+      final slots = todaySlots
+          .take(3)
+          .map((s) => '${s.title} ${s.startTime.hour}–${s.endTime.hour}')
+          .toList();
       timetableSummary = '- Today\'s classes: ${slots.join(", ")}';
     }
 
@@ -140,14 +144,16 @@ Plain English only. No markdown.''';
       if (blocks.isEmpty) {
         freeBlockLines.add('${dayNames[i]}: (no free blocks)');
       } else {
-        final blockStr = blocks.map((b) => '${b.startLabel}–${b.endLabel}').join(', ');
+        final blockStr =
+            blocks.map((b) => '${b.startLabel}–${b.endLabel}').join(', ');
         freeBlockLines.add('${dayNames[i]}: $blockStr');
       }
     }
     // 3. Past 4 weeks of sessions — extract day/time preferences
     final now = DateTime.now();
     final fourWeeksAgo = now.subtract(const Duration(days: 28));
-    final pastSessions = await sessionRepository.getSessionsForRange(semesterKey, fourWeeksAgo, now);
+    final pastSessions = await sessionRepository.getSessionsForRange(
+        semesterKey, fourWeeksAgo, now);
     final dayCount = <int, int>{};
     for (final s in pastSessions) {
       final d = s.startTime.weekday; // 1=Mon … 7=Sun
@@ -155,10 +161,21 @@ Plain English only. No markdown.''';
     }
     String patternSummary = 'No past study sessions recorded.';
     if (dayCount.isNotEmpty) {
-      final sorted = dayCount.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-      final dayNames2 = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      final sorted = dayCount.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      final dayNames2 = [
+        '',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday'
+      ];
       final top = sorted.take(3).map((e) => dayNames2[e.key]).join(', ');
-      final bottom = sorted.reversed.take(2).map((e) => dayNames2[e.key]).join(', ');
+      final bottom =
+          sorted.reversed.take(2).map((e) => dayNames2[e.key]).join(', ');
       patternSummary = 'Tends to study: $top\nRarely studies: $bottom';
     }
 
@@ -202,15 +219,18 @@ Each item must have exactly these fields:
     final weekEnd = weekStart.add(const Duration(days: 7));
 
     // Sessions this week
-    final sessions = await sessionRepository.getSessionsForRange(semesterKey, weekStart, weekEnd);
-    final totalMinutes = sessions.fold<int>(0, (sum, s) => sum + s.durationMinutes);
+    final sessions = await sessionRepository.getSessionsForRange(
+        semesterKey, weekStart, weekEnd);
+    final totalMinutes =
+        sessions.fold<int>(0, (sum, s) => sum + s.durationMinutes);
     final totalHours = totalMinutes / 60.0;
 
     // Per-course breakdown
     final courseMinutes = <String, int>{};
     final courseNames = <String, String>{};
     for (final s in sessions) {
-      courseMinutes[s.courseCode] = (courseMinutes[s.courseCode] ?? 0) + s.durationMinutes;
+      courseMinutes[s.courseCode] =
+          (courseMinutes[s.courseCode] ?? 0) + s.durationMinutes;
       courseNames[s.courseCode] = s.courseName;
     }
     final courseLines = courseMinutes.entries
@@ -230,7 +250,9 @@ Each item must have exactly these fields:
     if (allCourses.isNotEmpty) {
       final totalCr = allCourses.fold<double>(0, (s, c) => s + c.creditHours);
       final projected = totalCr > 0
-          ? allCourses.fold<double>(0, (s, c) => s + c.creditHours * c.expectedScore) / totalCr
+          ? allCourses.fold<double>(
+                  0, (s, c) => s + c.creditHours * c.expectedScore) /
+              totalCr
           : 0.0;
       cwaLine = 'Projected CWA: ${projected.toStringAsFixed(1)}';
     }
@@ -262,9 +284,11 @@ Tone: warm, honest, encouraging. Not generic. Reference their actual numbers and
 Do not use markdown. Plain sentences only.''';
   }
 
-  Future<List<TimetableSlotModel>> _getSlotsForDay(String semesterKey, int dayIndex) async {
+  Future<List<TimetableSlotModel>> _getSlotsForDay(
+      String semesterKey, int dayIndex) async {
     try {
-      return await timetableRepository.getSlotsForDayOnce(semesterKey, dayIndex);
+      return await timetableRepository.getSlotsForDayOnce(
+          semesterKey, dayIndex);
     } catch (_) {
       return [];
     }
@@ -286,7 +310,8 @@ Do not use markdown. Plain sentences only.''';
       final now = DateTime.now();
       final weekStart = now.subtract(Duration(days: now.weekday - 1));
       final weekEnd = weekStart.add(const Duration(days: 7));
-      final sessions = await sessionRepository.getSessionsForRange(semesterKey, weekStart, weekEnd);
+      final sessions = await sessionRepository.getSessionsForRange(
+          semesterKey, weekStart, weekEnd);
       return sessions;
     } catch (_) {
       return [];
@@ -297,7 +322,8 @@ Do not use markdown. Plain sentences only.''';
     try {
       final now = DateTime.now();
       final dayIndex = now.weekday - 1; // Isar uses 0-6
-      final stream = timetableRepository.watchSlotsForDay(semesterKey, dayIndex);
+      final stream =
+          timetableRepository.watchSlotsForDay(semesterKey, dayIndex);
       final slots = await stream.first;
       return slots;
     } catch (_) {

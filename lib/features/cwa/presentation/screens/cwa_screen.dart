@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
-import 'package:campusiq/core/constants/app_constants.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
@@ -11,8 +11,8 @@ import 'package:campusiq/features/cwa/presentation/widgets/course_card.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/cwa_coach_sheet.dart';
 import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
+import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
-import 'package:campusiq/features/streak/presentation/widgets/streak_action_button.dart';
 
 class CwaScreen extends ConsumerWidget {
   const CwaScreen({super.key});
@@ -44,10 +44,19 @@ class CwaScreen extends ConsumerWidget {
       debugPrint('🔴 CwaScreen _openAddSheet failed: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not save course. Please try again.')),
+          const SnackBar(
+              content: Text('Could not save course. Please try again.')),
         );
       }
     }
+  }
+
+  void _openHistory(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const PastSemestersScreen(),
+      ),
+    );
   }
 
   @override
@@ -57,40 +66,60 @@ class CwaScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        title: const Text(AppConstants.appName,
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        leading: Semantics(
+          button: true,
+          label: 'Go to Today',
+          child: IconButton(
+            tooltip: 'Go to Today',
+            icon: const Icon(Icons.home_outlined, semanticLabel: 'Go to Today'),
+            onPressed: () => context.go('/plan'),
+          ),
+        ),
+        title: const Text('CWA', style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
-          const StreakActionButton(),
-          if (viewMode == CwaViewMode.semester) ...[
-            IconButton(
-              icon: const Icon(Icons.document_scanner_outlined),
-              tooltip: 'Scan registration slip',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const RegistrationSlipImportScreen(),
-                ),
+          Semantics(
+            button: true,
+            label: 'Import courses or results',
+            child: TextButton.icon(
+              onPressed: () => _showImportSheet(context, viewMode),
+              icon: const Icon(Icons.file_upload_outlined, size: 18),
+              label: const Text('Import'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 44),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
             ),
-          ],
-          if (viewMode == CwaViewMode.cumulative) ...[
-            IconButton(
-              icon: const Icon(Icons.history_edu_outlined),
-              tooltip: 'Manage result history',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const PastSemestersScreen(),
-                ),
+          ),
+          PopupMenuButton<_CwaMenuAction>(
+            tooltip: 'More options',
+            icon: const Icon(Icons.more_vert),
+            onSelected: (action) {
+              switch (action) {
+                case _CwaMenuAction.target:
+                  _showTargetDialog(
+                    context,
+                    ref,
+                    ref.read(targetCwaProvider),
+                  );
+                  return;
+                case _CwaMenuAction.history:
+                  _openHistory(context);
+                  return;
+              }
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: _CwaMenuAction.target,
+                child: Text('Set target CWA'),
               ),
-            ),
-          ],
-          IconButton(
-            icon: const Icon(Icons.tune),
-            tooltip: 'Set target CWA',
-            onPressed: () => _showTargetDialog(
-              context,
-              ref,
-              ref.read(targetCwaProvider),
-            ),
+              if (viewMode == CwaViewMode.cumulative)
+                const PopupMenuItem(
+                  value: _CwaMenuAction.history,
+                  child: Text('Manage result history'),
+                ),
+            ],
           ),
         ],
       ),
@@ -114,15 +143,19 @@ class CwaScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: viewMode == CwaViewMode.semester
-          ? FloatingActionButton.extended(
-              onPressed: () => _openAddSheet(context, ref),
-              icon: const Icon(Icons.add),
-              label: const Text('Add Course'),
+          ? Semantics(
+              button: true,
+              label: 'Add course',
+              child: FloatingActionButton.extended(
+                tooltip: 'Add course',
+                onPressed: () => _openAddSheet(context, ref),
+                icon: const Icon(Icons.add),
+                label: const Text('Add Course'),
+              ),
             )
           : FloatingActionButton.extended(
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (_) => const PastSemestersScreen()),
+                MaterialPageRoute(builder: (_) => const PastSemestersScreen()),
               ),
               icon: const Icon(Icons.upload_file_outlined),
               label: const Text('Add Semester'),
@@ -130,8 +163,7 @@ class CwaScreen extends ConsumerWidget {
     );
   }
 
-  void _showTargetDialog(
-      BuildContext context, WidgetRef ref, double current) {
+  void _showTargetDialog(BuildContext context, WidgetRef ref, double current) {
     double temp = current;
     showDialog(
       context: context,
@@ -149,8 +181,7 @@ class CwaScreen extends ConsumerWidget {
                     color: AppTheme.primary,
                     iconSize: 32,
                     onPressed: temp > 40
-                        ? () => setState(
-                            () => temp = (temp - 1).clamp(40, 100))
+                        ? () => setState(() => temp = (temp - 1).clamp(40, 100))
                         : null,
                   ),
                   Text(
@@ -166,8 +197,7 @@ class CwaScreen extends ConsumerWidget {
                     color: AppTheme.primary,
                     iconSize: 32,
                     onPressed: temp < 100
-                        ? () => setState(
-                            () => temp = (temp + 1).clamp(40, 100))
+                        ? () => setState(() => temp = (temp + 1).clamp(40, 100))
                         : null,
                   ),
                 ],
@@ -185,8 +215,7 @@ class CwaScreen extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               ref.read(targetCwaProvider.notifier).state = temp;
@@ -202,6 +231,70 @@ class CwaScreen extends ConsumerWidget {
       ),
     );
   }
+
+  void _showImportSheet(BuildContext context, CwaViewMode viewMode) {
+    final title =
+        viewMode == CwaViewMode.semester ? 'Import Courses' : 'Import Results';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => _ImportOptionsSheet(
+        title: title,
+        options: [
+          _ImportOption(
+            icon: Icons.camera_alt_outlined,
+            label: 'Take Photo',
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              _openImportScreen(context, viewMode, initialSource: 'camera');
+            },
+          ),
+          _ImportOption(
+            icon: Icons.photo_library_outlined,
+            label: 'Upload Image',
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              _openImportScreen(context, viewMode, initialSource: 'gallery');
+            },
+          ),
+          _ImportOption(
+            icon: Icons.picture_as_pdf_outlined,
+            label: 'Choose PDF',
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              _openImportScreen(context, viewMode, initialSource: 'pdf');
+            },
+          ),
+          _ImportOption(
+            icon: Icons.edit_outlined,
+            label: 'Enter Manually',
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              context.push(
+                '/cwa/manual-entry?mode=${viewMode == CwaViewMode.semester ? 'semester' : 'cumulative'}',
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openImportScreen(
+    BuildContext context,
+    CwaViewMode viewMode, {
+    required String initialSource,
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => viewMode == CwaViewMode.semester
+            ? RegistrationSlipImportScreen(initialSource: initialSource)
+            : ResultSlipImportScreen(initialSource: initialSource),
+      ),
+    );
+  }
 }
 
 // ─── Toggle widget ────────────────────────────────────────────────────────────
@@ -214,11 +307,15 @@ class _ViewToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      height: 40,
+      height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.65),
+        ),
       ),
       child: Row(
         children: [
@@ -248,26 +345,309 @@ class _ToggleTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: active ? AppTheme.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: active ? Colors.white : AppTheme.textSecondary,
+      child: Semantics(
+        button: true,
+        selected: active,
+        label: label,
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: active ? colorScheme.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: active ? colorScheme.onPrimary : AppTheme.textSecondary,
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+enum _CwaMenuAction { target, history }
+
+class _ImportOption {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ImportOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+}
+
+class _ImportOptionsSheet extends StatelessWidget {
+  final String title;
+  final List<_ImportOption> options;
+
+  const _ImportOptionsSheet({
+    required this.title,
+    required this.options,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Choose how you want to bring data into CampusIQ.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              for (final option in options) ...[
+                _ImportOptionTile(option: option),
+                if (option != options.last) const SizedBox(height: 10),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImportOptionTile extends StatelessWidget {
+  final _ImportOption option;
+
+  const _ImportOptionTile({required this.option});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Material(
+      color: AppTheme.primary.withValues(alpha: 0.05),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: option.onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(option.icon, color: AppTheme.primary, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  option.label,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right,
+                color: AppTheme.textSecondary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CreditsSummaryCard extends StatelessWidget {
+  final int courseCount;
+  final double totalCredits;
+  final String courseLabel;
+  final String creditsLabel;
+
+  const _CreditsSummaryCard({
+    required this.courseCount,
+    required this.totalCredits,
+    this.courseLabel = 'courses',
+    this.creditsLabel = 'Total credits this semester',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _StatTile(
+              label: courseLabel,
+              value: '$courseCount',
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _StatTile(
+              label: creditsLabel,
+              value: '${totalCredits.toInt()} cr',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImportHelperRow extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String buttonLabel;
+  final VoidCallback onPressed;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondaryPressed;
+
+  const _ImportHelperRow({
+    required this.title,
+    required this.subtitle,
+    required this.buttonLabel,
+    required this.onPressed,
+    this.secondaryLabel,
+    this.onSecondaryPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.tonal(
+                onPressed: onPressed,
+                child: Text(buttonLabel),
+              ),
+              if (secondaryLabel != null && onSecondaryPressed != null)
+                OutlinedButton(
+                  onPressed: onSecondaryPressed,
+                  child: Text(secondaryLabel!),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _StatTile({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.primary,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -296,14 +676,45 @@ class _SemesterView extends ConsumerWidget {
             .toList();
         final highImpactIndices =
             CwaCalculator.highestImpactCourseIndices(pairs);
+        final totalCredits =
+            courses.fold<double>(0, (sum, course) => sum + course.creditHours);
 
         return CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child:
-                    CwaSummaryBar(projected: projected, target: target, gap: gap),
+                child: CwaSummaryBar(
+                  projected: projected,
+                  target: target,
+                  gap: gap,
+                  label: 'Current Semester CWA',
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                child: _CreditsSummaryCard(
+                  courseCount: courses.length,
+                  totalCredits: totalCredits,
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: _ImportHelperRow(
+                  title: 'Import courses into this semester',
+                  subtitle:
+                      'Use Import to scan your registration slip and prefill course data.',
+                  buttonLabel: 'Import Courses',
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const RegistrationSlipImportScreen(),
+                    ),
+                  ),
+                ),
               ),
             ),
             SliverToBoxAdapter(
@@ -331,10 +742,11 @@ class _SemesterView extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('My Courses',
+                    const Text('Course-wise CWA',
                         style: TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 15)),
-                    Text('${courses.length} courses',
+                    Text(
+                        '${courses.length} course${courses.length == 1 ? '' : 's'}',
                         style: const TextStyle(
                             color: AppTheme.textSecondary, fontSize: 13)),
                   ],
@@ -379,7 +791,9 @@ class _SemesterView extends ConsumerWidget {
                           debugPrint('🔴 CwaScreen deleteCourse failed: $e');
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Could not delete course. Please try again.')),
+                              const SnackBar(
+                                  content: Text(
+                                      'Could not delete course. Please try again.')),
                             );
                           }
                         }
@@ -419,8 +833,7 @@ class _CumulativeView extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (semesters) {
-        final currentCourses =
-            currentCoursesAsync.valueOrNull ?? [];
+        final currentCourses = currentCoursesAsync.valueOrNull ?? [];
 
         final hasPast = semesters.isNotEmpty;
         final hasCurrent = currentCourses.isNotEmpty;
@@ -444,31 +857,33 @@ class _CumulativeView extends ConsumerWidget {
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${totalCredits.toInt()} total credit hours',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primary,
-                        ),
-                      ),
+                child: _CreditsSummaryCard(
+                  courseCount: semesters.length + (hasCurrent ? 1 : 0),
+                  totalCredits: totalCredits,
+                  courseLabel: 'semester records',
+                  creditsLabel: 'Total credits completed',
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: _ImportHelperRow(
+                  title: 'Build your academic history',
+                  subtitle:
+                      'Import past result slips or open history to review previous semesters.',
+                  buttonLabel: 'Open History',
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const PastSemestersScreen(),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${semesters.length + (hasCurrent ? 1 : 0)} semester${semesters.length + (hasCurrent ? 1 : 0) == 1 ? '' : 's'}',
-                      style: const TextStyle(
-                          fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                  secondaryLabel: 'Import Results',
+                  onSecondaryPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ResultSlipImportScreen(),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -491,12 +906,10 @@ class _CumulativeView extends ConsumerWidget {
             if (hasPast) ...[
               const SliverToBoxAdapter(
                 child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Text(
                     'Past Semesters',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 15),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                   ),
                 ),
               ),
@@ -520,8 +933,8 @@ class _CumulativeView extends ConsumerWidget {
                   children: [
                     const Text(
                       'Current Semester',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 15),
+                      style:
+                          TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                     ),
                     const SizedBox(width: 8),
                     Container(
@@ -550,8 +963,8 @@ class _CumulativeView extends ConsumerWidget {
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     'No courses added yet. Switch to Semester view to add courses.',
-                    style: TextStyle(
-                        fontSize: 13, color: AppTheme.textSecondary),
+                    style:
+                        TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                   ),
                 ),
               )
@@ -756,8 +1169,7 @@ class _CurrentCourseRow extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(6),
@@ -813,9 +1225,7 @@ class _ScorePill extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: isApprox
-                    ? const Color(0xFFF57F17)
-                    : AppTheme.primary,
+                color: isApprox ? const Color(0xFFF57F17) : AppTheme.primary,
               ),
             ),
             if (isApprox) ...[
@@ -881,8 +1291,7 @@ class _NoHistoryBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: AppTheme.primary.withValues(alpha: 0.15)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [

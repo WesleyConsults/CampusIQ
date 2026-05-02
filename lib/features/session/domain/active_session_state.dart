@@ -8,12 +8,12 @@ class ActiveSessionState {
 
   // ── Pomodoro ─────────────────────────────────────────────────────────────
   final bool isPomodoroMode;
-  final int currentRound;           // 1-based: which focus round we're on
-  final int totalRounds;            // default 4
-  final bool isBreak;               // true = currently in a break phase
-  final bool isComplete;            // true = all rounds + final break done
-  final DateTime phaseEndsAt;       // when the current phase countdown ends
-  final DateTime phaseStartedAt;    // when the current phase began
+  final int currentRound; // 1-based: which focus round we're on
+  final int totalRounds; // default 4
+  final bool isBreak; // true = currently in a break phase
+  final bool isComplete; // true = all rounds + final break done
+  final DateTime phaseEndsAt; // when the current phase countdown ends
+  final DateTime phaseStartedAt; // when the current phase began
   final int accumulatedFocusSeconds; // focus seconds from completed rounds
   final Duration focusDuration;
   final Duration shortBreakDuration;

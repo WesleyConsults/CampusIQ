@@ -57,7 +57,8 @@ class WeeklyReviewNotifier extends StateNotifier<WeeklyReviewState> {
       final mondayDate = currentMondayDate();
       final isar = await _ref.read(isarProvider.future);
 
-      final existing = await isar.weeklyReviewModels.getByWeekStartDate(mondayDate);
+      final existing =
+          await isar.weeklyReviewModels.getByWeekStartDate(mondayDate);
 
       if (existing != null) {
         final userPrefsRepo = _ref.read(userPrefsRepositoryProvider);

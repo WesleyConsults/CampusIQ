@@ -7,7 +7,8 @@ class StudyPlanModel {
   Id id = 1; // single row — always replace, never append
 
   late DateTime generatedAt;
-  late String weekStartDate; // Monday of the week this was generated for, 'yyyy-MM-dd'
+  late String
+      weekStartDate; // Monday of the week this was generated for, 'yyyy-MM-dd'
 
   final slots = IsarLinks<StudyPlanSlotModel>();
 }

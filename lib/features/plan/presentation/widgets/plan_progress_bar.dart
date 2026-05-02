@@ -11,13 +11,14 @@ class PlanProgressBar extends StatelessWidget {
     required this.total,
   });
 
-  double get _progress => total == 0 ? 0.0 : (completed / total).clamp(0.0, 1.0);
+  double get _progress =>
+      total == 0 ? 0.0 : (completed / total).clamp(0.0, 1.0);
 
   Color _barColor(double progress) {
     if (progress >= 1.0) return const Color(0xFF1D9E75); // green
     if (progress >= 0.67) return const Color(0xFF1565C0); // blue
     if (progress >= 0.34) return const Color(0xFFF59E0B); // amber
-    return const Color(0xFFE8593C);                        // red-ish
+    return const Color(0xFFE8593C); // red-ish
   }
 
   @override

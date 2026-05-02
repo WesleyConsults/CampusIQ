@@ -21,8 +21,7 @@ class NextMilestoneCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'All milestones unlocked. You are a legend.',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 14),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
               ),
             ],
@@ -75,15 +74,15 @@ class NextMilestoneCard extends StatelessWidget {
                 value: progress.clamp(0, 1),
                 minHeight: 8,
                 backgroundColor: Colors.grey.shade200,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppTheme.accent),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppTheme.accent),
               ),
             ),
             const SizedBox(height: 6),
             Text(
               '${streak.longestStreak} / ${next.days} days',
-              style: const TextStyle(
-                  fontSize: 11, color: AppTheme.textSecondary),
+              style:
+                  const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
             ),
           ],
         ),

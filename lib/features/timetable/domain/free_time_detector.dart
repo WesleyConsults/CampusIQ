@@ -32,7 +32,8 @@ class FreeTimeDetector {
   }) {
     if (slots.isEmpty) return [];
 
-    final sorted = [...slots]..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+    final sorted = [...slots]
+      ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
     final blocks = <FreeBlock>[];
 
     // Gap before first class

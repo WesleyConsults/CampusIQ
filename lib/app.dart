@@ -44,7 +44,6 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
       _checkSubscriptionStatus();
       _scheduleNotifications();
       _maybeShowWeeklyReview();
-
     }
   }
 
@@ -86,8 +85,6 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
     return DateTime(d.year, d.month, d.day);
   }
 
-
-
   Future<void> _scheduleNotifications() async {
     final prefsRepo = ref.read(userPrefsRepositoryProvider);
     if (prefsRepo == null) return;
@@ -104,8 +101,7 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
           allSlots.where((s) => s.dayIndex == todayIndex).toList();
       final freeBlocks =
           FreeTimeDetector.detect(dayIndex: todayIndex, slots: todaySlots);
-      await NotificationService.instance
-          .scheduleFreeBlockReminders(freeBlocks);
+      await NotificationService.instance.scheduleFreeBlockReminders(freeBlocks);
 
       // Daily "haven't studied" alert at user's chosen time
       await NotificationService.instance.scheduleHaventStudiedAlert(

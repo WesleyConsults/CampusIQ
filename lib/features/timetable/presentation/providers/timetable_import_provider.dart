@@ -92,7 +92,8 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
       if (slots.isEmpty) {
         state = state.copyWith(
           step: ImportStep.error,
-          errorMessage: 'No timetable slots could be detected. Try a clearer image.',
+          errorMessage:
+              'No timetable slots could be detected. Try a clearer image.',
         );
         return;
       }

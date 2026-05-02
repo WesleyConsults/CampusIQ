@@ -27,8 +27,7 @@ class ActivityHeatmap extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Last 4 weeks',
-                style:
-                    TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
             const SizedBox(height: 12),
             Row(
               children: List.generate(4, (week) {
@@ -57,8 +56,7 @@ class ActivityHeatmap extends StatelessWidget {
                                 : AppTheme.primary.withValues(alpha: intensity),
                             borderRadius: BorderRadius.circular(3),
                             border: isToday
-                                ? Border.all(
-                                    color: AppTheme.accent, width: 1.5)
+                                ? Border.all(color: AppTheme.accent, width: 1.5)
                                 : null,
                           ),
                         ),
@@ -73,8 +71,8 @@ class ActivityHeatmap extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 const Text('Less',
-                    style: TextStyle(
-                        fontSize: 10, color: AppTheme.textSecondary)),
+                    style:
+                        TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
                 const SizedBox(width: 4),
                 ...List.generate(4, (i) {
                   return Container(
@@ -82,16 +80,16 @@ class ActivityHeatmap extends StatelessWidget {
                     height: 10,
                     margin: const EdgeInsets.only(right: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary
-                          .withValues(alpha: 0.15 + i * 0.25),
+                      color:
+                          AppTheme.primary.withValues(alpha: 0.15 + i * 0.25),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   );
                 }),
                 const SizedBox(width: 4),
                 const Text('More',
-                    style: TextStyle(
-                        fontSize: 10, color: AppTheme.textSecondary)),
+                    style:
+                        TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
               ],
             ),
           ],

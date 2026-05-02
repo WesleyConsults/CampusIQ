@@ -47,8 +47,8 @@ class HubSessionsTab extends ConsumerWidget {
                   Text(
                     'Start a study session to track your progress.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 13, color: AppTheme.textSecondary),
+                    style:
+                        TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                   ),
                 ],
               ),
@@ -59,8 +59,7 @@ class HubSessionsTab extends ConsumerWidget {
         // Compute weekly analytics scoped to this course
         final now = DateTime.now();
         final monday = now.subtract(Duration(days: now.weekday - 1));
-        final weekStart =
-            DateTime(monday.year, monday.month, monday.day);
+        final weekStart = DateTime(monday.year, monday.month, monday.day);
         final weekly = PlannedActualAnalyser.analyseWeek(
           allSessions: courseSessions,
           classSlots: [],

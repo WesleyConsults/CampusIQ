@@ -21,8 +21,8 @@ String weekKey(DateTime weekStart) {
 /// Review data for the current week.
 final currentWeekReviewProvider = FutureProvider<WeeklyReviewData>((ref) async {
   final sessions = ref.watch(allSessionsProvider).valueOrNull ?? [];
-  final courses  = ref.watch(coursesProvider).valueOrNull ?? [];
-  final streak   = ref.watch(studyStreakProvider);
+  final courses = ref.watch(coursesProvider).valueOrNull ?? [];
+  final streak = ref.watch(studyStreakProvider);
   final prefsRepo = ref.watch(userPrefsRepositoryProvider);
 
   final weekStart = _mondayOf(DateTime.now());
@@ -54,12 +54,12 @@ final currentWeekReviewProvider = FutureProvider<WeeklyReviewData>((ref) async {
 /// Review data for an arbitrary week (used by history).
 final weekReviewProvider =
     FutureProvider.family<WeeklyReviewData, DateTime>((ref, weekStart) async {
-  final sessions  = ref.watch(allSessionsProvider).valueOrNull ?? [];
-  final courses   = ref.watch(coursesProvider).valueOrNull ?? [];
-  final streak    = ref.watch(studyStreakProvider);
+  final sessions = ref.watch(allSessionsProvider).valueOrNull ?? [];
+  final courses = ref.watch(coursesProvider).valueOrNull ?? [];
+  final streak = ref.watch(studyStreakProvider);
   final prefsRepo = ref.watch(userPrefsRepositoryProvider);
 
-  final key  = weekKey(weekStart);
+  final key = weekKey(weekStart);
   final note = await prefsRepo?.getWeeklyNote(key);
 
   final data = WeeklyReviewCalculator(

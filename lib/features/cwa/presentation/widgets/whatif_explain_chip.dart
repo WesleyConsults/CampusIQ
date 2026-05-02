@@ -43,7 +43,8 @@ class WhatifExplainChip extends StatelessWidget {
                   ),
                 )
               else
-                const Icon(Icons.auto_awesome, size: 13, color: AppTheme.primary),
+                const Icon(Icons.auto_awesome,
+                    size: 13, color: AppTheme.primary),
               const SizedBox(width: 5),
               Text(
                 isLoading ? 'Explaining...' : 'Explain this \u2197',

@@ -65,7 +65,8 @@ class InsightCard extends StatelessWidget {
               ),
               // Emoji icon
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
                 child: Text(
                   insight.icon,
                   style: const TextStyle(fontSize: 28),
@@ -74,7 +75,8 @@ class InsightCard extends StatelessWidget {
               // Content
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,

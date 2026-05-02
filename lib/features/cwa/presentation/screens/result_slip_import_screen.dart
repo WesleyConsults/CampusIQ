@@ -5,11 +5,48 @@ import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/domain/past_course_result.dart';
 import 'package:campusiq/features/cwa/presentation/providers/result_slip_import_provider.dart';
 
-class ResultSlipImportScreen extends ConsumerWidget {
-  const ResultSlipImportScreen({super.key});
+class ResultSlipImportScreen extends ConsumerStatefulWidget {
+  final String? initialSource;
+
+  const ResultSlipImportScreen({super.key, this.initialSource});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ResultSlipImportScreen> createState() =>
+      _ResultSlipImportScreenState();
+}
+
+class _ResultSlipImportScreenState
+    extends ConsumerState<ResultSlipImportScreen> {
+  bool _didTriggerInitialSource = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didTriggerInitialSource) return;
+    _didTriggerInitialSource = true;
+
+    final source = widget.initialSource;
+    if (source == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final notifier = ref.read(resultSlipImportNotifierProvider.notifier);
+      switch (source) {
+        case 'camera':
+          notifier.pickFromCamera();
+          return;
+        case 'gallery':
+          notifier.pickFromGallery();
+          return;
+        case 'pdf':
+          notifier.pickFromFile();
+          return;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(resultSlipImportNotifierProvider);
     final notifier = ref.read(resultSlipImportNotifierProvider.notifier);
 
@@ -362,7 +399,8 @@ class _ReviewView extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 13, color: AppTheme.textSecondary),
                     ),
-                    if (state.reportedSemesterCwa != null || state.reportedCumulativeCwa != null) ...[
+                    if (state.reportedSemesterCwa != null ||
+                        state.reportedCumulativeCwa != null) ...[
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 8,
@@ -370,26 +408,34 @@ class _ReviewView extends StatelessWidget {
                         children: [
                           if (state.reportedSemesterCwa != null)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: AppTheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 'Reported Sem CWA: ${state.reportedSemesterCwa?.toStringAsFixed(2)}',
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primary),
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primary),
                               ),
                             ),
                           if (state.reportedCumulativeCwa != null)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: AppTheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 'Reported Cum CWA: ${state.reportedCumulativeCwa?.toStringAsFixed(2)}',
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primary),
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primary),
                               ),
                             ),
                         ],
@@ -403,7 +449,9 @@ class _ReviewView extends StatelessWidget {
                     ? notifier.deselectAll
                     : notifier.selectAll,
                 child: Text(
-                  selected == state.courses.length ? 'Deselect all' : 'Select all',
+                  selected == state.courses.length
+                      ? 'Deselect all'
+                      : 'Select all',
                   style: const TextStyle(color: AppTheme.primary, fontSize: 13),
                 ),
               ),
@@ -611,9 +659,8 @@ class _GradeDropdown extends StatelessWidget {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: _grades.contains(grade.toUpperCase())
-              ? grade.toUpperCase()
-              : 'F',
+          value:
+              _grades.contains(grade.toUpperCase()) ? grade.toUpperCase() : 'F',
           isDense: true,
           style: TextStyle(
             fontWeight: FontWeight.w700,
@@ -668,7 +715,8 @@ class _MarkInputState extends State<_MarkInput> {
   void didUpdateWidget(covariant _MarkInput oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.mark != oldWidget.mark) {
-      final newText = widget.mark != null ? widget.mark!.toStringAsFixed(0) : '';
+      final newText =
+          widget.mark != null ? widget.mark!.toStringAsFixed(0) : '';
       if (_controller.text != newText) {
         _controller.text = newText;
       }
@@ -881,8 +929,7 @@ class _ErrorView extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style:
-                const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
           ),
           const SizedBox(height: 28),
           ElevatedButton.icon(
@@ -892,8 +939,7 @@ class _ErrorView extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 28, vertical: 13),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 13),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),

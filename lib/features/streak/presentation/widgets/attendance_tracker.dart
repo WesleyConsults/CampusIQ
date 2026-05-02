@@ -33,8 +33,8 @@ class AttendanceTracker extends StatelessWidget {
             Row(
               children: [
                 const Text('Attendance streak',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 const Spacer(),
                 Row(
                   children: [
@@ -82,9 +82,8 @@ class AttendanceTracker extends StatelessWidget {
                           color: isToday
                               ? AppTheme.primary
                               : AppTheme.textSecondary,
-                          fontWeight: isToday
-                              ? FontWeight.w700
-                              : FontWeight.w400,
+                          fontWeight:
+                              isToday ? FontWeight.w700 : FontWeight.w400,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -100,8 +99,7 @@ class AttendanceTracker extends StatelessWidget {
                                   : Colors.grey.shade200,
                           shape: BoxShape.circle,
                           border: isToday
-                              ? Border.all(
-                                  color: AppTheme.primary, width: 2)
+                              ? Border.all(color: AppTheme.primary, width: 2)
                               : null,
                         ),
                         alignment: Alignment.center,

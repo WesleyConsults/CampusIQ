@@ -34,7 +34,7 @@ final studyStreakProvider = Provider<StreakResult>((ref) {
 /// Per-course streak map — courseCode → StreakResult
 final perCourseStreakProvider = Provider<Map<String, StreakResult>>((ref) {
   final sessions = ref.watch(allSessionsProvider).valueOrNull ?? [];
-  final courses  = ref.watch(coursesProvider).valueOrNull ?? [];
+  final courses = ref.watch(coursesProvider).valueOrNull ?? [];
 
   final result = <String, StreakResult>{};
   for (final course in courses) {

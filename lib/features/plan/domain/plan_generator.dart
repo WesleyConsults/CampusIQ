@@ -34,8 +34,8 @@ class PlanGenerator {
   final int dailyStudyGoalMinutes;
 
   // Grid boundaries (minutes from midnight)
-  static const int _gridStart = 360;  // 6 AM
-  static const int _gridEnd = 1200;   // 8 PM
+  static const int _gridStart = 360; // 6 AM
+  static const int _gridEnd = 1200; // 8 PM
   static const int _minUsableBlock = 30;
 
   PlanGenerator({
@@ -59,8 +59,11 @@ class PlanGenerator {
         courseCode: slot.courseCode,
         durationMinutes: slot.durationMinutes,
         startTime: DateTime(
-          date.year, date.month, date.day,
-          slot.startMinutes ~/ 60, slot.startMinutes % 60,
+          date.year,
+          date.month,
+          date.day,
+          slot.startMinutes ~/ 60,
+          slot.startMinutes % 60,
         ),
         isManual: false,
         sortOrder: 0, // reassigned at the end
@@ -80,7 +83,8 @@ class PlanGenerator {
       final lastSession = recentSessions
           .where((s) => s.courseCode == course.code)
           .map((s) => s.startTime)
-          .fold<DateTime?>(null, (prev, t) => prev == null || t.isAfter(prev) ? t : prev);
+          .fold<DateTime?>(
+              null, (prev, t) => prev == null || t.isAfter(prev) ? t : prev);
 
       if (lastSession == null || lastSession.isBefore(sevenDaysAgo)) {
         score += 20;
@@ -120,7 +124,6 @@ class PlanGenerator {
       ));
     }
 
-
     // ── 6. Sort by start time; tasks without startTime go last ───────────────
     tasks.sort((a, b) {
       if (a.startTime == null && b.startTime == null) return 0;
@@ -131,8 +134,7 @@ class PlanGenerator {
 
     // Assign sortOrder values
     return [
-      for (int i = 0; i < tasks.length; i++)
-        tasks[i].copyWith(sortOrder: i),
+      for (int i = 0; i < tasks.length; i++) tasks[i].copyWith(sortOrder: i),
     ];
   }
 

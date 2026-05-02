@@ -52,13 +52,16 @@ class TimetableImportScreen extends ConsumerWidget {
         ],
       ),
       body: switch (state.step) {
-        ImportStep.idle     => _IdleBody(onPick: (source) => notifier.pickAndParse(source)),
-        ImportStep.picking  => const _LoadingBody(message: 'Opening camera…'),
-        ImportStep.parsing  => const _LoadingBody(message: 'Extracting timetable…'),
+        ImportStep.idle =>
+          _IdleBody(onPick: (source) => notifier.pickAndParse(source)),
+        ImportStep.picking => const _LoadingBody(message: 'Opening camera…'),
+        ImportStep.parsing =>
+          const _LoadingBody(message: 'Extracting timetable…'),
         ImportStep.reviewing => _ReviewBody(state: state, notifier: notifier),
-        ImportStep.saving   => _ReviewBody(state: state, notifier: notifier, isSaving: true),
-        ImportStep.done     => const _LoadingBody(message: 'Saving…'),
-        ImportStep.error    => _ErrorBody(
+        ImportStep.saving =>
+          _ReviewBody(state: state, notifier: notifier, isSaving: true),
+        ImportStep.done => const _LoadingBody(message: 'Saving…'),
+        ImportStep.error => _ErrorBody(
             message: state.errorMessage ?? 'Something went wrong.',
             onRetry: notifier.reset,
           ),
@@ -215,7 +218,8 @@ class _ReviewBody extends StatelessWidget {
                   ),
                   const Spacer(),
                   TextButton(
-                    onPressed: allSelected ? notifier.deselectAll : notifier.selectAll,
+                    onPressed:
+                        allSelected ? notifier.deselectAll : notifier.selectAll,
                     child: Text(
                       allSelected ? 'Deselect All' : 'Select All',
                       style: const TextStyle(
@@ -235,7 +239,8 @@ class _ReviewBody extends StatelessWidget {
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: state.slots.length,
-                separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
+                separatorBuilder: (_, __) =>
+                    const Divider(height: 1, indent: 72),
                 itemBuilder: (_, i) => ImportSlotReviewTile(
                   index: i,
                   slot: state.slots[i],
@@ -256,7 +261,8 @@ class _ReviewBody extends StatelessWidget {
                         : null,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.primary,
-                      disabledBackgroundColor: AppTheme.textSecondary.withValues(alpha: 0.3),
+                      disabledBackgroundColor:
+                          AppTheme.textSecondary.withValues(alpha: 0.3),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -336,7 +342,8 @@ class _ErrorBody extends StatelessWidget {
               onPressed: onRetry,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

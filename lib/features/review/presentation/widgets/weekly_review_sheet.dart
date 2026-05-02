@@ -48,8 +48,7 @@ class _WeeklyReviewSheetState extends ConsumerState<WeeklyReviewSheet> {
             error: (e, _) => Center(child: Text('Error: $e')),
             data: (data) {
               // Pre-fill note controller once
-              if (_noteController.text.isEmpty &&
-                  data.reflectionNote != null) {
+              if (_noteController.text.isEmpty && data.reflectionNote != null) {
                 _noteController.text = data.reflectionNote!;
               }
               return _ReviewContent(
@@ -62,10 +61,9 @@ class _WeeklyReviewSheetState extends ConsumerState<WeeklyReviewSheet> {
                     ? () async {
                         final messenger = ScaffoldMessenger.of(context);
                         setState(() => _saving = true);
-                        await ref.read(
-                            saveReflectionNoteProvider(
-                                    _noteController.text.trim())
-                                .future);
+                        await ref.read(saveReflectionNoteProvider(
+                                _noteController.text.trim())
+                            .future);
                         if (!mounted) return;
                         setState(() => _saving = false);
                         messenger.showSnackBar(
@@ -146,8 +144,7 @@ class _ReviewContent extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           _dateRange(),
-          style: const TextStyle(
-              color: AppTheme.textSecondary, fontSize: 14),
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
         ).animate().fadeIn(delay: 80.ms, duration: 300.ms),
 
         const SizedBox(height: 20),
@@ -233,8 +230,7 @@ class _ReviewContent extends StatelessWidget {
                     ? 'No reflection saved for this week.'
                     : null)
                 : 'Write your reflection here…',
-            hintStyle:
-                const TextStyle(color: AppTheme.textSecondary),
+            hintStyle: const TextStyle(color: AppTheme.textSecondary),
           ),
         ).animate().fadeIn(delay: 460.ms, duration: 300.ms),
 
@@ -295,8 +291,7 @@ class _StatCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border:
-              Border.all(color: Colors.grey.shade200, width: 0.5),
+          border: Border.all(color: Colors.grey.shade200, width: 0.5),
         ),
         child: Column(
           children: [
@@ -304,14 +299,13 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               value,
-              style: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 15),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
               textAlign: TextAlign.center,
             ),
             Text(
               label,
-              style: const TextStyle(
-                  fontSize: 11, color: AppTheme.textSecondary),
+              style:
+                  const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -354,9 +348,7 @@ class _HighlightChip extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                      fontSize: 11,
-                      color: color,
-                      fontWeight: FontWeight.w600),
+                      fontSize: 11, color: color, fontWeight: FontWeight.w600),
                 ),
                 Text(
                   value,

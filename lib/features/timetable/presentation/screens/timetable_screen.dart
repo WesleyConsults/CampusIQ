@@ -37,7 +37,10 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
 
   // ── Class slot actions ──────────────────────────────────────────────────
 
-  Future<void> _openAddClassSheet({TimetableSlotModel? existing, int? prefillStart, int? prefillEnd}) async {
+  Future<void> _openAddClassSheet(
+      {TimetableSlotModel? existing,
+      int? prefillStart,
+      int? prefillEnd}) async {
     final day = ref.read(activeDayProvider);
     final semester = ref.read(activeSemesterProvider);
     final slotCount = await ref.read(slotCountProvider.future);
@@ -49,7 +52,8 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => AddSlotSheet(
         dayIndex: day,
         semesterKey: semester,
@@ -62,24 +66,29 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
 
     if (result == null || !mounted) return;
     final repo = ref.read(timetableRepositoryProvider);
-    existing == null ? await repo?.addSlot(result) : await repo?.updateSlot(result);
+    existing == null
+        ? await repo?.addSlot(result)
+        : await repo?.updateSlot(result);
   }
 
   void _showClassDetail(TimetableSlotModel slot) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => SlotDetailSheet(
         slot: slot,
         onEdit: () => _openAddClassSheet(existing: slot),
-        onDelete: () => ref.read(timetableRepositoryProvider)?.deleteSlot(slot.id),
+        onDelete: () =>
+            ref.read(timetableRepositoryProvider)?.deleteSlot(slot.id),
       ),
     );
   }
 
   void _onFreeBlockTap(FreeBlock block) {
-    _openAddClassSheet(prefillStart: block.startMinutes, prefillEnd: block.endMinutes);
+    _openAddClassSheet(
+        prefillStart: block.startMinutes, prefillEnd: block.endMinutes);
   }
 
   void _onEmptyTap() {
@@ -92,14 +101,20 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final classSlots    = ref.watch(activeDaySlotsProvider);
-    final freeBlocks    = ref.watch(activeDayFreeBlocksProvider);
-    final activeDay     = ref.watch(activeDayProvider);
+    final classSlots = ref.watch(activeDaySlotsProvider);
+    final freeBlocks = ref.watch(activeDayFreeBlocksProvider);
+    final activeDay = ref.watch(activeDayProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        title: const Text('Timetable', style: TextStyle(fontWeight: FontWeight.w700)),
+        leading: IconButton(
+          tooltip: 'Go to Today',
+          icon: const Icon(Icons.home_outlined, semanticLabel: 'Go to Today'),
+          onPressed: () => context.go('/plan'),
+        ),
+        title:
+            const Text('Table', style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
           const StreakActionButton(),
           IconButton(
@@ -109,6 +124,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.add),
+            tooltip: 'Add class',
             onPressed: _onFabTap,
           ),
         ],
@@ -124,7 +140,8 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
               children: [
                 Text(
                   TimetableConstants.dayFullLabels[activeDay],
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 15),
                 ),
                 const Spacer(),
                 if (freeBlocks.isNotEmpty)
@@ -184,16 +201,21 @@ class _EmptyPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.calendar_today_outlined, size: 56, color: AppTheme.textSecondary),
+          const Icon(Icons.calendar_today_outlined,
+              size: 56, color: AppTheme.textSecondary),
           const SizedBox(height: 12),
-          const Text('No classes today', style: TextStyle(color: AppTheme.textSecondary, fontSize: 15)),
+          const Text('No classes today',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 15)),
           const SizedBox(height: 4),
-          const Text('Tap + to add a class', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+          const Text('Tap + to add a class',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
           const SizedBox(height: 16),
-          TextButton.icon(onPressed: onAdd, icon: const Icon(Icons.add), label: const Text('Add')),
+          TextButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: const Text('Add')),
         ],
       ),
     );
   }
 }
-

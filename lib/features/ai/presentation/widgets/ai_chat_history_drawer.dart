@@ -57,7 +57,8 @@ class AiChatHistoryDrawer extends ConsumerWidget {
                     itemCount: chatState.sessions.length,
                     itemBuilder: (context, index) {
                       final session = chatState.sessions[index];
-                      final isSelected = session.id == chatState.currentSessionId;
+                      final isSelected =
+                          session.id == chatState.currentSessionId;
 
                       return ListTile(
                         leading: const Icon(Icons.chat_bubble_outline),
@@ -66,14 +67,18 @@ class AiChatHistoryDrawer extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                         selected: isSelected,
                         onTap: () {
                           Navigator.of(context).pop();
                           if (!isSelected) {
-                            ref.read(aiChatProvider.notifier).switchSession(session.id);
+                            ref
+                                .read(aiChatProvider.notifier)
+                                .switchSession(session.id);
                           }
                         },
                         trailing: IconButton(
@@ -83,7 +88,8 @@ class AiChatHistoryDrawer extends ConsumerWidget {
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 title: const Text('Delete Chat'),
-                                content: const Text('Are you sure you want to delete this chat history?'),
+                                content: const Text(
+                                    'Are you sure you want to delete this chat history?'),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx, false),
@@ -91,14 +97,17 @@ class AiChatHistoryDrawer extends ConsumerWidget {
                                   ),
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx, true),
-                                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                    child: const Text('Delete',
+                                        style: TextStyle(color: Colors.red)),
                                   ),
                                 ],
                               ),
                             );
 
                             if (confirm == true) {
-                              ref.read(aiChatProvider.notifier).deleteSession(session.id);
+                              ref
+                                  .read(aiChatProvider.notifier)
+                                  .deleteSession(session.id);
                             }
                           },
                         ),

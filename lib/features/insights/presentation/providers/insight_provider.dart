@@ -6,6 +6,6 @@ import 'package:campusiq/features/session/presentation/providers/session_provide
 
 final insightsProvider = Provider<List<Insight>>((ref) {
   final sessions = ref.watch(allSessionsProvider).valueOrNull ?? [];
-  final courses  = ref.watch(coursesProvider).valueOrNull ?? [];
+  final courses = ref.watch(coursesProvider).valueOrNull ?? [];
   return InsightAnalyser(sessions: sessions, courses: courses).analyse();
 });

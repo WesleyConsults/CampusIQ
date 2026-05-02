@@ -49,8 +49,8 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
 
   @override
   Widget build(BuildContext context) {
-    final cwaCourses   = ref.watch(coursesProvider).valueOrNull ?? [];
-    final todaySlots   = ref.watch(activeDaySlotsProvider);
+    final cwaCourses = ref.watch(coursesProvider).valueOrNull ?? [];
+    final todaySlots = ref.watch(activeDaySlotsProvider);
 
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.6,
@@ -67,7 +67,8 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
             labelColor: AppTheme.primary,
             unselectedLabelColor: AppTheme.textSecondary,
             indicatorColor: AppTheme.primary,
-            labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            labelStyle:
+                const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             tabs: const [
               Tab(text: 'CWA Courses'),
               Tab(text: "Today's Classes"),
@@ -80,45 +81,55 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
               children: [
                 // CWA courses
                 cwaCourses.isEmpty
-                    ? const Center(child: Text('No CWA courses added yet',
-                        style: TextStyle(color: AppTheme.textSecondary)))
+                    ? const Center(
+                        child: Text('No CWA courses added yet',
+                            style: TextStyle(color: AppTheme.textSecondary)))
                     : ListView(
-                        children: cwaCourses.map((c) => ListTile(
-                          leading: const Icon(Icons.school_outlined,
-                              color: AppTheme.primary),
-                          title: Text(c.code,
-                              style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text(c.name),
-                          onTap: () => _pick(PickedCourse(
-                            courseCode: c.code,
-                            courseName: c.name,
-                            source: 'cwa',
-                          )),
-                        )).toList(),
+                        children: cwaCourses
+                            .map((c) => ListTile(
+                                  leading: const Icon(Icons.school_outlined,
+                                      color: AppTheme.primary),
+                                  title: Text(c.code,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600)),
+                                  subtitle: Text(c.name),
+                                  onTap: () => _pick(PickedCourse(
+                                    courseCode: c.code,
+                                    courseName: c.name,
+                                    source: 'cwa',
+                                  )),
+                                ))
+                            .toList(),
                       ),
 
                 // Today's timetable slots
                 todaySlots.isEmpty
-                    ? const Center(child: Text("No classes scheduled today",
-                        style: TextStyle(color: AppTheme.textSecondary)))
+                    ? const Center(
+                        child: Text("No classes scheduled today",
+                            style: TextStyle(color: AppTheme.textSecondary)))
                     : ListView(
-                        children: todaySlots.map((s) => ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Color(s.colorValue).withValues(alpha: 0.15),
-                            child: Text(s.courseCode.substring(0, 1),
-                                style: TextStyle(
-                                    color: Color(s.colorValue),
-                                    fontWeight: FontWeight.w700)),
-                          ),
-                          title: Text(s.courseCode,
-                              style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text('${s.startTimeLabel} · ${s.venue}'),
-                          onTap: () => _pick(PickedCourse(
-                            courseCode: s.courseCode,
-                            courseName: s.courseName,
-                            source: 'timetable',
-                          )),
-                        )).toList(),
+                        children: todaySlots
+                            .map((s) => ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: Color(s.colorValue)
+                                        .withValues(alpha: 0.15),
+                                    child: Text(s.courseCode.substring(0, 1),
+                                        style: TextStyle(
+                                            color: Color(s.colorValue),
+                                            fontWeight: FontWeight.w700)),
+                                  ),
+                                  title: Text(s.courseCode,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600)),
+                                  subtitle:
+                                      Text('${s.startTimeLabel} · ${s.venue}'),
+                                  onTap: () => _pick(PickedCourse(
+                                    courseCode: s.courseCode,
+                                    courseName: s.courseName,
+                                    source: 'timetable',
+                                  )),
+                                ))
+                            .toList(),
                       ),
 
                 // Custom
@@ -135,8 +146,8 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
                       const SizedBox(height: 12),
                       TextField(
                         controller: _customNameCtrl,
-                        decoration: const InputDecoration(
-                            labelText: 'Course name'),
+                        decoration:
+                            const InputDecoration(labelText: 'Course name'),
                       ),
                       const SizedBox(height: 20),
                       SizedBox(

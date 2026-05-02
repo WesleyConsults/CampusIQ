@@ -36,7 +36,7 @@ class _CourseRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final barFill = stats.completionRate.clamp(0.0, 1.0);
-    final isOver  = stats.isOverStudied;
+    final isOver = stats.isOverStudied;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -86,9 +86,7 @@ class _CourseRow extends StatelessWidget {
                     : 'Need ${_fmt(stats.gapMinutes)} more',
                 style: TextStyle(
                   fontSize: 10,
-                  color: isOver
-                      ? AppTheme.success
-                      : AppTheme.textSecondary,
+                  color: isOver ? AppTheme.success : AppTheme.textSecondary,
                 ),
               ),
             ],

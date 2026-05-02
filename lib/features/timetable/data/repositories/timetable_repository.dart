@@ -15,7 +15,8 @@ class TimetableRepository {
   }
 
   /// Live stream filtered to one day.
-  Stream<List<TimetableSlotModel>> watchSlotsForDay(String semesterKey, int dayIndex) {
+  Stream<List<TimetableSlotModel>> watchSlotsForDay(
+      String semesterKey, int dayIndex) {
     return _isar.timetableSlotModels
         .filter()
         .semesterKeyEqualTo(semesterKey)
@@ -51,7 +52,8 @@ class TimetableRepository {
     }
   }
 
-  Future<List<TimetableSlotModel>> getSlotsForDayOnce(String semesterKey, int dayIndex) async {
+  Future<List<TimetableSlotModel>> getSlotsForDayOnce(
+      String semesterKey, int dayIndex) async {
     return _isar.timetableSlotModels
         .filter()
         .semesterKeyEqualTo(semesterKey)

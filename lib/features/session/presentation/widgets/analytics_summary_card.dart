@@ -44,9 +44,7 @@ class AnalyticsSummaryCard extends StatelessWidget {
               _Stat(
                 label: 'Completion',
                 value: '$rate%',
-                color: rate >= 100
-                    ? AppTheme.success
-                    : AppTheme.warning,
+                color: rate >= 100 ? AppTheme.success : AppTheme.warning,
               ),
             ],
           ),

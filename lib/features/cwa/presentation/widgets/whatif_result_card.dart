@@ -22,14 +22,11 @@ class WhatifResultCard extends StatelessWidget {
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isLimit
-                    ? Colors.orange.shade50
-                    : Colors.blue.shade50,
+                color: isLimit ? Colors.orange.shade50 : Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isLimit
-                      ? Colors.orange.shade200
-                      : Colors.blue.shade100,
+                  color:
+                      isLimit ? Colors.orange.shade200 : Colors.blue.shade100,
                 ),
               ),
               child: Row(

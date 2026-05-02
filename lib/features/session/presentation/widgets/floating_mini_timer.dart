@@ -94,8 +94,8 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
                     if (pomodoroLabel != null)
                       Text(
                         pomodoroLabel,
-                        style:
-                            const TextStyle(color: Colors.white70, fontSize: 10),
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 10),
                       )
                     else
                       Text(

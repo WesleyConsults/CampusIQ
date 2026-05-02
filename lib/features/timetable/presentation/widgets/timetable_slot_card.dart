@@ -24,12 +24,13 @@ class TimetableSlotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final topOffset = (slot.startMinutes - TimetableConstants.gridStartMinutes) *
-        TimetableConstants.pixelsPerMinute;
+    final topOffset =
+        (slot.startMinutes - TimetableConstants.gridStartMinutes) *
+            TimetableConstants.pixelsPerMinute;
     final height = slot.durationMinutes * TimetableConstants.pixelsPerMinute;
     final color = Color(slot.colorValue);
-    final isShort      = height < 40;  // < 40 min: code only
-    final showFooter   = height >= 80; // >= 80 min: show time · type footer
+    final isShort = height < 40; // < 40 min: code only
+    final showFooter = height >= 80; // >= 80 min: show time · type footer
 
     return Positioned(
       top: topOffset,

@@ -67,8 +67,7 @@ class HubOverviewTab extends ConsumerWidget {
         _InfoCard(
           title: 'Course',
           children: [
-            _InfoRow(
-                label: 'Code', value: course.code, bold: true),
+            _InfoRow(label: 'Code', value: course.code, bold: true),
             _InfoRow(label: 'Name', value: course.name),
             _InfoRow(
                 label: 'Credits',
@@ -85,8 +84,8 @@ class HubOverviewTab extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Expected Score',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -159,8 +158,7 @@ class HubOverviewTab extends ConsumerWidget {
         _InfoCard(
           title: 'Study Stats',
           children: [
-            _InfoRow(
-                label: 'Sessions', value: '${courseSessions.length}'),
+            _InfoRow(label: 'Sessions', value: '${courseSessions.length}'),
             _InfoRow(label: 'Total time', value: timeStr),
             _InfoRow(label: 'Last studied', value: lastStudiedLabel),
           ],
@@ -187,9 +185,8 @@ class HubOverviewTab extends ConsumerWidget {
                       child: Icon(
                         Icons.local_fire_department,
                         size: 28,
-                        color: courseStreak.isAlive
-                            ? Colors.orange
-                            : Colors.grey,
+                        color:
+                            courseStreak.isAlive ? Colors.orange : Colors.grey,
                       ),
                     ),
                   ),
@@ -249,8 +246,8 @@ class _InfoCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 14)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
             const SizedBox(height: 12),
             ...children,
           ],
@@ -265,8 +262,7 @@ class _InfoRow extends StatelessWidget {
   final String value;
   final bool bold;
 
-  const _InfoRow(
-      {required this.label, required this.value, this.bold = false});
+  const _InfoRow({required this.label, required this.value, this.bold = false});
 
   @override
   Widget build(BuildContext context) {
@@ -283,8 +279,7 @@ class _InfoRow extends StatelessWidget {
             value,
             style: TextStyle(
               fontSize: 13,
-              fontWeight:
-                  bold ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
               color: AppTheme.textPrimary,
             ),
           ),

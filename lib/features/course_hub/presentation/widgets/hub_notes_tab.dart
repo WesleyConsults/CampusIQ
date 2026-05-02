@@ -64,8 +64,7 @@ class HubNotesTab extends ConsumerWidget {
                           'Tap + to add your first note for this course.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.textSecondary),
+                              fontSize: 13, color: AppTheme.textSecondary),
                         ),
                       ],
                     ),
@@ -86,14 +85,13 @@ class HubNotesTab extends ConsumerWidget {
                           color: Colors.red.shade50,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.delete_outline,
-                            color: Colors.red),
+                        child:
+                            const Icon(Icons.delete_outline, color: Colors.red),
                       ),
                       onDismissed: (_) => repo?.deleteNote(note.id),
                       child: _NoteTile(
                         note: note,
-                        onTap: () =>
-                            _openEditor(context, note: note),
+                        onTap: () => _openEditor(context, note: note),
                       ),
                     );
                   },
@@ -113,9 +111,8 @@ class _NoteTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateLabel = DateFormat('dd MMM · HH:mm').format(note.updatedAt);
-    final preview = note.body.isNotEmpty
-        ? note.body.replaceAll('\n', ' ')
-        : 'Empty note';
+    final preview =
+        note.body.isNotEmpty ? note.body.replaceAll('\n', ' ') : 'Empty note';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -129,8 +126,8 @@ class _NoteTile extends StatelessWidget {
             children: [
               Text(
                 note.title,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 14),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

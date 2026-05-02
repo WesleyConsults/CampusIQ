@@ -24,8 +24,8 @@ class WeeklyBarChart extends StatelessWidget {
             Row(
               children: [
                 const Text('This week',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 const Spacer(),
                 Text(
                   _fmt(weekly.totalActualMinutes),
@@ -59,8 +59,7 @@ class WeeklyBarChart extends StatelessWidget {
                             Text(
                               _fmt(day.totalActualMinutes),
                               style: const TextStyle(
-                                  fontSize: 8,
-                                  color: AppTheme.textSecondary),
+                                  fontSize: 8, color: AppTheme.textSecondary),
                               textAlign: TextAlign.center,
                             ),
                           const SizedBox(height: 2),
@@ -79,9 +78,8 @@ class WeeklyBarChart extends StatelessWidget {
                             dayLabels[i],
                             style: TextStyle(
                               fontSize: 11,
-                              fontWeight: isToday
-                                  ? FontWeight.w700
-                                  : FontWeight.w400,
+                              fontWeight:
+                                  isToday ? FontWeight.w700 : FontWeight.w400,
                               color: isToday
                                   ? AppTheme.primary
                                   : AppTheme.textSecondary,
@@ -157,12 +155,10 @@ class _Insight extends StatelessWidget {
               children: [
                 Text(label,
                     style: const TextStyle(
-                        fontSize: 10,
-                        color: AppTheme.textSecondary)),
+                        fontSize: 10, color: AppTheme.textSecondary)),
                 Text(value,
                     style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600),
+                        fontSize: 12, fontWeight: FontWeight.w600),
                     overflow: TextOverflow.ellipsis),
               ],
             ),

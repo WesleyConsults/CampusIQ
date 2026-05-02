@@ -1,6 +1,6 @@
 # CampusIQ — End-to-End User Test Checklist
 
-Use this document to manually test the app as a real user would, from first launch through every major feature. Work through each section in order — later sections depend on data created in earlier ones (e.g. courses added in CWA are used in Sessions and Exam Prep).
+Use this document to manually test the app as a real user would, from first launch through every major feature. Work through each section in order. The checklist below has been updated to match the final UI navigation redesign completed through Phase 8.
 
 Mark each item `[x]` as you confirm it works.
 
@@ -18,20 +18,60 @@ Mark each item `[x]` as you confirm it works.
 
 ### 1.1 Cold launch
 - [ ] App opens without crash
-- [ ] Lands on the **Plan** screen (not a blank screen)
-- [ ] Bottom navigation bar shows 4 tabs: Dashboard, CWA, Table, Sessions
+- [ ] Lands on the **Today** screen at `/plan` (not a blank screen)
+- [ ] Top-left AppBar action is a visible **menu/drawer** icon, not a Home button
+- [ ] Bottom navigation bar shows 3 tabs: **CWA, Table, Sessions**
 - [ ] AI Assistant is visible as a Floating Action Button (FAB)
-- [ ] Streak (🔥) is visible in the top-right AppBar header
+- [ ] If no session is active, no mini timer is shown above the shell
 
 ### 1.2 Bottom navigation
 - [ ] Tap **CWA** — navigates to CWA screen
 - [ ] Tap **Table** — navigates to Timetable screen
 - [ ] Tap **Sessions** — navigates to Sessions screen
-- [ ] Tap **Streak** (in the top-right header) — navigates to Streak screen
 - [ ] Tap **AI** (FAB) — navigates to AI Chat screen
-- [ ] Tap **Dashboard** — navigates back to Dashboard screen
 - [ ] Active bottom tab is visually highlighted
 - [ ] No crash or blank screen on any tab or FAB
+
+### 1.3 Today home base
+- [ ] Today AppBar title reads **Today** (or equivalent user-facing Today label)
+- [ ] Notification/bell action is visible in the header
+- [ ] Screen shows a greeting / welcome section
+- [ ] Screen shows today's classes if timetable data exists
+- [ ] Screen shows free-time blocks if timetable data exists
+- [ ] Screen shows suggested study tasks / daily plan content
+- [ ] Screen shows a streak summary
+- [ ] Screen shows a current CWA snapshot
+- [ ] If a study session is active, a resume/active-session surface is visible on Today
+
+### 1.4 Drawer navigation from Today
+- [ ] Tap the top-left menu icon on Today — drawer opens
+- [ ] Drawer includes **Today**
+- [ ] Drawer includes **Streak**
+- [ ] Drawer includes **Insights**
+- [ ] Drawer includes **Weekly Review**
+- [ ] Drawer includes **Settings**
+- [ ] Drawer includes **Subscribe**
+- [ ] Tap **Today** — returns to `/plan`
+- [ ] Tap **Streak** — opens `/streak`
+- [ ] Tap **Insights** — opens `/insights`
+- [ ] Tap **Weekly Review** — opens `/ai/weekly-review`
+- [ ] Tap **Settings** — opens `/settings`
+- [ ] Tap **Subscribe** — opens `/subscribe`
+- [ ] Back/close safely dismisses the drawer without crash
+
+### 1.5 Home-return pattern on module screens
+- [ ] From Today, open **CWA** — visible top-left **Home** button appears
+- [ ] Tap **Home** on CWA — returns to Today (`/plan`)
+- [ ] From Today, open **Table** — visible top-left **Home** button appears
+- [ ] Tap **Home** on Table — returns to Today (`/plan`)
+- [ ] From Today, open **Sessions** — visible top-left **Home** button appears
+- [ ] Tap **Home** on Sessions — returns to Today (`/plan`)
+
+### 1.6 Shell-only chrome rules
+- [ ] Bottom navigation appears on shell screens only
+- [ ] AI FAB appears on shell screens only
+- [ ] Full-screen routes such as `/cwa/manual-entry`, `/timetable/import`, `/course/:courseCode`, and `/ai/weekly-review` do not show the bottom nav
+- [ ] `/cwa/manual-entry` does not show the AI FAB
 
 ---
 
@@ -40,49 +80,81 @@ Mark each item `[x]` as you confirm it works.
 > **Do this before Sessions and AI features** — courses added here appear in those screens.
 
 ### 2.1 Empty state
-- [ ] Screen shows empty state message and a "+" FAB
-- [ ] AppBar shows a document scanner icon (Semester view) and a tune icon
+- [ ] CWA opens without crash
+- [ ] AppBar shows a visible **Home** button on the left
+- [ ] AppBar title reads **CWA**
+- [ ] AppBar shows a visible **Import** action on the right
+- [ ] Overflow / More action is visible if secondary actions exist
+- [ ] The **Semester / Cumulative** segmented switcher is visible directly under the app bar
 
-### 2.2 Add a course manually
-- [ ] Tap the **FAB (+)**
-- [ ] `AddCourseSheet` opens from the bottom
-- [ ] Fill in: Course name (e.g. "Engineering Mathematics"), credit hours (e.g. 3), expected score (e.g. 72)
-- [ ] Tap **Save**
-- [ ] Course card appears in the list
-- [ ] Repeat — add at least **3 courses** with different credit hours and scores
+### 2.2 Semester / Cumulative switcher
+- [ ] Default selection is **Semester**
+- [ ] Tap **Cumulative** — cumulative content appears
+- [ ] Tap **Semester** — current semester content appears again
+- [ ] Existing CWA data remains visible after switching modes
+- [ ] Existing CWA calculations still update correctly
 
-### 2.3 CWA calculation
+### 2.3 Semester mode structure
+- [ ] Semester mode shows a **Current Semester CWA** summary/card
+- [ ] Semester mode shows course-wise CWA content
+- [ ] Semester mode shows a credits summary
+- [ ] Semester mode shows an import helper row or CTA near the top
+
+### 2.4 Cumulative mode structure
+- [ ] Cumulative mode shows cumulative CWA summary
+- [ ] Cumulative mode shows past semesters / academic history
+- [ ] Cumulative mode shows total credits or history/trend context if data exists
+- [ ] Existing cumulative actions still work
+
+### 2.5 CWA calculation
 - [ ] Summary bar at the top shows a projected CWA
 - [ ] Tap the **Target CWA** area — slider dialog opens
 - [ ] Drag the slider to set a target (e.g. 75)
 - [ ] Confirm — summary bar now shows Target, Projected, and Gap
 - [ ] Adjust the score slider on a course card — projected CWA updates live
 
-### 2.4 High-impact indicator
+### 2.6 High-impact indicator
 - [ ] One course card should show a "high impact" indicator (the one whose score change affects CWA most)
 
-### 2.5 Edit and delete
+### 2.7 Edit and delete
 - [ ] Tap the **edit icon** on a course card — `AddCourseSheet` opens pre-filled
 - [ ] Change the score, save — card updates
 - [ ] Delete a course (swipe or delete button) — card disappears, CWA recalculates
 - [ ] Re-add the course so you have at least 3 for later tests
 
-### 2.6 Open Course Hub from CWA
+### 2.8 Open Course Hub from CWA
 - [ ] Tap the **⋮ menu** on any course card → menu shows "Open Workspace", Edit, Delete
 - [ ] Tap **"Open Workspace"** → navigates to that course's Course Hub
 - [ ] Back arrow returns to the CWA screen
 
-### 2.7 AI Coaching
+### 2.9 AI Coaching
 - [ ] Tap **"Get AI Coaching"** button
 - [ ] `CwaCoachSheet` opens with AI-generated advice
 - [ ] Advice is relevant to your current courses and gap
 - [ ] Sheet dismisses on back/swipe
 
-### 2.8 Registration Slip Import
-- [ ] Tap the **document scanner icon** in the AppBar (visible in Semester view only)
-- [ ] `RegistrationSlipImportScreen` opens (no bottom nav)
-- [ ] Three option tiles visible: **Take a photo**, **Upload image from gallery**, **Choose a PDF**
-- [ ] Tap **"Choose a PDF"** (or camera/gallery) — file picker / camera opens
+### 2.10 Import bottom sheet
+- [ ] Tap the **Import** action in the CWA AppBar
+- [ ] A rounded bottom sheet opens
+- [ ] Background dims behind the sheet
+- [ ] Drag handle is visible
+- [ ] Four large tappable rows are shown:
+  - [ ] `Take Photo`
+  - [ ] `Upload Image`
+  - [ ] `Choose PDF`
+  - [ ] `Enter Manually`
+- [ ] Each row shows a clear icon:
+  - [ ] Camera
+  - [ ] Image/gallery
+  - [ ] PDF/document
+  - [ ] Pencil/edit
+- [ ] Swiping down or tapping outside dismisses the sheet safely
+- [ ] Import button has a tooltip/semantic label
+
+### 2.11 Registration Slip Import from Semester mode
+- [ ] In **Semester** mode, tap **Import**
+- [ ] Tap **Take Photo**, **Upload Image**, or **Choose PDF**
+- [ ] `RegistrationSlipImportScreen` opens (no bottom nav, no AI FAB)
 - [ ] Cancel without selecting — returns to idle screen (no crash)
 - [ ] Select a valid registration slip image → loading state shows "AI is reading your slip…"
 - [ ] Review screen appears listing all extracted courses with checkboxes
@@ -96,17 +168,20 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Imported courses are now visible in the CWA course list
 - [ ] Back button at any step resets the flow and returns to CWA without crash
 
-### 2.9 Cumulative CWA view mode
-- [ ] `SegmentedButton` at the top of the CWA screen shows **Semester** and **Cumulative** options
-- [ ] Default is **Semester** — existing course list and summary bar are shown
-- [ ] Tap **Cumulative** — AppBar icon changes to a history icon; summary bar switches to Cumulative CWA display
-- [ ] In Cumulative mode, summary bar shows: Cumulative CWA value, total credit hours, semester count
-- [ ] With no past semesters imported, cumulative CWA equals the current semester CWA
-- [ ] Tap the **history icon** (cumulative mode AppBar) → `PastSemestersScreen` opens
+- [ ] Tap **Home** after import — returns to Today safely
+
+### 2.12 Result Slip Import from Cumulative mode
+- [ ] Switch to **Cumulative** mode
+- [ ] Tap **Import**
+- [ ] Tap **Take Photo**, **Upload Image**, or **Choose PDF**
+- [ ] `ResultSlipImportScreen` opens
+- [ ] In cumulative mode, the import title/label is appropriate for results or semester records
+- [ ] Review / save flow still works
+- [ ] Tap the existing cumulative history entry point (if present) → `PastSemestersScreen` opens
 - [ ] Empty state shows "No past results yet" with an **Import First Result** button
 - [ ] Back arrow returns to CWA
 
-### 2.10 Result Slip Import (Cumulative CWA)
+### 2.13 Result Slip Import (Cumulative CWA)
 - [ ] On `PastSemestersScreen`, tap the **FAB (+ Add Semester)**
 - [ ] `ResultSlipImportScreen` opens
 - [ ] Three option tiles visible: **Take a photo**, **Upload image from gallery**, **Choose a PDF**
@@ -124,7 +199,40 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Tap Done → returns to `PastSemestersScreen`
 - [ ] Imported semester card appears with: label, course count, calculated CWA badge
 
-### 2.11 Past Semesters Screen management
+### 2.14 Manual entry screen
+- [ ] From **Semester** mode, tap **Import** → **Enter Manually**
+- [ ] Full-screen `Enter Courses Manually` page opens
+- [ ] Bottom navigation is not visible
+- [ ] AI FAB is not visible
+- [ ] AppBar shows Back, title, and `Save draft`
+- [ ] Segmented switcher shows **Semester** and **Cumulative**
+- [ ] Default mode matches the mode used on CWA before opening the screen
+- [ ] Helper text updates when switching between Semester and Cumulative
+- [ ] Semester information card is visible
+- [ ] At least one course card is visible by default
+- [ ] Home button is not shown on this screen
+- [ ] Manual-entry screen scrolls correctly on a small device
+- [ ] Opening the keyboard does not cover the active field or the bottom action area
+- [ ] Sticky `Cancel` and `Save Courses` actions remain usable on a small screen
+- [ ] No RenderFlex overflow appears while entering data
+- [ ] Tap **Add Another Course** — a new course card is added
+- [ ] Tap **Remove Course** on a removable card — that card disappears safely
+- [ ] Live Summary updates when course fields change
+- [ ] Add, Remove, Save Courses, and Cancel actions expose semantic labels/tooltips
+- [ ] Empty course code shows validation
+- [ ] Empty course title shows validation
+- [ ] Non-numeric or zero credits show validation
+- [ ] Non-numeric or out-of-range score shows validation
+- [ ] Duplicate course code shows a warning
+- [ ] Duplicate course code does not silently save duplicate data
+- [ ] Tap **Cancel** — returns safely to CWA
+- [ ] Tap **Back** with unsaved changes — discard confirmation appears and behaves safely
+- [ ] Re-open manual entry, fill valid values, tap **Save Courses**
+- [ ] Screen closes back to CWA
+- [ ] Newly saved semester courses appear in Semester mode or saved cumulative records appear in Cumulative/history flows
+- [ ] CWA refreshes immediately after save
+
+### 2.15 Past Semesters Screen management
 - [ ] Semester card is collapsed by default — tap to expand, reveals course rows
 - [ ] Each course row shows: code, name, mark field, credit stepper, grade dropdown — all editable inline
 - [ ] Edit a grade inline → card CWA badge recalculates immediately
@@ -132,6 +240,22 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Confirm delete → semester card disappears; cumulative CWA on CWA screen updates
 - [ ] Import a second past semester — both cards appear; cumulative CWA updates to include both
 - [ ] Cumulative CWA on the main CWA screen now reflects all past semesters + current semester
+
+### 2.16 Final redesign regression smoke checks
+- [ ] Launch app → Today
+- [ ] Today → CWA
+- [ ] CWA → Home → Today
+- [ ] Today → Table
+- [ ] Table → Home → Today
+- [ ] Today → Sessions
+- [ ] Sessions → Home → Today
+- [ ] CWA `Semester` / `Cumulative` switching still preserves visible data
+- [ ] Existing Course Hub entry points from CWA still work
+- [ ] CWA → Import bottom sheet still shows all four options
+- [ ] Existing photo/image/PDF import flows still open the correct screens
+- [ ] Manual entry save returns to CWA and refreshed data is visible
+- [ ] Active session mini timer still appears when a session is active
+- [ ] `Settings`, `Insights`, `Streak`, `Weekly Review`, and `Subscribe` routes still open
 
 ---
 
@@ -518,6 +642,7 @@ These tests verify features work together correctly.
 ## 13. Course Hub Workspace (`/course/:courseCode`)
 
 > **Setup:** complete Steps 2, 3, and 4 first — courses, timetable slots, sessions, and streaks must exist.
+> Current launch scope: 3 tabs only — Overview, Sessions, Notes.
 
 ### 13.1 Entry points
 - [ ] Timetable → tap a class slot → tap **"Open Workspace"** → hub opens for that course, no bottom nav visible
@@ -553,77 +678,21 @@ These tests verify features work together correctly.
 - [ ] Notes from Course A do **not** appear in Course B's Notes tab
 - [ ] Empty state shows when no notes exist
 
-### 13.6 Files tab — attach
-- [ ] Tap **"Attach File"** → system file picker opens
-- [ ] Pick a **text-based PDF** (e.g. lecture notes with selectable text) → button label changes to **"Reading PDF…"** and is disabled while extracting
-- [ ] After save: tile shows a green **"📄 Text indexed"** chip below the filename
-- [ ] Pick a **scanned PDF** (photo of a page, no selectable text) → no loading delay, tile shows grey **"🖼 Visual only — AI cannot read this"** chip
-- [ ] Pick an **image** (JPG/PNG) → appears with a blue image icon, **no chip shown**
-- [ ] Pick a large PDF (40+ pages) → no crash; extraction completes; chip reflects result correctly
+### 13.6 Tab scope confirmation
+- [ ] Tab bar shows exactly **3 tabs**: **Overview**, **Sessions**, **Notes**
+- [ ] **Files** tab is not visible
+- [ ] **AI Chat** tab is not visible
+- [ ] Switching between the 3 tabs works without crash
 
-### 13.7 Files tab — open & delete
-- [ ] Tap a PDF tile → PDF opens in the device's PDF viewer
-- [ ] Tap an image tile → image opens fullscreen / in an image viewer
-- [ ] Tap 🗑 on a file → file disappears from the list and the physical copy is deleted from storage
-- [ ] Files from Course A do **not** appear in Course B's Files tab
-- [ ] Empty state shows when no files are attached
+### 13.7 Stability
+- [ ] Hot restart → notes and per-course stats are still present on their respective tabs
+- [ ] Full app restart → notes and per-course stats are still present
+- [ ] No red-screen errors on any of the 3 tabs
+- [ ] No overflow or render errors on a standard ~360 dp width screen
 
 ### 13.8 ~~Flashcards tab~~ *(Removed in v1.0)*
 
-> The Flashcards tab and `hubExamPrepProvider` family have been removed from the Course Hub. The hub now has 5 tabs: Overview, Sessions, Notes, Files, AI Chat.
-
-### 13.9 AI Chat tab — mode selector
-- [ ] Two chips visible at the top: **📚 From My Notes** and **🌐 General**
-- [ ] **🌐 General** is selected by default (navy background, white text)
-- [ ] Old blue "Focused on [Code]" indigo banner is **gone**
-- [ ] Tapping **📚 From My Notes** selects it (navy); **🌐 General** deselects
-- [ ] Tapping **🌐 General** switches back
-
-### 13.10 AI Chat tab — General mode (unchanged behaviour)
-- [ ] In **🌐 General** mode, send a message → AI responds with content relevant to the course
-- [ ] Ask **"What course are we focusing on?"** → AI correctly names the course
-- [ ] Typing indicator appears while waiting for the response
-- [ ] Ask a math question → response renders typeset math, no red screen
-- [ ] Bold text and bullet lists render correctly (not as raw `**` / `-`)
-- [ ] Ask **"Summarise my study situation"** → AI describes sessions, streak, and notes
-
-### 13.11 AI Chat tab — From My Notes mode (empty state)
-- [ ] On a course with **no notes and no indexed PDFs**, tap **📚 From My Notes**
-- [ ] Chat area is replaced with a folder icon and instructions to add notes or attach a text PDF
-- [ ] Text input field is **hidden** — no way to send a message
-- [ ] Switching back to **🌐 General** restores the normal chat input
-
-### 13.12 AI Chat tab — From My Notes mode (with materials)
-- [ ] Add at least one note on the Notes tab (e.g. "Newton's second law: F = ma")
-- [ ] Attach a text-based PDF with indexed content
-- [ ] Switch to the AI Chat tab → tap **📚 From My Notes**
-- [ ] A grey source summary strip appears: *"Reading: 1 notes · 1 PDFs indexed"*
-- [ ] If a scanned PDF was also attached, strip shows *"(1 visual only — not included)"*
-- [ ] Send a question covered by the note or PDF → AI answers and **cites the note title or PDF filename**
-- [ ] Ask something not in your materials → AI responds: *"I don't see this in your notes. Try switching to General mode for a broader answer."*
-- [ ] Switch back to **🌐 General** → general system prompt is used; AI does not cite note titles
-
-### 13.13 AI Chat tab — source context refresh
-- [ ] In **📚 From My Notes** mode, delete an indexed PDF from the Files tab
-- [ ] Return to the AI Chat tab and send a message → the deleted file is no longer referenced
-- [ ] Add a new note → the next message in grounded mode includes the new note's content
-
-### 13.14 AI Chat tab — history isolation
-- [ ] Open hub for Course A, send a message → back → open hub for Course B → AI Chat is empty (separate history)
-- [ ] Global AI Coach chat (`/ai`) history is **not mixed** with hub chat history
-- [ ] Hot restart → hub chat history for Course A is preserved
-
-### 13.15 AI Chat tab — quota
-- [ ] Usage counter chip shows remaining free messages (shared with global AI chat)
-- [ ] Source-grounded messages count against the same 3/day `chat` quota
-- [ ] Premium gate appears after the shared daily limit is reached — in both General and From My Notes mode
-
-### 13.16 Stability
-- [ ] Hot restart → all notes and files are still present on their respective tabs
-- [ ] Full app restart → all notes and files are still present; indexed/visual-only chips still show correctly
-- [ ] No red-screen errors on any of the 5 tabs
-- [ ] No overflow or render errors on a standard ~360 dp width screen
-- [ ] Attaching a non-PDF file does not show any extraction UI or chip
+> The Flashcards tab, Files tab, and per-course AI Chat tab have been removed from the Course Hub for the launch build. The hub now has 3 tabs: Overview, Sessions, Notes.
 
 ---
 
@@ -720,7 +789,6 @@ These tests verify features work together correctly.
 - [ ] Go to **AI Chat** → type a message and send → error state appears with `"You are offline. AI features require a connection."` — no crash, no stuck spinner
 - [ ] Go to **Exam Prep** → tap Generate → same offline error state appears
 - [ ] Go to **CWA screen** → tap "Get AI Coaching" → error message shown — app does not hang
-- [ ] Go to **Course Hub** → AI Chat tab → send a message → offline error, not crash
 - [ ] Go to **Timetable Import** → pick an image → offline error state shown before any API call
 - [ ] Go to **Registration Slip Import** → pick an image → offline error shown
 - [ ] Turn airplane mode **off** → retry each feature → it works normally
@@ -734,7 +802,6 @@ These tests verify features work together correctly.
 - [ ] **Streak screen**: no study days → empty state message (not a blank card)
 - [ ] **Plan screen**: no tasks → empty state visible
 - [ ] **Course Hub — Notes tab**: no notes → empty state visible
-- [ ] **Course Hub — Files tab**: no files → empty state visible
 
 ### 16.3 Navigation safety — invalid course code
 
@@ -742,12 +809,11 @@ These tests verify features work together correctly.
 - [ ] Navigate to `/course/FAKE999` (nonexistent course) → fallback scaffold appears: "This course no longer exists" with a back button — no crash
 - [ ] Back button on the fallback scaffold navigates correctly (no stuck nav stack)
 
-### 16.4 File import safety
+### 16.4 Course Hub scope safety
 
-- [ ] In **Course Hub → Files tab**, try to attach a file larger than 50 MB → snackbar: `"File is too large. Maximum size is 50 MB."` — no copy, no Isar write
-- [ ] Attach a **corrupted PDF** (rename a .txt file to .pdf) → `"Reading PDF…"` state resolves (either extracts or shows "🖼 Visual only") — no crash within 30 seconds
-- [ ] Tap **Open** on a file with no viewer installed → snackbar: `"Could not open file. You may need an app to view this type of file."` — no crash
-- [ ] Attach then immediately delete a file — no ghost entry remains in the list
+- [ ] Open any Course Hub and confirm **Files** tab is absent
+- [ ] Open any Course Hub and confirm **AI Chat** tab is absent
+- [ ] Navigation into and out of the 3-tab hub still works from CWA, Timetable, and Sessions
 
 ### 16.5 Timer reliability — edge cases
 
@@ -789,15 +855,13 @@ These tests verify features work together correctly.
 | 11. Cross-Feature Tests | | |
 | 11a. Pomodoro cross-feature (11.8–11.9) | | |
 | 12. Edge Cases | | |
-| 13. Course Hub Workspace (5-tab) | | |
-| 13a. PDF Text Extraction (15.4) | | |
-| 13b. Source-Grounded AI Mode (15.4) | | |
+| 13. Course Hub Workspace (3-tab) | | |
 | 14. Timetable Image Import | | |
 | 15. Performance & Stability | | |
 | 16a. Offline detection (15.5) | | |
 | 16b. Error/empty states (15.5) | | |
 | 16c. Navigation safety (15.5) | | |
-| 16d. File import safety (15.5) | | |
+| 16d. Course Hub scope safety (15.5) | | |
 | 16e. Timer reliability (15.5) | | |
 | 16f. Isar write safety (15.5) | | |
 

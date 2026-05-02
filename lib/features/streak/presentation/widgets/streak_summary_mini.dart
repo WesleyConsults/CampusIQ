@@ -19,11 +19,26 @@ class StreakSummaryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _MiniCard(emoji: '🔥', label: 'Study', days: study.currentStreak, isAlive: study.isAlive)),
+        Expanded(
+            child: _MiniCard(
+                emoji: '🔥',
+                label: 'Study',
+                days: study.currentStreak,
+                isAlive: study.isAlive)),
         const SizedBox(width: 8),
-        Expanded(child: _MiniCard(emoji: '🎓', label: 'Attendance', days: attendance.currentStreak, isAlive: attendance.isAlive)),
+        Expanded(
+            child: _MiniCard(
+                emoji: '🎓',
+                label: 'Attendance',
+                days: attendance.currentStreak,
+                isAlive: attendance.isAlive)),
         const SizedBox(width: 8),
-        Expanded(child: _MiniCard(emoji: '📚', label: 'Courses', days: totalCourseStreaks, isAlive: totalCourseStreaks > 0)),
+        Expanded(
+            child: _MiniCard(
+                emoji: '📚',
+                label: 'Courses',
+                days: totalCourseStreaks,
+                isAlive: totalCourseStreaks > 0)),
       ],
     );
   }
@@ -64,8 +79,8 @@ class _MiniCard extends StatelessWidget {
             ),
           ),
           Text(label,
-              style: const TextStyle(
-                  fontSize: 10, color: AppTheme.textSecondary)),
+              style:
+                  const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
         ],
       ),
     );

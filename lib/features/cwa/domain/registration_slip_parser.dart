@@ -14,8 +14,7 @@ class RegistrationSlipParser {
 
   static const _timeout = Duration(seconds: 90);
 
-  static const _prompt =
-      'You are a university course registration parser. '
+  static const _prompt = 'You are a university course registration parser. '
       'Extract every course from this registration slip and return ONLY a JSON array. '
       'Each object must have these exact keys: '
       'course_code (string: the module code, e.g. "CS 101"), '

@@ -25,7 +25,11 @@ class PlanTaskTile extends ConsumerWidget {
     final h = dt.hour;
     final m = dt.minute;
     final suffix = h < 12 ? 'AM' : 'PM';
-    final hour = h == 0 ? 12 : h > 12 ? h - 12 : h;
+    final hour = h == 0
+        ? 12
+        : h > 12
+            ? h - 12
+            : h;
     return '$hour:${m.toString().padLeft(2, '0')} $suffix';
   }
 
@@ -65,10 +69,9 @@ class PlanTaskTile extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Icon(
-                  done
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
-                  color: done ? const Color(0xFF1D9E75) : const Color(0xFF6B7280),
+                  done ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color:
+                      done ? const Color(0xFF1D9E75) : const Color(0xFF6B7280),
                   size: 24,
                 ),
               ),

@@ -10,12 +10,12 @@ import 'package:campusiq/features/session/presentation/providers/active_session_
 import 'package:campusiq/features/session/presentation/widgets/floating_mini_timer.dart';
 import 'package:campusiq/features/insights/presentation/screens/insights_screen.dart';
 import 'package:campusiq/features/streak/presentation/screens/streak_screen.dart';
-import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 import 'package:campusiq/features/ai/presentation/screens/ai_chat_screen.dart';
 import 'package:campusiq/features/ai/presentation/screens/subscribe_screen_stub.dart';
 import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.dart';
 import 'package:campusiq/features/course_hub/presentation/screens/course_hub_screen.dart';
 import 'package:campusiq/features/timetable/presentation/screens/timetable_import_screen.dart';
+import 'package:campusiq/features/cwa/presentation/screens/cwa_manual_entry_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/plan',
@@ -97,6 +97,14 @@ final appRouter = GoRouter(
       name: 'timetable-import',
       builder: (context, state) => const TimetableImportScreen(),
     ),
+    GoRoute(
+      path: '/cwa/manual-entry',
+      name: 'cwa-manual-entry',
+      builder: (context, state) {
+        final mode = state.uri.queryParameters['mode'] ?? 'semester';
+        return CwaManualEntryScreen(mode: mode);
+      },
+    ),
   ],
 );
 
@@ -104,19 +112,18 @@ class _AppShell extends ConsumerWidget {
   final Widget child;
   const _AppShell({required this.child});
 
-  int _locationToIndex(BuildContext context) {
+  int? _locationToIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith('/cwa'))       return 1;
-    if (location.startsWith('/timetable')) return 2;
-    if (location.startsWith('/sessions'))  return 3;
-    return 0; // /plan
+    if (location.startsWith('/cwa')) return 0;
+    if (location.startsWith('/timetable')) return 1;
+    if (location.startsWith('/sessions')) return 2;
+    return null;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSessionActive = ref.watch(activeSessionProvider) != null;
-    final studyStreak     = ref.watch(studyStreakProvider);
-    final hasLossRisk     = studyStreak.lossAversionMessage != null;
+    final selectedIndex = _locationToIndex(context);
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -131,59 +138,140 @@ class _AppShell extends ConsumerWidget {
             FloatingMiniTimer(onTap: () => context.go('/sessions')),
         ],
       ),
-      bottomNavigationBar: NavigationBarTheme(
-        data: NavigationBarThemeData(
-          labelTextStyle: WidgetStateProperty.resolveWith((states) {
-            final isSelected = states.contains(WidgetState.selected);
-            return TextStyle(
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-              overflow: TextOverflow.ellipsis,
-            );
-          }),
-          iconTheme: WidgetStateProperty.resolveWith((states) {
-            return const IconThemeData(size: 20);
-          }),
-          indicatorShape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+      bottomNavigationBar: _ShellBottomNav(
+        selectedIndex: selectedIndex,
+        isSessionActive: isSessionActive,
+        onDestinationSelected: (i) {
+          switch (i) {
+            case 0:
+              context.go('/cwa');
+              return;
+            case 1:
+              context.go('/timetable');
+              return;
+            case 2:
+              context.go('/sessions');
+              return;
+          }
+        },
+      ),
+    );
+  }
+}
+
+class _ShellBottomNav extends StatelessWidget {
+  final int? selectedIndex;
+  final bool isSessionActive;
+  final ValueChanged<int> onDestinationSelected;
+
+  const _ShellBottomNav({
+    required this.selectedIndex,
+    required this.isSessionActive,
+    required this.onDestinationSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    const destinations = [
+      (
+        label: 'CWA',
+        icon: Icons.analytics_outlined,
+        selectedIcon: Icons.analytics,
+      ),
+      (
+        label: 'Table',
+        icon: Icons.calendar_view_week_outlined,
+        selectedIcon: Icons.calendar_view_week,
+      ),
+      (
+        label: 'Sessions',
+        icon: Icons.timer_outlined,
+        selectedIcon: Icons.timer,
+      ),
+    ];
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x14000000),
+                blurRadius: 18,
+                offset: Offset(0, 6),
+              ),
+            ],
           ),
-        ),
-        child: NavigationBar(
-          height: 64,
-          selectedIndex: _locationToIndex(context),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          onDestinationSelected: (i) {
-            switch (i) {
-              case 0: context.go('/plan');
-              case 1: context.go('/cwa');
-              case 2: context.go('/timetable');
-              case 3: context.go('/sessions');
-            }
-          },
-          destinations: [
-            const NavigationDestination(
-              icon: Icon(Icons.checklist_rounded, size: 20),
-              selectedIcon: Icon(Icons.checklist_rounded, size: 20),
-              label: 'Dashboard',
-            ),
-            const NavigationDestination(
-              icon: Icon(Icons.school_outlined, size: 20),
-              selectedIcon: Icon(Icons.school, size: 20),
-              label: 'CWA',
-            ),
-            const NavigationDestination(
-              icon: Icon(Icons.calendar_today_outlined, size: 20),
-              selectedIcon: Icon(Icons.calendar_today, size: 20),
-              label: 'Table',
-            ),
-            NavigationDestination(
-              icon: isSessionActive
-                  ? const Icon(Icons.timer, color: Colors.red, size: 20)
-                  : const Icon(Icons.timer_outlined, size: 20),
-              selectedIcon: const Icon(Icons.timer, size: 20),
-              label: 'Sessions',
-            ),
-          ],
+          child: Row(
+            children: List.generate(destinations.length, (index) {
+              final destination = destinations[index];
+              final isSelected = selectedIndex == index;
+              final iconColor = isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : const Color(0xFF6B7280);
+              final baseIcon =
+                  isSelected ? destination.selectedIcon : destination.icon;
+              final icon =
+                  index == 2 && isSessionActive ? Icons.timer : baseIcon;
+
+              return Expanded(
+                child: Semantics(
+                  button: true,
+                  selected: isSelected,
+                  label: 'Open ${destination.label}',
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(18),
+                    onTap: () => onDestinationSelected(index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        color: isSelected
+                            ? colorScheme.primary.withValues(alpha: 0.10)
+                            : Colors.transparent,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            icon,
+                            size: 20,
+                            color: index == 2 && isSessionActive && !isSelected
+                                ? Colors.red
+                                : iconColor,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            destination.label,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: iconColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
         ),
       ),
     );

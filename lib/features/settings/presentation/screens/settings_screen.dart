@@ -105,8 +105,8 @@ class SettingsScreen extends ConsumerWidget {
                 title: const Text('Daily study reminder time',
                     style: TextStyle(fontWeight: FontWeight.w500)),
                 subtitle: Text(
-                  _formatTime(prefs.dailyReminderHour,
-                      prefs.dailyReminderMinute),
+                  _formatTime(
+                      prefs.dailyReminderHour, prefs.dailyReminderMinute),
                   style: const TextStyle(color: AppTheme.textSecondary),
                 ),
                 trailing: const Icon(Icons.access_time_rounded,
@@ -121,8 +121,7 @@ class SettingsScreen extends ConsumerWidget {
                   );
                   if (picked == null) return;
                   final repo = ref.read(userPrefsRepositoryProvider);
-                  await repo?.setDailyReminderTime(
-                      picked.hour, picked.minute);
+                  await repo?.setDailyReminderTime(picked.hour, picked.minute);
                   ref.invalidate(notificationPrefsProvider);
                 },
               ),
@@ -190,7 +189,8 @@ class _DevPremiumTile extends ConsumerWidget {
             value: isPremium,
             activeThumbColor: AppTheme.primary,
             onChanged: (v) async {
-              final repo = await ref.read(subscriptionRepositoryProvider.future);
+              final repo =
+                  await ref.read(subscriptionRepositoryProvider.future);
               await repo.devSetPremium(v);
               ref.invalidate(isPremiumProvider);
               if (context.mounted) {
@@ -226,8 +226,7 @@ class _NotifTile extends StatelessWidget {
       title: Text(title,
           style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
       subtitle: Text(subtitle,
-          style: const TextStyle(
-              fontSize: 12, color: AppTheme.textSecondary)),
+          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
       value: value,
       onChanged: onChanged,
     );

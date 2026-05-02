@@ -35,8 +35,8 @@ Widget _buildMath(String tex, {required bool display}) {
     mathStyle: display ? MathStyle.display : MathStyle.text,
     // inherit: false prevents Math.build() from merging with DefaultTextStyle,
     // which can have null fontSize/color inside MarkdownBody and crash on !.
-    textStyle: const TextStyle(
-        fontSize: 14, color: Colors.black87, inherit: false),
+    textStyle:
+        const TextStyle(fontSize: 14, color: Colors.black87, inherit: false),
     onErrorFallback: (_) => Text(
       tex,
       style: const TextStyle(
@@ -108,9 +108,8 @@ class AiMessageBubble extends StatelessWidget {
                     ? Theme.of(context).primaryColor
                     : Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: !isUser
-                    ? Border.all(color: Colors.grey.shade300)
-                    : null,
+                border:
+                    !isUser ? Border.all(color: Colors.grey.shade300) : null,
               ),
               child: isUser
                   ? Text(
@@ -163,13 +162,9 @@ class AiMessageBubble extends StatelessWidget {
       ).copyWith(
         p: const TextStyle(color: Colors.black87, fontSize: 14, height: 1.4),
         strong: const TextStyle(
-            color: Colors.black87,
-            fontSize: 14,
-            fontWeight: FontWeight.bold),
+            color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
         em: const TextStyle(
-            color: Colors.black87,
-            fontSize: 14,
-            fontStyle: FontStyle.italic),
+            color: Colors.black87, fontSize: 14, fontStyle: FontStyle.italic),
         listBullet: const TextStyle(color: Colors.black87, fontSize: 14),
         code: TextStyle(
           fontSize: 13,

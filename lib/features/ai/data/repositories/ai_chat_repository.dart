@@ -37,7 +37,8 @@ class AiChatRepository {
     return session.id;
   }
 
-  Future<void> updateSession(int id, {String? title, DateTime? updatedAt}) async {
+  Future<void> updateSession(int id,
+      {String? title, DateTime? updatedAt}) async {
     try {
       await _isar.writeTxn(() async {
         final session = await _isar.aiChatSessionModels.get(id);
@@ -72,7 +73,8 @@ class AiChatRepository {
 
   // ---------- MESSAGES ----------
 
-  Future<List<AiMessageModel>> getMessages(String feature, {int? sessionId}) async {
+  Future<List<AiMessageModel>> getMessages(String feature,
+      {int? sessionId}) async {
     if (sessionId != null) {
       return _isar.aiMessageModels
           .filter()

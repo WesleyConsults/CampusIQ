@@ -60,12 +60,21 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
       await plan.slots.load();
       final slots = plan.slots.toList()
         ..sort((a, b) {
-          const order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+          const order = [
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+            'Sunday'
+          ];
           final di = order.indexOf(a.day).compareTo(order.indexOf(b.day));
           if (di != 0) return di;
           return a.startTime.compareTo(b.startTime);
         });
-      state = state.copyWith(plan: plan, slots: slots, isGenerated: true, clearError: true);
+      state = state.copyWith(
+          plan: plan, slots: slots, isGenerated: true, clearError: true);
     } catch (e) {
       state = state.copyWith(error: 'Failed to load study plan.');
     }
@@ -127,7 +136,8 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Could not generate plan. ${e.toString().contains('JSON') ? 'AI returned unexpected format — try again.' : 'Check your connection and try again.'}',
+        error:
+            'Could not generate plan. ${e.toString().contains('JSON') ? 'AI returned unexpected format — try again.' : 'Check your connection and try again.'}',
       );
     }
   }
@@ -152,6 +162,7 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
   }
 }
 
-final studyPlanProvider = StateNotifierProvider<StudyPlanNotifier, StudyPlanState>((ref) {
+final studyPlanProvider =
+    StateNotifierProvider<StudyPlanNotifier, StudyPlanState>((ref) {
   return StudyPlanNotifier(ref);
 });

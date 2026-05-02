@@ -6,7 +6,6 @@ import 'package:campusiq/features/session/data/repositories/session_repository.d
 import 'package:campusiq/features/session/domain/planned_actual_analyser.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 
-
 final sessionRepositoryProvider = Provider<SessionRepository?>((ref) {
   final isarAsync = ref.watch(isarProvider);
   return isarAsync.whenOrNull(data: (isar) => SessionRepository(isar));
@@ -14,7 +13,7 @@ final sessionRepositoryProvider = Provider<SessionRepository?>((ref) {
 
 /// Live stream of all sessions newest first
 final allSessionsProvider = StreamProvider<List<StudySessionModel>>((ref) {
-  final repo     = ref.watch(sessionRepositoryProvider);
+  final repo = ref.watch(sessionRepositoryProvider);
   final semester = ref.watch(activeSemesterProvider);
   if (repo == null) return const Stream.empty();
   return repo.watchAllSessions(semester);
@@ -22,9 +21,8 @@ final allSessionsProvider = StreamProvider<List<StudySessionModel>>((ref) {
 
 /// Today's analytics — recomputed whenever sessions or timetable changes
 final todayAnalyticsProvider = Provider<DayAnalytics?>((ref) {
-  final sessions    = ref.watch(allSessionsProvider).valueOrNull ?? [];
-  final classSlots  = ref.watch(allSlotsProvider).valueOrNull ?? [];
-
+  final sessions = ref.watch(allSessionsProvider).valueOrNull ?? [];
+  final classSlots = ref.watch(allSlotsProvider).valueOrNull ?? [];
 
   final today = DateTime.now();
   final todaySessions = sessions.where((s) {
@@ -41,16 +39,15 @@ final todayAnalyticsProvider = Provider<DayAnalytics?>((ref) {
 
 /// This week's analytics
 final weeklyAnalyticsProvider = Provider<WeeklyAnalytics?>((ref) {
-  final sessions      = ref.watch(allSessionsProvider).valueOrNull ?? [];
-  final classSlots    = ref.watch(allSlotsProvider).valueOrNull ?? [];
-
+  final sessions = ref.watch(allSessionsProvider).valueOrNull ?? [];
+  final classSlots = ref.watch(allSlotsProvider).valueOrNull ?? [];
 
   if (sessions.isEmpty) return null;
 
-  final now       = DateTime.now();
+  final now = DateTime.now();
   // Monday of the current week
   final weekStart = now.subtract(Duration(days: now.weekday - 1));
-  final monday    = DateTime(weekStart.year, weekStart.month, weekStart.day);
+  final monday = DateTime(weekStart.year, weekStart.month, weekStart.day);
 
   return PlannedActualAnalyser.analyseWeek(
     allSessions: sessions,

@@ -12,7 +12,11 @@ class SessionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final hour = session.startTime.hour;
     final suffix = hour < 12 ? 'AM' : 'PM';
-    final displayHour = hour == 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    final displayHour = hour == 0
+        ? 12
+        : hour > 12
+            ? hour - 12
+            : hour;
     final timeLabel =
         '$displayHour:${session.startTime.minute.toString().padLeft(2, '0')} $suffix';
 
@@ -55,7 +59,8 @@ class SessionTile extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           IconButton(
-            icon: const Icon(Icons.delete_outline, size: 18, color: AppTheme.textSecondary),
+            icon: const Icon(Icons.delete_outline,
+                size: 18, color: AppTheme.textSecondary),
             onPressed: onDelete,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),

@@ -26,10 +26,8 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
   @override
   void initState() {
     super.initState();
-    _titleController =
-        TextEditingController(text: widget.note?.title ?? '');
-    _bodyController =
-        TextEditingController(text: widget.note?.body ?? '');
+    _titleController = TextEditingController(text: widget.note?.title ?? '');
+    _bodyController = TextEditingController(text: widget.note?.body ?? '');
   }
 
   @override
@@ -119,8 +117,8 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
                           ? const SizedBox(
                               width: 16,
                               height: 16,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
                             )
                           : const Text('Save'),
                     ),

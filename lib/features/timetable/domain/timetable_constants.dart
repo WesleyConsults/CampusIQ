@@ -1,13 +1,27 @@
 class TimetableConstants {
   /// Days shown in the timetable grid. KNUST classes run Mon–Sat; Sun shown for personal slots.
-  static const List<String> dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  static const List<String> dayLabels = [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun'
+  ];
   static const List<String> dayFullLabels = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
   ];
 
   /// Grid time range: 6AM to 8PM
-  static const int gridStartHour = 6;   // 6AM = 360 minutes
-  static const int gridEndHour = 20;    // 8PM = 1200 minutes
+  static const int gridStartHour = 6; // 6AM = 360 minutes
+  static const int gridEndHour = 20; // 8PM = 1200 minutes
   static const int gridStartMinutes = gridStartHour * 60;
   static const int gridEndMinutes = gridEndHour * 60;
   static const int totalGridMinutes = gridEndMinutes - gridStartMinutes; // 840
@@ -16,7 +30,8 @@ class TimetableConstants {
   static const double pixelsPerMinute = 1.0;
 
   /// Total grid height in pixels
-  static const double totalGridHeight = totalGridMinutes * pixelsPerMinute; // 1260px
+  static const double totalGridHeight =
+      totalGridMinutes * pixelsPerMinute; // 1260px
 
   /// Width of the time label column on the left
   static const double timeLabelWidth = 52.0;

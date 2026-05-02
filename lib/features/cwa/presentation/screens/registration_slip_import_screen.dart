@@ -5,14 +5,51 @@ import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/domain/registration_course_import.dart';
 import 'package:campusiq/features/cwa/presentation/providers/registration_slip_import_provider.dart';
 
-class RegistrationSlipImportScreen extends ConsumerWidget {
-  const RegistrationSlipImportScreen({super.key});
+class RegistrationSlipImportScreen extends ConsumerStatefulWidget {
+  final String? initialSource;
+
+  const RegistrationSlipImportScreen({super.key, this.initialSource});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RegistrationSlipImportScreen> createState() =>
+      _RegistrationSlipImportScreenState();
+}
+
+class _RegistrationSlipImportScreenState
+    extends ConsumerState<RegistrationSlipImportScreen> {
+  bool _didTriggerInitialSource = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didTriggerInitialSource) return;
+    _didTriggerInitialSource = true;
+
+    final source = widget.initialSource;
+    if (source == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final notifier =
+          ref.read(registrationSlipImportNotifierProvider.notifier);
+      switch (source) {
+        case 'camera':
+          notifier.pickFromCamera();
+          return;
+        case 'gallery':
+          notifier.pickFromGallery();
+          return;
+        case 'pdf':
+          notifier.pickFromGalleryOrFile();
+          return;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(registrationSlipImportNotifierProvider);
-    final notifier =
-        ref.read(registrationSlipImportNotifierProvider.notifier);
+    final notifier = ref.read(registrationSlipImportNotifierProvider.notifier);
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
@@ -32,7 +69,8 @@ class RegistrationSlipImportScreen extends ConsumerWidget {
                 ? 'AI is reading your slip…'
                 : 'Opening file…',
           ),
-        SlipImportStep.reviewing => _ReviewView(state: state, notifier: notifier),
+        SlipImportStep.reviewing =>
+          _ReviewView(state: state, notifier: notifier),
         SlipImportStep.saving => const _LoadingView('Saving courses…'),
         SlipImportStep.done => _DoneView(
             count: state.selectedIndexes.length,
@@ -283,8 +321,7 @@ class _ReviewView extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed:
-                    selected == 0 ? null : notifier.confirmImport,
+                onPressed: selected == 0 ? null : notifier.confirmImport,
                 icon: const Icon(Icons.check),
                 label: Text(
                   selected == 0
@@ -564,8 +601,7 @@ class _ErrorView extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 28, vertical: 13),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 13),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),

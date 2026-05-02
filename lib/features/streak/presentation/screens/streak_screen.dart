@@ -19,8 +19,8 @@ class StreakScreen extends ConsumerWidget {
   Map<DateTime, int> _buildActivityMap(List<StudySessionModel> sessions) {
     final map = <DateTime, int>{};
     for (final s in sessions) {
-      final norm = DateTime(
-          s.startTime.year, s.startTime.month, s.startTime.day);
+      final norm =
+          DateTime(s.startTime.year, s.startTime.month, s.startTime.day);
       map[norm] = (map[norm] ?? 0) + 1;
     }
     return map;
@@ -28,17 +28,16 @@ class StreakScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final studyStreak      = ref.watch(studyStreakProvider);
+    final studyStreak = ref.watch(studyStreakProvider);
     final attendanceStreak = ref.watch(attendanceStreakProvider);
-    final perCourseStreaks  = ref.watch(perCourseStreakProvider);
-    final attendedDates    = ref.watch(attendedDatesProvider).valueOrNull ?? [];
-    final sessions         = ref.watch(allSessionsProvider).valueOrNull ?? [];
-    final prefsRepo        = ref.watch(userPrefsRepositoryProvider);
+    final perCourseStreaks = ref.watch(perCourseStreakProvider);
+    final attendedDates = ref.watch(attendedDatesProvider).valueOrNull ?? [];
+    final sessions = ref.watch(allSessionsProvider).valueOrNull ?? [];
+    final prefsRepo = ref.watch(userPrefsRepositoryProvider);
 
     final activityMap = _buildActivityMap(sessions);
-    final activeCourseStreaks = perCourseStreaks.values
-        .where((r) => r.currentStreak > 0)
-        .length;
+    final activeCourseStreaks =
+        perCourseStreaks.values.where((r) => r.currentStreak > 0).length;
 
     return Scaffold(
       backgroundColor: AppTheme.surface,

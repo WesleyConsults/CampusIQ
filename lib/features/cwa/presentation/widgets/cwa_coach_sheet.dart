@@ -50,7 +50,10 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
       final advice = await client.complete(
         systemPrompt: prompt,
         messages: const [
-          {'role': 'user', 'content': 'Give me coaching advice about my CWA situation.'}
+          {
+            'role': 'user',
+            'content': 'Give me coaching advice about my CWA situation.'
+          }
         ],
         maxTokens: 300,
       );
@@ -100,14 +103,17 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
               ),
               // Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: Row(
                   children: [
-                    const Icon(Icons.auto_awesome, size: 20, color: AppTheme.primary),
+                    const Icon(Icons.auto_awesome,
+                        size: 20, color: AppTheme.primary),
                     const SizedBox(width: 8),
                     const Text(
                       'AI Coach',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                     ),
                     const Spacer(),
                     IconButton(
@@ -156,7 +162,9 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
           const SizedBox(height: 24),
           Icon(Icons.error_outline, size: 40, color: Colors.grey.shade400),
           const SizedBox(height: 12),
-          Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textSecondary)),
+          Text(_error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppTheme.textSecondary)),
           const SizedBox(height: 16),
           TextButton(
             onPressed: () {
@@ -178,14 +186,17 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
         children: [
           Text(
             _advice!,
-            style: const TextStyle(fontSize: 15, height: 1.6, color: AppTheme.textPrimary),
+            style: const TextStyle(
+                fontSize: 15, height: 1.6, color: AppTheme.textPrimary),
           ),
           const SizedBox(height: 24),
           TextButton.icon(
             onPressed: () async {
               final nav = Navigator.of(context);
               final router = GoRouter.of(context);
-              await ref.read(aiChatProvider.notifier).seedWithCoachingContext(_advice!);
+              await ref
+                  .read(aiChatProvider.notifier)
+                  .seedWithCoachingContext(_advice!);
               if (!mounted) return;
               nav.pop();
               router.push('/ai');

@@ -16,8 +16,8 @@ class InsightsScreen extends ConsumerWidget {
     final sorted = [
       ...insights.where((i) => i.type == InsightType.warning),
       ...insights.where((i) => i.type == InsightType.positive),
-      ...insights.where((i) =>
-          i.type == InsightType.neutral || i.type == InsightType.tip),
+      ...insights.where(
+          (i) => i.type == InsightType.neutral || i.type == InsightType.tip),
     ];
 
     return Scaffold(

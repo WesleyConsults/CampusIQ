@@ -24,8 +24,7 @@ class CourseStreakList extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Per-course streaks',
-                style:
-                    TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
             const SizedBox(height: 12),
             ...sorted.map((entry) => _CourseStreakRow(
                   courseCode: entry.key,
@@ -61,9 +60,7 @@ class _CourseStreakRow extends StatelessWidget {
                 ? AppTheme.primary.withValues(alpha: 0.1)
                 : Colors.grey.shade100,
             child: Text(
-              courseCode.length >= 2
-                  ? courseCode.substring(0, 2)
-                  : courseCode,
+              courseCode.length >= 2 ? courseCode.substring(0, 2) : courseCode,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,

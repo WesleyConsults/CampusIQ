@@ -8,7 +8,8 @@ class SubscribeScreenStub extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Upgrade to Premium')),
       body: const Center(
-        child: Text('Subscription coming soon.\nContact: wesleyconsults@gmail.com'),
+        child: Text(
+            'Subscription coming soon.\nContact: wesleyconsults@gmail.com'),
       ),
     );
   }

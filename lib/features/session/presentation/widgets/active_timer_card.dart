@@ -110,10 +110,10 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
     final isBreak = s.isBreak;
     final cardColor = isBreak ? AppTheme.success : AppTheme.primary;
     final timerColor = isBreak ? Colors.white : AppTheme.accent;
-    final phaseLabel = isBreak
-        ? (s.isLongBreak ? 'Long Break' : 'Short Break')
-        : 'Focus';
-    final roundLabel = 'Round ${s.currentRound} of ${s.totalRounds}  ·  $phaseLabel';
+    final phaseLabel =
+        isBreak ? (s.isLongBreak ? 'Long Break' : 'Short Break') : 'Focus';
+    final roundLabel =
+        'Round ${s.currentRound} of ${s.totalRounds}  ·  $phaseLabel';
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -135,9 +135,7 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
 
           // Round progress dots
           _RoundDots(
-              current: s.currentRound,
-              total: s.totalRounds,
-              isBreak: isBreak),
+              current: s.currentRound, total: s.totalRounds, isBreak: isBreak),
           const SizedBox(height: 16),
 
           // Countdown

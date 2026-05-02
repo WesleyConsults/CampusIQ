@@ -73,7 +73,8 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
   Future<void> switchSession(int sessionId) async {
     try {
       final chatRepo = await ref.read(aiChatRepositoryProvider.future);
-      final messages = await chatRepo.getMessages(_feature, sessionId: sessionId);
+      final messages =
+          await chatRepo.getMessages(_feature, sessionId: sessionId);
       state = AiChatState(
         sessions: state.sessions,
         messages: messages,
@@ -125,7 +126,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
     // 1. Assign session or create if new
     final chatRepo = await ref.read(aiChatRepositoryProvider.future);
     int? sessionId = state.currentSessionId;
-    
+
     if (sessionId == null) {
       // Create short title from user input
       String title = userText;
@@ -134,7 +135,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       }
       sessionId = await chatRepo.createSession(_feature, title);
       state = state.copyWith(currentSessionId: sessionId);
-      
+
       // reload sessions list to show it cleanly
       final sessions = await chatRepo.getSessions(_feature);
       state = state.copyWith(sessions: sessions);
@@ -158,10 +159,12 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
 
       final contextBuilder = await ref.read(contextBuilderProvider.future);
       const semesterKey = 'current';
-      final academicContext = await contextBuilder.buildAcademicContext(semesterKey);
+      final academicContext =
+          await contextBuilder.buildAcademicContext(semesterKey);
 
       final recentMessages = state.messages;
-      final lastMessages = recentMessages.skip(max(0, recentMessages.length - 6)).toList();
+      final lastMessages =
+          recentMessages.skip(max(0, recentMessages.length - 6)).toList();
       final messagesList = lastMessages
           .map((m) => {'role': m.role, 'content': m.content})
           .cast<Map<String, String>>()
@@ -189,11 +192,12 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
         messages: [...state.messages, assistantMsg],
         isLoading: false,
       );
-      
+
       // refresh sessions to update list timing
       loadSessions();
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Failed to send message: $e');
+      state =
+          state.copyWith(isLoading: false, error: 'Failed to send message: $e');
     }
   }
 
@@ -201,7 +205,8 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
   /// the AI has full context when the user asks a follow-up question.
   Future<void> seedWithCoachingContext(String advice) async {
     final chatRepo = await ref.read(aiChatRepositoryProvider.future);
-    final sessionId = await chatRepo.createSession(_feature, 'CWA Coaching Follow-up');
+    final sessionId =
+        await chatRepo.createSession(_feature, 'CWA Coaching Follow-up');
 
     final assistantMsg = AiMessageModel()
       ..feature = _feature
@@ -228,6 +233,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
 
 int max(int a, int b) => a > b ? a : b;
 
-final aiChatProvider = StateNotifierProvider<AiChatNotifier, AiChatState>((ref) {
+final aiChatProvider =
+    StateNotifierProvider<AiChatNotifier, AiChatState>((ref) {
   return AiChatNotifier(ref);
 });

@@ -29,14 +29,22 @@ class PlanFreeGateCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Monday', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.primary)),
+                      const Text('Monday',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primary)),
                       const SizedBox(height: 8),
-                      _fakeTile('MATH 251', '09:00 – 10:30', 'Highest leverage course'),
+                      _fakeTile('MATH 251', '09:00 – 10:30',
+                          'Highest leverage course'),
                       _fakeTile('EE 301', '14:00 – 15:30', 'CWA gap: 6 points'),
                       const SizedBox(height: 10),
-                      const Text('Tuesday', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.primary)),
+                      const Text('Tuesday',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primary)),
                       const SizedBox(height: 8),
-                      _fakeTile('CHEM 101', '10:00 – 11:00', 'No sessions this week'),
+                      _fakeTile(
+                          'CHEM 101', '10:00 – 11:00', 'No sessions this week'),
                     ],
                   ),
                 ),
@@ -44,7 +52,8 @@ class PlanFreeGateCard extends StatelessWidget {
                 Positioned.fill(
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                    child: Container(color: Colors.white.withValues(alpha: 0.3)),
+                    child:
+                        Container(color: Colors.white.withValues(alpha: 0.3)),
                   ),
                 ),
                 // Lock icon centred
@@ -87,18 +96,24 @@ class PlanFreeGateCard extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                 ),
                 const SizedBox(height: 8),
-                ...['AI-generated 7-day study plan', 'Respects your timetable free blocks', 'Prioritises your highest-gap courses', 'Regenerate anytime']
-                    .map((f) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 3),
-                          child: Row(children: [
-                            Icon(Icons.check_circle, size: 16, color: Colors.green.shade600),
-                            const SizedBox(width: 8),
-                            Text(f, style: const TextStyle(fontSize: 13)),
-                          ]),
-                        )),
+                ...[
+                  'AI-generated 7-day study plan',
+                  'Respects your timetable free blocks',
+                  'Prioritises your highest-gap courses',
+                  'Regenerate anytime'
+                ].map((f) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(children: [
+                        Icon(Icons.check_circle,
+                            size: 16, color: Colors.green.shade600),
+                        const SizedBox(width: 8),
+                        Text(f, style: const TextStyle(fontSize: 13)),
+                      ]),
+                    )),
                 const SizedBox(height: 12),
                 const Text('GHS 20/month · GHS 120/semester',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
@@ -125,10 +140,19 @@ class PlanFreeGateCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle)),
+          Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                  color: AppTheme.primary, shape: BoxShape.circle)),
           const SizedBox(width: 8),
-          Expanded(child: Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
-          Text(time, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+          Expanded(
+              child: Text(name,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w500))),
+          Text(time,
+              style:
+                  const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
         ],
       ),
     );

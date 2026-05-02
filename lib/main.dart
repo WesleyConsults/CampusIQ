@@ -52,11 +52,9 @@ Future<void> _handleStreakRiskCheck() async {
     [
       CourseModelSchema,
       TimetableSlotModelSchema,
-
       StudySessionModelSchema,
       UserPrefsModelSchema,
       DailyPlanTaskModelSchema,
-
       SubscriptionModelSchema,
       AiChatSessionModelSchema,
       AiMessageModelSchema,

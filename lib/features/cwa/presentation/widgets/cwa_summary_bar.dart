@@ -34,8 +34,14 @@ class CwaSummaryBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _StatBox(label: label, value: projected.toCwaString(), valueColor: Colors.white),
-              _StatBox(label: 'Target CWA', value: target.toCwaString(), valueColor: AppTheme.accent),
+              _StatBox(
+                  label: label,
+                  value: projected.toCwaString(),
+                  valueColor: Colors.white),
+              _StatBox(
+                  label: 'Target CWA',
+                  value: target.toCwaString(),
+                  valueColor: AppTheme.accent),
               _StatBox(
                 label: 'Gap',
                 value: isOnTrack ? 'On track' : gap.toCwaString(),
@@ -73,16 +79,20 @@ class _StatBox extends StatelessWidget {
   final String value;
   final Color valueColor;
 
-  const _StatBox({required this.label, required this.value, required this.valueColor});
+  const _StatBox(
+      {required this.label, required this.value, required this.valueColor});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 11)),
+        Text(label,
+            style: const TextStyle(color: Colors.white54, fontSize: 11)),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(color: valueColor, fontSize: 20, fontWeight: FontWeight.w600)),
+        Text(value,
+            style: TextStyle(
+                color: valueColor, fontSize: 20, fontWeight: FontWeight.w600)),
       ],
     );
   }

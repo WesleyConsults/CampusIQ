@@ -1,7 +1,6 @@
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 
-
 class CourseStats {
   final String courseCode;
   final String courseName;
@@ -84,8 +83,6 @@ class PlannedActualAnalyser {
       planned[s.courseCode] = (planned[s.courseCode] ?? 0) + s.durationMinutes;
     }
 
-
-
     return planned;
   }
 
@@ -102,20 +99,22 @@ class PlannedActualAnalyser {
 
     // Aggregate actual minutes per course
     final actual = <String, int>{};
-    final names  = <String, String>{};
+    final names = <String, String>{};
     for (final s in sessions) {
       actual[s.courseCode] = (actual[s.courseCode] ?? 0) + s.durationMinutes;
-      names[s.courseCode]  = s.courseName;
+      names[s.courseCode] = s.courseName;
     }
 
     // Merge keys from both planned and actual
     final allCodes = {...planned.keys, ...actual.keys};
-    final perCourse = allCodes.map((code) => CourseStats(
-      courseCode: code,
-      courseName: names[code] ?? code,
-      actualMinutes: actual[code] ?? 0,
-      plannedMinutes: planned[code] ?? 0,
-    )).toList()
+    final perCourse = allCodes
+        .map((code) => CourseStats(
+              courseCode: code,
+              courseName: names[code] ?? code,
+              actualMinutes: actual[code] ?? 0,
+              plannedMinutes: planned[code] ?? 0,
+            ))
+        .toList()
       ..sort((a, b) => b.actualMinutes.compareTo(a.actualMinutes));
 
     return DayAnalytics(
@@ -137,7 +136,9 @@ class PlannedActualAnalyser {
       final date = weekStart.add(Duration(days: i));
       final daySessions = allSessions.where((s) {
         final d = s.startTime;
-        return d.year == date.year && d.month == date.month && d.day == date.day;
+        return d.year == date.year &&
+            d.month == date.month &&
+            d.day == date.day;
       }).toList();
       days.add(analyseDay(
         date: date,
@@ -148,19 +149,20 @@ class PlannedActualAnalyser {
 
     // Course totals across the week
     final weekActual = <String, int>{};
-    final weekNames  = <String, String>{};
+    final weekNames = <String, String>{};
     for (final s in allSessions) {
-      weekActual[s.courseCode] = (weekActual[s.courseCode] ?? 0) + s.durationMinutes;
-      weekNames[s.courseCode]  = s.courseName;
+      weekActual[s.courseCode] =
+          (weekActual[s.courseCode] ?? 0) + s.durationMinutes;
+      weekNames[s.courseCode] = s.courseName;
     }
 
-    String mostStudied  = '';
+    String mostStudied = '';
     String leastStudied = '';
     if (weekActual.isNotEmpty) {
       final sorted = weekActual.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
-      mostStudied  = weekNames[sorted.first.key] ?? sorted.first.key;
-      leastStudied = weekNames[sorted.last.key]  ?? sorted.last.key;
+      mostStudied = weekNames[sorted.first.key] ?? sorted.first.key;
+      leastStudied = weekNames[sorted.last.key] ?? sorted.last.key;
     }
 
     return WeeklyAnalytics(
@@ -185,14 +187,19 @@ class PlannedActualAnalyser {
       return 'You studied $timeStr today — great spontaneous effort!';
     }
 
-    if (rate >= 1.0) return 'You hit your study target today. $timeStr studied. Keep it up!';
-    if (rate >= 0.7) return 'Almost there — $timeStr studied, ${((1 - rate) * 100).toInt()}% left to hit your plan.';
+    if (rate >= 1.0)
+      return 'You hit your study target today. $timeStr studied. Keep it up!';
+    if (rate >= 0.7)
+      return 'Almost there — $timeStr studied, ${((1 - rate) * 100).toInt()}% left to hit your plan.';
 
     // Find most under-studied course
     final worst = analytics.perCourse
-        .where((c) => c.plannedMinutes > 0 && c.actualMinutes < c.plannedMinutes)
-        .fold<CourseStats?>(null, (prev, c) =>
-            prev == null || c.gapMinutes > prev.gapMinutes ? c : prev);
+        .where(
+            (c) => c.plannedMinutes > 0 && c.actualMinutes < c.plannedMinutes)
+        .fold<CourseStats?>(
+            null,
+            (prev, c) =>
+                prev == null || c.gapMinutes > prev.gapMinutes ? c : prev);
 
     if (worst != null) {
       return 'You are under-studying ${worst.courseCode} — ${worst.formattedPlanned} planned, only ${worst.formattedActual} done.';

@@ -38,7 +38,11 @@ class ClassTimetableGrid extends StatelessWidget {
 
                   final classPositions = _assignColumns(
                     classSlots
-                        .map((s) => (id: s.id, start: s.startMinutes, end: s.endMinutes))
+                        .map((s) => (
+                              id: s.id,
+                              start: s.startMinutes,
+                              end: s.endMinutes
+                            ))
                         .toList(),
                   );
 
@@ -56,13 +60,15 @@ class ClassTimetableGrid extends StatelessWidget {
 
                         // Class slots
                         ...classSlots.map((s) {
-                          final pos = classPositions[s.id] ??
-                              const _OverlapPos(0, 1);
+                          final pos =
+                              classPositions[s.id] ?? const _OverlapPos(0, 1);
                           final laneWidth = totalWidth / pos.totalColumns;
                           return TimetableSlotCard(
                             slot: s,
                             left: pos.columnIndex * laneWidth + 2,
-                            right: totalWidth - (pos.columnIndex + 1) * laneWidth + 2,
+                            right: totalWidth -
+                                (pos.columnIndex + 1) * laneWidth +
+                                2,
                             onTap: () => onClassSlotTap(s),
                             onLongPress: () => onClassSlotTap(s),
                           );
@@ -106,7 +112,7 @@ Map<int, _OverlapPos> _assignColumns(
 
   final sorted = [...items]..sort((a, b) => a.start.compareTo(b.start));
   final colAssign = <int, int>{}; // id → column index
-  final colEnds = <int>[];        // end-minute of the last slot in each column
+  final colEnds = <int>[]; // end-minute of the last slot in each column
 
   for (final item in sorted) {
     // Find the first column that is free at item.start
@@ -156,11 +162,21 @@ class _TimeLabels extends StatelessWidget {
       height: TimetableConstants.totalGridHeight,
       child: Stack(
         children: hours.map((hour) {
-          final top = (hour - TimetableConstants.gridStartHour) * TimetableConstants.hourRowHeight;
-          final label = hour == 0 ? '12 AM' : hour < 12 ? '$hour AM' : hour == 12 ? '12 PM' : '${hour - 12} PM';
+          final top = (hour - TimetableConstants.gridStartHour) *
+              TimetableConstants.hourRowHeight;
+          final label = hour == 0
+              ? '12 AM'
+              : hour < 12
+                  ? '$hour AM'
+                  : hour == 12
+                      ? '12 PM'
+                      : '${hour - 12} PM';
           return Positioned(
-            top: top - 6, left: 0, right: 4,
-            child: Text(label, textAlign: TextAlign.right,
+            top: top - 6,
+            left: 0,
+            right: 4,
+            child: Text(label,
+                textAlign: TextAlign.right,
                 style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
           );
         }).toList(),
@@ -172,14 +188,17 @@ class _TimeLabels extends StatelessWidget {
 class _HourLines extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    const hours = TimetableConstants.gridEndHour - TimetableConstants.gridStartHour;
+    const hours =
+        TimetableConstants.gridEndHour - TimetableConstants.gridStartHour;
     return SizedBox(
       height: TimetableConstants.totalGridHeight,
       child: Stack(
         children: List.generate(hours, (i) {
           final top = i * TimetableConstants.hourRowHeight;
           return Positioned(
-            top: top, left: 0, right: 0,
+            top: top,
+            left: 0,
+            right: 0,
             child: Divider(height: 0.5, color: Colors.grey.shade200),
           );
         }),
@@ -193,15 +212,25 @@ class _CurrentTimeIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final nowMins = now.hour * 60 + now.minute;
-    if (nowMins < TimetableConstants.gridStartMinutes || nowMins > TimetableConstants.gridEndMinutes) {
+    if (nowMins < TimetableConstants.gridStartMinutes ||
+        nowMins > TimetableConstants.gridEndMinutes) {
       return const SizedBox.shrink();
     }
-    final top = (nowMins - TimetableConstants.gridStartMinutes) * TimetableConstants.pixelsPerMinute;
+    final top = (nowMins - TimetableConstants.gridStartMinutes) *
+        TimetableConstants.pixelsPerMinute;
     return Positioned(
-      top: top, left: 0, right: 0,
+      top: top,
+      left: 0,
+      right: 0,
       child: Row(children: [
-        Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
-        Expanded(child: Container(height: 1, color: Colors.red.withValues(alpha: 0.6))),
+        Container(
+            width: 8,
+            height: 8,
+            decoration:
+                const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+        Expanded(
+            child:
+                Container(height: 1, color: Colors.red.withValues(alpha: 0.6))),
       ]),
     );
   }

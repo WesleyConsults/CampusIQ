@@ -20,9 +20,11 @@ class CwaCalculator {
   static double gap(double projected, double target) => target - projected;
 
   /// Returns all indices of courses tied for the highest credit weight.
-  static Set<int> highestImpactCourseIndices(List<({double creditHours, double score})> courses) {
+  static Set<int> highestImpactCourseIndices(
+      List<({double creditHours, double score})> courses) {
     if (courses.isEmpty) return {};
-    double maxCredits = courses.map((c) => c.creditHours).reduce((a, b) => a > b ? a : b);
+    double maxCredits =
+        courses.map((c) => c.creditHours).reduce((a, b) => a > b ? a : b);
     return {
       for (int i = 0; i < courses.length; i++)
         if (courses[i].creditHours == maxCredits) i,
@@ -36,7 +38,8 @@ class CwaCalculator {
     required double newScore,
   }) {
     final modified = List.of(courses);
-    modified[index] = (creditHours: modified[index].creditHours, score: newScore);
+    modified[index] =
+        (creditHours: modified[index].creditHours, score: newScore);
     return calculate(modified);
   }
 

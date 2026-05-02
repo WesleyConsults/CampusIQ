@@ -108,9 +108,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       ..courseSource = completed.courseSource
       ..semesterKey = semesterKey
       ..sessionType = completed.isPomodoroMode ? 'pomodoro' : 'normal'
-      ..pomodoroRoundsCompleted = completed.isPomodoroMode
-          ? completed.pomodoroRoundsCompleted
-          : null;
+      ..pomodoroRoundsCompleted =
+          completed.isPomodoroMode ? completed.pomodoroRoundsCompleted : null;
 
     final repo = ref.read(sessionRepositoryProvider);
     await repo?.saveSession(session);
@@ -119,7 +118,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
     if (!hadSessionToday) {
       final streak = ref.read(studyStreakProvider);
-      await NotificationService.instance.showStreakSecured(streak.currentStreak);
+      await NotificationService.instance
+          .showStreakSecured(streak.currentStreak);
     }
   }
 
@@ -135,7 +135,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        title: const Text('Study Sessions',
+        leading: IconButton(
+          tooltip: 'Go to Today',
+          icon: const Icon(Icons.home_outlined, semanticLabel: 'Go to Today'),
+          onPressed: () => context.go('/plan'),
+        ),
+        title: const Text('Sessions',
             style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
           const StreakActionButton(),
@@ -146,7 +151,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               backgroundColor: Colors.transparent,
               builder: (_) => const WeeklyReviewSheet(),
             ),
-            child: const Text('This Week', style: TextStyle(color: Colors.white)),
+            child:
+                const Text('This Week', style: TextStyle(color: Colors.white)),
           ),
           IconButton(
             icon: const Icon(Icons.auto_awesome_rounded),
@@ -198,7 +204,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 class _HistoryTab extends ConsumerWidget {
   final dynamic activeSession;
   final String semester;
-  final void Function(bool isPomodoroMode, Duration focus, Duration shortBreak, Duration longBreak) onStart;
+  final void Function(bool isPomodoroMode, Duration focus, Duration shortBreak,
+      Duration longBreak) onStart;
   final VoidCallback onStop;
   final VoidCallback onCancel;
   final VoidCallback onPhaseExpired;
@@ -236,7 +243,6 @@ class _HistoryTab extends ConsumerWidget {
                 : _StartCard(onStart: onStart),
           ),
         ),
-
         if (todayAnalytics != null && todayAnalytics.sessionCount > 0)
           SliverToBoxAdapter(
             child: Padding(
@@ -244,7 +250,6 @@ class _HistoryTab extends ConsumerWidget {
               child: AnalyticsSummaryCard(analytics: todayAnalytics),
             ),
           ),
-
         if (todayAnalytics != null && todayAnalytics.perCourse.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
@@ -252,7 +257,6 @@ class _HistoryTab extends ConsumerWidget {
               child: CourseBreakdownCard(courses: todayAnalytics.perCourse),
             ),
           ),
-
         if (weeklyAnalytics != null)
           SliverToBoxAdapter(
             child: Padding(
@@ -260,7 +264,6 @@ class _HistoryTab extends ConsumerWidget {
               child: WeeklyBarChart(weekly: weeklyAnalytics),
             ),
           ),
-
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -280,7 +283,6 @@ class _HistoryTab extends ConsumerWidget {
             ),
           ),
         ),
-
         sessionsAsync.when(
           loading: () => const SliverToBoxAdapter(
             child: Center(child: CircularProgressIndicator()),
@@ -316,7 +318,6 @@ class _HistoryTab extends ConsumerWidget {
             );
           },
         ),
-
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
     );
@@ -326,7 +327,8 @@ class _HistoryTab extends ConsumerWidget {
 // ── Start card with mode toggle ───────────────────────────────────────────────
 
 class _StartCard extends StatefulWidget {
-  final void Function(bool isPomodoroMode, Duration focus, Duration shortBreak, Duration longBreak) onStart;
+  final void Function(bool isPomodoroMode, Duration focus, Duration shortBreak,
+      Duration longBreak) onStart;
   const _StartCard({required this.onStart});
 
   @override
@@ -339,7 +341,8 @@ class _StartCardState extends State<_StartCard> {
   int _shortBreakMinutes = 1;
   int _longBreakMinutes = 15;
 
-  void _adjust(int current, int delta, int min, int max, void Function(int) update) {
+  void _adjust(
+      int current, int delta, int min, int max, void Function(int) update) {
     final next = current + delta;
     if (next >= min && next <= max) setState(() => update(next));
   }
@@ -386,22 +389,28 @@ class _StartCardState extends State<_StartCard> {
             _DurationStepper(
               label: 'Focus',
               minutes: _focusMinutes,
-              onDecrement: () => _adjust(_focusMinutes, -5, 10, 60, (v) => _focusMinutes = v),
-              onIncrement: () => _adjust(_focusMinutes, 5, 10, 60, (v) => _focusMinutes = v),
+              onDecrement: () =>
+                  _adjust(_focusMinutes, -5, 10, 60, (v) => _focusMinutes = v),
+              onIncrement: () =>
+                  _adjust(_focusMinutes, 5, 10, 60, (v) => _focusMinutes = v),
             ),
             const SizedBox(height: 8),
             _DurationStepper(
               label: 'Short Break',
               minutes: _shortBreakMinutes,
-              onDecrement: () => _adjust(_shortBreakMinutes, -5, 5, 30, (v) => _shortBreakMinutes = v),
-              onIncrement: () => _adjust(_shortBreakMinutes, 5, 5, 30, (v) => _shortBreakMinutes = v),
+              onDecrement: () => _adjust(
+                  _shortBreakMinutes, -5, 5, 30, (v) => _shortBreakMinutes = v),
+              onIncrement: () => _adjust(
+                  _shortBreakMinutes, 5, 5, 30, (v) => _shortBreakMinutes = v),
             ),
             const SizedBox(height: 8),
             _DurationStepper(
               label: 'Long Break',
               minutes: _longBreakMinutes,
-              onDecrement: () => _adjust(_longBreakMinutes, -5, 10, 60, (v) => _longBreakMinutes = v),
-              onIncrement: () => _adjust(_longBreakMinutes, 5, 10, 60, (v) => _longBreakMinutes = v),
+              onDecrement: () => _adjust(
+                  _longBreakMinutes, -5, 10, 60, (v) => _longBreakMinutes = v),
+              onIncrement: () => _adjust(
+                  _longBreakMinutes, 5, 10, 60, (v) => _longBreakMinutes = v),
             ),
             const SizedBox(height: 16),
           ] else ...[
@@ -511,8 +520,8 @@ class _DurationStepper extends StatelessWidget {
         SizedBox(
           width: 90,
           child: Text(label,
-              style: const TextStyle(
-                  fontSize: 13, color: AppTheme.textSecondary)),
+              style:
+                  const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
         ),
         const Spacer(),
         IconButton(
@@ -527,8 +536,7 @@ class _DurationStepper extends StatelessWidget {
           child: Text(
             '$minutes min',
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ),
         IconButton(

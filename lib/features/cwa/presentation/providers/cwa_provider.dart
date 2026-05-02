@@ -10,7 +10,8 @@ import 'package:campusiq/core/constants/app_constants.dart';
 enum CwaViewMode { semester, cumulative }
 
 /// Active semester — becomes user-configurable in a later phase.
-final activeSemesterProvider = StateProvider<String>((ref) => AppConstants.defaultSemesterKey);
+final activeSemesterProvider =
+    StateProvider<String>((ref) => AppConstants.defaultSemesterKey);
 
 /// Repository — only available once Isar is open.
 final cwaRepositoryProvider = Provider<CwaRepository?>((ref) {
@@ -89,7 +90,9 @@ final cumulativeCwaProvider = Provider<double>((ref) {
   if (pastSemesters.isNotEmpty) {
     try {
       anchor = pastSemesters.lastWhere(
-        (s) => s.cumulativeWeightedMarks != null && s.cumulativeCreditsCalc != null,
+        (s) =>
+            s.cumulativeWeightedMarks != null &&
+            s.cumulativeCreditsCalc != null,
       );
     } catch (_) {
       anchor = null;

@@ -35,9 +35,8 @@ class StreakCalculator {
     // Current streak: walk backwards from today (or yesterday if not
     // studied today — streak is still alive until midnight)
     int current = 0;
-    DateTime cursor = studiedToday
-        ? todayNorm
-        : todayNorm.subtract(const Duration(days: 1));
+    DateTime cursor =
+        studiedToday ? todayNorm : todayNorm.subtract(const Duration(days: 1));
 
     for (final date in unique) {
       if (date == cursor) {

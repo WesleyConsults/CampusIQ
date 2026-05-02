@@ -32,7 +32,8 @@ class CourseCard extends ConsumerStatefulWidget {
 
 class _CourseCardState extends ConsumerState<CourseCard> {
   late double _sliderValue;
-  late double _savedScore; // score at the time this card was mounted — does not change during drag
+  late double
+      _savedScore; // score at the time this card was mounted — does not change during drag
 
   @override
   void initState() {
@@ -85,32 +86,45 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                         children: [
                           Text(
                             widget.course.code,
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textPrimary),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: AppTheme.textPrimary),
                           ),
                           if (widget.isHighImpact) ...[
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: AppTheme.accent.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
                                 'High impact',
-                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppTheme.accent.withValues(alpha: 0.9)),
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        AppTheme.accent.withValues(alpha: 0.9)),
                               ),
                             ),
                           ],
                         ],
                       ),
                       const SizedBox(height: 2),
-                      Text(widget.course.name, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                      Text(widget.course.name,
+                          style: const TextStyle(
+                              fontSize: 13, color: AppTheme.textSecondary)),
                     ],
                   ),
                 ),
                 Text(
                   '${widget.course.creditHours.toInt()} cr',
-                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w500),
                 ),
                 PopupMenuButton<String>(
                   onSelected: (v) {
@@ -141,9 +155,13 @@ class _CourseCardState extends ConsumerState<CourseCard> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Text('Expected score:', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                const Text('Expected score:',
+                    style:
+                        TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                 const Spacer(),
-                Text('${_sliderValue.toInt()}%', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                Text('${_sliderValue.toInt()}%',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13)),
               ],
             ),
             Slider(
@@ -156,10 +174,10 @@ class _CourseCardState extends ConsumerState<CourseCard> {
               onChanged: (value) {
                 setState(() => _sliderValue = value);
                 ref.read(whatifProvider.notifier).setAdjustedScore(
-                  _courseId,
-                  value,
-                  _savedScore,
-                );
+                      _courseId,
+                      value,
+                      _savedScore,
+                    );
                 widget.onScoreChanged(value);
               },
             ),
@@ -179,28 +197,31 @@ class _CourseCardState extends ConsumerState<CourseCard> {
 
   void _triggerExplain() {
     final courses = ref.read(coursesProvider).valueOrNull ?? [];
-    final pairs = courses.map((c) => (creditHours: c.creditHours, score: c.expectedScore)).toList();
+    final pairs = courses
+        .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
+        .toList();
     final originalCwa = CwaCalculator.calculate(pairs);
 
     final courseIndex = courses.indexWhere((c) => c.id == widget.course.id);
     final newCwa = courseIndex >= 0
-        ? CwaCalculator.whatIf(courses: pairs, index: courseIndex, newScore: _sliderValue)
+        ? CwaCalculator.whatIf(
+            courses: pairs, index: courseIndex, newScore: _sliderValue)
         : originalCwa;
 
     final targetCwa = ref.read(targetCwaProvider);
 
     ref.read(whatifProvider.notifier).explainChange(
-      _courseId,
-      WhatIfInput(
-        courseCode: widget.course.code,
-        courseName: widget.course.name,
-        creditHours: widget.course.creditHours.toInt(),
-        originalScore: _savedScore,
-        newScore: _sliderValue,
-        originalCwa: originalCwa,
-        newCwa: newCwa,
-        targetCwa: targetCwa,
-      ),
-    );
+          _courseId,
+          WhatIfInput(
+            courseCode: widget.course.code,
+            courseName: widget.course.name,
+            creditHours: widget.course.creditHours.toInt(),
+            originalScore: _savedScore,
+            newScore: _sliderValue,
+            originalCwa: originalCwa,
+            newCwa: newCwa,
+            targetCwa: targetCwa,
+          ),
+        );
   }
 }

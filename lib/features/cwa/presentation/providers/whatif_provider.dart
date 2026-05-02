@@ -7,7 +7,7 @@ import 'package:campusiq/features/ai/data/repositories/ai_usage_repository.dart'
 
 class WhatIfState {
   final Map<String, String?> explanations; // courseId → explanation text
-  final Map<String, bool> isLoading;       // courseId → loading state
+  final Map<String, bool> isLoading; // courseId → loading state
   final Map<String, double> adjustedScores; // courseId → current slider value
   final String? error;
 
@@ -61,7 +61,8 @@ class WhatIfNotifier extends StateNotifier<WhatIfState> {
     // Avoid re-calling if we already have an explanation for the same slider value
     final cached = state.explanations[courseId];
     final currentAdjusted = state.adjustedScores[courseId];
-    if (cached != null && currentAdjusted != null &&
+    if (cached != null &&
+        currentAdjusted != null &&
         (currentAdjusted - input.newScore).abs() < 0.01) {
       return;
     }
@@ -104,7 +105,10 @@ class WhatIfNotifier extends StateNotifier<WhatIfState> {
       final explanation = await client.complete(
         systemPrompt: prompt,
         messages: const [
-          {'role': 'user', 'content': 'Explain the impact of this score change.'}
+          {
+            'role': 'user',
+            'content': 'Explain the impact of this score change.'
+          }
         ],
         maxTokens: 120,
       );
@@ -131,6 +135,7 @@ class WhatIfNotifier extends StateNotifier<WhatIfState> {
   }
 }
 
-final whatifProvider = StateNotifierProvider<WhatIfNotifier, WhatIfState>((ref) {
+final whatifProvider =
+    StateNotifierProvider<WhatIfNotifier, WhatIfState>((ref) {
   return WhatIfNotifier(ref);
 });

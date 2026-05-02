@@ -1,14 +1,135 @@
 # CampusIQ — MVP Completion Report
 
-**Date:** 2026-04-28
+**Date:** 2026-05-02
 **Package:** com.wesleyconsults.campusiq
-**Status:** v1.0 Lean Build — Dead-weight removed; Play Store ready
+**Status:** v1.0 Lean Build with UI Navigation Redesign (Phases 0–8 complete)
 
 ---
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The v1.0 build covers: CWA Target Planner, Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes), Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Daily Study Plan, Course Hub Workspace (per-course notes, files, sessions, AI chat), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, Cumulative CWA with Past Result Slip Import, and Source-Grounded AI (PDF text extraction + "From My Notes" mode). **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, and the Course Hub Flashcards tab — all cut to reduce complexity and improve stability for launch.
+CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The v1.0 build covers: CWA Target Planner, Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes), Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, and Cumulative CWA with Past Result Slip Import. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the Course Hub Flashcards tab, the Course Hub Files tab, and the Course Hub per-course AI chat — all cut to reduce complexity and improve stability for launch.
+
+---
+
+## Session Update: UI Navigation Redesign (Phases 0–8)
+
+This session completed the full CampusIQ UI navigation redesign through Phase 8 without expanding feature scope or introducing new database concepts.
+
+### What changed
+
+- The shell navigation now uses **3 bottom-nav destinations only**: `CWA`, `Table`, and `Sessions`.
+- The internal route `/plan` remains the launch route, but the screen is now user-facing **Today**, acting as the student's home base.
+- `Today` now has a **top-left menu button** that opens secondary destinations:
+  - `Today`
+  - `Streak`
+  - `Insights`
+  - `Weekly Review`
+  - `Settings`
+  - `Subscribe`
+- `CWA`, `Table`, and `Sessions` each now have a **visible top-left Home button** that routes back to `/plan`.
+- The shell still preserves the **global AI FAB** and the **active-session floating mini timer**.
+- The final shell structure is now:
+  - `Today` at `/plan`
+  - `CWA` at `/cwa`
+  - `Table` at `/timetable`
+  - `Sessions` at `/sessions`
+
+### CWA redesign delivered in this session
+
+- The CWA screen header now follows a clearer structure:
+  - `Home`
+  - `CWA`
+  - `Import`
+  - `More`
+- The **Semester / Cumulative** segmented switcher stays directly under the app bar because it changes screen meaning.
+- Semester mode now presents:
+  - current semester CWA summary
+  - course-wise course list
+  - credits summary
+  - import helper CTA
+- Cumulative mode now presents:
+  - cumulative CWA summary
+  - academic history / past semesters
+  - total credit context where data exists
+- Existing Course Hub entry points from CWA were preserved.
+
+### CWA import flow delivered in this session
+
+- Tapping `Import` on CWA now opens a **rounded Material 3 bottom sheet** with:
+  - `Take Photo`
+  - `Upload Image`
+  - `Choose PDF`
+  - `Enter Manually`
+- Existing registration-slip and result-slip import flows were **reused**, not replaced.
+- Camera, gallery, and PDF options can now deep-link directly into the existing import screens with an initial source.
+- `Enter Manually` now opens a dedicated full-screen route:
+  - `/cwa/manual-entry?mode=semester|cumulative`
+
+### Manual entry delivered in this session
+
+- The new **Enter Courses Manually** screen is a focused full-screen form outside the shell.
+- It intentionally does **not** show:
+  - bottom navigation
+  - the shell AI FAB
+- It supports both `Semester` and `Cumulative` modes, defaulting from the mode selected in CWA.
+- It includes:
+  - semester information card
+  - repeatable course cards
+  - validation
+  - duplicate course-code warning
+  - live course / credit / estimated CWA summary
+  - sticky `Cancel` and `Save Courses` actions
+- Saving reuses the existing repositories and models:
+  - `CourseModel` / `CwaRepository` for semester
+  - `PastSemesterModel` / `PastResultRepository` for cumulative
+- Back and cancel now protect against accidental data loss with an unsaved-changes discard flow.
+
+### Polish and accessibility completed in this session
+
+- Consistent padding, spacing, border radius, and card styling were aligned across:
+  - Today
+  - bottom navigation
+  - CWA
+  - CWA import bottom sheet
+  - manual entry
+- Touch targets and semantics/tooltips were improved for:
+  - Home
+  - Import
+  - Add course
+  - Remove course
+  - Save courses
+  - Cancel
+- The manual-entry screen was hardened for:
+  - keyboard-safe scrolling
+  - sticky bottom actions on small screens
+  - dark-mode resilience
+  - reduced overflow risk
+
+### Final regression and cleanup completed in this session
+
+- Added widget regression coverage in:
+  - `test/ui_redesign_regression_test.dart`
+- Regression smoke coverage now checks:
+  - shell navigation presence
+  - shell AI FAB visibility
+  - CWA import sheet options
+  - manual-entry rendering on small screens
+  - active-session mini timer visibility
+- A small-screen manual-entry dropdown overflow issue was found and fixed by making the dropdowns expand safely and ellipsize long values.
+
+### Validation completed in-session
+
+- `dart format .`
+- `flutter analyze`
+- `flutter test`
+
+The latest validation runs completed successfully aside from the repo's pre-existing non-blocking analyzer warnings/info items.
+
+Current validation state:
+- `dart format .` passed
+- `flutter test` passed
+- `flutter analyze` still reports the existing repo baseline of 56 warnings/info items, mainly generated Riverpod deprecations, experimental Isar generated API warnings, and a few unrelated lint issues outside this redesign scope
 
 ---
 
@@ -20,7 +141,7 @@ CampusIQ is a Flutter-based academic planning app built Android-first for Ghanai
 | Language | Dart |
 | State management | Riverpod (riverpod_annotation + riverpod_generator) |
 | Local storage | Isar 3.x |
-| Navigation | Go Router |
+| Navigation | GoRouter with shell + full-screen push routes |
 | Fonts | Google Fonts — Inter |
 | Code generation | build_runner + isar_generator + riverpod_generator |
 
@@ -43,6 +164,31 @@ lib/features/<feature>/
 ```
 
 Business logic is never placed in widgets. Domain layer has zero Flutter dependencies.
+
+---
+
+## Current Navigation Snapshot
+
+### Shell routes
+
+- `/plan` — user-facing **Today**
+- `/cwa`
+- `/timetable`
+- `/sessions`
+- `/streak`
+- `/insights`
+- `/settings`
+- `/ai`
+
+### Full-screen routes outside the shell
+
+- `/subscribe`
+- `/ai/weekly-review`
+- `/course/:courseCode`
+- `/timetable/import`
+- `/cwa/manual-entry`
+
+These full-screen routes intentionally do not show the bottom nav or shell AI FAB.
 
 ---
 
@@ -251,27 +397,18 @@ lib/
 │   └── course_hub/                                — Phase 15.1 + 15.4
 │       ├── data/
 │       │   ├── models/course_note_model.dart      — Isar @collection: notes per course
-│       │   ├── models/course_file_model.dart      — Isar @collection: attached files; +extractedText, +isTextExtractable (15.4)
-│       │   ├── repositories/course_note_repository.dart
-│       │   └── repositories/course_file_repository.dart — +getExtractableFiles() (15.4)
+│       │   └── repositories/course_note_repository.dart
 │       ├── domain/
-│       │   ├── course_hub_context_builder.dart    — pure Dart: build() for general mode; +buildSourceGroundedContext() (15.4)
-│       │   └── course_pdf_extractor.dart          — Phase 15.4: pure Dart syncfusion PDF extractor; 150-char min, 40k-char cap
+│       │   └── course_hub_context_builder.dart    — pure Dart context summary builder for course-scoped stats
 │       └── presentation/
 │           ├── providers/
-│           │   ├── course_note_provider.dart      — @riverpod Stream family per courseCode
-│           │   ├── course_file_provider.dart      — @riverpod Stream family per courseCode
-│           │   └── hub_ai_provider.dart           — HubAiNotifier.family; +isSourceGrounded state, +toggleSourceGrounded(), source-grounded prompt branch (15.4)
-│           ├── screens/course_hub_screen.dart     — 6-tab DefaultTabController screen
+│           │   └── course_note_provider.dart      — @riverpod Stream family per courseCode
+│           ├── screens/course_hub_screen.dart     — 3-tab DefaultTabController screen
 │           └── widgets/
 │               ├── hub_overview_tab.dart          — course info, expected score, CWA impact, stats, streak
 │               ├── hub_sessions_tab.dart          — course-scoped bar chart + session history
 │               ├── hub_notes_tab.dart             — note list with FAB, Dismissible delete, edit sheet
-│               ├── hub_files_tab.dart             — file attach with PDF extraction + "Reading PDF…" loading state (15.4)
-│               ├── hub_flashcards_tab.dart        — per-course exam prep (hubExamPrepProvider family)
-│               ├── hub_ai_tab.dart                — per-course AI chat; From My Notes / General toggle chips, source summary strip, empty state (15.4)
-│               ├── note_editor_sheet.dart         — DraggableScrollableSheet for create/edit notes
-│               └── file_tile.dart                 — PDF/image file row; +"📄 Text indexed" / "🖼 Visual only" chips (15.4)
+│               └── note_editor_sheet.dart         — DraggableScrollableSheet for create/edit notes
 └── shared/
     ├── extensions/double_extensions.dart
     ├── widgets/empty_state_widget.dart
@@ -295,7 +432,7 @@ lib/
 | `/ai/weekly-review` | AI-powered Weekly Review (full screen) | 15 |
 | `/settings` | Notification Settings + DEV premium toggle | 14 |
 | `/subscribe` | Premium subscription upsell stub | 12+ |
-| `/course/:courseCode` | Course Hub Workspace (5-tab per-course workspace) | 15.1 |
+| `/course/:courseCode` | Course Hub Workspace (3-tab per-course workspace) | 15.1 |
 | `/timetable/import` | Timetable Image Import (full-screen, no bottom nav) | 15.2 |
 
 Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating mini-timer and AI Assistant FAB are rendered inside `_AppShell` and persist across all tab switches. The bottom nav shows: Dashboard, CWA, Table, Sessions. The Streak indicator is located in the AppBar headers.
@@ -533,17 +670,14 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 
 | Feature | Description |
 |---|---|
-| Course Hub Screen | `DefaultTabController(length: 5)` wrapping a Scaffold with a scrollable `TabBar`; resolves the route `courseCode` parameter against `coursesProvider` before rendering |
+| Course Hub Screen | `DefaultTabController(length: 3)` wrapping a Scaffold with a scrollable `TabBar`; resolves the route `courseCode` parameter against `coursesProvider` before rendering |
 | Overview tab | Course info card, expected score with `LinearProgressIndicator` + grade chip, CWA impact card (contribution points, current CWA, weight %), study stats (session count, total time, last studied), streak mini-card |
 | Sessions tab | Course-scoped `WeeklyBarChart` using `PlannedActualAnalyser` with empty class/personal slots; reverse-chronological session list; swipe-to-delete |
 | Notes tab | `StreamProvider`-backed note list; FAB opens `NoteEditorSheet` (create); tap opens edit mode; `Dismissible` swipe to delete |
-| Files tab | `StreamProvider`-backed file list; attach button opens `FilePicker` (PDF, images, docs); file is copied to `appDir/course_files/<courseCode>/`; `OpenFilex` opens file; swipe/delete removes record and physical file |
-| AI Chat tab | Per-course AI chat backed by `hubAiProvider` family; shares `chat` quota (3/day free); `HubAiNotifier._buildSystemPrompt()` injects full course context via `CourseHubContextBuilder` |
-| CourseHubContextBuilder | Pure Dart; builds a multi-line context string from `CourseModel`, filtered `StudySessionModel` list, `CourseNoteModel` list, and `StreakResult`; injected into the AI system prompt for focused, context-aware responses |
+| CourseHubContextBuilder | Pure Dart; builds a compact course context summary from `CourseModel`, filtered `StudySessionModel` list, `CourseNoteModel` list, and `StreakResult` for any future scoped surfaces |
 | Entry points | CWA screen: "Open Workspace" as first item in course card `PopupMenuButton`; Timetable: "Open Workspace" `OutlinedButton` in slot detail sheet; Sessions: `InkWell` tap on each course row in `CourseBreakdownCard` |
-| History isolation | Hub AI sessions use feature key `'course_<code>'`; `AiChatRepository.createSession` now accepts optional `courseCode` param; `AiChatSessionModel` has a new `@Index() String? courseCode` field |
 
-**Isar schemas:** `CourseNoteModel`, `CourseFileModel` (new); `AiChatSessionModel` (updated — added `courseCode` field)
+**Isar schemas:** `CourseNoteModel`
 
 ---
 
@@ -623,40 +757,16 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 
 ---
 
-### Phase 15.4 — Source-Grounded AI ("From My Notes" Mode)
-
-**No new routes. No new screens. No new Isar collections.** All changes are inside the Course Hub feature.
-
-#### Session 1 — PDF Text Extraction Pipeline
+### Phase 15.4 — Launch Scope Reduction
 
 | Feature | Description |
 |---|---|
-| `syncfusion_flutter_pdf` dependency | Local PDF text extraction — offline, no API key |
-| `CourseFileModel` updated | Two new fields: `String? extractedText` and `bool isTextExtractable` — Isar handles migration automatically (nullable / default false) |
-| `CoursePdfExtractor` | New pure Dart domain class; reads PDF bytes, iterates pages via `sf.PdfTextExtractor`, enforces a 150-char minimum (filters scanned/image-only PDFs) and a 40,000-char storage cap (silent truncation for large docs) |
-| `getExtractableFiles()` | New `CourseFileRepository` method — queries Isar for all files in a course where `isTextExtractable == true` |
-| PDF upload flow | `hub_files_tab.dart`: after copying PDF to local storage, runs `CoursePdfExtractor.extract()` before the Isar write; button label changes to **"Reading PDF…"** and is disabled during extraction; non-PDF files skip the extractor entirely |
-| `file_tile.dart` chip | Text-indexed PDFs show a green **"📄 Text indexed"** chip; scanned/image-only PDFs show a grey **"🖼 Visual only — AI cannot read this"** chip; non-PDF files show no chip |
+| Course Hub simplification | The launch build removes the Course Hub Files tab and per-course AI chat, leaving a focused 3-tab workspace: Overview, Sessions, Notes |
+| File feature removal | `CourseFileModel`, file repository/provider wiring, PDF extraction helpers, and file UI components were deleted from the launch branch |
+| Per-course AI removal | `hub_ai_provider.dart` and `hub_ai_tab.dart` were removed; AI remains available only in the main `/ai` surfaces |
+| Isar cleanup | `CourseFileModelSchema` was removed from `isarProvider`, so the file feature is no longer part of the active local schema set |
 
-#### Session 2 — Source-Grounded Mode in Hub AI Tab
-
-| Feature | Description |
-|---|---|
-| `buildSourceGroundedContext()` | New instance method on `CourseHubContextBuilder`; assembles a structured context block from notes and extractable PDF text; hard-capped at 15,000 chars to stay within DeepSeek's context window |
-| `isSourceGrounded` state | New field on `HubAiState`; defaults to `false`; persists across messages within the same notifier instance |
-| `toggleSourceGrounded()` | New method on `HubAiNotifier`; flips the state flag |
-| Updated `_buildSystemPrompt()` | When `isSourceGrounded` is true: loads notes from the stream cache + refreshes `_extractableFiles` from Isar; if no materials exist, returns the sentinel `'__EMPTY_SOURCE_CONTEXT__'`; otherwise returns the grounded system prompt instructing the AI to cite note title or PDF filename; falls back to the existing general prompt when `isSourceGrounded` is false |
-| Context refresh on send | `_extractableFiles` is re-fetched from Isar on every `sendMessage()` call while in grounded mode — deleted files are excluded from the next response |
-| Two-chip mode selector | Replaces the old "Focused on [Code]" indigo banner; **📚 From My Notes** and **🌐 General** `FilterChip` widgets; selected chip is navy (`Color(0xFF0A1F44)`) with white text |
-| Source summary strip | Shown when grounded mode is ON and materials exist; displays note count, indexed PDF count, and a "(N visual only — not included)" note if applicable |
-| Empty state | When grounded mode is ON but there are zero notes and zero extractable PDFs, the chat area is replaced with a folder icon + instructions; text input is hidden; no messages can be sent |
-| Quota unchanged | Source-grounded messages share the existing `chat` quota (3/day free); `PremiumGateWidget` behaviour is unchanged |
-
-**Modified files:** `course_file_model.dart`, `course_file_model.g.dart` (regenerated), `course_file_repository.dart`, `course_hub_context_builder.dart`, `hub_ai_provider.dart`, `hub_files_tab.dart`, `hub_ai_tab.dart`, `file_tile.dart`, `pubspec.yaml`
-
-**New file:** `domain/course_pdf_extractor.dart`
-
-**Isar schemas:** `CourseFileModel` updated (two new fields — no manual migration needed)
+**Launch cleanup commit:** `Remove workspace files and AI chat`
 
 ---
 
@@ -695,21 +805,18 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 | `/course/:courseCode` null safety | `app_router.dart`: empty/null `courseCode` redirects to `/cwa` with snackbar; unresolved `CourseModel` shows a fallback `Scaffold` with back button instead of crashing |
 | Snackbars for silent failures | All user-triggered writes (save, delete, swipe-to-dismiss) that previously swallowed exceptions now show `ScaffoldMessenger` snackbars with human-readable messages |
 
-#### Session 4 — Timer Reliability + File/PDF/Image Safety
+#### Session 4 — Timer Reliability + Launch Safety
 
 | Change | Description |
 |---|---|
 | Timer reliability verified | `startTime` confirmed as `DateTime.now()` anchor; `elapsed` = `DateTime.now().difference(startTime)`; `phaseRemaining` already clamped to `Duration.zero`; `_lastFiredPhaseEnd` guard confirmed preventing double phase-fire; `advancePhase()` confirmed idempotent via state checks; app-kill mid-Pomodoro cleanly abandons session on relaunch (no phantom state) |
-| 50 MB file size guard | `hub_files_tab.dart`: checks `result.files.single.size > 50 MB` before copying; shows snackbar and aborts — no partial writes |
-| PDF extraction timeout | `hub_files_tab.dart`: `.timeout(Duration(seconds: 30))` wrapping `CoursePdfExtractor.extract()` with `onTimeout: () => (text: '', isExtractable: false)` — "Reading PDF…" state always resolves |
-| `OpenFilex` hardened | `_openFile()` wrapped in try-catch; updated snackbar message: `"Could not open file. You may need an app to view this type of file."` |
-| PDF extractor logging | `course_pdf_extractor.dart`: `debugPrint('🔴 PDF extraction failed: $e')` in catch block |
+| Course Hub launch scope verified | Stability pass now assumes the launch Course Hub surface is Overview, Sessions, and Notes only; removed Files and hub AI surfaces are no longer part of the active manual test scope |
 | Timetable import error message | Updated empty-parse message to `"No timetable slots could be detected. Try a clearer image."` (aligns with guide spec) |
 | Slip import guards confirmed | Both `registration_slip_import_provider.dart` and `result_slip_import_provider.dart` already route empty parse to error state — confirmed no change needed |
 
 **New files (Phase 15.5):** `core/services/connectivity_service.dart`, `core/providers/connectivity_provider.dart`, `shared/widgets/offline_banner.dart`, `shared/widgets/error_retry_widget.dart`
 
-**Modified files (Phase 15.5):** `main.dart`, `app_router.dart`, all 9 AI provider files (offline guard), all 13 repository files (Isar write safety), all 14 screen files (state coverage), `deepseek_client.dart`, `timetable_vision_parser.dart`, `registration_slip_parser.dart`, `result_slip_parser.dart`, `hub_files_tab.dart`, `course_pdf_extractor.dart`, `timetable_import_provider.dart`
+**Modified files (Phase 15.5):** `main.dart`, `app_router.dart`, all 9 AI provider files (offline guard), all 13 repository files (Isar write safety), all 14 screen files (state coverage), `deepseek_client.dart`, `timetable_vision_parser.dart`, `registration_slip_parser.dart`, `result_slip_parser.dart`, `timetable_import_provider.dart`
 
 ---
 
@@ -732,7 +839,6 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 | `DailyPlanTaskModel` | Daily Plan | 15 | Daily tasks and checklist items with completion state |
 | ~~`ExamModel`~~ | ~~Exam Mode~~ | ~~15~~ | **Removed in v1.0** |
 | `CourseNoteModel` | Course Hub | 15.1 | Per-course markdown notes |
-| `CourseFileModel` | Course Hub | 15.1 / 15.4 | Attached file records; `extractedText` and `isTextExtractable` added in 15.4 |
 | `PastSemesterModel` | CWA | 15.3 | Past semester results |
 
 ---
@@ -758,13 +864,11 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating
 | flutter_timezone | ^5.0.2 | Device timezone detection |
 | timezone | ^0.11.0 | Timezone data for scheduling |
 | workmanager | ^0.9.0 | Background task execution |
-| file_picker | ^8.1.2 | Native file picker (PDF, images, docs) for Course Hub file attachments |
 | open_filex | ^4.4.1 | Open attached files with the device's default app handler |
 | image_picker | ^1.1.2 | Camera and gallery image picker for timetable image import (Phase 15.2) |
 | flutter_markdown | ^0.7.3 | Markdown rendering for AI chat assistant bubbles |
 | flutter_math_fork | ^0.7.2 | LaTeX math rendering (`Math.tex()`) for inline and display math in AI chat |
 | markdown | ^7.2.2 | Custom `InlineSyntax` extension for `$...$` detection inside `MarkdownBody` |
-| syncfusion_flutter_pdf | ^26.2.14 | Offline PDF text extraction for Course Hub source-grounded AI (Phase 15.4) |
 | connectivity_plus | ^6.0.3 | On-demand network connectivity check for offline guards before AI/API calls (Phase 15.5) |
 
 ### Dev
@@ -868,6 +972,7 @@ flutter run
 | AI rendering fix S4 | `fix: eliminate display-math crash in AI chat bubble` (pre-split $$...$$ before MarkdownBody; remove debug ErrorWidget.builder) |
 | Phase 15.4 S1 | `feat(phase-15.4): session 1 — PDF text extraction pipeline` |
 | Phase 15.4 S2 | `feat(phase-15.4): session 2 — source-grounded AI mode in course hub` |
+| Launch cleanup | `Remove workspace files and AI chat` |
 | Pomodoro | `feat(phase-15.4): PDF text extraction pipeline + source-grounded AI mode` → `feat(sessions): Pomodoro study mode — countdown timer, round tracking, focus-only save` |
 | Phase 15.5 S1 | `fix(15.5-S1): global error capture + API/AI call hardening` |
 | Phase 15.5 S2 | `fix(15.5-S2): offline detection, Isar write safety, provider error state coverage` |

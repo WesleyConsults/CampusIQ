@@ -13,7 +13,16 @@ import 'package:campusiq/core/services/connectivity_service.dart';
 
 part 'result_slip_import_provider.g.dart';
 
-enum ResultImportStep { idle, picking, parsing, labelling, reviewing, saving, done, error }
+enum ResultImportStep {
+  idle,
+  picking,
+  parsing,
+  labelling,
+  reviewing,
+  saving,
+  done,
+  error
+}
 
 class ResultImportState {
   final ResultImportStep step;
@@ -56,9 +65,12 @@ class ResultImportState {
         semesterLabel: semesterLabel ?? this.semesterLabel,
         errorMessage: errorMessage,
         reportedSemesterCwa: reportedSemesterCwa ?? this.reportedSemesterCwa,
-        reportedCumulativeCwa: reportedCumulativeCwa ?? this.reportedCumulativeCwa,
-        cumulativeCreditsCalc: cumulativeCreditsCalc ?? this.cumulativeCreditsCalc,
-        cumulativeWeightedMarks: cumulativeWeightedMarks ?? this.cumulativeWeightedMarks,
+        reportedCumulativeCwa:
+            reportedCumulativeCwa ?? this.reportedCumulativeCwa,
+        cumulativeCreditsCalc:
+            cumulativeCreditsCalc ?? this.cumulativeCreditsCalc,
+        cumulativeWeightedMarks:
+            cumulativeWeightedMarks ?? this.cumulativeWeightedMarks,
       );
 }
 
@@ -128,8 +140,9 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
         );
         return;
       }
-      final mime =
-          (file.extension ?? '').toLowerCase() == 'pdf' ? 'application/pdf' : 'image/jpeg';
+      final mime = (file.extension ?? '').toLowerCase() == 'pdf'
+          ? 'application/pdf'
+          : 'image/jpeg';
       await _parse(bytes, mime);
     } catch (e) {
       state = state.copyWith(
@@ -176,7 +189,8 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
       state = ResultImportState(
         step: ResultImportStep.labelling,
         courses: parseResult.courses,
-        selectedIndexes: Set.from(List.generate(parseResult.courses.length, (i) => i)),
+        selectedIndexes:
+            Set.from(List.generate(parseResult.courses.length, (i) => i)),
         reportedSemesterCwa: parseResult.reportedSemesterCwa,
         reportedCumulativeCwa: parseResult.reportedCumulativeCwa,
         cumulativeCreditsCalc: parseResult.cumulativeCreditsCalc,

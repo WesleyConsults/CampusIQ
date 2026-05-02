@@ -10,6 +10,7 @@ class AddSlotSheet extends ConsumerStatefulWidget {
   final String semesterKey;
   final int colorValue;
   final TimetableSlotModel? existing;
+
   /// If opened from a free block, pre-fill these times
   final int? prefillStartMinutes;
   final int? prefillEndMinutes;
@@ -52,8 +53,10 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
       _slotType = existing.slotType;
       _dayIndex = existing.dayIndex;
     } else {
-      _startMinutes = widget.prefillStartMinutes ?? TimetableConstants.gridStartMinutes + 120; // 8AM default
-      _endMinutes = widget.prefillEndMinutes ?? _startMinutes + 120; // 2hr default
+      _startMinutes = widget.prefillStartMinutes ??
+          TimetableConstants.gridStartMinutes + 120; // 8AM default
+      _endMinutes =
+          widget.prefillEndMinutes ?? _startMinutes + 120; // 2hr default
       _slotType = TimetableConstants.slotTypes.first;
       _dayIndex = widget.dayIndex;
     }
@@ -69,7 +72,8 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
 
   Future<void> _pickTime(bool isStart) async {
     final currentMinutes = isStart ? _startMinutes : _endMinutes;
-    final initial = TimeOfDay(hour: currentMinutes ~/ 60, minute: currentMinutes % 60);
+    final initial =
+        TimeOfDay(hour: currentMinutes ~/ 60, minute: currentMinutes % 60);
     final picked = await showTimePicker(context: context, initialTime: initial);
     if (picked == null) return;
     int total = picked.hour * 60 + picked.minute;
@@ -118,7 +122,9 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        left: 20, right: 20, top: 20,
+        left: 20,
+        right: 20,
+        top: 20,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Form(
@@ -130,50 +136,53 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
             children: [
               Text(
                 widget.existing == null ? 'Add Class' : 'Edit Class',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 20),
 
               // Fast selection from CWA courses
               ref.watch(coursesProvider).when(
-                data: (courses) {
-                  if (courses.isEmpty) return const SizedBox.shrink();
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Select from My Courses:',
-                        style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-                      ),
-                      const SizedBox(height: 8),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: courses.map((course) {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: ActionChip(
-                                label: Text(course.code),
-                                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                                side: BorderSide.none,
-                                onPressed: () {
-                                  setState(() {
-                                    _codeController.text = course.code;
-                                    _nameController.text = course.name;
-                                  });
-                                },
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  );
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
+                    data: (courses) {
+                      if (courses.isEmpty) return const SizedBox.shrink();
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Select from My Courses:',
+                            style: TextStyle(
+                                fontSize: 13, color: AppTheme.textSecondary),
+                          ),
+                          const SizedBox(height: 8),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: courses.map((course) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: ActionChip(
+                                    label: Text(course.code),
+                                    backgroundColor:
+                                        AppTheme.primary.withValues(alpha: 0.1),
+                                    side: BorderSide.none,
+                                    onPressed: () {
+                                      setState(() {
+                                        _codeController.text = course.code;
+                                        _nameController.text = course.name;
+                                      });
+                                    },
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      );
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
 
               // Day selector
               DropdownButtonFormField<int>(
@@ -182,7 +191,9 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                 decoration: const InputDecoration(labelText: 'Day'),
                 items: List.generate(
                   TimetableConstants.dayFullLabels.length,
-                  (i) => DropdownMenuItem(value: i, child: Text(TimetableConstants.dayFullLabels[i])),
+                  (i) => DropdownMenuItem(
+                      value: i,
+                      child: Text(TimetableConstants.dayFullLabels[i])),
                 ),
                 onChanged: (v) => setState(() => _dayIndex = v!),
               ),
@@ -190,21 +201,26 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
 
               TextFormField(
                 controller: _codeController,
-                decoration: const InputDecoration(labelText: 'Course code (e.g. COE 456)'),
+                decoration: const InputDecoration(
+                    labelText: 'Course code (e.g. COE 456)'),
                 textCapitalization: TextCapitalization.characters,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Course name'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _venueController,
-                decoration: const InputDecoration(labelText: 'Venue (e.g. Hall 3)'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                decoration:
+                    const InputDecoration(labelText: 'Venue (e.g. Hall 3)'),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
 
@@ -250,9 +266,11 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                     backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: Text(widget.existing == null ? 'Add Class' : 'Save Changes'),
+                  child: Text(
+                      widget.existing == null ? 'Add Class' : 'Save Changes'),
                 ),
               ),
             ],
@@ -268,7 +286,8 @@ class _TimeTile extends StatelessWidget {
   final String value;
   final VoidCallback onTap;
 
-  const _TimeTile({required this.label, required this.value, required this.onTap});
+  const _TimeTile(
+      {required this.label, required this.value, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -284,9 +303,13 @@ class _TimeTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 11, color: AppTheme.textSecondary)),
             const SizedBox(height: 4),
-            Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            Text(value,
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
           ],
         ),
       ),

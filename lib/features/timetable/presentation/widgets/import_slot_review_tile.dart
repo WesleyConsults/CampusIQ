@@ -25,14 +25,13 @@ class ImportSlotReviewTile extends ConsumerWidget {
 
     final chipColor = switch (slot.slotType) {
       'Practical' => Colors.teal,
-      'Tutorial'  => Colors.orange,
-      _           => AppTheme.primary,
+      'Tutorial' => Colors.orange,
+      _ => AppTheme.primary,
     };
 
     return InkWell(
-      onTap: () => ref
-          .read(timetableImportNotifierProvider.notifier)
-          .toggleSlot(index),
+      onTap: () =>
+          ref.read(timetableImportNotifierProvider.notifier).toggleSlot(index),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Row(

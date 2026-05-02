@@ -25,11 +25,9 @@ final isarProvider = FutureProvider<Isar>((ref) async {
       CourseModelSchema,
       PastSemesterModelSchema,
       TimetableSlotModelSchema,
-
       StudySessionModelSchema,
       UserPrefsModelSchema,
       DailyPlanTaskModelSchema,
-
       SubscriptionModelSchema,
       AiChatSessionModelSchema,
       AiMessageModelSchema,

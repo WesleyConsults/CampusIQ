@@ -13,8 +13,20 @@ class WeeklyReviewScreen extends ConsumerWidget {
   String _formatMonday(String mondayDate) {
     try {
       final d = DateTime.parse(mondayDate);
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
+      ];
       return '${months[d.month - 1]} ${d.day}, ${d.year}';
     } catch (_) {
       return mondayDate;
@@ -37,7 +49,8 @@ class WeeklyReviewScreen extends ConsumerWidget {
             if (reviewState.review != null)
               Text(
                 'Week of ${_formatMonday(reviewState.review!.weekStartDate)}',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
+                style:
+                    const TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
               ),
           ],
         ),

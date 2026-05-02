@@ -19,8 +19,7 @@ class CourseHubContextBuilder {
     final timeStr = hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
 
     final lastSession = sessions.isNotEmpty
-        ? sessions.reduce(
-            (a, b) => a.startTime.isAfter(b.startTime) ? a : b)
+        ? sessions.reduce((a, b) => a.startTime.isAfter(b.startTime) ? a : b)
         : null;
 
     final daysSinceLast = lastSession != null
@@ -49,6 +48,7 @@ Total study time: $timeStr
 Course streak: ${courseStreak.currentStreak} days ($streakStatus)
 Student notes summary: $noteSummary''';
   }
+
   static String _gradeLabel(double score) {
     if (score >= 80) return 'A';
     if (score >= 70) return 'B';

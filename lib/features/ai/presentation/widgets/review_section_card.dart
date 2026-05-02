@@ -47,7 +47,8 @@ class ReviewSectionCard extends StatelessWidget {
                     Positioned.fill(
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                        child: Container(color: Colors.white.withValues(alpha: 0.1)),
+                        child: Container(
+                            color: Colors.white.withValues(alpha: 0.1)),
                       ),
                     ),
                 ],

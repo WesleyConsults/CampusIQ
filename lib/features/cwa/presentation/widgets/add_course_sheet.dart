@@ -54,7 +54,9 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        left: 20, right: 20, top: 20,
+        left: 20,
+        right: 20,
+        top: 20,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Form(
@@ -70,22 +72,28 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
             const SizedBox(height: 20),
             TextFormField(
               controller: _codeController,
-              decoration: const InputDecoration(labelText: 'Course code (e.g. COE 456)'),
+              decoration: const InputDecoration(
+                  labelText: 'Course code (e.g. COE 456)'),
               textCapitalization: TextCapitalization.characters,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: 'Course name'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Credit hours', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-                Text('${_creditHours.toInt()}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                const Text('Credit hours',
+                    style:
+                        TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                Text('${_creditHours.toInt()}',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
               ],
             ),
             Slider(
@@ -99,8 +107,11 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Expected score', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-                Text('${_expectedScore.toInt()}%', style: const TextStyle(fontWeight: FontWeight.w600)),
+                const Text('Expected score',
+                    style:
+                        TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                Text('${_expectedScore.toInt()}%',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
               ],
             ),
             Slider(
@@ -120,9 +131,11 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
-                child: Text(widget.existing == null ? 'Add Course' : 'Save Changes'),
+                child: Text(
+                    widget.existing == null ? 'Add Course' : 'Save Changes'),
               ),
             ),
           ],

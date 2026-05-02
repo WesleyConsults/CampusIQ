@@ -36,26 +36,33 @@ class SlotDetailSheet extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 slot.courseCode,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color),
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.w700, color: color),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   slot.slotType,
-                  style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      fontSize: 11, color: color, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(slot.courseName, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
+          Text(slot.courseName,
+              style:
+                  const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
           const SizedBox(height: 16),
-          _DetailRow(icon: Icons.access_time, label: '${slot.startTimeLabel} – ${slot.endTimeLabel}'),
+          _DetailRow(
+              icon: Icons.access_time,
+              label: '${slot.startTimeLabel} – ${slot.endTimeLabel}'),
           const SizedBox(height: 8),
           _DetailRow(icon: Icons.location_on_outlined, label: slot.venue),
           const SizedBox(height: 8),
@@ -131,7 +138,9 @@ class _DetailRow extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: AppTheme.textSecondary),
         const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+        Text(label,
+            style:
+                const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
       ],
     );
   }

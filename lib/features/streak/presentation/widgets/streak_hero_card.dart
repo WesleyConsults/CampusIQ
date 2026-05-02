@@ -90,9 +90,7 @@ class StreakHeroCard extends StatelessWidget {
                       streak.lossAversionMessage!,
                       style: TextStyle(
                         fontSize: 12,
-                        color: isAlive
-                            ? Colors.white
-                            : AppTheme.textPrimary,
+                        color: isAlive ? Colors.white : AppTheme.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -166,9 +164,8 @@ class _Divider extends StatelessWidget {
     return Container(
       width: 0.5,
       height: 36,
-      color: isAlive
-          ? Colors.white.withValues(alpha: 0.2)
-          : Colors.grey.shade300,
+      color:
+          isAlive ? Colors.white.withValues(alpha: 0.2) : Colors.grey.shade300,
     );
   }
 }

@@ -9,12 +9,14 @@ class FreeBlockIndicator extends StatelessWidget {
   final FreeBlock block;
   final VoidCallback onTap;
 
-  const FreeBlockIndicator({super.key, required this.block, required this.onTap});
+  const FreeBlockIndicator(
+      {super.key, required this.block, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final topOffset = (block.startMinutes - TimetableConstants.gridStartMinutes) *
-        TimetableConstants.pixelsPerMinute;
+    final topOffset =
+        (block.startMinutes - TimetableConstants.gridStartMinutes) *
+            TimetableConstants.pixelsPerMinute;
     final height = block.durationMinutes * TimetableConstants.pixelsPerMinute;
 
     // Only show label if there's enough room

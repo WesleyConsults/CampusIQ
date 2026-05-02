@@ -28,8 +28,7 @@ class CourseHubScreen extends ConsumerWidget {
         ),
       ),
       data: (courses) {
-        final course =
-            courses.where((c) => c.code == courseCode).firstOrNull;
+        final course = courses.where((c) => c.code == courseCode).firstOrNull;
 
         if (course == null) {
           return Scaffold(
@@ -40,13 +39,12 @@ class CourseHubScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.school_outlined,
-                        size: 48, color: Colors.grey),
+                    Icon(Icons.school_outlined, size: 48, color: Colors.grey),
                     SizedBox(height: 12),
                     Text(
                       'Course not found',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                     SizedBox(height: 4),
                     Text(
@@ -78,8 +76,7 @@ class CourseHubScreen extends ConsumerWidget {
                   ),
                   Text(
                     course.name,
-                    style: const TextStyle(
-                        fontSize: 12, color: Colors.white70),
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],

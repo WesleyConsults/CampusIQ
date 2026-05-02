@@ -16,7 +16,8 @@ class InsightAnalyser {
     if (sessions.isEmpty) {
       return [
         const Insight(
-          message: 'Start logging study sessions to unlock personalised insights.',
+          message:
+              'Start logging study sessions to unlock personalised insights.',
           type: InsightType.neutral,
           icon: '💡',
         ),
@@ -33,10 +34,16 @@ class InsightAnalyser {
       dayTotals[day] = (dayTotals[day] ?? 0) + s.durationMinutes;
     }
     if (dayTotals.isNotEmpty) {
-      final best = dayTotals.entries.reduce((a, b) => a.value >= b.value ? a : b);
+      final best =
+          dayTotals.entries.reduce((a, b) => a.value >= b.value ? a : b);
       const dayNames = {
-        1: 'Monday', 2: 'Tuesday', 3: 'Wednesday',
-        4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday',
+        1: 'Monday',
+        2: 'Tuesday',
+        3: 'Wednesday',
+        4: 'Thursday',
+        5: 'Friday',
+        6: 'Saturday',
+        7: 'Sunday',
       };
       insights.add(Insight(
         message:
@@ -53,7 +60,8 @@ class InsightAnalyser {
 
       if (courseSessions.isEmpty) {
         insights.add(Insight(
-          message: "You haven't studied ${course.name} yet. It needs attention.",
+          message:
+              "You haven't studied ${course.name} yet. It needs attention.",
           type: InsightType.warning,
           courseCode: course.code,
           icon: '⚠️',
@@ -102,8 +110,8 @@ class InsightAnalyser {
     // ── Check 4 — Late-night consistency drop ─────────────────────────────────
     final lateNight = sessions.where((s) => s.startTime.hour >= 21).toList();
     if (lateNight.length >= 3) {
-      final avg =
-          lateNight.fold(0, (sum, s) => sum + s.durationMinutes) / lateNight.length;
+      final avg = lateNight.fold(0, (sum, s) => sum + s.durationMinutes) /
+          lateNight.length;
       if (avg < 30) {
         insights.add(const Insight(
           message:
@@ -153,8 +161,7 @@ class InsightAnalyser {
         .fold(0, (sum, s) => sum + s.durationMinutes);
 
     if (lastWeekMinutes > 0) {
-      final changeRatio =
-          (thisWeekMinutes - lastWeekMinutes) / lastWeekMinutes;
+      final changeRatio = (thisWeekMinutes - lastWeekMinutes) / lastWeekMinutes;
       if (changeRatio >= 0.2) {
         insights.add(const Insight(
           message: 'You studied more this week than last. Great progress.',

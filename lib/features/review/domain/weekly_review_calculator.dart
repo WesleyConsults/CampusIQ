@@ -15,8 +15,8 @@ class WeeklyReviewCalculator {
 
   WeeklyReviewData calculate(DateTime weekStart) {
     final weekEnd = weekStart.add(const Duration(days: 6));
-    final weekEndInclusive = DateTime(
-        weekEnd.year, weekEnd.month, weekEnd.day, 23, 59, 59);
+    final weekEndInclusive =
+        DateTime(weekEnd.year, weekEnd.month, weekEnd.day, 23, 59, 59);
 
     // Sessions within the week
     final weekSessions = allSessions.where((s) {
@@ -30,8 +30,13 @@ class WeeklyReviewCalculator {
 
     // Best study day
     const dayNames = {
-      1: 'Monday', 2: 'Tuesday', 3: 'Wednesday',
-      4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday',
+      1: 'Monday',
+      2: 'Tuesday',
+      3: 'Wednesday',
+      4: 'Thursday',
+      5: 'Friday',
+      6: 'Saturday',
+      7: 'Sunday',
     };
     final dayTotals = <int, int>{};
     for (final s in weekSessions) {
@@ -75,8 +80,8 @@ class WeeklyReviewCalculator {
     // Most neglected course (fewest minutes — zero counts)
     String? mostNeglectedCourse;
     if (courses.isNotEmpty) {
-      final entry = courseTotals.entries.reduce(
-          (least, e) => e.value <= least.value ? e : least);
+      final entry = courseTotals.entries
+          .reduce((least, e) => e.value <= least.value ? e : least);
       mostNeglectedCourse = courses
           .where((c) => c.code == entry.key)
           .map((c) => c.name)

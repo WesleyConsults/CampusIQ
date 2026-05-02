@@ -19,12 +19,14 @@ class ErrorRetryWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: AppTheme.textSecondary),
+            const Icon(Icons.error_outline,
+                size: 48, color: AppTheme.textSecondary),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              style:
+                  const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
