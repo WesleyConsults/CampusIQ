@@ -128,7 +128,7 @@ class _AppShell extends ConsumerWidget {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/ai'),
+        onPressed: () => context.push('/ai'),
         tooltip: 'AI Assistant',
         child: const Icon(Icons.auto_awesome),
       ),

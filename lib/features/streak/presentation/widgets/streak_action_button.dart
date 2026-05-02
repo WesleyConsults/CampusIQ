@@ -14,7 +14,7 @@ class StreakActionButton extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: IconButton(
-        onPressed: () => context.go('/streak'),
+        onPressed: () => context.push('/streak'),
         tooltip: 'View Streak',
         icon: Badge(
           isLabelVisible: hasLossRisk,

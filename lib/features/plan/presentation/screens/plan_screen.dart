@@ -145,12 +145,12 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               _DrawerItem(
                 icon: Icons.local_fire_department_outlined,
                 label: 'Streak',
-                onTap: () => _navigateFromDrawer('/streak'),
+                onTap: () => _navigateFromDrawer('/streak', push: true),
               ),
               _DrawerItem(
                 icon: Icons.auto_graph_outlined,
                 label: 'Insights',
-                onTap: () => _navigateFromDrawer('/insights'),
+                onTap: () => _navigateFromDrawer('/insights', push: true),
               ),
               _DrawerItem(
                 icon: Icons.rate_review_outlined,
@@ -161,7 +161,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               _DrawerItem(
                 icon: Icons.settings_outlined,
                 label: 'Settings',
-                onTap: () => _navigateFromDrawer('/settings'),
+                onTap: () => _navigateFromDrawer('/settings', push: true),
               ),
               _DrawerItem(
                 icon: Icons.workspace_premium_outlined,
@@ -202,7 +202,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           IconButton(
             icon: const Icon(Icons.notifications_outlined, color: Colors.white),
             tooltip: 'Notification settings',
-            onPressed: () => context.go('/settings'),
+            onPressed: () => context.push('/settings'),
           ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
