@@ -38,6 +38,7 @@ void main() {
     await _pumpFrames(tester);
 
     expect(find.text('Today'), findsWidgets);
+    expect(find.text('Home'), findsOneWidget);
     expect(find.text('CWA'), findsOneWidget);
     expect(find.text('Table'), findsOneWidget);
     expect(find.text('Sessions'), findsOneWidget);
@@ -46,8 +47,12 @@ void main() {
     await tester.tap(find.text('CWA'));
     await _pumpFrames(tester);
     expect(find.text('CWA'), findsWidgets);
+    expect(
+      _navigationDestinationContainer(tester, 'CWA'),
+      isNotNull,
+    );
 
-    await tester.tap(find.byTooltip('Go to Today'));
+    await tester.tap(find.text('Home'));
     await _pumpFrames(tester);
     expect(find.text('Today'), findsWidgets);
   });
@@ -146,4 +151,15 @@ Future<void> _pumpFrames(WidgetTester tester) async {
   for (var i = 0; i < 6; i++) {
     await tester.pump(const Duration(milliseconds: 120));
   }
+}
+
+Finder? _navigationDestinationContainer(WidgetTester tester, String label) {
+  final labelFinder = find.text(label);
+  if (labelFinder.evaluate().isEmpty) {
+    return null;
+  }
+  return find.ancestor(
+    of: labelFinder.first,
+    matching: find.byType(AnimatedContainer),
+  );
 }

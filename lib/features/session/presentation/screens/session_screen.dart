@@ -135,11 +135,6 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Go to Today',
-          icon: const Icon(Icons.home_outlined, semanticLabel: 'Go to Today'),
-          onPressed: () => context.go('/plan'),
-        ),
         title: const Text('Sessions',
             style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [

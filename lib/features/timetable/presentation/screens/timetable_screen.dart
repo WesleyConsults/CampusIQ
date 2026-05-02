@@ -108,11 +108,6 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Go to Today',
-          icon: const Icon(Icons.home_outlined, semanticLabel: 'Go to Today'),
-          onPressed: () => context.go('/plan'),
-        ),
         title:
             const Text('Table', style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [

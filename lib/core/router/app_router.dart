@@ -114,9 +114,10 @@ class _AppShell extends ConsumerWidget {
 
   int? _locationToIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith('/cwa')) return 0;
-    if (location.startsWith('/timetable')) return 1;
-    if (location.startsWith('/sessions')) return 2;
+    if (location.startsWith('/plan') || location.startsWith('/today')) return 0;
+    if (location.startsWith('/cwa')) return 1;
+    if (location.startsWith('/timetable')) return 2;
+    if (location.startsWith('/sessions')) return 3;
     return null;
   }
 
@@ -144,12 +145,15 @@ class _AppShell extends ConsumerWidget {
         onDestinationSelected: (i) {
           switch (i) {
             case 0:
-              context.go('/cwa');
+              context.go('/plan');
               return;
             case 1:
-              context.go('/timetable');
+              context.go('/cwa');
               return;
             case 2:
+              context.go('/timetable');
+              return;
+            case 3:
               context.go('/sessions');
               return;
           }
@@ -175,6 +179,11 @@ class _ShellBottomNav extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     const destinations = [
+      (
+        label: 'Home',
+        icon: Icons.home_outlined,
+        selectedIcon: Icons.home,
+      ),
       (
         label: 'CWA',
         icon: Icons.analytics_outlined,
@@ -221,7 +230,7 @@ class _ShellBottomNav extends StatelessWidget {
               final baseIcon =
                   isSelected ? destination.selectedIcon : destination.icon;
               final icon =
-                  index == 2 && isSessionActive ? Icons.timer : baseIcon;
+                  index == 3 && isSessionActive ? Icons.timer : baseIcon;
 
               return Expanded(
                 child: Semantics(
@@ -249,7 +258,7 @@ class _ShellBottomNav extends StatelessWidget {
                           Icon(
                             icon,
                             size: 20,
-                            color: index == 2 && isSessionActive && !isSelected
+                            color: index == 3 && isSessionActive && !isSelected
                                 ? Colors.red
                                 : iconColor,
                           ),

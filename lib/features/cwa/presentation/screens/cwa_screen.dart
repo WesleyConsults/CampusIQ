@@ -66,15 +66,6 @@ class CwaScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        leading: Semantics(
-          button: true,
-          label: 'Go to Today',
-          child: IconButton(
-            tooltip: 'Go to Today',
-            icon: const Icon(Icons.home_outlined, semanticLabel: 'Go to Today'),
-            onPressed: () => context.go('/plan'),
-          ),
-        ),
         title: const Text('CWA', style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
           Semantics(
