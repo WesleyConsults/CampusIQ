@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:campusiq/core/layout/shell_overlay_padding.dart';
 import 'package:campusiq/core/services/notification_service.dart';
-import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
@@ -132,6 +132,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   Widget build(BuildContext context) {
     final activeSession = ref.watch(activeSessionProvider);
     final semester = ref.watch(activeSemesterProvider);
+    final bottomContentPadding = shellOverlayBottomPadding(
+      context,
+      hasActiveSession: activeSession != null,
+    );
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
@@ -178,6 +182,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           _HistoryTab(
             activeSession: activeSession,
             semester: semester,
+            bottomContentPadding: bottomContentPadding,
             onStart: (isPomodoroMode, focus, shortBreak, longBreak) =>
                 _startSession(
               context,
@@ -193,7 +198,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
             onSkipBreak: () =>
                 ref.read(activeSessionProvider.notifier).skipBreak(),
           ),
-          const StudyPlanTab(),
+          StudyPlanTab(bottomContentPadding: bottomContentPadding),
         ],
       ),
     );
@@ -211,6 +216,7 @@ class _HistoryTab extends ConsumerWidget {
   final VoidCallback onCancel;
   final VoidCallback onPhaseExpired;
   final VoidCallback onSkipBreak;
+  final double bottomContentPadding;
 
   const _HistoryTab({
     required this.activeSession,
@@ -220,6 +226,7 @@ class _HistoryTab extends ConsumerWidget {
     required this.onCancel,
     required this.onPhaseExpired,
     required this.onSkipBreak,
+    required this.bottomContentPadding,
   });
 
   @override
@@ -319,7 +326,9 @@ class _HistoryTab extends ConsumerWidget {
             );
           },
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
+        SliverToBoxAdapter(
+          child: SizedBox(height: bottomContentPadding),
+        ),
       ],
     );
   }

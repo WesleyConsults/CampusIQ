@@ -7,7 +7,12 @@ import 'package:campusiq/features/ai/presentation/widgets/plan_day_card.dart';
 import 'package:campusiq/features/ai/presentation/widgets/plan_free_gate_card.dart';
 
 class StudyPlanTab extends ConsumerWidget {
-  const StudyPlanTab({super.key});
+  final double bottomContentPadding;
+
+  const StudyPlanTab({
+    super.key,
+    required this.bottomContentPadding,
+  });
 
   static const _dayOrder = [
     'Monday',
@@ -31,7 +36,10 @@ class StudyPlanTab extends ConsumerWidget {
       data: (isPremium) {
         // Free users see gate card — no AI call ever happens
         if (!isPremium) {
-          return const SingleChildScrollView(child: PlanFreeGateCard());
+          return SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: bottomContentPadding),
+            child: const PlanFreeGateCard(),
+          );
         }
 
         // Premium user — loading state
@@ -150,7 +158,12 @@ class StudyPlanTab extends ConsumerWidget {
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  bottomContentPadding,
+                ),
                 child: OutlinedButton.icon(
                   onPressed: () =>
                       ref.read(studyPlanProvider.notifier).generatePlan(),

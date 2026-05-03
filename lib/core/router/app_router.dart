@@ -135,6 +135,7 @@ class _AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isSessionActive = ref.watch(activeSessionProvider) != null;
     final selectedIndex = _locationToIndex(context);
+    final usesShellNav = selectedIndex != null;
     final mediaQuery = MediaQuery.of(context);
     final navBottomOffset = mediaQuery.padding.bottom + _navBottomMargin;
     final shellBottomInset = mediaQuery.padding.bottom +
@@ -142,10 +143,12 @@ class _AppShell extends ConsumerWidget {
         _navHeight +
         AppSpacing.xl;
     final timerBottomOffset = navBottomOffset + _navHeight + _timerGap;
-    final childBottomInset = shellBottomInset +
-        (isSessionActive
-            ? _timerEstimatedHeight + _timerGap + AppSpacing.md
-            : 0);
+    final childBottomInset = usesShellNav
+        ? 0.0
+        : shellBottomInset +
+            (isSessionActive
+                ? _timerEstimatedHeight + _timerGap + AppSpacing.md
+                : 0);
 
     return Scaffold(
       backgroundColor: AppTheme.surface,

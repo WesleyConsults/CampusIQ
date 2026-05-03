@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:campusiq/core/layout/shell_overlay_padding.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
@@ -15,6 +16,7 @@ import 'package:campusiq/features/cwa/presentation/widgets/cwa_coach_sheet.dart'
 import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
+import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
 import 'package:campusiq/shared/widgets/campus_button.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
@@ -68,6 +70,11 @@ class CwaScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final viewMode = ref.watch(cwaViewModeProvider);
+    final hasActiveSession = ref.watch(activeSessionProvider) != null;
+    final bottomContentPadding = shellOverlayBottomPadding(
+      context,
+      hasActiveSession: hasActiveSession,
+    );
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
@@ -138,8 +145,14 @@ class CwaScreen extends ConsumerWidget {
           // ── Content ──────────────────────────────────────────────────────
           Expanded(
             child: viewMode == CwaViewMode.semester
-                ? _SemesterView(onOpenAddSheet: _openAddSheet)
-                : _CumulativeView(onOpenHistory: _openHistory),
+                ? _SemesterView(
+                    onOpenAddSheet: _openAddSheet,
+                    bottomContentPadding: bottomContentPadding,
+                  )
+                : _CumulativeView(
+                    onOpenHistory: _openHistory,
+                    bottomContentPadding: bottomContentPadding,
+                  ),
           ),
         ],
       ),
@@ -782,8 +795,12 @@ class _SectionNote extends StatelessWidget {
 class _SemesterView extends ConsumerWidget {
   final Future<void> Function(BuildContext, WidgetRef, {CourseModel? existing})
       onOpenAddSheet;
+  final double bottomContentPadding;
 
-  const _SemesterView({required this.onOpenAddSheet});
+  const _SemesterView({
+    required this.onOpenAddSheet,
+    required this.bottomContentPadding,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1003,7 +1020,9 @@ class _SemesterView extends ConsumerWidget {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
+            SliverToBoxAdapter(
+              child: SizedBox(height: bottomContentPadding),
+            ),
           ],
         );
       },
@@ -1015,8 +1034,12 @@ class _SemesterView extends ConsumerWidget {
 
 class _CumulativeView extends ConsumerWidget {
   final void Function(BuildContext context) onOpenHistory;
+  final double bottomContentPadding;
 
-  const _CumulativeView({required this.onOpenHistory});
+  const _CumulativeView({
+    required this.onOpenHistory,
+    required this.bottomContentPadding,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1252,7 +1275,9 @@ class _CumulativeView extends ConsumerWidget {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
+            SliverToBoxAdapter(
+              child: SizedBox(height: bottomContentPadding),
+            ),
           ],
         );
       },

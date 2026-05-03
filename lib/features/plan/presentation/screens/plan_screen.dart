@@ -1,5 +1,6 @@
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/core/layout/shell_overlay_padding.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 import 'package:campusiq/features/plan/presentation/providers/plan_provider.dart';
@@ -109,6 +110,10 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     final freeBlocks = FreeTimeDetector.detect(
       dayIndex: todayIndex,
       slots: todaySlots,
+    );
+    final bottomContentPadding = shellOverlayBottomPadding(
+      context,
+      hasActiveSession: activeSession != null,
     );
 
     return Scaffold(
@@ -265,6 +270,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           targetCwa: targetCwa,
           todaySlots: todaySlots,
           freeBlocks: freeBlocks,
+          bottomContentPadding: bottomContentPadding,
         ),
       ),
     );
@@ -285,6 +291,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     required double targetCwa,
     required List<TimetableSlotModel> todaySlots,
     required List<FreeBlock> freeBlocks,
+    required double bottomContentPadding,
   }) {
     final attendTasks = tasks.where((t) => t.taskType == 'attend').toList();
     final studyTasks = tasks.where((t) => t.taskType == 'study').toList();
@@ -317,178 +324,171 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
     final cwaGap = targetCwa - projectedCwa;
 
-    return SafeArea(
-      top: false,
-      left: false,
-      right: false,
-      bottom: true,
-      minimum: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: AppSpacing.screenPadding.copyWith(bottom: 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _PageHeader(
-                    greeting: greeting,
-                    dateLabel: dateLabel,
-                    onAddTask: _showAddSheet,
-                  ),
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: AppSpacing.screenPadding.copyWith(bottom: 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _PageHeader(
+                  greeting: greeting,
+                  dateLabel: dateLabel,
+                  onAddTask: _showAddSheet,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                _HeroCard(content: heroContent),
+                const SizedBox(height: AppSpacing.xl),
+                const CampusSectionHeader(
+                  title: 'Academic pulse',
+                  subtitle: 'A compact look at where your momentum stands.',
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _AcademicPulseCard(
+                  projectedCwa: projectedCwa,
+                  targetCwa: targetCwa,
+                  cwaGap: cwaGap,
+                  studyStreak: studyStreak,
+                  attendanceStreak: attendanceStreak,
+                  totalCourseStreaks: totalCourseStreaks,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                const CampusSectionHeader(
+                  title: 'Today at a glance',
+                  subtitle:
+                      'See your classes, focus load, and progress in one pass.',
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _TodayAtGlanceCard(
+                  classCount: todaySlots.length,
+                  pendingStudyTaskCount: pendingStudyTasks.length,
+                  completed: completed,
+                  total: total,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                _ProgressOverviewCard(
+                  completed: completed,
+                  total: total,
+                  isDone: isDone,
+                ),
+                if (activeSession != null) ...[
                   const SizedBox(height: AppSpacing.xl),
-                  _HeroCard(content: heroContent),
-                  const SizedBox(height: AppSpacing.xl),
-                  const CampusSectionHeader(
-                    title: 'Academic pulse',
-                    subtitle: 'A compact look at where your momentum stands.',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _AcademicPulseCard(
-                    projectedCwa: projectedCwa,
-                    targetCwa: targetCwa,
-                    cwaGap: cwaGap,
-                    studyStreak: studyStreak,
-                    attendanceStreak: attendanceStreak,
-                    totalCourseStreaks: totalCourseStreaks,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  const CampusSectionHeader(
-                    title: 'Today at a glance',
-                    subtitle:
-                        'See your classes, focus load, and progress in one pass.',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _TodayAtGlanceCard(
-                    classCount: todaySlots.length,
-                    pendingStudyTaskCount: pendingStudyTasks.length,
-                    completed: completed,
-                    total: total,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  _ProgressOverviewCard(
-                    completed: completed,
-                    total: total,
-                    isDone: isDone,
-                  ),
-                  if (activeSession != null) ...[
-                    const SizedBox(height: AppSpacing.xl),
-                    _ActiveSessionResumeCard(session: activeSession),
-                  ],
-                  const SizedBox(height: AppSpacing.xl),
-                  const CampusSectionHeader(
-                    title: 'Today in detail',
-                    subtitle:
-                        'The rest of your schedule stays here when you need specifics.',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _TodayClassesCard(slots: todaySlots),
-                  const SizedBox(height: AppSpacing.md),
-                  _FreeBlocksCard(freeBlocks: freeBlocks),
-                  const SizedBox(height: AppSpacing.xl),
-                  CampusSectionHeader(
-                    title: 'Today\'s plan',
-                    subtitle: pendingTasks == 0
-                        ? 'Everything here is either complete or ready when you are.'
-                        : '$pendingTasks task${pendingTasks == 1 ? '' : 's'} still need attention.',
-                    trailing: OutlinedButton.icon(
-                      onPressed: _showAddSheet,
-                      icon: const Icon(LucideIcons.plus, size: 16),
-                      label: const Text('Add task'),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 40),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.sm,
-                        ),
+                  _ActiveSessionResumeCard(session: activeSession),
+                ],
+                const SizedBox(height: AppSpacing.xl),
+                const CampusSectionHeader(
+                  title: 'Today in detail',
+                  subtitle:
+                      'The rest of your schedule stays here when you need specifics.',
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _TodayClassesCard(slots: todaySlots),
+                const SizedBox(height: AppSpacing.md),
+                _FreeBlocksCard(freeBlocks: freeBlocks),
+                const SizedBox(height: AppSpacing.xl),
+                CampusSectionHeader(
+                  title: 'Today\'s plan',
+                  subtitle: pendingTasks == 0
+                      ? 'Everything here is either complete or ready when you are.'
+                      : '$pendingTasks task${pendingTasks == 1 ? '' : 's'} still need attention.',
+                  trailing: OutlinedButton.icon(
+                    onPressed: _showAddSheet,
+                    icon: const Icon(LucideIcons.plus, size: 16),
+                    label: const Text('Add task'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 40),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  if (tasks.isEmpty)
-                    _EmptyPlanCard(
-                      onGenerate: _generatePlan,
-                      onAddTask: _showAddSheet,
-                      isGenerating: _isGenerating,
-                    ),
-                ],
-              ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (tasks.isEmpty)
+                  _EmptyPlanCard(
+                    onGenerate: _generatePlan,
+                    onAddTask: _showAddSheet,
+                    isGenerating: _isGenerating,
+                  ),
+              ],
             ),
           ),
-          if (tasks.isNotEmpty) ...[
-            if (attendTasks.isNotEmpty) ...[
-              const _TaskGroupHeader(
-                label: 'Planned classes',
-                icon: LucideIcons.calendarDays,
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (_, i) => Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.xl,
-                      0,
-                      AppSpacing.xl,
-                      AppSpacing.sm,
-                    ),
-                    child: CampusCard(
-                      padding: EdgeInsets.zero,
-                      child: PlanTaskTile(task: attendTasks[i]),
-                    ),
+        ),
+        if (tasks.isNotEmpty) ...[
+          if (attendTasks.isNotEmpty) ...[
+            const _TaskGroupHeader(
+              label: 'Planned classes',
+              icon: LucideIcons.calendarDays,
+            ),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (_, i) => Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    0,
+                    AppSpacing.xl,
+                    AppSpacing.sm,
                   ),
-                  childCount: attendTasks.length,
-                ),
-              ),
-            ],
-            if (studyTasks.isNotEmpty) ...[
-              const _TaskGroupHeader(
-                label: 'Suggested study tasks',
-                icon: LucideIcons.bookOpen,
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (_, i) => Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.xl,
-                      0,
-                      AppSpacing.xl,
-                      AppSpacing.sm,
-                    ),
-                    child: CampusCard(
-                      padding: EdgeInsets.zero,
-                      child: PlanTaskTile(task: studyTasks[i]),
-                    ),
+                  child: CampusCard(
+                    padding: EdgeInsets.zero,
+                    child: PlanTaskTile(task: attendTasks[i]),
                   ),
-                  childCount: studyTasks.length,
                 ),
+                childCount: attendTasks.length,
               ),
-            ],
-            if (personalTasks.isNotEmpty) ...[
-              const _TaskGroupHeader(
-                label: 'Personal tasks',
-                icon: LucideIcons.briefcase,
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (_, i) => Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.xl,
-                      0,
-                      AppSpacing.xl,
-                      AppSpacing.sm,
-                    ),
-                    child: CampusCard(
-                      padding: EdgeInsets.zero,
-                      child: PlanTaskTile(task: personalTasks[i]),
-                    ),
-                  ),
-                  childCount: personalTasks.length,
-                ),
-              ),
-            ],
+            ),
           ],
-          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+          if (studyTasks.isNotEmpty) ...[
+            const _TaskGroupHeader(
+              label: 'Suggested study tasks',
+              icon: LucideIcons.bookOpen,
+            ),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (_, i) => Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    0,
+                    AppSpacing.xl,
+                    AppSpacing.sm,
+                  ),
+                  child: CampusCard(
+                    padding: EdgeInsets.zero,
+                    child: PlanTaskTile(task: studyTasks[i]),
+                  ),
+                ),
+                childCount: studyTasks.length,
+              ),
+            ),
+          ],
+          if (personalTasks.isNotEmpty) ...[
+            const _TaskGroupHeader(
+              label: 'Personal tasks',
+              icon: LucideIcons.briefcase,
+            ),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (_, i) => Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    0,
+                    AppSpacing.xl,
+                    AppSpacing.sm,
+                  ),
+                  child: CampusCard(
+                    padding: EdgeInsets.zero,
+                    child: PlanTaskTile(task: personalTasks[i]),
+                  ),
+                ),
+                childCount: personalTasks.length,
+              ),
+            ),
+          ],
         ],
-      ),
+        SliverToBoxAdapter(child: SizedBox(height: bottomContentPadding)),
+      ],
     );
   }
 

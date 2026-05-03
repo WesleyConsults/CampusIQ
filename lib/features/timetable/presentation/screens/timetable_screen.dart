@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:campusiq/core/layout/shell_overlay_padding.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
@@ -13,6 +14,7 @@ import 'package:campusiq/features/timetable/presentation/widgets/day_selector.da
 import 'package:campusiq/features/timetable/presentation/widgets/class_timetable_grid.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/add_slot_sheet.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/slot_detail_sheet.dart';
+import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_chip.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
@@ -109,6 +111,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     final allSlotsAsync = ref.watch(allSlotsProvider);
     final classSlots = ref.watch(activeDaySlotsProvider);
     final freeBlocks = ref.watch(activeDayFreeBlocksProvider);
+    final hasActiveSession = ref.watch(activeSessionProvider) != null;
     final activeDay = ref.watch(activeDayProvider);
     final todayIndex = DateTime.now().weekday - 1;
     final highlightedSlot = _resolveHighlightedSlot(
@@ -117,6 +120,10 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     );
     final hasLoadError = allSlotsAsync.hasError;
     final isLoading = allSlotsAsync.isLoading && !allSlotsAsync.hasValue;
+    final bottomContentPadding = shellOverlayBottomPadding(
+      context,
+      hasActiveSession: hasActiveSession,
+    );
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
@@ -144,7 +151,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
               AppSpacing.xl,
               AppSpacing.sm,
               AppSpacing.xl,
-              AppSpacing.xl,
+              0,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,7 +165,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                   highlightedSlot: highlightedSlot,
                   isToday: activeDay == todayIndex,
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.md),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -180,7 +187,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 Builder(
                   builder: (context) {
                     if (hasLoadError) {
@@ -212,7 +219,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                     }
 
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      padding: EdgeInsets.only(bottom: bottomContentPadding),
                       child: ClassTimetableGrid(
                         classSlots: classSlots,
                         freeBlocks: freeBlocks,
@@ -282,8 +289,8 @@ class _TodaySummaryCard extends StatelessWidget {
 
     return CampusCard(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,54 +301,106 @@ class _TodaySummaryCard extends StatelessWidget {
                 child: Text(
                   heading,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 15,
                         color: AppTheme.primary,
                       ),
                 ),
               ),
               if (isToday)
-                const CampusChip(
+                const _CompactSummaryChip(
                   label: 'Today',
                   backgroundColor: AppColors.goldSoft,
-                  foregroundColor: AppTheme.primary,
                 ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xxs),
+          const SizedBox(height: 2),
           Text(
             classSummary,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.textPrimary,
                   fontWeight: FontWeight.w600,
+                  fontSize: 12.5,
+                  height: 1.25,
                 ),
           ),
           if (classSlots.isNotEmpty || highlightedSlot != null) ...[
-            const SizedBox(height: AppSpacing.xxs),
+            const SizedBox(height: 2),
             Text(
               highlightedSlot == null
                   ? helperLine
                   : '$highlightTitle: $helperLine',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 12,
+                    height: 1.25,
+                  ),
             ),
           ] else ...[
-            const SizedBox(height: AppSpacing.xxs),
+            const SizedBox(height: 2),
             Text(
               helperLine,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 12,
+                    height: 1.25,
+                  ),
             ),
           ],
           if (freeBlocks.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            CampusChip(
+            const SizedBox(height: AppSpacing.xs),
+            _CompactSummaryChip(
               label:
                   '${freeBlocks.length} free block${freeBlocks.length == 1 ? '' : 's'}',
               icon: LucideIcons.clock3,
               backgroundColor: AppColors.surfaceMuted,
-              foregroundColor: AppTheme.primary,
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _CompactSummaryChip extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final Color backgroundColor;
+
+  const _CompactSummaryChip({
+    required this.label,
+    this.icon,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: AppRadii.pill,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: 6,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 13, color: AppTheme.primary),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppTheme.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
