@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
@@ -11,7 +13,10 @@ import 'package:campusiq/features/timetable/presentation/widgets/day_selector.da
 import 'package:campusiq/features/timetable/presentation/widgets/class_timetable_grid.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/add_slot_sheet.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/slot_detail_sheet.dart';
-import 'package:campusiq/features/streak/presentation/widgets/streak_action_button.dart';
+import 'package:campusiq/shared/widgets/campus_card.dart';
+import 'package:campusiq/shared/widgets/campus_chip.dart';
+import 'package:campusiq/shared/widgets/campus_section_header.dart';
+import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
 class TimetableScreen extends ConsumerStatefulWidget {
   const TimetableScreen({super.key});
@@ -101,114 +106,324 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final allSlotsAsync = ref.watch(allSlotsProvider);
     final classSlots = ref.watch(activeDaySlotsProvider);
     final freeBlocks = ref.watch(activeDayFreeBlocksProvider);
     final activeDay = ref.watch(activeDayProvider);
+    final todayIndex = DateTime.now().weekday - 1;
+    final highlightedSlot = _resolveHighlightedSlot(
+      classSlots,
+      isToday: activeDay == todayIndex,
+    );
+    final hasLoadError = allSlotsAsync.hasError;
+    final isLoading = allSlotsAsync.isLoading && !allSlotsAsync.hasValue;
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        title:
-            const Text('Table', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text('Table'),
         actions: [
-          const StreakActionButton(),
           IconButton(
-            icon: const Icon(Icons.document_scanner_outlined),
+            icon: const Icon(LucideIcons.scanText),
             tooltip: 'Import from image',
             onPressed: () => context.push('/timetable/import'),
           ),
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(LucideIcons.plus),
             tooltip: 'Add class',
             onPressed: _onFabTap,
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const DaySelector(),
-
-          // Day label + free block count
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
+      body: SafeArea(
+        top: false,
+        child: GestureDetector(
+          onHorizontalDragEnd: _onDaySwipe,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.sm,
+              AppSpacing.xl,
+              AppSpacing.xl,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  TimetableConstants.dayFullLabels[activeDay],
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 15),
+                const DaySelector(),
+                const SizedBox(height: AppSpacing.md),
+                _TodaySummaryCard(
+                  activeDay: activeDay,
+                  classSlots: classSlots,
+                  freeBlocks: freeBlocks,
+                  highlightedSlot: highlightedSlot,
+                  isToday: activeDay == todayIndex,
                 ),
-                const Spacer(),
-                if (freeBlocks.isNotEmpty)
-                  Text(
-                    '${freeBlocks.length} free block${freeBlocks.length > 1 ? 's' : ''}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.success.withValues(alpha: 0.8),
-                      fontWeight: FontWeight.w500,
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Expanded(
+                      child: CampusSectionHeader(
+                        title: 'Daily timeline',
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: AppSpacing.sm),
+                    CampusChip(
+                      label: classSlots.isEmpty
+                          ? 'Open day'
+                          : '${classSlots.length} class${classSlots.length == 1 ? '' : 'es'}',
+                      icon: LucideIcons.calendarDays,
+                      backgroundColor: classSlots.isEmpty
+                          ? AppColors.surfaceMuted
+                          : AppColors.goldSoft,
+                      foregroundColor: AppTheme.primary,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Builder(
+                  builder: (context) {
+                    if (hasLoadError) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.xl),
+                        child: ErrorRetryWidget(
+                          message:
+                              'We could not load your timetable right now.',
+                          onRetry: () => ref.invalidate(allSlotsProvider),
+                        ),
+                      );
+                    }
+
+                    if (isLoading) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: AppSpacing.xxxl),
+                        child: _LoadingState(),
+                      );
+                    }
+
+                    if (classSlots.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.xl),
+                        child: _EmptyPage(
+                          activeDay: activeDay,
+                          onAdd: _onFabTap,
+                        ),
+                      );
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: ClassTimetableGrid(
+                        classSlots: classSlots,
+                        freeBlocks: freeBlocks,
+                        onClassSlotTap: _showClassDetail,
+                        onFreeBlockTap: _onFreeBlockTap,
+                        onEmptyTap: _onEmptyTap,
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
-
-          // Grid — swipe left/right to change day
-          Expanded(
-            child: GestureDetector(
-              onHorizontalDragEnd: _onDaySwipe,
-              child: () {
-                if (classSlots.isEmpty) {
-                  return _EmptyPage(onAdd: _onFabTap);
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: ClassTimetableGrid(
-                    classSlots: classSlots,
-                    freeBlocks: freeBlocks,
-                    onClassSlotTap: _showClassDetail,
-                    onFreeBlockTap: _onFreeBlockTap,
-                    onEmptyTap: _onEmptyTap,
-                  ),
-                );
-              }(),
-            ),
-          ),
-        ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _onFabTap,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Class'),
+    );
+  }
+}
+
+TimetableSlotModel? _resolveHighlightedSlot(
+  List<TimetableSlotModel> slots, {
+  required bool isToday,
+}) {
+  if (slots.isEmpty) return null;
+
+  if (!isToday) {
+    return slots.first;
+  }
+
+  final nowMinutes = DateTime.now().hour * 60 + DateTime.now().minute;
+  for (final slot in slots) {
+    if (slot.endMinutes > nowMinutes) {
+      return slot;
+    }
+  }
+
+  return null;
+}
+
+class _TodaySummaryCard extends StatelessWidget {
+  final int activeDay;
+  final List<TimetableSlotModel> classSlots;
+  final List<FreeBlock> freeBlocks;
+  final TimetableSlotModel? highlightedSlot;
+  final bool isToday;
+
+  const _TodaySummaryCard({
+    required this.activeDay,
+    required this.classSlots,
+    required this.freeBlocks,
+    required this.highlightedSlot,
+    required this.isToday,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final heading = TimetableConstants.dayFullLabels[activeDay];
+    final classSummary = classSlots.isEmpty
+        ? 'No classes today'
+        : '${classSlots.length} class${classSlots.length == 1 ? '' : 'es'} today';
+    final highlightTitle = isToday ? 'Next class' : 'First class';
+    final helperLine = classSlots.isEmpty
+        ? 'Your day is open.'
+        : highlightedSlot == null
+            ? classSummary
+            : '${highlightedSlot!.courseCode} · ${highlightedSlot!.startTimeLabel}${highlightedSlot!.venue.isEmpty ? '' : ' · ${highlightedSlot!.venue}'}';
+
+    return CampusCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  heading,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppTheme.primary,
+                      ),
+                ),
+              ),
+              if (isToday)
+                const CampusChip(
+                  label: 'Today',
+                  backgroundColor: AppColors.goldSoft,
+                  foregroundColor: AppTheme.primary,
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            classSummary,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          if (classSlots.isNotEmpty || highlightedSlot != null) ...[
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              highlightedSlot == null
+                  ? helperLine
+                  : '$highlightTitle: $helperLine',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ] else ...[
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              helperLine,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+          if (freeBlocks.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            CampusChip(
+              label:
+                  '${freeBlocks.length} free block${freeBlocks.length == 1 ? '' : 's'}',
+              icon: LucideIcons.clock3,
+              backgroundColor: AppColors.surfaceMuted,
+              foregroundColor: AppTheme.primary,
+            ),
+          ],
+        ],
       ),
     );
   }
 }
 
 class _EmptyPage extends StatelessWidget {
+  final int activeDay;
   final VoidCallback onAdd;
 
-  const _EmptyPage({required this.onAdd});
+  const _EmptyPage({required this.activeDay, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.calendar_today_outlined,
-              size: 56, color: AppTheme.textSecondary),
-          const SizedBox(height: 12),
-          const Text('No classes today',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 15)),
-          const SizedBox(height: 4),
-          const Text('Tap + to add a class',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-          const SizedBox(height: 16),
-          TextButton.icon(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceMuted,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(
+                LucideIcons.calendarHeart,
+                size: 30,
+                color: AppTheme.primary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'No classes on ${TimetableConstants.dayFullLabels[activeDay]}',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Your day is open. Add a class or use the free time to study.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextButton.icon(
               onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: const Text('Add')),
+              icon: const Icon(LucideIcons.plus, size: 16),
+              label: const Text('Add class'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.2,
+              color: AppTheme.primary,
+            ),
+          ),
+          SizedBox(height: AppSpacing.md),
+          Text(
+            'Loading your timetable...',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 14,
+            ),
+          ),
         ],
       ),
     );

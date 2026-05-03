@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
@@ -18,38 +19,63 @@ class FreeBlockIndicator extends StatelessWidget {
         (block.startMinutes - TimetableConstants.gridStartMinutes) *
             TimetableConstants.pixelsPerMinute;
     final height = block.durationMinutes * TimetableConstants.pixelsPerMinute;
-
-    // Only show label if there's enough room
-    final showLabel = height >= 30;
+    final showLabel = height >= 36;
+    final showTimeRange = height >= 56;
 
     return Positioned(
       top: topOffset,
-      left: 2,
-      right: 2,
+      left: 6,
+      right: 6,
       height: height,
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          decoration: BoxDecoration(
-            color: AppTheme.success.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: AppTheme.success.withValues(alpha: 0.25),
-              width: 0.5,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
             ),
-          ),
-          alignment: Alignment.center,
-          child: showLabel
-              ? Text(
-                  'Free · ${block.durationMinutes}min',
-                  style: TextStyle(
-                    color: AppTheme.success.withValues(alpha: 0.7),
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
-                  ),
-                )
-              : null,
-        ),
+            decoration: BoxDecoration(
+              color: AppColors.info.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              border: Border.all(
+                color: AppColors.info.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            alignment: showLabel ? Alignment.centerLeft : Alignment.center,
+            child: showLabel
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Free · ${block.durationMinutes} min',
+                        style: const TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (showTimeRange)
+                        Text(
+                          '${block.startLabel} - ${block.endLabel}',
+                          style: TextStyle(
+                            color:
+                                AppTheme.textSecondary.withValues(alpha: 0.9),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                    ],
+                  )
+                : Container(
+                    width: 22,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: AppColors.info.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  )),
       ),
     );
   }

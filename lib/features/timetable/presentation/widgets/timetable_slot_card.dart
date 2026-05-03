@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
@@ -9,7 +11,7 @@ import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 class TimetableSlotCard extends StatelessWidget {
   final TimetableSlotModel slot;
   final double left;
-  final double right;
+  final double width;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -17,7 +19,7 @@ class TimetableSlotCard extends StatelessWidget {
     super.key,
     required this.slot,
     required this.left,
-    required this.right,
+    required this.width,
     required this.onTap,
     required this.onLongPress,
   });
@@ -28,79 +30,137 @@ class TimetableSlotCard extends StatelessWidget {
         (slot.startMinutes - TimetableConstants.gridStartMinutes) *
             TimetableConstants.pixelsPerMinute;
     final height = slot.durationMinutes * TimetableConstants.pixelsPerMinute;
-    final color = Color(slot.colorValue);
-    final isShort = height < 40; // < 40 min: code only
-    final showFooter = height >= 80; // >= 80 min: show time · type footer
+    final accent = Color(slot.colorValue);
+    final background = Color.lerp(Colors.white, accent, 0.12) ?? Colors.white;
+    final borderColor = accent.withValues(alpha: 0.24);
+    final isCompact = height < 64;
+    final showCourseName = height >= 56;
+    final showMeta = height >= 84;
+    final showTimeFooter = height >= 112;
+    final secondaryMeta = slot.venue.isNotEmpty ? slot.venue : slot.slotType;
 
     return Positioned(
       top: topOffset,
       left: left,
-      right: right,
+      width: width,
       height: height,
       child: GestureDetector(
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: color, width: 1.5),
+            color: background,
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+            border: Border.all(color: borderColor, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          child: isShort
-              ? Text(
-                  slot.courseCode,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    overflow: TextOverflow.ellipsis,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 4,
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: const BorderRadius.horizontal(
+                    left: Radius.circular(AppRadii.sm),
                   ),
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      slot.courseCode,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Text(
-                      slot.courseName,
-                      style: TextStyle(
-                        color: color.withValues(alpha: 0.8),
-                        fontSize: 10,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      maxLines: 1,
-                    ),
-                    if (slot.venue.isNotEmpty)
-                      Text(
-                        slot.venue,
-                        style: TextStyle(
-                          color: color.withValues(alpha: 0.7),
-                          fontSize: 9,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        maxLines: 1,
-                      ),
-                    if (showFooter) ...[
-                      const Spacer(),
-                      Text(
-                        '${slot.startTimeLabel} · ${slot.slotType}',
-                        style: TextStyle(
-                          color: color.withValues(alpha: 0.7),
-                          fontSize: 9,
-                        ),
-                      ),
-                    ],
-                  ],
                 ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                  child: isCompact
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              slot.courseCode,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              slot.startTimeLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              slot.courseCode,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            if (showCourseName) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                slot.courseName,
+                                maxLines: showMeta ? 2 : 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppTheme.textPrimary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                            if (showMeta) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                secondaryMeta,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                            if (showTimeFooter) ...[
+                              const Spacer(),
+                              Text(
+                                '${slot.startTimeLabel} - ${slot.endTimeLabel} · ${slot.slotType}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

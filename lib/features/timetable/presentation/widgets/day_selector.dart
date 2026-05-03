@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
@@ -14,10 +15,10 @@ class DaySelector extends ConsumerWidget {
     final allSlots = ref.watch(allSlotsProvider).valueOrNull ?? [];
 
     return SizedBox(
-      height: 56,
+      height: 52,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.zero,
         itemCount: TimetableConstants.dayLabels.length,
         itemBuilder: (context, i) {
           final isActive = i == activeDay;
@@ -27,15 +28,20 @@ class DaySelector extends ConsumerWidget {
             onTap: () => ref.read(activeDayProvider.notifier).state = i,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              curve: Curves.easeOut,
+              margin: const EdgeInsets.only(right: AppSpacing.xs),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
               decoration: BoxDecoration(
-                color: isActive ? AppTheme.primary : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
+                color: isActive ? AppTheme.primary : Colors.white,
+                borderRadius: AppRadii.pill,
                 border: Border.all(
-                  color: isActive ? AppTheme.primary : Colors.grey.shade300,
-                  width: 0.5,
+                  color: isActive ? AppTheme.primary : AppColors.border,
+                  width: 1,
                 ),
+                boxShadow: isActive ? AppShadows.soft : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -44,17 +50,17 @@ class DaySelector extends ConsumerWidget {
                     TimetableConstants.dayLabels[i],
                     style: TextStyle(
                       color: isActive ? Colors.white : AppTheme.textSecondary,
-                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
                       fontSize: 13,
                     ),
                   ),
                   if (hasSlots) ...[
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     Container(
-                      width: 5,
-                      height: 5,
+                      width: 6,
+                      height: 6,
                       decoration: BoxDecoration(
-                        color: isActive ? Colors.white60 : AppTheme.accent,
+                        color: isActive ? Colors.white : AppTheme.accent,
                         shape: BoxShape.circle,
                       ),
                     ),

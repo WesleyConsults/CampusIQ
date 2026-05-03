@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
@@ -24,66 +26,64 @@ class ClassTimetableGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _TimeLabels(),
-          Expanded(
-            child: GestureDetector(
-              onTap: onEmptyTap,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final totalWidth = constraints.maxWidth;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _TimeLabels(),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: GestureDetector(
+            onTap: onEmptyTap,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final totalWidth = constraints.maxWidth;
 
-                  final classPositions = _assignColumns(
-                    classSlots
-                        .map((s) => (
-                              id: s.id,
-                              start: s.startMinutes,
-                              end: s.endMinutes
-                            ))
-                        .toList(),
-                  );
+                final classPositions = _assignColumns(
+                  classSlots
+                      .map((s) =>
+                          (id: s.id, start: s.startMinutes, end: s.endMinutes))
+                      .toList(),
+                );
 
-                  return SizedBox(
-                    height: TimetableConstants.totalGridHeight,
-                    child: Stack(
-                      children: [
-                        _HourLines(),
+                return Container(
+                  height: TimetableConstants.totalGridHeight,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceMuted.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                  ),
+                  child: Stack(
+                    children: [
+                      const _HourLines(),
+                      ...freeBlocks.map(
+                        (b) => FreeBlockIndicator(
+                          block: b,
+                          onTap: () => onFreeBlockTap(b),
+                        ),
+                      ),
+                      ...classSlots.map((s) {
+                        const laneGap = 8.0;
+                        final pos =
+                            classPositions[s.id] ?? const _OverlapPos(0, 1);
+                        final laneWidth = totalWidth / pos.totalColumns;
+                        final cardWidth = laneWidth - laneGap;
 
-                        // Free blocks
-                        ...freeBlocks.map((b) => FreeBlockIndicator(
-                              block: b,
-                              onTap: () => onFreeBlockTap(b),
-                            )),
-
-                        // Class slots
-                        ...classSlots.map((s) {
-                          final pos =
-                              classPositions[s.id] ?? const _OverlapPos(0, 1);
-                          final laneWidth = totalWidth / pos.totalColumns;
-                          return TimetableSlotCard(
-                            slot: s,
-                            left: pos.columnIndex * laneWidth + 2,
-                            right: totalWidth -
-                                (pos.columnIndex + 1) * laneWidth +
-                                2,
-                            onTap: () => onClassSlotTap(s),
-                            onLongPress: () => onClassSlotTap(s),
-                          );
-                        }),
-
-                        _CurrentTimeIndicator(),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                        return TimetableSlotCard(
+                          slot: s,
+                          left: (pos.columnIndex * laneWidth) + (laneGap / 2),
+                          width: cardWidth,
+                          onTap: () => onClassSlotTap(s),
+                          onLongPress: () => onClassSlotTap(s),
+                        );
+                      }),
+                      const _CurrentTimeIndicator(),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -172,12 +172,16 @@ class _TimeLabels extends StatelessWidget {
                       ? '12 PM'
                       : '${hour - 12} PM';
           return Positioned(
-            top: top - 6,
+            top: top - 8,
             left: 0,
             right: 4,
             child: Text(label,
                 textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textSecondary,
+                )),
           );
         }).toList(),
       ),
@@ -186,6 +190,8 @@ class _TimeLabels extends StatelessWidget {
 }
 
 class _HourLines extends StatelessWidget {
+  const _HourLines();
+
   @override
   Widget build(BuildContext context) {
     const hours =
@@ -199,7 +205,10 @@ class _HourLines extends StatelessWidget {
             top: top,
             left: 0,
             right: 0,
-            child: Divider(height: 0.5, color: Colors.grey.shade200),
+            child: Container(
+              height: 1,
+              color: AppColors.divider,
+            ),
           );
         }),
       ),
@@ -208,6 +217,8 @@ class _HourLines extends StatelessWidget {
 }
 
 class _CurrentTimeIndicator extends StatelessWidget {
+  const _CurrentTimeIndicator();
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
@@ -224,13 +235,19 @@ class _CurrentTimeIndicator extends StatelessWidget {
       right: 0,
       child: Row(children: [
         Container(
-            width: 8,
-            height: 8,
-            decoration:
-                const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+          width: 8,
+          height: 8,
+          decoration: const BoxDecoration(
+            color: AppTheme.warning,
+            shape: BoxShape.circle,
+          ),
+        ),
         Expanded(
-            child:
-                Container(height: 1, color: Colors.red.withValues(alpha: 0.6))),
+          child: Container(
+            height: 1,
+            color: AppTheme.warning.withValues(alpha: 0.6),
+          ),
+        ),
       ]),
     );
   }
