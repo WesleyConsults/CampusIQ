@@ -146,8 +146,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               backgroundColor: Colors.transparent,
               builder: (_) => const WeeklyReviewSheet(),
             ),
-            child:
-                const Text('This Week', style: TextStyle(color: Colors.white)),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.primary,
+            ),
+            child: const Text(
+              'This Week',
+              style: TextStyle(color: AppTheme.primary),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.auto_awesome_rounded),
@@ -157,9 +162,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          indicatorColor: AppTheme.primary,
+          labelColor: AppTheme.primary,
+          unselectedLabelColor: AppTheme.textSecondary,
           tabs: const [
             Tab(text: 'History'),
             Tab(text: 'Plan'),

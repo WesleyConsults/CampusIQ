@@ -76,7 +76,7 @@ class CwaScreen extends ConsumerWidget {
               icon: const Icon(Icons.file_upload_outlined, size: 18),
               label: const Text('Import'),
               style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
+                foregroundColor: AppTheme.primary,
                 minimumSize: const Size(0, 44),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

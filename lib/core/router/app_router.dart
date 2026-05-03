@@ -46,26 +46,6 @@ final appRouter = GoRouter(
           name: 'sessions',
           builder: (context, state) => const SessionScreen(),
         ),
-        GoRoute(
-          path: '/streak',
-          name: 'streak',
-          builder: (context, state) => const StreakScreen(),
-        ),
-        GoRoute(
-          path: '/insights',
-          name: 'insights',
-          builder: (context, state) => const InsightsScreen(),
-        ),
-        GoRoute(
-          path: '/settings',
-          name: 'settings',
-          builder: (context, state) => const SettingsScreen(),
-        ),
-        GoRoute(
-          path: '/ai',
-          name: 'ai',
-          builder: (context, state) => const AiChatScreen(),
-        ),
       ],
     ),
     GoRoute(
@@ -77,6 +57,26 @@ final appRouter = GoRouter(
       path: '/ai/weekly-review',
       name: 'weekly-review',
       builder: (context, state) => const WeeklyReviewScreen(),
+    ),
+    GoRoute(
+      path: '/streak',
+      name: 'streak',
+      builder: (context, state) => const StreakScreen(),
+    ),
+    GoRoute(
+      path: '/insights',
+      name: 'insights',
+      builder: (context, state) => const InsightsScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      name: 'settings',
+      builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/ai',
+      name: 'ai',
+      builder: (context, state) => const AiChatScreen(),
     ),
     GoRoute(
       path: '/course/:courseCode',
@@ -137,15 +137,21 @@ class _AppShell extends ConsumerWidget {
     final selectedIndex = _locationToIndex(context);
     final mediaQuery = MediaQuery.of(context);
     final navBottomOffset = mediaQuery.padding.bottom + _navBottomMargin;
-    final navReservedSpace = navBottomOffset + _navHeight + AppSpacing.lg;
-    final timerBottomOffset =
-        navBottomOffset + _navHeight + _timerGap + mediaQuery.padding.bottom;
-    final childBottomPadding = isSessionActive
-        ? timerBottomOffset + _timerEstimatedHeight
-        : navReservedSpace;
+    final shellBottomInset = mediaQuery.padding.bottom +
+        _navBottomMargin +
+        _navHeight +
+        AppSpacing.xl;
+    final timerBottomOffset = navBottomOffset + _navHeight + _timerGap;
+    final childBottomInset = shellBottomInset +
+        (isSessionActive
+            ? _timerEstimatedHeight + _timerGap + AppSpacing.md
+            : 0);
     final paddedMediaQuery = mediaQuery.copyWith(
       padding: mediaQuery.padding.copyWith(
-        bottom: mediaQuery.padding.bottom + childBottomPadding,
+        bottom: childBottomInset,
+      ),
+      viewPadding: mediaQuery.viewPadding.copyWith(
+        bottom: childBottomInset,
       ),
     );
 

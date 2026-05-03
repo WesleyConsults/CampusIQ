@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 import 'package:campusiq/features/plan/presentation/providers/plan_provider.dart';
@@ -192,7 +193,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
-                color: Colors.white70,
+                color: AppTheme.textSecondary,
               ),
             ),
           ],
@@ -200,7 +201,10 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         actions: [
           const StreakActionButton(),
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+            icon: const Icon(
+              Icons.notifications_outlined,
+              color: AppTheme.textPrimary,
+            ),
             tooltip: 'Notification settings',
             onPressed: () => context.push('/settings'),
           ),
@@ -212,7 +216,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: AppTheme.primary,
                     ),
                   )
                 : OutlinedButton.icon(
@@ -220,19 +224,27 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                     icon: const Icon(
                       Icons.auto_awesome,
                       size: 16,
-                      color: Colors.white,
+                      color: AppTheme.primary,
                     ),
                     label: const Text(
                       'Generate',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
+                      style: TextStyle(
+                        color: AppTheme.primary,
+                        fontSize: 12,
+                      ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.white54),
+                      side: const BorderSide(color: AppTheme.border),
+                      foregroundColor: AppTheme.primary,
+                      backgroundColor: AppColors.surface.withValues(alpha: 0.8),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 6,
                       ),
                       minimumSize: Size.zero,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: AppRadii.button,
+                      ),
                     ),
                   ),
           ),
