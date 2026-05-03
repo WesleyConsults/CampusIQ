@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
@@ -13,6 +15,10 @@ import 'package:campusiq/features/cwa/presentation/widgets/cwa_coach_sheet.dart'
 import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
+import 'package:campusiq/shared/widgets/campus_button.dart';
+import 'package:campusiq/shared/widgets/campus_card.dart';
+import 'package:campusiq/shared/widgets/campus_section_header.dart';
+import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
 class CwaScreen extends ConsumerWidget {
   const CwaScreen({super.key});
@@ -73,7 +79,7 @@ class CwaScreen extends ConsumerWidget {
             label: 'Import courses or results',
             child: TextButton.icon(
               onPressed: () => _showImportSheet(context, viewMode),
-              icon: const Icon(Icons.file_upload_outlined, size: 18),
+              icon: const Icon(LucideIcons.fileUp, size: 18),
               label: const Text('Import'),
               style: TextButton.styleFrom(
                 foregroundColor: AppTheme.primary,
@@ -85,7 +91,7 @@ class CwaScreen extends ConsumerWidget {
           ),
           PopupMenuButton<_CwaMenuAction>(
             tooltip: 'More options',
-            icon: const Icon(Icons.more_vert),
+            icon: const Icon(LucideIcons.ellipsisVertical),
             onSelected: (action) {
               switch (action) {
                 case _CwaMenuAction.target:
@@ -116,9 +122,13 @@ class CwaScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          // ── Mode toggle ──────────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.sm,
+              AppSpacing.xl,
+              0,
+            ),
             child: _ViewToggle(
               mode: viewMode,
               onChanged: (m) =>
@@ -129,28 +139,10 @@ class CwaScreen extends ConsumerWidget {
           Expanded(
             child: viewMode == CwaViewMode.semester
                 ? _SemesterView(onOpenAddSheet: _openAddSheet)
-                : const _CumulativeView(),
+                : _CumulativeView(onOpenHistory: _openHistory),
           ),
         ],
       ),
-      floatingActionButton: viewMode == CwaViewMode.semester
-          ? Semantics(
-              button: true,
-              label: 'Add course',
-              child: FloatingActionButton.extended(
-                tooltip: 'Add course',
-                onPressed: () => _openAddSheet(context, ref),
-                icon: const Icon(Icons.add),
-                label: const Text('Add Course'),
-              ),
-            )
-          : FloatingActionButton.extended(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PastSemestersScreen()),
-              ),
-              icon: const Icon(Icons.upload_file_outlined),
-              label: const Text('Add Semester'),
-            ),
     );
   }
 
@@ -298,14 +290,13 @@ class _ViewToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      height: 44,
+      height: 52,
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.surfaceMuted,
+        borderRadius: AppRadii.button,
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.65),
+          color: AppColors.border,
         ),
       ),
       child: Row(
@@ -336,7 +327,6 @@ class _ToggleTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Expanded(
       child: Semantics(
         button: true,
@@ -346,17 +336,18 @@ class _ToggleTab extends StatelessWidget {
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: active ? colorScheme.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
+              color: active ? AppTheme.primary : Colors.transparent,
+              borderRadius: AppRadii.button,
             ),
             alignment: Alignment.center,
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: active ? colorScheme.onPrimary : AppTheme.textSecondary,
+                color: active ? Colors.white : AppTheme.textSecondary,
               ),
             ),
           ),
@@ -391,16 +382,20 @@ class _ImportOptionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return SafeArea(
       top: false,
       child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadii.sheet,
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,12 +405,12 @@ class _ImportOptionsSheet extends StatelessWidget {
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: colorScheme.outlineVariant,
+                    color: AppColors.divider,
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 title,
                 style: const TextStyle(
@@ -428,14 +423,15 @@ class _ImportOptionsSheet extends StatelessWidget {
               const Text(
                 'Choose how you want to bring data into CampusIQ.',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   color: AppTheme.textSecondary,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               for (final option in options) ...[
                 _ImportOptionTile(option: option),
-                if (option != options.last) const SizedBox(height: 10),
+                if (option != options.last)
+                  const SizedBox(height: AppSpacing.sm),
               ],
             ],
           ),
@@ -452,155 +448,101 @@ class _ImportOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Material(
-      color: AppTheme.primary.withValues(alpha: 0.05),
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: option.onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(14),
+    return CampusCard(
+      padding: EdgeInsets.zero,
+      color: AppColors.surfaceMuted,
+      onTap: option.onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+              ),
+              child: Icon(option.icon, color: AppTheme.primary, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                option.label,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
                 ),
-                child: Icon(option.icon, color: AppTheme.primary, size: 24),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  option.label,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.chevron_right,
-                color: AppTheme.textSecondary,
-              ),
-            ],
-          ),
+            ),
+            const Icon(
+              LucideIcons.chevronRight,
+              color: AppTheme.textSecondary,
+              size: 18,
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _CreditsSummaryCard extends StatelessWidget {
-  final int courseCount;
-  final double totalCredits;
-  final String courseLabel;
-  final String creditsLabel;
-
-  const _CreditsSummaryCard({
-    required this.courseCount,
-    required this.totalCredits,
-    this.courseLabel = 'courses',
-    this.creditsLabel = 'Total credits this semester',
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatTile(
-              label: courseLabel,
-              value: '$courseCount',
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _StatTile(
-              label: creditsLabel,
-              value: '${totalCredits.toInt()} cr',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ImportHelperRow extends StatelessWidget {
+class _SupportCard extends StatelessWidget {
   final String title;
   final String subtitle;
-  final String buttonLabel;
-  final VoidCallback onPressed;
-  final String? secondaryLabel;
-  final VoidCallback? onSecondaryPressed;
+  final List<Widget> actions;
+  final IconData icon;
 
-  const _ImportHelperRow({
+  const _SupportCard({
     required this.title,
     required this.subtitle,
-    required this.buttonLabel,
-    required this.onPressed,
-    this.secondaryLabel,
-    this.onSecondaryPressed,
+    required this.actions,
+    required this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.12)),
-      ),
+    return CampusCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: Icon(icon, color: AppTheme.primary, size: 20),
+          ),
+          const SizedBox(height: AppSpacing.md),
           Text(
             title,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             subtitle,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: AppTheme.textSecondary,
+              height: 1.45,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.sm),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              FilledButton.tonal(
-                onPressed: onPressed,
-                child: Text(buttonLabel),
-              ),
-              if (secondaryLabel != null && onSecondaryPressed != null)
-                OutlinedButton(
-                  onPressed: onSecondaryPressed,
-                  child: Text(secondaryLabel!),
-                ),
-            ],
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: actions,
           ),
         ],
       ),
@@ -608,37 +550,229 @@ class _ImportHelperRow extends StatelessWidget {
   }
 }
 
-class _StatTile extends StatelessWidget {
+class _QuickStatsGrid extends StatelessWidget {
+  final List<_QuickStatItem> items;
+
+  const _QuickStatsGrid({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: items.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: AppSpacing.sm,
+        crossAxisSpacing: AppSpacing.sm,
+        mainAxisExtent: 92,
+      ),
+      itemBuilder: (context, index) => _QuickStatCard(item: items[index]),
+    );
+  }
+}
+
+class _QuickStatItem {
   final String label;
   final String value;
+  final IconData icon;
 
-  const _StatTile({
+  const _QuickStatItem({
     required this.label,
     required this.value,
+    required this.icon,
+  });
+}
+
+class _QuickStatCard extends StatelessWidget {
+  final _QuickStatItem item;
+
+  const _QuickStatCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return CampusCard(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(item.icon, size: 15, color: AppTheme.primary),
+          const Spacer(),
+          Text(
+            item.label,
+            style: const TextStyle(
+              fontSize: 10,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            item.value,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StateCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget? action;
+
+  const _StateCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.action,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppTheme.textSecondary,
+    return CampusCard(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppRadii.md),
+            ),
+            child: Icon(icon, color: AppTheme.primary, size: 24),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppTheme.textSecondary,
+              height: 1.5,
+            ),
+          ),
+          if (action != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            action!,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _InlineActionButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final IconData? icon;
+  final bool primary;
+
+  const _InlineActionButton({
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.primary = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final child = icon == null
+        ? Text(label)
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16),
+              const SizedBox(width: AppSpacing.xs),
+              Text(label),
+            ],
+          );
+
+    if (primary) {
+      return ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(0, 44),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.primary,
-          ),
+        child: child,
+      );
+    }
+
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 44),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
         ),
-      ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _BottomCta extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _BottomCta({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: CampusButton(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 16),
+        child: Text(label),
+      ),
+    );
+  }
+}
+
+class _SectionNote extends StatelessWidget {
+  final String text;
+
+  const _SectionNote({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 13,
+        color: AppTheme.textSecondary,
+        height: 1.45,
+      ),
     );
   }
 }
@@ -660,7 +794,13 @@ class _SemesterView extends ConsumerWidget {
 
     return coursesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Padding(
+        padding: AppSpacing.screenPadding,
+        child: ErrorRetryWidget(
+          message: 'We could not load your courses right now.\n$e',
+          onRetry: () => ref.invalidate(coursesProvider),
+        ),
+      ),
       data: (courses) {
         final pairs = courses
             .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
@@ -669,98 +809,148 @@ class _SemesterView extends ConsumerWidget {
             CwaCalculator.highestImpactCourseIndices(pairs);
         final totalCredits =
             courses.fold<double>(0, (sum, course) => sum + course.creditHours);
+        final hasCourses = courses.isNotEmpty;
 
         return CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.md,
+                  AppSpacing.xl,
+                  0,
+                ),
                 child: CwaSummaryBar(
                   projected: projected,
                   target: target,
                   gap: gap,
-                  label: 'Current Semester CWA',
+                  label: 'Projected CWA',
+                  eyebrow: 'Current semester',
+                  hasData: hasCourses,
+                  emptyStateMessage:
+                      'Add your courses to see your semester projection and where to improve.',
                 ),
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                child: _CreditsSummaryCard(
-                  courseCount: courses.length,
-                  totalCredits: totalCredits,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.sm,
+                  AppSpacing.xl,
+                  0,
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: _ImportHelperRow(
-                  title: 'Import courses into this semester',
-                  subtitle:
-                      'Use Import to scan your registration slip and prefill course data.',
-                  buttonLabel: 'Import Courses',
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const RegistrationSlipImportScreen(),
+                child: _QuickStatsGrid(
+                  items: [
+                    _QuickStatItem(
+                      label: 'Courses',
+                      value: '${courses.length}',
+                      icon: LucideIcons.bookOpen,
                     ),
-                  ),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                child: TextButton.icon(
-                  onPressed: () => showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => const CwaCoachSheet(),
-                  ),
-                  icon: const Icon(Icons.auto_awesome, size: 16),
-                  label: const Text('Get AI Coaching'),
-                  style:
-                      TextButton.styleFrom(foregroundColor: AppTheme.primary),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Course-wise CWA',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 15)),
-                    Text(
-                        '${courses.length} course${courses.length == 1 ? '' : 's'}',
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 13)),
+                    _QuickStatItem(
+                      label: 'Credits',
+                      value: '${totalCredits.toInt()} cr',
+                      icon: LucideIcons.chartColumn,
+                    ),
                   ],
                 ),
               ),
             ),
-            if (courses.isEmpty)
-              const SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.school_outlined,
-                          size: 56, color: AppTheme.textSecondary),
-                      SizedBox(height: 12),
-                      Text('No courses yet',
-                          style: TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 15)),
-                      SizedBox(height: 4),
-                      Text('Tap + to add your first course',
-                          style: TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 13)),
-                    ],
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.xs,
+                  AppSpacing.xl,
+                  0,
+                ),
+                child: _SupportCard(
+                  icon: LucideIcons.fileUp,
+                  title: 'Import courses',
+                  subtitle:
+                      'Scan your registration slip or add courses manually without rebuilding this semester from scratch.',
+                  actions: [
+                    _InlineActionButton(
+                      label: 'Import',
+                      icon: LucideIcons.fileUp,
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const RegistrationSlipImportScreen(),
+                        ),
+                      ),
+                    ),
+                    _InlineActionButton(
+                      label: 'Add manually',
+                      primary: false,
+                      icon: LucideIcons.plus,
+                      onPressed: () =>
+                          context.push('/cwa/manual-entry?mode=semester'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.lg,
+                  AppSpacing.xl,
+                  0,
+                ),
+                child: CampusSectionHeader(
+                  title: 'Course performance',
+                  subtitle: hasCourses
+                      ? '${courses.length} course${courses.length == 1 ? '' : 's'}'
+                      : 'No courses yet',
+                  trailing: TextButton.icon(
+                    onPressed: () => showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => const CwaCoachSheet(),
+                    ),
+                    icon: const Icon(LucideIcons.sparkles, size: 16),
+                    label: const Text('Coach'),
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  6,
+                  AppSpacing.xl,
+                  AppSpacing.xs,
+                ),
+                child: _SectionNote(
+                  text: hasCourses
+                      ? 'Adjust only the courses you want to focus on. Your projected CWA updates live as you edit.'
+                      : 'Start with one course and CampusIQ will calculate the rest from there.',
+                ),
+              ),
+            ),
+            if (!hasCourses)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    0,
+                    AppSpacing.xl,
+                    0,
+                  ),
+                  child: _StateCard(
+                    icon: LucideIcons.bookOpen,
+                    title: 'No courses added yet',
+                    subtitle:
+                        'Add your semester courses to see your projected CWA, target gap, and which courses need more attention.',
+                    action: _BottomCta(
+                      label: 'Add Course',
+                      icon: LucideIcons.plus,
+                      onPressed: () => onOpenAddSheet(context, ref),
+                    ),
                   ),
                 ),
               )
@@ -798,7 +988,22 @@ class _SemesterView extends ConsumerWidget {
                   childCount: courses.length,
                 ),
               ),
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.sm,
+                  AppSpacing.xl,
+                  AppSpacing.sm,
+                ),
+                child: _BottomCta(
+                  label: 'Add Course',
+                  icon: LucideIcons.plus,
+                  onPressed: () => onOpenAddSheet(context, ref),
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
           ],
         );
       },
@@ -809,7 +1014,9 @@ class _SemesterView extends ConsumerWidget {
 // ─── Cumulative view ──────────────────────────────────────────────────────────
 
 class _CumulativeView extends ConsumerWidget {
-  const _CumulativeView();
+  final void Function(BuildContext context) onOpenHistory;
+
+  const _CumulativeView({required this.onOpenHistory});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -822,125 +1029,92 @@ class _CumulativeView extends ConsumerWidget {
 
     return semestersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Padding(
+        padding: AppSpacing.screenPadding,
+        child: ErrorRetryWidget(
+          message: 'We could not load your academic history right now.\n$e',
+          onRetry: () => ref.invalidate(pastSemestersProvider),
+        ),
+      ),
       data: (semesters) {
         final currentCourses = currentCoursesAsync.valueOrNull ?? [];
 
         final hasPast = semesters.isNotEmpty;
         final hasCurrent = currentCourses.isNotEmpty;
+        final hasAnyData = hasPast || hasCurrent;
 
         return CustomScrollView(
           slivers: [
-            // ── Cumulative summary bar ───────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                  0,
+                ),
                 child: CwaSummaryBar(
                   projected: cumulativeCwa,
                   target: target,
                   gap: gap,
                   label: 'Cumulative CWA',
-                ),
-              ),
-            ),
-            // ── Total credits pill ───────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: _CreditsSummaryCard(
-                  courseCount: semesters.length + (hasCurrent ? 1 : 0),
-                  totalCredits: totalCredits,
-                  courseLabel: 'semester records',
-                  creditsLabel: 'Total credits completed',
+                  eyebrow: 'Across all semesters',
+                  hasData: hasAnyData,
+                  emptyStateMessage:
+                      'Import past result slips to build your academic history and unlock your cumulative CWA.',
                 ),
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: _ImportHelperRow(
-                  title: 'Build your academic history',
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.lg,
+                  AppSpacing.xl,
+                  0,
+                ),
+                child: _QuickStatsGrid(
+                  items: [
+                    _QuickStatItem(
+                      label: 'Semester records',
+                      value: '${semesters.length}',
+                      icon: LucideIcons.briefcase,
+                    ),
+                    _QuickStatItem(
+                      label: 'Total credits',
+                      value: '${totalCredits.toInt()} cr',
+                      icon: LucideIcons.chartColumn,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.lg,
+                  AppSpacing.xl,
+                  0,
+                ),
+                child: _SupportCard(
+                  icon: LucideIcons.fileUp,
+                  title: 'Build academic history',
                   subtitle:
-                      'Import past result slips or open history to review previous semesters.',
-                  buttonLabel: 'Open History',
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const PastSemestersScreen(),
+                      'Import past result slips or open your saved semester records to understand your full academic picture.',
+                  actions: [
+                    _InlineActionButton(
+                      label: 'Open History',
+                      primary: false,
+                      icon: LucideIcons.bookOpen,
+                      onPressed: () => onOpenHistory(context),
                     ),
-                  ),
-                  secondaryLabel: 'Import Results',
-                  onSecondaryPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ResultSlipImportScreen(),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // ── No history banner ────────────────────────────────────────
-            if (!hasPast)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: _NoHistoryBanner(
-                    onAdd: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (_) => const PastSemestersScreen()),
-                    ),
-                  ),
-                ),
-              ),
-
-            // ── Past semesters ───────────────────────────────────────────
-            if (hasPast) ...[
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Text(
-                    'Past Semesters',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                  ),
-                ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) => Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: _PastSemesterSummaryCard(semester: semesters[i]),
-                  ),
-                  childCount: semesters.length,
-                ),
-              ),
-            ],
-
-            // ── Current semester ─────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Row(
-                  children: [
-                    const Text(
-                      'Current Semester',
-                      style:
-                          TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppTheme.success.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'In progress',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.success,
+                    _InlineActionButton(
+                      label: 'Import',
+                      icon: LucideIcons.fileUp,
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ResultSlipImportScreen(),
                         ),
                       ),
                     ),
@@ -948,14 +1122,102 @@ class _CumulativeView extends ConsumerWidget {
                 ),
               ),
             ),
+            if (!hasPast)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    AppSpacing.lg,
+                    AppSpacing.xl,
+                    0,
+                  ),
+                  child: _StateCard(
+                    icon: LucideIcons.fileUp,
+                    title: 'No cumulative history yet',
+                    subtitle:
+                        'Import your previous result slips to see your true cumulative CWA across all semesters.',
+                    action: _InlineActionButton(
+                      label: 'Import Results',
+                      icon: LucideIcons.fileUp,
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ResultSlipImportScreen(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (hasPast) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    AppSpacing.xl,
+                    AppSpacing.xl,
+                    AppSpacing.sm,
+                  ),
+                  child: CampusSectionHeader(
+                    title: 'Academic history',
+                    subtitle:
+                        '${semesters.length} semester record${semesters.length == 1 ? '' : 's'}',
+                  ),
+                ),
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) => Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                      vertical: 6,
+                    ),
+                    child: _PastSemesterSummaryCard(semester: semesters[i]),
+                  ),
+                  childCount: semesters.length,
+                ),
+              ),
+            ],
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                  AppSpacing.sm,
+                ),
+                child: CampusSectionHeader(
+                  title: 'Current semester',
+                  subtitle: hasCurrent
+                      ? '${currentCourses.length} course${currentCourses.length == 1 ? '' : 's'} in progress'
+                      : 'No current courses added',
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.success.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Text(
+                      'In progress',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.success,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
             if (!hasCurrent)
               const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'No courses added yet. Switch to Semester view to add courses.',
-                    style:
-                        TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                  child: _SectionNote(
+                    text:
+                        'Switch to Semester view to add current courses and keep your cumulative view up to date.',
                   ),
                 ),
               )
@@ -966,14 +1228,31 @@ class _CumulativeView extends ConsumerWidget {
                     final c = currentCourses[i];
                     return Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 3),
+                        horizontal: AppSpacing.xl,
+                        vertical: 6,
+                      ),
                       child: _CurrentCourseRow(course: c),
                     );
                   },
                   childCount: currentCourses.length,
                 ),
               ),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.lg,
+                  AppSpacing.xl,
+                  AppSpacing.lg,
+                ),
+                child: _BottomCta(
+                  label: 'Add Semester',
+                  icon: LucideIcons.plus,
+                  onPressed: () => onOpenHistory(context),
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
           ],
         );
       },
@@ -1009,17 +1288,20 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
   Widget build(BuildContext context) {
     final cwa = _semCwa;
 
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      elevation: 0.5,
+    return CampusCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadii.card,
             onTap: () => setState(() => _expanded = !_expanded),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -1029,35 +1311,42 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                         Text(
                           widget.semester.semesterLabel,
                           style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: AppTheme.textPrimary),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
                           '${widget.semester.courses.length} courses'
                           '${widget.semester.reportedSemesterCwa != null ? ' • Slip: ${widget.semester.reportedSemesterCwa!.toStringAsFixed(2)}' : ''}',
                           style: const TextStyle(
-                              fontSize: 12, color: AppTheme.textSecondary),
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
+                      color: AppColors.surfaceMuted,
+                      borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
                       cwa.toStringAsFixed(1),
                       style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          color: AppTheme.primary),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: AppTheme.primary,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Icon(
                     _expanded ? Icons.expand_less : Icons.expand_more,
                     size: 20,
@@ -1068,10 +1357,15 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
             ),
           ),
           if (_expanded) ...[
-            const Divider(height: 1, indent: 14, endIndent: 14),
+            const Divider(height: 1, indent: 20, endIndent: 20),
             ...widget.semester.courses.map(
               (c) => Padding(
-                padding: const EdgeInsets.fromLTRB(14, 6, 14, 2),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  2,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -1081,34 +1375,36 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                           Text(c.courseCode,
                               style: const TextStyle(
                                   fontSize: 11,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                   color: AppTheme.primary,
                                   letterSpacing: 0.4)),
                           Text(c.courseName,
                               style: const TextStyle(
-                                  fontSize: 12, color: AppTheme.textPrimary),
+                                fontSize: 13,
+                                color: AppTheme.textPrimary,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis),
                         ],
                       ),
                     ),
                     Text(
-                      '${c.creditHours.toInt()}cr',
+                      '${c.creditHours.toInt()} cr',
                       style: const TextStyle(
                           fontSize: 12, color: AppTheme.textSecondary),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.xs),
                     // Show the actual score used in CWA calculation.
                     // If mark is null the code falls back to a grade midpoint —
                     // flag that so the user knows to enter the real mark.
                     _ScorePill(mark: c.mark, score: c.score),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppSpacing.xs),
                     _GradePill(grade: c.grade),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
           ],
         ],
       ),
@@ -1124,11 +1420,10 @@ class _CurrentCourseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+    return CampusCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
       ),
       child: Row(
         children: [
@@ -1139,38 +1434,46 @@ class _CurrentCourseRow extends StatelessWidget {
                 Text(
                   course.code,
                   style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.primary,
-                      letterSpacing: 0.4),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primary,
+                    letterSpacing: 0.4,
+                  ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   course.name,
                   style: const TextStyle(
-                      fontSize: 13, color: AppTheme.textPrimary),
-                  maxLines: 1,
+                    fontSize: 13,
+                    color: AppTheme.textPrimary,
+                  ),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
           Text(
-            '${course.creditHours.toInt()}cr',
+            '${course.creditHours.toInt()} cr',
             style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: 6,
+            ),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(6),
+              color: AppColors.surfaceMuted,
+              borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              '${course.expectedScore.toInt()}',
+              '${course.expectedScore.toInt()}%',
               style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                  color: AppTheme.primary),
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: AppTheme.primary,
+              ),
             ),
           ),
         ],
@@ -1264,45 +1567,6 @@ class _GradePill extends StatelessWidget {
           fontWeight: FontWeight.w700,
           color: color,
         ),
-      ),
-    );
-  }
-}
-
-// ─── No history banner ────────────────────────────────────────────────────────
-
-class _NoHistoryBanner extends StatelessWidget {
-  final VoidCallback onAdd;
-  const _NoHistoryBanner({required this.onAdd});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline, color: AppTheme.primary, size: 20),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Import past result slips to see your true CWA across all years.',
-              style: TextStyle(fontSize: 13, color: AppTheme.textPrimary),
-            ),
-          ),
-          TextButton(
-            onPressed: onAdd,
-            child: const Text('Import',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primary)),
-          ),
-        ],
       ),
     );
   }

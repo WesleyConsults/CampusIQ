@@ -146,22 +146,18 @@ class _AppShell extends ConsumerWidget {
         (isSessionActive
             ? _timerEstimatedHeight + _timerGap + AppSpacing.md
             : 0);
-    final paddedMediaQuery = mediaQuery.copyWith(
-      padding: mediaQuery.padding.copyWith(
-        bottom: childBottomInset,
-      ),
-      viewPadding: mediaQuery.viewPadding.copyWith(
-        bottom: childBottomInset,
-      ),
-    );
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
       body: Stack(
         children: [
-          Positioned.fill(
+          Positioned(
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: childBottomInset,
             child: MediaQuery(
-              data: paddedMediaQuery,
+              data: mediaQuery,
               child: ColoredBox(
                 color: AppTheme.surface,
                 child: child,
