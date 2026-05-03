@@ -2,10 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Floating pill shown at the bottom of every screen when a session is active.
-/// Positioned above the bottom nav bar inside the AppShell Stack.
+/// Placement is handled by the AppShell so the widget stays reusable.
 class FloatingMiniTimer extends ConsumerStatefulWidget {
   final VoidCallback onTap;
   const FloatingMiniTimer({super.key, required this.onTap});
@@ -38,7 +40,7 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
 
     final isPomodoro = session.isPomodoroMode;
     final isBreak = isPomodoro && session.isBreak;
-    final pillColor = isBreak ? AppTheme.success : AppTheme.primary;
+    final accentColor = isBreak ? AppTheme.success : AppTheme.primary;
 
     // Mini label: "R2 Focus" or "R2 Break"
     String? pomodoroLabel;
@@ -54,72 +56,89 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
       timerDisplay = session.formattedElapsed;
     }
 
-    return Positioned(
-      left: 16,
-      right: 16,
-      bottom: 12,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: pillColor,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: pillColor.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              _PulsingDot(),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      session.courseCode,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface.withValues(alpha: 0.98),
+          borderRadius: AppRadii.pill,
+          border: Border.all(color: AppColors.border),
+          boxShadow: const [
+            BoxShadow(
+              color: AppColors.shadow,
+              blurRadius: 18,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            _PulsingDot(color: accentColor),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    session.courseCode,
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                     ),
-                    if (pomodoroLabel != null)
-                      Text(
-                        pomodoroLabel,
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 10),
-                      )
-                    else
-                      Text(
-                        session.courseName,
-                        style: const TextStyle(
-                            color: Colors.white60, fontSize: 10),
-                        overflow: TextOverflow.ellipsis,
+                  ),
+                  if (pomodoroLabel != null)
+                    Text(
+                      pomodoroLabel,
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 10,
                       ),
-                  ],
-                ),
+                    )
+                  else
+                    Text(
+                      session.courseName,
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 10,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
               ),
-              Text(
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.10),
+                borderRadius: AppRadii.pill,
+              ),
+              child: Text(
                 timerDisplay,
-                style: const TextStyle(
-                  color: AppTheme.accent,
-                  fontSize: 16,
+                style: TextStyle(
+                  color: accentColor,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  fontFeatures: [FontFeature.tabularFigures()],
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right, color: Colors.white54, size: 16),
-            ],
-          ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            const Icon(
+              LucideIcons.chevronRight,
+              color: AppTheme.textSecondary,
+              size: 16,
+            ),
+          ],
         ),
       ),
     );
@@ -127,6 +146,10 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
 }
 
 class _PulsingDot extends StatefulWidget {
+  final Color color;
+
+  const _PulsingDot({required this.color});
+
   @override
   State<_PulsingDot> createState() => _PulsingDotState();
 }
@@ -159,8 +182,7 @@ class _PulsingDotState extends State<_PulsingDot>
       child: Container(
         width: 8,
         height: 8,
-        decoration:
-            const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+        decoration: BoxDecoration(color: widget.color, shape: BoxShape.circle),
       ),
     );
   }

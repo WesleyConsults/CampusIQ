@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/features/cwa/presentation/screens/cwa_screen.dart';
 import 'package:campusiq/features/plan/presentation/screens/plan_screen.dart';
 import 'package:campusiq/features/settings/presentation/screens/settings_screen.dart';
@@ -16,6 +17,8 @@ import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.d
 import 'package:campusiq/features/course_hub/presentation/screens/course_hub_screen.dart';
 import 'package:campusiq/features/timetable/presentation/screens/timetable_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/cwa_manual_entry_screen.dart';
+import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/plan',
@@ -109,6 +112,13 @@ final appRouter = GoRouter(
 );
 
 class _AppShell extends ConsumerWidget {
+  static const double _navHeight = 72;
+  static const double _navBottomMargin = 14;
+  static const double _navHorizontalMargin = 18;
+  static const double _timerGap = 12;
+  static const double _timerEstimatedHeight = 64;
+  static const double _fabSize = 58;
+
   final Widget child;
   const _AppShell({required this.child});
 
@@ -125,39 +135,71 @@ class _AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isSessionActive = ref.watch(activeSessionProvider) != null;
     final selectedIndex = _locationToIndex(context);
+    final mediaQuery = MediaQuery.of(context);
+    final navBottomOffset = mediaQuery.padding.bottom + _navBottomMargin;
+    final navReservedSpace = navBottomOffset + _navHeight + AppSpacing.lg;
+    final timerBottomOffset =
+        navBottomOffset + _navHeight + _timerGap + mediaQuery.padding.bottom;
+    final childBottomPadding = isSessionActive
+        ? timerBottomOffset + _timerEstimatedHeight
+        : navReservedSpace;
+    final paddedMediaQuery = mediaQuery.copyWith(
+      padding: mediaQuery.padding.copyWith(
+        bottom: mediaQuery.padding.bottom + childBottomPadding,
+      ),
+    );
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/ai'),
-        tooltip: 'AI Assistant',
-        child: const Icon(Icons.auto_awesome),
-      ),
+      backgroundColor: AppTheme.surface,
       body: Stack(
         children: [
-          child,
+          Positioned.fill(
+            child: MediaQuery(
+              data: paddedMediaQuery,
+              child: ColoredBox(
+                color: AppTheme.surface,
+                child: child,
+              ),
+            ),
+          ),
           if (isSessionActive)
-            FloatingMiniTimer(onTap: () => context.go('/sessions')),
+            Positioned(
+              left: _navHorizontalMargin,
+              right: _navHorizontalMargin + _fabSize + AppSpacing.md,
+              bottom: timerBottomOffset,
+              child: FloatingMiniTimer(onTap: () => context.go('/sessions')),
+            ),
+          Positioned(
+            left: _navHorizontalMargin,
+            right: _navHorizontalMargin,
+            bottom: navBottomOffset,
+            child: _ShellBottomNav(
+              selectedIndex: selectedIndex,
+              isSessionActive: isSessionActive,
+              onDestinationSelected: (i) {
+                switch (i) {
+                  case 0:
+                    context.go('/plan');
+                    return;
+                  case 1:
+                    context.go('/cwa');
+                    return;
+                  case 2:
+                    context.go('/timetable');
+                    return;
+                  case 3:
+                    context.go('/sessions');
+                    return;
+                }
+              },
+            ),
+          ),
+          Positioned(
+            right: _navHorizontalMargin,
+            bottom: navBottomOffset + _navHeight + AppSpacing.md,
+            child: _AiFab(onPressed: () => context.push('/ai')),
+          ),
         ],
-      ),
-      bottomNavigationBar: _ShellBottomNav(
-        selectedIndex: selectedIndex,
-        isSessionActive: isSessionActive,
-        onDestinationSelected: (i) {
-          switch (i) {
-            case 0:
-              context.go('/plan');
-              return;
-            case 1:
-              context.go('/cwa');
-              return;
-            case 2:
-              context.go('/timetable');
-              return;
-            case 3:
-              context.go('/sessions');
-              return;
-          }
-        },
       ),
     );
   }
@@ -177,111 +219,139 @@ class _ShellBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    const destinations = [
+    final lucide = theme.extension<AppLucideTheme>();
+    final destinations = [
       (
         label: 'Home',
-        icon: Icons.home_outlined,
-        selectedIcon: Icons.home,
+        icon: lucide?.home ?? LucideIcons.house,
+        selectedIcon: lucide?.homeFilled ?? LucideIcons.house,
       ),
       (
         label: 'CWA',
-        icon: Icons.analytics_outlined,
-        selectedIcon: Icons.analytics,
+        icon: lucide?.analytics ?? LucideIcons.chartColumn,
+        selectedIcon: lucide?.analyticsFilled ?? LucideIcons.chartColumn,
       ),
       (
         label: 'Table',
-        icon: Icons.calendar_view_week_outlined,
-        selectedIcon: Icons.calendar_view_week,
+        icon: lucide?.timetable ?? LucideIcons.calendarDays,
+        selectedIcon: lucide?.timetableFilled ?? LucideIcons.calendarDays,
       ),
       (
         label: 'Sessions',
-        icon: Icons.timer_outlined,
-        selectedIcon: Icons.timer,
+        icon: lucide?.sessions ?? LucideIcons.timer,
+        selectedIcon: lucide?.sessionsFilled ?? LucideIcons.timer,
       ),
     ];
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 18,
-                offset: Offset(0, 6),
-              ),
-            ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.96),
+        borderRadius: const BorderRadius.all(Radius.circular(30)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 26,
+            offset: Offset(0, 10),
           ),
-          child: Row(
-            children: List.generate(destinations.length, (index) {
-              final destination = destinations[index];
-              final isSelected = selectedIndex == index;
-              final iconColor = isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : const Color(0xFF6B7280);
-              final baseIcon =
-                  isSelected ? destination.selectedIcon : destination.icon;
-              final icon =
-                  index == 3 && isSessionActive ? Icons.timer : baseIcon;
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Row(
+          children: List.generate(destinations.length, (index) {
+            final destination = destinations[index];
+            final isSelected = selectedIndex == index;
+            final iconColor =
+                isSelected ? AppTheme.primary : AppColors.textSecondary;
+            final baseIcon =
+                isSelected ? destination.selectedIcon : destination.icon;
+            final icon = index == 3 && isSessionActive
+                ? (lucide?.sessionsFilled ?? LucideIcons.timer)
+                : baseIcon;
 
-              return Expanded(
-                child: Semantics(
-                  button: true,
-                  selected: isSelected,
-                  label: 'Open ${destination.label}',
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(18),
-                    onTap: () => onDestinationSelected(index),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        color: isSelected
-                            ? colorScheme.primary.withValues(alpha: 0.10)
-                            : Colors.transparent,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            icon,
-                            size: 20,
-                            color: index == 3 && isSessionActive && !isSelected
-                                ? Colors.red
-                                : iconColor,
+            return Expanded(
+              child: Semantics(
+                button: true,
+                selected: isSelected,
+                label: 'Open ${destination.label}',
+                child: InkWell(
+                  borderRadius: AppRadii.pill,
+                  onTap: () => onDestinationSelected(index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                      vertical: AppSpacing.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: AppRadii.pill,
+                      color: isSelected
+                          ? AppTheme.primary.withValues(alpha: 0.08)
+                          : Colors.transparent,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 20,
+                          color: iconColor,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          destination.label,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: iconColor,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            destination.label,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                              color: iconColor,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              );
-            }),
-          ),
+              ),
+            );
+          }),
         ),
+      ),
+    );
+  }
+}
+
+class _AiFab extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _AiFab({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final lucide = Theme.of(context).extension<AppLucideTheme>();
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: AppRadii.pill,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.gold.withValues(alpha: 0.18),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: FloatingActionButton.small(
+        onPressed: onPressed,
+        tooltip: 'AI Assistant',
+        backgroundColor: AppColors.goldSoft,
+        foregroundColor: AppTheme.primary,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.pill),
+        child: Icon(lucide?.ai ?? LucideIcons.sparkles, size: 18),
       ),
     );
   }
