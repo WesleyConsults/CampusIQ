@@ -21,7 +21,7 @@ Strict three-layer structure per feature:
 
 ## 4. Core Features (v1.0)
 1.  **CWA Planner:** Manual entry + registration slip import (AI Vision). Supports Semester and Cumulative tracking.
-2.  **Timetable:** Single-layer class grid. Supports image import (AI Vision) and free-time detection.
+2.  **Timetable:** Single-layer class grid with a compact day summary, full-page daily timeline, image import (AI Vision), and free-time detection.
 3.  **Study Sessions:** Count-up (Normal) and Count-down (Pomodoro) timers. Tracks focus time only.
 4.  **Course Hub:** Per-course workspace with Overview, Sessions, and Notes only.
 5.  **Daily Plan:** AI-generated task list based on timetable free blocks.
@@ -51,12 +51,14 @@ Strict three-layer structure per feature:
 - Bottom navigation now shows 4 destinations: `Home` (`/plan`), `CWA` (`/cwa`), `Table` (`/timetable`), and `Sessions` (`/sessions`).
 - The shell also owns the floating active-session mini timer; if a study session is active, tapping the timer returns the user to `/sessions`.
 - The AI FAB opens the main AI chat at `/ai` from anywhere inside the shell.
+- Shell tabs now render full height behind the floating nav instead of being permanently clipped above it.
+- Each shell tab is responsible for its own trailing bottom clearance so lower content can scroll above the bottom nav, AI FAB, and active-session mini timer without leaving a persistent dead band.
 - Full-screen routes outside the shell intentionally do not show the bottom nav or shell AI FAB.
 
 ### Main top-level screens a user can reach
 - `Today` at `/plan`: the daily hub and main landing screen. Internally still the Plan route, but user-facing copy should prefer `Today`.
 - `CWA` at `/cwa`: course management, target planning, import bottom sheet, semester/cumulative toggle, and workspace entry point.
-- `Timetable` at `/timetable`: class timetable, slot detail, timetable import entry point, and workspace entry point.
+- `Timetable` at `/timetable`: class timetable with compact day summary, calmer slot/free-block styling, slot detail sheet, timetable import entry point, and workspace entry point.
 - `Sessions` at `/sessions`: timer, analytics, plan-related surfaces, and workspace entry point from course breakdown.
 - `AI Chat` at `/ai`: global AI assistant only.
 - `Streak` at `/streak`: streak dashboard.
@@ -86,11 +88,17 @@ Strict three-layer structure per feature:
 - Bottom-safe spacing on Today was refined so lower Home content can scroll fully above the floating shell nav.
 - Long plan-task labels now wrap to 2 lines and ellipsize instead of overflowing into the time/duration column.
 
-### Core module return pattern
-- `CWA`, `Timetable`, and `Sessions` now each expose a visible top-left **Home** button.
-- That Home button routes the user back to `/plan` (Today).
-- Today is now accessible via the **Home** tab in the bottom navigation bar.
-- Home button semantics/tooltips were added during the redesign polish pass.
+### Timetable screen behavior
+- The Timetable AppBar prioritizes two actions only: image import (scanner) and add class.
+- A compact day summary card appears near the top and can show the selected day, class count, next/first class, and free-block count.
+- The `Daily timeline` is the primary content area; the whole Timetable page scrolls naturally instead of trapping the grid inside a small inner vertical scroll box.
+- Class slots use calmer cards, and free blocks are intentionally lighter and less visually dominant.
+- Timetable content now scrolls cleanly above the floating shell nav and AI FAB using the same shell-overlay spacing model as the other bottom-nav tabs.
+
+### Primary shell return pattern
+- Today remains the primary home base at `/plan` and is accessible through the **Home** bottom-nav tab.
+- `CWA`, `Timetable`, and `Sessions` currently rely on the shared bottom navigation for returning to Today, rather than dedicated Home actions in each AppBar.
+- Secondary destinations such as `Streak`, `Insights`, `Weekly Review`, `Settings`, and `Subscribe` remain reachable from the Today drawer or their existing deep links.
 
 ### Course Hub workspace
 - Route is `/course/:courseCode`.

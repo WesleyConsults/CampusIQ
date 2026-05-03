@@ -49,7 +49,7 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Screen shows daily plan task content
 - [ ] The old **Suggested focus** section is not present
 - [ ] If a study session is active, a resume/active-session surface is visible on Today
-- [ ] Lower Today content scrolls fully above the floating bottom nav
+- [ ] Lower Today content scrolls fully above the floating bottom nav / AI FAB
 - [ ] No RenderFlex / bottom overflow appears on a standard ~360 dp width screen
 - [ ] Long task labels wrap/truncate cleanly without overlapping the time/duration column
 
@@ -70,16 +70,15 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Back/close safely dismisses the drawer without crash
 
 ### 1.5 Home-return pattern on module screens
-- [ ] From Today, open **CWA** — visible top-left **Home** button appears
-- [ ] Tap **Home** on CWA — returns to Today (`/plan`)
-- [ ] From Today, open **Table** — visible top-left **Home** button appears
-- [ ] Tap **Home** on Table — returns to Today (`/plan`)
-- [ ] From Today, open **Sessions** — visible top-left **Home** button appears
-- [ ] Tap **Home** on Sessions — returns to Today (`/plan`)
+- [ ] From Today, open **CWA** — return to Today using the **Home** bottom-nav tab
+- [ ] From Today, open **Table** — return to Today using the **Home** bottom-nav tab
+- [ ] From Today, open **Sessions** — return to Today using the **Home** bottom-nav tab
+- [ ] CWA, Table, and Sessions do not show a duplicate or misleading Home AppBar action
 
 ### 1.6 Shell-only chrome rules
 - [ ] Bottom navigation appears on shell screens only
 - [ ] AI FAB appears on shell screens only
+- [ ] Shell tabs render full height; lower content is not permanently clipped above the navbar
 - [ ] Full-screen routes such as `/cwa/manual-entry`, `/timetable/import`, `/course/:courseCode`, and `/ai/weekly-review` do not show the bottom nav
 - [ ] `/cwa/manual-entry` does not show the AI FAB
 
@@ -91,7 +90,7 @@ Mark each item `[x]` as you confirm it works.
 
 ### 2.1 Empty state
 - [ ] CWA opens without crash
-- [ ] AppBar shows a visible **Home** button on the left
+- [ ] AppBar does not show a duplicate **Home** button on the left
 - [ ] AppBar title reads **CWA**
 - [ ] AppBar shows a visible **Import** action on the right
 - [ ] Overflow / More action is visible if secondary actions exist
@@ -259,29 +258,43 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Table → Home (via bottom nav) → Today
 - [ ] Today → Sessions (via bottom nav)
 - [ ] Sessions → Home (via bottom nav) → Today
-- [ ] CWA → Home (via Home button in AppBar) → Today
-- [ ] Table → Home (via Home button in AppBar) → Today
-- [ ] Sessions → Home (via Home button in AppBar) → Today
 - [ ] CWA `Semester` / `Cumulative` switching still preserves visible data
 - [ ] Existing Course Hub entry points from CWA still work
 - [ ] CWA → Import bottom sheet still shows all four options
 - [ ] Existing photo/image/PDF import flows still open the correct screens
 - [ ] Manual entry save returns to CWA and refreshed data is visible
 - [ ] Active session mini timer still appears when a session is active
+- [ ] Lower CWA content scrolls fully above the floating bottom nav / AI FAB
+- [ ] Lower Table content scrolls fully above the floating bottom nav / AI FAB with no persistent dead band
+- [ ] Lower Sessions History and Sessions Plan content scroll above the floating bottom nav / AI FAB
 - [ ] `Settings`, `Insights`, `Streak`, `Weekly Review`, and `Subscribe` routes still open
 
 ---
 
 ## 3. Timetable (`/timetable`)
 
-### 3.1 Day selector
+### 3.1 Header, day selector, and summary
+- [ ] AppBar title reads **Table**
+- [ ] Scanner/import action is visible in the AppBar
+- [ ] Add (`+`) action is visible in the AppBar
 - [ ] Horizontal day picker shows all 7 days
 - [ ] Tap a different day — grid updates (may be empty for that day)
 - [ ] Today is highlighted by default
+- [ ] Compact day summary card is visible near the top
+- [ ] Summary card updates when the selected day changes
+- [ ] Summary card can show selected day, class count, next/first class, and free-block count without overflow
 
-### 3.2 Add a class slot
-- [ ] Swipe to **Classes Only** view (or Both)
-- [ ] Tap the FAB — label reads **"Add Class"**
+### 3.2 Timeline layout and scrolling
+- [ ] `Daily timeline` header is visible above the timetable
+- [ ] The actual timetable grid is the main page content under the summary card
+- [ ] The whole page scrolls naturally; timetable is not trapped inside a tiny inner vertical scroll box
+- [ ] Class blocks are visible and readable
+- [ ] Free blocks are visible when available and are visually lighter than class blocks
+- [ ] The final timetable content scrolls above the floating bottom nav and AI FAB
+- [ ] No persistent blank band remains above the navbar on the Table page
+
+### 3.3 Add a class slot
+- [ ] Tap the AppBar `+` action
 - [ ] `AddSlotSheet` opens
 - [ ] Fill in: Course (e.g. "Engineering Mathematics"), day, start time, end time, venue
 - [ ] Tap **Save** — slot appears on the grid for that day/time
@@ -293,9 +306,11 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Tap **"Open Workspace"** on a class slot → navigates to that course's Course Hub (no bottom nav visible)
 - [ ] Back arrow on Course Hub returns to the Timetable screen
 
-### 3.5 Tap empty grid area
-- [ ] Tap an empty time cell on the grid
-- [ ] Add sheet opens with that time pre-filled
+### 3.5 Free blocks, empty state, and open space
+- [ ] Tap a visible free block — add sheet opens with that time range pre-filled
+- [ ] On a day with no classes, a calm empty state is shown instead of a blank page
+- [ ] Empty-state add action still opens the add sheet
+- [ ] Tapping open timetable space still opens the add flow without crashing
 
 ### 3.6 Import from image — entry point
 - [ ] Scanner icon (document scanner) is visible in the Timetable AppBar alongside the "+" button
@@ -320,6 +335,7 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Navigate to another tab (e.g. CWA or AI) while session is running
 - [ ] A **floating timer chip** appears at the bottom of the screen
 - [ ] Tap the floating timer — navigates back to Sessions screen
+- [ ] Lower Sessions content still scrolls above the floating bottom nav / AI FAB / mini timer
 
 ### 4.3 Stop and save
 - [ ] Return to Sessions tab
@@ -338,6 +354,7 @@ Mark each item `[x]` as you confirm it works.
   - Today's duration and session count
   - Course breakdown
   - Weekly bar chart (may show one bar)
+- [ ] Scroll near the bottom of Sessions History — the last visible content clears the floating bottom nav / AI FAB
 
 ### 4.6 Open Course Hub from Sessions breakdown
 - [ ] Scroll to the **"By course"** breakdown card
@@ -351,6 +368,7 @@ Mark each item `[x]` as you confirm it works.
 ### 4.8 Plan tab
 - [ ] Tap the **Plan** tab inside Sessions
 - [ ] AI study plan displays (or empty state if no data yet)
+- [ ] Lower Study Plan content scrolls above the floating bottom nav / AI FAB
 
 ### 4.9 Insights
 - [ ] Tap the **Insights** icon in the AppBar (if visible)

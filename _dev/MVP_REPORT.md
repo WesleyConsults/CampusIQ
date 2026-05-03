@@ -27,8 +27,8 @@ This session completed the full CampusIQ UI navigation redesign through Phase 8 
   - `Weekly Review`
   - `Settings`
   - `Subscribe`
-- `CWA`, `Table`, and `Sessions` each now have a **visible top-left Home button** that routes back to `/plan`.
 - The shell still preserves the **global AI FAB** and the **active-session floating mini timer**.
+- Shell tabs now render full height behind the floating nav, and each tab owns its own trailing overlay clearance so content can scroll above the nav, AI FAB, and mini timer without a permanent dead band.
 - The final shell structure is now:
   - `Home` at `/plan`
   - `CWA` at `/cwa`
@@ -38,10 +38,10 @@ This session completed the full CampusIQ UI navigation redesign through Phase 8 
 ### CWA redesign delivered in this session
 
 - The CWA screen header now follows a clearer structure:
-  - `Home`
   - `CWA`
   - `Import`
   - `More`
+- Returning to Today from CWA now relies on the shared **Home** bottom-nav tab instead of a dedicated AppBar Home action.
 - The **Semester / Cumulative** segmented switcher stays directly under the app bar because it changes screen meaning.
 - Semester mode now presents:
   - current semester CWA summary
@@ -477,7 +477,7 @@ lib/
 | `/course/:courseCode` | Course Hub Workspace (3-tab per-course workspace) | 15.1 |
 | `/timetable/import` | Timetable Image Import (full-screen, no bottom nav) | 15.2 |
 
-Navigation uses a `ShellRoute` with a 4-destination bottom nav bar: Home, CWA, Table, Sessions. Tab switches use `context.go()`; drill-down screens (AI Chat, Streak, Insights, Settings, Course Hub, etc.) use `context.push()` for proper back-button behaviour. The floating mini-timer and AI Assistant FAB are rendered inside `_AppShell` and persist across all tab switches.
+Navigation uses a `ShellRoute` with a 4-destination bottom nav bar: Home, CWA, Table, Sessions. Tab switches use `context.go()`; drill-down screens (AI Chat, Streak, Insights, Settings, Course Hub, etc.) use `context.push()` for proper back-button behaviour. The floating mini-timer and AI Assistant FAB are rendered inside `_AppShell` and persist across all tab switches. Shell tabs now render at full height and use in-page trailing overlay clearance so their final content can scroll above the nav/FAB/timer stack cleanly.
 
 ---
 
@@ -511,13 +511,15 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar: Home, CWA, T
 | Feature | Description |
 |---|---|
 | Day selector | Tap pill to switch day; swipe left/right on the grid to navigate days |
+| Day summary card | Compact top card summarizes the selected day, class count, next/first class, and free-block count when available |
 | Time grid | 6AM–8PM, hourly rows at 60px/hr (1.0 px/min); 30-min resolution |
 | Add class slot | Bottom sheet with fast-select CWA course chips for instant autofill (course code, name, venue, type, time, color); time picker auto-promotes sub-6AM selections to PM; end time auto-advances if ≤ start |
-| Slot card | Shows course code, name, venue, and (for slots ≥ 80 min) start time · type; 3-tier layout avoids overflow on 1-hour slots |
+| Timeline layout | `Daily timeline` is the main page content; the whole page scrolls naturally instead of trapping the timetable inside a small nested vertical scroll box |
+| Slot card | Uses calmer card styling while still showing course code, name, venue, and (for taller slots) time/type without overflow |
 | Slot overlap handling | Overlapping same-day class slots are split into equal side-by-side lanes via `_assignColumns` — no stacked/unreadable text |
-| Slot detail sheet | Tap slot to view/delete |
+| Slot detail sheet | Tap slot to open a polished detail sheet with edit, delete, and `Open Workspace` actions |
 | Free time detector | `FreeTimeDetector` computes contiguous free blocks per day — pure Dart |
-| Free block indicator | Displays free blocks in the grid when no class is scheduled |
+| Free block indicator | Displays lighter, less dominant free blocks in the grid when no class is scheduled |
 | Slot types | Lecture / Practical / Tutorial |
 
 **Isar schemas:** `TimetableSlotModel`
@@ -945,10 +947,10 @@ Streak state is computed entirely from existing data. Study streak reads `StudyS
 `isar_flutter_libs 3.1.0+1` ships a Groovy `build.gradle` without a `namespace` declaration. AGP 8+ requires it. Fixed with a `plugins.withId("com.android.library")` hook in `android/build.gradle.kts` that injects the namespace from the project group before evaluation. Using `afterEvaluate` failed because `evaluationDependsOn(":app")` had already triggered sibling project evaluation.
 
 ### 7. Timetable navigation: swipe = days, tap = view mode
-Horizontal swipe on the grid navigates between days (Mon → Tue → … → Sun) via a `GestureDetector` with a 300 velocity threshold. View mode switching (Class / Both / Personal) is handled by tapping the `TimetablePageIndicator` labels. This separates the two concerns cleanly — the original `PageView` approach conflated swipe with view switching, which users found unintuitive.
+Horizontal swipe on the timetable screen navigates between days (Mon → Tue → … → Sun) via a `GestureDetector` with a 300 velocity threshold. The current launch build is single-layer only, so the page now focuses on one compact day summary plus a full-page `Daily timeline` instead of any class/personal layer switching UI.
 
 ### 12. Slot overlap detection with greedy column assignment
-Overlapping timetable slots (same layer or cross-layer in Both view) are rendered side-by-side using a greedy column-assignment algorithm in `DualLayerGrid._assignColumns`. Slots are sorted by start time; each is assigned to the first column whose last occupant has already ended. A second pass finds the highest column index used by any overlapping slot, giving each slot its `totalColumns` count. In Both mode, class and personal slots are pooled into a single call (personal IDs encoded as `-id - 1` to avoid Isar ID collisions) so cross-layer conflicts are resolved together.
+Overlapping timetable slots are rendered side-by-side using a greedy column-assignment algorithm in `ClassTimetableGrid._assignColumns`. Slots are sorted by start time; each is assigned to the first column whose last occupant has already ended. A second pass finds the highest column index used by any overlapping slot, giving each slot its `totalColumns` count so overlapping class cards remain readable.
 
 ### 8. Workmanager init without auto permission request
 `callbackDispatcher` is a top-level function registered with Workmanager for background streak checks. The `NotificationService.init()` call was removed from the Workmanager dispatcher's first-run hook to prevent the OS permission dialog firing before the app's custom permission dialog, which rendered the Allow button non-functional. Permission is now only requested from within the app UI flow.
@@ -1008,6 +1010,8 @@ flutter run
 | Phase 15.2 link | `cwa linked with timetable oneway` / `timetable model success` |
 | Phase 15.3 S1 | `registration slip integrated into CWA` / `split slip import idle into 3 options` |
 | Phase 15.3 S2 | `add cumulative CWA tracking with past result slip import` |
+| Post-MVP timetable UI | `refactor: refine timetable screen layout` |
+| Post-MVP shell spacing | `refactor: unify shell nav overlay spacing` |
 | Phase 15.3 S3 | `cumulative cwa updated` / `cumulative cwa patched` |
 | AI rendering fix S1 | `feat: add markdown + LaTeX math rendering to AI chat bubble` |
 | AI rendering fix S2 | `fix: use MarkdownStyleSheet.fromTheme to prevent null-check crash on list render` |
