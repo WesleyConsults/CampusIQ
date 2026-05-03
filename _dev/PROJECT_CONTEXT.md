@@ -75,7 +75,16 @@ Strict three-layer structure per feature:
   - `Weekly Review`
   - `Settings`
   - `Subscribe`
-- The Today screen preserves daily-plan logic and also surfaces key dashboard information such as greeting, class/free-block context, streak summary, current CWA snapshot, and active-session resume state.
+- The Today screen preserves daily-plan logic and now presents it through a calmer dashboard hierarchy:
+  - in-body greeting header
+  - one premium hero card near the top
+  - `Academic pulse` summary in a 2-column metric grid
+  - `Today at a glance` summary rows
+  - `Progress` section with the plan progress bar
+  - lower-priority detail cards for classes, free blocks, and task groups
+- The earlier `Suggested focus` section was removed during refinement; the Today screen now flows directly from hero card into academic summary content.
+- Bottom-safe spacing on Today was refined so lower Home content can scroll fully above the floating shell nav.
+- Long plan-task labels now wrap to 2 lines and ellipsize instead of overflowing into the time/duration column.
 
 ### Core module return pattern
 - `CWA`, `Timetable`, and `Sessions` now each expose a visible top-left **Home** button.
@@ -133,6 +142,7 @@ Strict three-layer structure per feature:
   - manual-entry rendering on small screens
   - active-session mini timer visibility
 - A small-screen dropdown overflow issue in manual entry was fixed during regression cleanup.
+- A later Home refinement pass also fixed small-screen Today overflows by tightening the academic pulse tiles and making long task labels wrap/ellipsis safely.
 
 ### Navigation back-button behaviour (updated 2026-05-02)
 - Shell tab switches use `context.go()` — pressing Back from a tab exits the app (expected).

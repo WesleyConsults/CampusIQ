@@ -36,13 +36,22 @@ Mark each item `[x]` as you confirm it works.
 ### 1.3 Today home base
 - [ ] Today AppBar title reads **Today** (or equivalent user-facing Today label)
 - [ ] Notification/bell action is visible in the header
-- [ ] Screen shows a greeting / welcome section
-- [ ] Screen shows today's classes if timetable data exists
-- [ ] Screen shows free-time blocks if timetable data exists
-- [ ] Screen shows suggested study tasks / daily plan content
-- [ ] Screen shows a streak summary
-- [ ] Screen shows a current CWA snapshot
+- [ ] Screen shows an in-body greeting / welcome section
+- [ ] A hero card is visible near the top of the Today screen
+- [ ] Screen shows **Academic pulse**
+- [ ] Academic pulse renders as a **2-column grid** of compact summary tiles
+- [ ] Screen shows **Today at a glance**
+- [ ] Today at a glance does **not** show a free-block metric
+- [ ] Screen shows a **Progress** section with the plan progress bar
+- [ ] Screen shows current CWA / streak context through the summary cards
+- [ ] Screen still shows today's classes if timetable data exists
+- [ ] Screen still shows free-time blocks in the lower detail area if timetable data exists
+- [ ] Screen shows daily plan task content
+- [ ] The old **Suggested focus** section is not present
 - [ ] If a study session is active, a resume/active-session surface is visible on Today
+- [ ] Lower Today content scrolls fully above the floating bottom nav
+- [ ] No RenderFlex / bottom overflow appears on a standard ~360 dp width screen
+- [ ] Long task labels wrap/truncate cleanly without overlapping the time/duration column
 
 ### 1.4 Drawer navigation from Today
 - [ ] Tap the top-left menu icon on Today — drawer opens

@@ -1,6 +1,6 @@
 # CampusIQ — MVP Completion Report
 
-**Date:** 2026-05-02
+**Date:** 2026-05-03
 **Package:** com.wesleyconsults.campusiq
 **Status:** v1.0 Lean Build with UI Navigation Redesign (Phases 0–8 complete)
 
@@ -143,6 +143,35 @@ Current validation state:
 - `dart format .` passed
 - `flutter test` passed
 - `flutter analyze` still reports the existing repo baseline of 56 warnings/info items, mainly generated Riverpod deprecations, experimental Isar generated API warnings, and a few unrelated lint issues outside this redesign scope
+
+### Home / Today redesign pass (2026-05-03)
+
+- Completed the Phase 3 **Home / Today / Plan** redesign and refinement without changing routes, providers, repositories, or business logic.
+- The Today screen now uses a calmer content hierarchy:
+  - in-body greeting header
+  - premium hero card driven by active session / class / no-class state
+  - compact `Academic pulse` summary
+  - `Today at a glance`
+  - `Progress`
+  - lower-priority detail sections below
+- The earlier `Suggested focus` section was removed during refinement to reduce congestion in the first screenful.
+- `Academic pulse` was refined into a **2-column grid** of compact tiles instead of stretched vertical strips.
+- `Today at a glance` was kept, but the free-block metric was removed so the section feels more intentional.
+- The Home screen's local add-task FAB was removed to avoid competing with the shell AI FAB; task creation remains available through inline actions.
+- Bottom-safe spacing on Today was refined so lower Home content can scroll above the floating bottom navigation more reliably.
+- Small-screen Today overflows were fixed by:
+  - tightening the academic pulse tile padding and typography
+  - allowing long plan-task labels to wrap to 2 lines with ellipsis
+  - reserving a stable trailing column for task time and duration
+
+### Validation completed for the Home redesign pass
+
+- `flutter analyze lib/features/plan/presentation/screens/plan_screen.dart` passed
+- `flutter analyze lib/features/plan/presentation/widgets/plan_task_tile.dart lib/features/plan/presentation/screens/plan_screen.dart` passed
+- `flutter test` passed
+- `flutter analyze` remained at the same baseline of 56 pre-existing warnings/info items
+- `flutter run -d macos --no-resident` could not complete in this environment because `xcodebuild` was unavailable
+- `flutter run -d chrome --no-resident` surfaced pre-existing Isar-generated JavaScript integer compile errors unrelated to the Home redesign
 
 ---
 
@@ -642,10 +671,11 @@ Navigation uses a `ShellRoute` with a 4-destination bottom nav bar: Home, CWA, T
 |---|---|
 | PlanGenerator | Pure Dart: scans today's timetable slots for free blocks (6AM–8PM, 30-min minimum), prioritises courses by days-since-last-session, produces a typed `PlanTask` list (attend / study) |
 | AI plan generation | "Generate" button calls DeepSeek to produce a structured daily plan and persists tasks as `DailyPlanTaskModel` rows |
-| Plan screen | Initial app route; shows date header, progress bar, sectioned task lists (Classes, Study) with completion checkboxes |
+| Plan screen | Initial app route; user-facing **Today** home screen with in-body greeting, hero card, academic pulse, today-at-a-glance summary, progress, lower detail cards, and sectioned task lists with completion checkboxes |
 | Progress bar | `PlanProgressBar` shows completed/total tasks with a celebration message when all done |
-| Manual task add | Bottom sheet to add a custom task outside AI generation |
+| Manual task add | Bottom sheet to add a custom task outside AI generation; entered from inline Home actions rather than a competing local FAB |
 | Task types | `attend` (class), `study` (course work) |
+| Overflow handling | Academic pulse tiles were tightened for small screens, and long task labels now wrap to 2 lines with ellipsis instead of overflowing |
 
 #### ~~Exam Mode~~ *(Removed in v1.0)*
 
