@@ -20,11 +20,12 @@ Mark each item `[x]` as you confirm it works.
 - [ ] App opens without crash
 - [ ] Lands on the **Today** screen at `/plan` (not a blank screen)
 - [ ] Top-left AppBar action is a visible **menu/drawer** icon, not a Home button
-- [ ] Bottom navigation bar shows 3 tabs: **CWA, Table, Sessions**
+- [ ] Bottom navigation bar shows 4 tabs: **Home, CWA, Table, Sessions**
 - [ ] AI Assistant is visible as a Floating Action Button (FAB)
 - [ ] If no session is active, no mini timer is shown above the shell
 
 ### 1.2 Bottom navigation
+- [ ] Tap **Home** — navigates to Today screen (`/plan`)
 - [ ] Tap **CWA** — navigates to CWA screen
 - [ ] Tap **Table** — navigates to Timetable screen
 - [ ] Tap **Sessions** — navigates to Sessions screen
@@ -243,12 +244,15 @@ Mark each item `[x]` as you confirm it works.
 
 ### 2.16 Final redesign regression smoke checks
 - [ ] Launch app → Today
-- [ ] Today → CWA
-- [ ] CWA → Home → Today
-- [ ] Today → Table
-- [ ] Table → Home → Today
-- [ ] Today → Sessions
-- [ ] Sessions → Home → Today
+- [ ] Today → CWA (via bottom nav)
+- [ ] CWA → Home (via bottom nav) → Today
+- [ ] Today → Table (via bottom nav)
+- [ ] Table → Home (via bottom nav) → Today
+- [ ] Today → Sessions (via bottom nav)
+- [ ] Sessions → Home (via bottom nav) → Today
+- [ ] CWA → Home (via Home button in AppBar) → Today
+- [ ] Table → Home (via Home button in AppBar) → Today
+- [ ] Sessions → Home (via Home button in AppBar) → Today
 - [ ] CWA `Semester` / `Cumulative` switching still preserves visible data
 - [ ] Existing Course Hub entry points from CWA still work
 - [ ] CWA → Import bottom sheet still shows all four options
@@ -596,7 +600,7 @@ These tests verify features work together correctly.
 
 ### 11.7 Mini timer persistence
 - [ ] Start a session in Sessions tab
-- [ ] Navigate through all 6 bottom nav tabs one by one
+- [ ] Navigate through all 4 bottom nav tabs one by one
 - [ ] Mini floating timer is visible on every tab
 - [ ] Timer count is still running (not reset)
 - [ ] Return to Sessions — active session card is still live
@@ -635,6 +639,10 @@ These tests verify features work together correctly.
 - [ ] From Settings, press system back — returns to the screen you came from
 - [ ] From Weekly Review, press system back — returns to AI Chat
 - [ ] From Course Hub, press system back — returns to the screen that opened it
+- [ ] From AI Chat (opened via FAB), press system back — returns to the previous tab
+- [ ] From Streak (opened via drawer), press system back — returns to Today
+- [ ] From Insights (opened via drawer), press system back — returns to Today
+- [ ] From any bottom nav tab (Home, CWA, Table, Sessions), press system back — exits to phone launcher (expected)
 - [ ] No "back press" results in a blank screen
 
 ---
@@ -840,7 +848,7 @@ These tests verify features work together correctly.
 
 | Section | Status | Notes |
 |---|---|---|
-| 1. App Launch & Navigation | | |
+| 1. App Launch & Navigation (incl. Home tab + back button) | | |
 | 2. CWA Planner | | |
 | 3. Timetable | | |
 | 4. Study Sessions — Normal mode | | |

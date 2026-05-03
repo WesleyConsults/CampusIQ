@@ -18,8 +18,8 @@ This session completed the full CampusIQ UI navigation redesign through Phase 8 
 
 ### What changed
 
-- The shell navigation now uses **3 bottom-nav destinations only**: `CWA`, `Table`, and `Sessions`.
-- The internal route `/plan` remains the launch route, but the screen is now user-facing **Today**, acting as the student's home base.
+- The shell navigation now uses **4 bottom-nav destinations**: `Home`, `CWA`, `Table`, and `Sessions`.
+- The internal route `/plan` remains the launch route, and the screen is now user-facing **Today**, acting as the student's home base. It is also directly accessible via the **Home** bottom nav tab.
 - `Today` now has a **top-left menu button** that opens secondary destinations:
   - `Today`
   - `Streak`
@@ -30,7 +30,7 @@ This session completed the full CampusIQ UI navigation redesign through Phase 8 
 - `CWA`, `Table`, and `Sessions` each now have a **visible top-left Home button** that routes back to `/plan`.
 - The shell still preserves the **global AI FAB** and the **active-session floating mini timer**.
 - The final shell structure is now:
-  - `Today` at `/plan`
+  - `Home` at `/plan`
   - `CWA` at `/cwa`
   - `Table` at `/timetable`
   - `Sessions` at `/sessions`
@@ -117,6 +117,19 @@ This session completed the full CampusIQ UI navigation redesign through Phase 8 
   - manual-entry rendering on small screens
   - active-session mini timer visibility
 - A small-screen manual-entry dropdown overflow issue was found and fixed by making the dropdowns expand safely and ellipsize long values.
+
+### Home tab + back-button navigation fix (2026-05-02)
+
+- Added **Home** as the first bottom nav tab, giving Today (`/plan`) a direct tab alongside CWA, Table, and Sessions.
+- Bottom nav now has 4 destinations: Home, CWA, Table, Sessions.
+- Fixed Android back-button behaviour: detail/drill-down screens now use `context.push()` instead of `context.go()`.
+  - **Before:** Pressing Back from AI Chat, Streak, Insights, or Settings exited to the phone launcher.
+  - **After:** Pressing Back returns to the previous screen inside the app.
+  - Shell tab switches still use `go()`, which is correct — Back from a tab exits the app.
+- Files changed:
+  - `app_router.dart`: AI FAB now uses `push('/ai')`
+  - `streak_action_button.dart`: Streak nav now uses `push('/streak')`
+  - `plan_screen.dart`: Drawer links (Streak, Insights, Settings) now use `push: true`; Settings icon now uses `push('/settings')`
 
 ### Validation completed in-session
 
@@ -435,7 +448,7 @@ lib/
 | `/course/:courseCode` | Course Hub Workspace (3-tab per-course workspace) | 15.1 |
 | `/timetable/import` | Timetable Image Import (full-screen, no bottom nav) | 15.2 |
 
-Navigation uses a `ShellRoute` with a 4-destination bottom nav bar. The floating mini-timer and AI Assistant FAB are rendered inside `_AppShell` and persist across all tab switches. The bottom nav shows: Dashboard, CWA, Table, Sessions. The Streak indicator is located in the AppBar headers.
+Navigation uses a `ShellRoute` with a 4-destination bottom nav bar: Home, CWA, Table, Sessions. Tab switches use `context.go()`; drill-down screens (AI Chat, Streak, Insights, Settings, Course Hub, etc.) use `context.push()` for proper back-button behaviour. The floating mini-timer and AI Assistant FAB are rendered inside `_AppShell` and persist across all tab switches.
 
 ---
 
@@ -978,6 +991,9 @@ flutter run
 | Phase 15.5 S2 | `fix(15.5-S2): offline detection, Isar write safety, provider error state coverage` |
 | Phase 15.5 S3 | `fix(15.5-S3): full loading/empty/error UI coverage + route safety` |
 | v1.0 refactor | `refactor: remove Personal Timetable, Exam Mode, and Exam Prep for v1.0` |
+| UI redesign v1 | `ui redesign v1 done` |
+| Home tab | `home screen added to navbar` |
+| Nav fix | `fix: use push() for detail screen navigation so back button returns to previous screen` |
 
 ---
 

@@ -48,7 +48,7 @@ Strict three-layer structure per feature:
 ### App shell
 - Initial route is `/plan`.
 - The main shell uses a `ShellRoute` with a persistent bottom navigation bar and a global AI floating action button.
-- Bottom navigation now shows 3 destinations only: `CWA` (`/cwa`), `Table` (`/timetable`), and `Sessions` (`/sessions`).
+- Bottom navigation now shows 4 destinations: `Home` (`/plan`), `CWA` (`/cwa`), `Table` (`/timetable`), and `Sessions` (`/sessions`).
 - The shell also owns the floating active-session mini timer; if a study session is active, tapping the timer returns the user to `/sessions`.
 - The AI FAB opens the main AI chat at `/ai` from anywhere inside the shell.
 - Full-screen routes outside the shell intentionally do not show the bottom nav or shell AI FAB.
@@ -80,7 +80,7 @@ Strict three-layer structure per feature:
 ### Core module return pattern
 - `CWA`, `Timetable`, and `Sessions` now each expose a visible top-left **Home** button.
 - That Home button routes the user back to `/plan` (Today).
-- Today is intentionally **not** present in the bottom nav anymore.
+- Today is now accessible via the **Home** tab in the bottom navigation bar.
 - Home button semantics/tooltips were added during the redesign polish pass.
 
 ### Course Hub workspace
@@ -134,10 +134,16 @@ Strict three-layer structure per feature:
   - active-session mini timer visibility
 - A small-screen dropdown overflow issue in manual entry was fixed during regression cleanup.
 
+### Navigation back-button behaviour (updated 2026-05-02)
+- Shell tab switches use `context.go()` — pressing Back from a tab exits the app (expected).
+- Detail/drill-down screens (AI Chat, Streak, Insights, Settings, Course Hub, etc.) use `context.push()` — pressing Back returns to the previous screen inside the app.
+- This matches the production pattern used by Google Pay and Nubank: `go()` for same-level tab switching, `push()` for deeper navigation.
+
 ### Navigation assumptions for future changes
 - Global AI lives only in `/ai`; there is no per-course AI surface in the workspace.
 - Any feature added to Course Hub should be treated as a separate tab or in-tab action inside the 3-tab workspace unless the shell structure itself is being changed.
 - Workspace changes should be checked against all 3 entry points: CWA, Timetable, and Sessions.
+- Any new drill-down screen must use `context.push()` to ensure proper back-button behaviour.
 
 ## 8. Key File Locations
 - `lib/core/`: Providers (Isar, connectivity, notification), Router, and Theme.
