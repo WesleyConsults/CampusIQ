@@ -87,8 +87,11 @@ class PlanTaskTile extends ConsumerWidget {
                   children: [
                     Text(
                       task.label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
+                        height: 1.25,
                         fontWeight: FontWeight.w600,
                         color: done
                             ? const Color(0xFF6B7280)
@@ -122,25 +125,32 @@ class PlanTaskTile extends ConsumerWidget {
             // Trailing: time + duration
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (task.startTime != null)
+              child: SizedBox(
+                width: 78,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (task.startTime != null)
+                      Text(
+                        _formatTime(task.startTime!),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 11, color: Color(0xFF6B7280)),
+                      ),
                     Text(
-                      _formatTime(task.startTime!),
-                      style: const TextStyle(
-                          fontSize: 11, color: Color(0xFF6B7280)),
+                      '${task.durationMinutes} min',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
                     ),
-                  Text(
-                    '${task.durationMinutes} min',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: accent,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
