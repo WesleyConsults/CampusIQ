@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
@@ -355,10 +356,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
           actions: [
             TextButton(
               onPressed: _isSaving ? null : _saveDraft,
-              child: const Text(
-                'Save draft',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: const Text('Save draft'),
             ),
           ],
         ),
@@ -374,10 +372,10 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: EdgeInsets.fromLTRB(
-                      16,
-                      16,
-                      16,
-                      bottomInset > 0 ? 24 : 120,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      bottomInset > 0 ? AppSpacing.xl : 120,
                     ),
                     children: [
                       _ModeSwitcher(
@@ -387,11 +385,10 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                       const SizedBox(height: AppSpacing.md),
                       Text(
                         helperText,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.textSecondary,
-                          height: 1.4,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.4,
+                            ),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _SectionCard(
@@ -455,7 +452,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                               alignment: Alignment.centerLeft,
                               child: OutlinedButton.icon(
                                 onPressed: _addCourse,
-                                icon: const Icon(Icons.add),
+                                icon: const Icon(LucideIcons.plus),
                                 label: const Text('Add Another Course'),
                               ),
                             ),
@@ -516,7 +513,12 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                   child: SafeArea(
                     top: false,
                     child: Container(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.sm,
+                        AppSpacing.md,
+                        AppSpacing.md,
+                      ),
                       decoration: BoxDecoration(
                         color: colorScheme.surface,
                         border: Border(
@@ -659,11 +661,12 @@ class _ModeTab extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: active ? colorScheme.onPrimary : AppTheme.textSecondary,
-              ),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: active
+                        ? colorScheme.onPrimary
+                        : AppColors.textSecondary,
+                  ),
             ),
           ),
         ),
@@ -693,11 +696,7 @@ class _SectionCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
-              ),
+              style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppSpacing.md),
             child,
@@ -778,14 +777,10 @@ class _CourseEditorCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Course',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
               if (canRemove)
@@ -794,7 +789,7 @@ class _CourseEditorCard extends StatelessWidget {
                   label: 'Remove course',
                   child: TextButton.icon(
                     onPressed: onRemove,
-                    icon: const Icon(Icons.delete_outline, size: AppIconSizes.lg),
+                    icon: const Icon(LucideIcons.trash2, size: AppIconSizes.lg),
                     label: const Text('Remove Course'),
                     style: TextButton.styleFrom(
                       foregroundColor: AppTheme.warning,
@@ -903,19 +898,14 @@ class _SummaryStat extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppTheme.textSecondary,
-            ),
+            style: Theme.of(context).textTheme.labelSmall,
           ),
           const SizedBox(height: AppSpacing.xxs2),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.primary,
-            ),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: AppTheme.primary,
+                ),
           ),
         ],
       ),

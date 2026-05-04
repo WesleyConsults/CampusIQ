@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/course_hub/data/models/course_note_model.dart';
 import 'package:campusiq/features/course_hub/presentation/providers/course_note_provider.dart';
+import 'package:campusiq/shared/widgets/campus_modal_action_row.dart';
+import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
 
 class NoteEditorSheet extends ConsumerStatefulWidget {
   final String courseCode;
-  final CourseNoteModel? note; // null = new note, non-null = edit mode
+  final CourseNoteModel? note;
 
   const NoteEditorSheet({
     super.key,
@@ -71,7 +73,12 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     final isEditing = widget.note != null;
+    final titleText = isEditing ? 'Edit note' : 'New note';
+    final subtitleText = isEditing
+        ? 'Refine your course note and keep the latest version saved.'
+        : 'Capture a quick thought, summary, or reminder for this course.';
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -79,97 +86,110 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+        return CampusModalSheet(
+          title: titleText,
+          subtitle: subtitleText,
+          expandBody: true,
+          maxHeightFactor: 0.95,
+          trailing: IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            tooltip: 'Close',
+            icon: const Icon(LucideIcons.x, size: AppIconSizes.xl),
           ),
-          child: Column(
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(AppRadii.xxxs),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      isEditing ? 'Edit Note' : 'New Note',
-                      style: const TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.w700),
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    FilledButton(
-                      onPressed: _isSaving ? null : _save,
-                      child: _isSaving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Text('Save'),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 16),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _titleController,
-                        decoration: const InputDecoration(
-                          hintText: 'Title',
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        style: Theme.of(context).textTheme.headlineSmall,
-                        textInputAction: TextInputAction.next,
+          bottomBar: CampusModalActionRow(
+            primaryLabel: isEditing ? 'Save changes' : 'Save note',
+            onPrimaryPressed: _isSaving ? null : _save,
+            secondaryLabel: 'Cancel',
+            onSecondaryPressed:
+                _isSaving ? null : () => Navigator.of(context).pop(),
+            isPrimaryLoading: _isSaving,
+          ),
+          child: Scrollbar(
+            controller: scrollController,
+            thumbVisibility: false,
+            child: SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _FieldShell(
+                    child: TextField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        hintText: 'Title',
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding: EdgeInsets.zero,
                       ),
-                      const Divider(height: 1),
-                      const SizedBox(height: AppSpacing.xs),
-                      TextField(
-                        controller: _bodyController,
-                        decoration: const InputDecoration(
-                          hintText: 'Start writing...',
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        style: const TextStyle(
-                            fontSize: 15, color: AppTheme.textPrimary),
-                        minLines: 8,
-                        maxLines: null,
-                        keyboardType: TextInputType.multiline,
-                      ),
-                    ],
+                      style: textTheme.headlineSmall,
+                      textInputAction: TextInputAction.next,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.md),
+                  _FieldShell(
+                    minHeight: 260,
+                    alignment: Alignment.topLeft,
+                    child: TextField(
+                      controller: _bodyController,
+                      decoration: const InputDecoration(
+                        hintText: 'Start writing...',
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      style: textTheme.bodyLarge?.copyWith(
+                        height: 1.55,
+                      ),
+                      minLines: 10,
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
+    );
+  }
+}
+
+class _FieldShell extends StatelessWidget {
+  final Widget child;
+  final AlignmentGeometry alignment;
+  final double? minHeight;
+
+  const _FieldShell({
+    required this.child,
+    this.alignment = Alignment.centerLeft,
+    this.minHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      constraints: minHeight == null
+          ? null
+          : BoxConstraints(minHeight: minHeight!),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: AppRadii.card,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Align(
+        alignment: alignment,
+        child: child,
+      ),
     );
   }
 }

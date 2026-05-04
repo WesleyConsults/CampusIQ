@@ -60,7 +60,7 @@ class CwaScreen extends ConsumerWidget {
   }
 
   void _openHistory(BuildContext context) {
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => const PastSemestersScreen(),
       ),
@@ -292,7 +292,7 @@ class CwaScreen extends ConsumerWidget {
     CwaViewMode viewMode, {
     required String initialSource,
   }) {
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => viewMode == CwaViewMode.semester
             ? RegistrationSlipImportScreen(initialSource: initialSource)
@@ -912,7 +912,7 @@ class _SemesterView extends ConsumerWidget {
                     _InlineActionButton(
                       label: 'Import',
                       icon: LucideIcons.fileUp,
-                      onPressed: () => Navigator.of(context).push(
+                      onPressed: () => Navigator.of(context, rootNavigator: true).push(
                         MaterialPageRoute(
                           builder: (_) => const RegistrationSlipImportScreen(),
                         ),
@@ -1167,7 +1167,7 @@ class _CumulativeView extends ConsumerWidget {
                     _InlineActionButton(
                       label: 'Import',
                       icon: LucideIcons.fileUp,
-                      onPressed: () => Navigator.of(context).push(
+                      onPressed: () => Navigator.of(context, rootNavigator: true).push(
                         MaterialPageRoute(
                           builder: (_) => const ResultSlipImportScreen(),
                         ),
@@ -1194,7 +1194,7 @@ class _CumulativeView extends ConsumerWidget {
                     action: _InlineActionButton(
                       label: 'Import Results',
                       icon: LucideIcons.fileUp,
-                      onPressed: () => Navigator.of(context).push(
+                      onPressed: () => Navigator.of(context, rootNavigator: true).push(
                         MaterialPageRoute(
                           builder: (_) => const ResultSlipImportScreen(),
                         ),

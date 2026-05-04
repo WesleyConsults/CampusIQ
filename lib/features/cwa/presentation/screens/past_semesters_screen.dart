@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:campusiq/core/theme/app_theme.dart';
@@ -42,7 +43,7 @@ class PastSemestersScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openImport(context),
-        icon: const Icon(Icons.add),
+        icon: const Icon(LucideIcons.plus),
         label: const Text('Add Semester'),
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
@@ -51,7 +52,7 @@ class PastSemestersScreen extends ConsumerWidget {
   }
 
   void _openImport(BuildContext context) {
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(builder: (_) => const ResultSlipImportScreen()),
     );
   }
@@ -171,13 +172,13 @@ class _SemesterCardState extends State<_SemesterCard> {
                   ),
                   const SizedBox(width: AppSpacing.xxs),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline,
+                    icon: const Icon(LucideIcons.trash2,
                         size: AppIconSizes.xl, color: AppTheme.textSecondary),
                     onPressed: widget.onDelete,
                     tooltip: 'Remove',
                   ),
                   Icon(
-                    _expanded ? Icons.expand_less : Icons.expand_more,
+                    _expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
                     color: AppTheme.textSecondary,
                   ),
                 ],
@@ -321,7 +322,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
                       }
                     : null,
                 child: _MiniButton(
-                  icon: Icons.remove,
+                  icon: LucideIcons.minus,
                   enabled: _credits > 1,
                 ),
               ),
@@ -400,13 +401,15 @@ class _MiniButton extends StatelessWidget {
   final IconData icon;
   final bool enabled;
 
+  static const double _size = 22;
+
   const _MiniButton({required this.icon, required this.enabled});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 22,
-      height: 22,
+      width: _size,
+      height: _size,
       decoration: BoxDecoration(
         color: enabled
             ? AppTheme.primary.withValues(alpha: 0.1)
@@ -508,27 +511,23 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.history_edu_outlined,
+            const Icon(LucideIcons.graduationCap,
                 size: 64, color: AppTheme.textSecondary),
             const SizedBox(height: AppSpacing.md),
-            const Text(
+            Text(
               'No past results yet',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
-              ),
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: AppSpacing.xs),
-            const Text(
+            Text(
               'Import your previous semester result slips to unlock your true cumulative CWA.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: AppSpacing.xxl),
             ElevatedButton.icon(
               onPressed: onImport,
-              icon: const Icon(Icons.upload_file_outlined),
+              icon: const Icon(LucideIcons.fileUp),
               label: const Text('Import First Result'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,

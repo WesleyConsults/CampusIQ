@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/session/presentation/providers/session_provider.dart';
 import 'package:campusiq/features/session/presentation/widgets/session_tile.dart';
@@ -28,28 +28,26 @@ class HubSessionsTab extends ConsumerWidget {
           ..sort((a, b) => b.startTime.compareTo(a.startTime));
 
         if (courseSessions.isEmpty) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(AppSpacing.xxl),
+              padding: const EdgeInsets.all(AppSpacing.xxl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.timer_off_outlined,
-                      size: 48, color: AppTheme.textSecondary),
-                  SizedBox(height: AppSpacing.sm),
+                  const Icon(LucideIcons.timerOff,
+                      size: AppIconSizes.hero, color: AppColors.textSecondary),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     'No sessions yet',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                   ),
-                  SizedBox(height: AppSpacing.xxs),
+                  const SizedBox(height: AppSpacing.xxs),
                   Text(
                     'Start a study session to track your progress.',
                     textAlign: TextAlign.center,
-                    style:
-                        TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
@@ -57,7 +55,6 @@ class HubSessionsTab extends ConsumerWidget {
           );
         }
 
-        // Compute weekly analytics scoped to this course
         final now = DateTime.now();
         final monday = now.subtract(Duration(days: now.weekday - 1));
         final weekStart = DateTime(monday.year, monday.month, monday.day);
@@ -73,7 +70,7 @@ class HubSessionsTab extends ConsumerWidget {
           itemBuilder: (context, index) {
             if (index == 0) {
               return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                 child: WeeklyBarChart(weekly: weekly),
               );
             }

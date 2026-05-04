@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 import 'package:campusiq/features/course_hub/presentation/widgets/hub_overview_tab.dart';
@@ -29,29 +30,31 @@ class CourseHubScreen extends ConsumerWidget {
         ),
       ),
       data: (courses) {
-        final course = courses.where((c) => c.code == courseCode).firstOrNull;
+        final course =
+            courses.where((c) => c.code == courseCode).firstOrNull;
 
         if (course == null) {
           return Scaffold(
             appBar: AppBar(title: Text(courseCode)),
             body: Center(
               child: Padding(
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.school_outlined, size: 48, color: Colors.grey),
-                    SizedBox(height: AppSpacing.sm),
+                    const Icon(LucideIcons.bookOpen,
+                        size: AppIconSizes.alert, color: AppColors.textSecondary),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       'Course not found',
-                      style:
-                          Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    SizedBox(height: AppSpacing.xxs),
-                    Text(
+                    const SizedBox(height: AppSpacing.xxs),
+                    const Text(
                       'Add this course in the CWA tab first.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                          color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -64,41 +67,40 @@ class CourseHubScreen extends ConsumerWidget {
           length: 3,
           child: Scaffold(
             appBar: AppBar(
+              titleSpacing: 0,
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    course.code,
-                    style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
+                    course.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    course.name,
-                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                    '${course.code}  ·  ${course.creditHours.toInt()} credits',
+                    style: Theme.of(context).textTheme.bodySmall,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-              bottom: const TabBar(
+              bottom: TabBar(
                 isScrollable: true,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white54,
-                indicatorColor: Colors.white,
                 tabAlignment: TabAlignment.start,
-                tabs: [
+                tabs: const [
                   Tab(
-                    icon: Icon(Icons.dashboard_outlined, size: AppIconSizes.lg),
+                    icon: Icon(LucideIcons.layoutDashboard,
+                        size: AppIconSizes.lg),
                     text: 'Overview',
                   ),
                   Tab(
-                    icon: Icon(Icons.timer_outlined, size: AppIconSizes.lg),
+                    icon: Icon(LucideIcons.timer, size: AppIconSizes.lg),
                     text: 'Sessions',
                   ),
                   Tab(
-                    icon: Icon(Icons.notes_outlined, size: AppIconSizes.lg),
+                    icon: Icon(LucideIcons.stickyNote, size: AppIconSizes.lg),
                     text: 'Notes',
                   ),
                 ],

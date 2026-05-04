@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
@@ -103,13 +104,11 @@ class _IdleView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSpacing.md),
-          const Text(
+          Text(
             'Import your courses',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
-            ),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
           ),
           const SizedBox(height: AppSpacing.xs),
           const Text(
@@ -118,21 +117,21 @@ class _IdleView extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xxl),
           _OptionTile(
-            icon: Icons.camera_alt_outlined,
+            icon: LucideIcons.camera,
             label: 'Take a photo',
             subtitle: 'Use your camera to capture the slip',
             onTap: notifier.pickFromCamera,
           ),
           const SizedBox(height: AppSpacing.sm),
           _OptionTile(
-            icon: Icons.photo_library_outlined,
+            icon: LucideIcons.image,
             label: 'Upload image from gallery',
             subtitle: 'Pick a JPG or PNG from your photos',
             onTap: notifier.pickFromGallery,
           ),
           const SizedBox(height: AppSpacing.sm),
           _OptionTile(
-            icon: Icons.picture_as_pdf_outlined,
+            icon: LucideIcons.fileText,
             label: 'Choose a PDF',
             subtitle: 'Upload a PDF registration slip',
             onTap: notifier.pickFromGalleryOrFile,
@@ -206,7 +205,7 @@ class _OptionTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right,
+              const Icon(LucideIcons.chevronRight,
                   color: AppTheme.textSecondary, size: AppIconSizes.xl),
             ],
           ),
@@ -323,7 +322,7 @@ class _ReviewView extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: selected == 0 ? null : notifier.confirmImport,
-                icon: const Icon(Icons.check),
+                icon: const Icon(LucideIcons.check),
                 label: Text(
                   selected == 0
                       ? 'Select at least one course'
@@ -445,7 +444,7 @@ class _CreditStepper extends StatelessWidget {
     return Row(
       children: [
         _StepButton(
-          icon: Icons.remove,
+          icon: LucideIcons.minus,
           onTap: value > 1 ? () => onChanged(value - 1) : null,
         ),
         Padding(
@@ -460,7 +459,7 @@ class _CreditStepper extends StatelessWidget {
           ),
         ),
         _StepButton(
-          icon: Icons.add,
+          icon: LucideIcons.plus,
           onTap: value < 6 ? () => onChanged(value + 1) : null,
         ),
       ],
@@ -520,7 +519,7 @@ class _DoneView extends StatelessWidget {
                 color: AppTheme.success,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check, color: Colors.white, size: AppIconSizes.status),
+              child: const Icon(LucideIcons.check, color: Colors.white, size: AppIconSizes.status),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -575,7 +574,7 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 56, color: AppTheme.warning),
+          const Icon(LucideIcons.circleAlert, size: 56, color: AppTheme.warning),
           const SizedBox(height: AppSpacing.md),
           const Text(
             'Something went wrong',
@@ -597,7 +596,7 @@ class _ErrorView extends StatelessWidget {
           const SizedBox(height: 28),
           ElevatedButton.icon(
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(LucideIcons.refreshCw),
             label: const Text('Try Again'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primary,

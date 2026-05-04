@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:campusiq/core/theme/app_theme.dart';
@@ -120,21 +121,21 @@ class _IdleView extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xxl),
           _OptionTile(
-            icon: Icons.camera_alt_outlined,
+            icon: LucideIcons.camera,
             label: 'Take a photo',
             subtitle: 'Capture your result slip with the camera',
             onTap: notifier.pickFromCamera,
           ),
           const SizedBox(height: AppSpacing.sm),
           _OptionTile(
-            icon: Icons.photo_library_outlined,
+            icon: LucideIcons.image,
             label: 'Upload image from gallery',
             subtitle: 'Pick a JPG or PNG from your photos',
             onTap: notifier.pickFromGallery,
           ),
           const SizedBox(height: AppSpacing.sm),
           _OptionTile(
-            icon: Icons.picture_as_pdf_outlined,
+            icon: LucideIcons.fileText,
             label: 'Choose a PDF',
             subtitle: 'Upload a PDF result slip',
             onTap: notifier.pickFromFile,
@@ -208,7 +209,7 @@ class _OptionTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right,
+              const Icon(LucideIcons.chevronRight,
                   color: AppTheme.textSecondary, size: AppIconSizes.xl),
             ],
           ),
@@ -493,7 +494,7 @@ class _ReviewView extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: selected == 0 ? null : notifier.confirmImport,
-                icon: const Icon(Icons.check),
+                icon: const Icon(LucideIcons.check),
                 label: Text(
                   selected == 0
                       ? 'Select at least one course'
@@ -774,7 +775,7 @@ class _CreditStepper extends StatelessWidget {
     return Row(
       children: [
         _StepButton(
-          icon: Icons.remove,
+          icon: LucideIcons.minus,
           onTap: value > 1 ? () => onChanged(value - 1) : null,
         ),
         Padding(
@@ -854,7 +855,7 @@ class _DoneView extends StatelessWidget {
                 color: AppTheme.success,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check, color: Colors.white, size: AppIconSizes.status),
+              child: const Icon(LucideIcons.check, color: Colors.white, size: AppIconSizes.status),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -916,7 +917,7 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: AppIconSizes.error, color: AppTheme.warning),
+          const Icon(LucideIcons.circleAlert, size: AppIconSizes.error, color: AppTheme.warning),
           const SizedBox(height: AppSpacing.md),
           const Text(
             'Something went wrong',
@@ -935,7 +936,7 @@ class _ErrorView extends StatelessWidget {
           const SizedBox(height: 28),
           ElevatedButton.icon(
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(LucideIcons.refreshCw),
             label: const Text('Try Again'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primary,
