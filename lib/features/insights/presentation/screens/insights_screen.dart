@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
@@ -32,36 +33,41 @@ class InsightsScreen extends ConsumerWidget {
       body: CustomScrollView(
         slivers: [
           // Header subtitle
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.xxs,
+              ),
               child: Text(
                 'What your data says about you',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ),
 
           if (sorted.isEmpty)
-            const SliverFillRemaining(
+            SliverFillRemaining(
               child: Center(
                 child: Padding(
-                  padding: EdgeInsets.all(AppSpacing.xxl),
+                  padding: const EdgeInsets.all(AppSpacing.xxl),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('💡', style: TextStyle(fontSize: 48)),
-                      SizedBox(height: AppSpacing.sm),
+                      Text('💡',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineLarge
+                              ?.copyWith(fontSize: 48)),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         'Log more sessions to generate insights.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 15,
-                        ),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                       ),
                     ],
                   ),
@@ -70,7 +76,10 @@ class InsightsScreen extends ConsumerWidget {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.only(top: 8, bottom: 32),
+              padding: const EdgeInsets.only(
+                top: AppSpacing.xs,
+                bottom: AppSpacing.xxl,
+              ),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => InsightCard(insight: sorted[i], index: i),

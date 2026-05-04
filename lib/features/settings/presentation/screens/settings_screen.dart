@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
@@ -19,7 +20,7 @@ class SettingsScreen extends ConsumerWidget {
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
         title: const Text('Notification Settings',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
+            style: TextStyle(fontWeight: FontWeight.w700)),
       ),
       body: prefsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -110,7 +111,7 @@ class SettingsScreen extends ConsumerWidget {
                       prefs.dailyReminderHour, prefs.dailyReminderMinute),
                   style: const TextStyle(color: AppTheme.textSecondary),
                 ),
-                trailing: const Icon(Icons.access_time_rounded,
+                trailing: const Icon(LucideIcons.clock,
                     color: AppTheme.textSecondary),
                 onTap: () async {
                   final picked = await showTimePicker(
@@ -146,7 +147,7 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 }
               },
-              icon: const Icon(Icons.notifications_off_outlined),
+              icon: const Icon(LucideIcons.bellOff),
               label: const Text('Cancel all scheduled notifications'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.red,
@@ -176,15 +177,16 @@ class _DevPremiumTile extends ConsumerWidget {
       data: (isPremium) => Card(
         color: Colors.amber.shade50,
         child: ListTile(
-          leading: const Icon(Icons.developer_mode, color: Colors.amber),
-          title: const Text('DEV: Premium status',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          leading: const Icon(LucideIcons.code, color: Colors.amber),
+          title: Text('DEV: Premium status',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  )),
           subtitle: Text(
             isPremium ? 'Currently: Premium' : 'Currently: Free',
-            style: TextStyle(
-              fontSize: 12,
-              color: isPremium ? Colors.green.shade700 : Colors.grey,
-            ),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: isPremium ? Colors.green.shade700 : Colors.grey,
+                ),
           ),
           trailing: Switch(
             value: isPremium,
@@ -225,9 +227,13 @@ class _NotifTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return SwitchListTile(
       title: Text(title,
-          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              )),
       subtitle: Text(subtitle,
-          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: AppColors.textSecondary,
+              )),
       value: value,
       onChanged: onChanged,
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
@@ -45,13 +46,16 @@ class WeeklyReviewScreen extends ConsumerWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Week in Review',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            Text('Week in Review',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    )),
             if (reviewState.review != null)
               Text(
                 'Week of ${_formatMonday(reviewState.review!.weekStartDate)}',
-                style:
-                    const TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w400,
+                    ),
               ),
           ],
         ),
@@ -67,14 +71,14 @@ class WeeklyReviewScreen extends ConsumerWidget {
     AsyncValue<bool> isPremiumAsync,
   ) {
     if (reviewState.isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: AppSpacing.md),
+            const CircularProgressIndicator(),
+            const SizedBox(height: AppSpacing.md),
             Text('Generating your weekly review...',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       );
@@ -87,11 +91,11 @@ class WeeklyReviewScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
+              Icon(LucideIcons.circleAlert, size: 48, color: Colors.grey.shade400),
               const SizedBox(height: AppSpacing.sm),
               Text(reviewState.error!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppTheme.textSecondary)),
+                  style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
         ),
@@ -99,22 +103,22 @@ class WeeklyReviewScreen extends ConsumerWidget {
     }
 
     if (!reviewState.hasReviewThisWeek || reviewState.review == null) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xxl),
+          padding: const EdgeInsets.all(AppSpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.calendar_month_outlined,
-                  size: 56, color: AppTheme.textSecondary),
-              SizedBox(height: AppSpacing.md),
+              const Icon(LucideIcons.calendarDays,
+                  size: 56, color: AppColors.textSecondary),
+              const SizedBox(height: AppSpacing.md),
               Text('No review yet',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-              SizedBox(height: AppSpacing.xs),
+                  style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 'Your weekly review generates each Monday. Check back then.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ),
@@ -169,7 +173,7 @@ class WeeklyReviewScreen extends ConsumerWidget {
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                       child: TextButton.icon(
                         onPressed: () => context.push('/ai'),
-                        icon: const Icon(Icons.arrow_forward, size: AppIconSizes.md),
+                        icon: const Icon(LucideIcons.arrowRight, size: AppIconSizes.md),
                         label: const Text('Ask about this review'),
                         style: TextButton.styleFrom(
                             foregroundColor: AppTheme.primary),

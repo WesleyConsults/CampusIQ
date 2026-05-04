@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:campusiq/features/insights/domain/insight.dart';
@@ -43,7 +44,10 @@ class InsightCard extends StatelessWidget {
         ),
       ],
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        margin: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xxs2,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadii.sm),
@@ -59,42 +63,50 @@ class InsightCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: _stripColor,
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
+                    topLeft: Radius.circular(AppRadii.sm),
+                    bottomLeft: Radius.circular(AppRadii.sm),
                   ),
                 ),
               ),
               // Emoji icon
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm2,
+                  vertical: AppSpacing.md,
+                ),
                 child: Text(
                   insight.icon,
-                  style: const TextStyle(fontSize: 28),
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineMedium
+                      ?.copyWith(height: 1.0),
                 ),
               ),
               // Content
               Expanded(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.sm2,
+                    horizontal: AppSpacing.xxs,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         insight.message,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          height: 1.4,
-                          color: Color(0xFF1A1A2E),
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              height: 1.4,
+                              color: const Color(0xFF1A1A2E),
+                            ),
                       ),
                       if (insight.courseCode != null) ...[
                         const SizedBox(height: AppSpacing.xs),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
+                            horizontal: AppSpacing.xs2,
+                            vertical: AppSpacing.xxs,
+                          ),
                           decoration: BoxDecoration(
                             color: _stripColor.withAlpha(25),
                             borderRadius: BorderRadius.circular(AppRadii.md2),
@@ -103,11 +115,12 @@ class InsightCard extends StatelessWidget {
                           ),
                           child: Text(
                             insight.courseCode!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: _stripColor,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(
+                                  color: _stripColor,
+                                ),
                           ),
                         ),
                       ],
