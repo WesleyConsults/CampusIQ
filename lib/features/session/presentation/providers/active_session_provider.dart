@@ -44,7 +44,7 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
   /// Transitions focus→break or break→focus (or marks complete after final break).
   void advancePhase() {
     final s = state;
-    if (s == null || !s.isPomodoroMode || s.isComplete) return;
+    if (s == null || !s.isPomodoroMode || s.isComplete || s.isPaused) return;
     final now = DateTime.now();
 
     if (!s.isBreak) {
@@ -93,8 +93,69 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
 
   void skipBreak() {
     final s = state;
-    if (s == null || !s.isPomodoroMode || !s.isBreak) return;
+    if (s == null || !s.isPomodoroMode || !s.isBreak || s.isPaused) return;
     advancePhase();
+  }
+
+  void pauseSession() {
+    final s = state;
+    if (s == null || s.isPaused || s.isComplete) return;
+
+    state = s.copyWith(
+      isPaused: true,
+      pausedAt: DateTime.now(),
+      pausedPhaseRemaining: s.isPomodoroMode ? s.phaseRemaining : null,
+    );
+    if (s.isPomodoroMode) {
+      NotificationService.instance.cancelPomodoroPhaseNotification();
+    }
+  }
+
+  void resumeSession() {
+    final s = state;
+    if (s == null || !s.isPaused || s.isComplete) return;
+
+    final now = DateTime.now();
+    final pausedDuration =
+        s.pausedAt == null ? Duration.zero : now.difference(s.pausedAt!);
+    final accumulatedPausedSeconds =
+        s.accumulatedPausedSeconds + pausedDuration.inSeconds;
+
+    if (!s.isPomodoroMode) {
+      state = s.copyWith(
+        isPaused: false,
+        pausedAt: null,
+        pausedPhaseRemaining: null,
+        accumulatedPausedSeconds: accumulatedPausedSeconds,
+      );
+      return;
+    }
+
+    final remaining = s.pausedPhaseRemaining ?? s.phaseRemaining;
+    final totalPhaseDuration = s.isBreak
+        ? (s.isLongBreak ? s.longBreakDuration : s.shortBreakDuration)
+        : s.focusDuration;
+    final progressedSeconds =
+        totalPhaseDuration.inSeconds - remaining.inSeconds;
+    final next = s.copyWith(
+      isPaused: false,
+      pausedAt: null,
+      pausedPhaseRemaining: null,
+      accumulatedPausedSeconds: accumulatedPausedSeconds,
+      phaseEndsAt: now.add(remaining),
+      phaseStartedAt: now.subtract(
+        Duration(
+            seconds: progressedSeconds.clamp(0, totalPhaseDuration.inSeconds)),
+      ),
+    );
+    state = next;
+    NotificationService.instance.schedulePomodoroPhaseEnd(
+      phaseEndsAt: next.phaseEndsAt,
+      isBreak: next.isBreak,
+      isLongBreak: next.isLongBreak,
+      round: next.currentRound,
+      totalRounds: next.totalRounds,
+    );
   }
 
   /// Returns completed session data then clears state.

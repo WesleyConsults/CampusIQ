@@ -40,19 +40,26 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
 
     final isPomodoro = session.isPomodoroMode;
     final isBreak = isPomodoro && session.isBreak;
-    final accentColor = isBreak ? AppTheme.success : AppTheme.primary;
+    final isPaused = session.isPaused;
+    final accentColor = isPaused
+        ? AppTheme.accent
+        : isBreak
+            ? AppTheme.success
+            : AppTheme.primary;
 
-    // Mini label: "R2 Focus" or "R2 Break"
-    String? pomodoroLabel;
+    String? secondaryLabel;
     String timerDisplay;
     if (isPomodoro && !session.isComplete) {
       final phase = isBreak ? 'Break' : 'Focus';
-      pomodoroLabel = 'R${session.currentRound} $phase';
+      secondaryLabel = isPaused
+          ? 'Paused · R${session.currentRound} $phase'
+          : 'R${session.currentRound} $phase';
       timerDisplay = session.formattedPhaseRemaining;
     } else if (isPomodoro && session.isComplete) {
-      pomodoroLabel = 'Done!';
+      secondaryLabel = 'Done!';
       timerDisplay = '${session.pomodoroRoundsCompleted}×25m';
     } else {
+      secondaryLabel = isPaused ? 'Paused' : session.courseName;
       timerDisplay = session.formattedElapsed;
     }
 
@@ -78,7 +85,10 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
         ),
         child: Row(
           children: [
-            _PulsingDot(color: accentColor),
+            _StatusIndicator(
+              color: accentColor,
+              isPaused: isPaused,
+            ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Column(
@@ -93,23 +103,14 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  if (pomodoroLabel != null)
-                    Text(
-                      pomodoroLabel,
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 10,
-                      ),
-                    )
-                  else
-                    Text(
-                      session.courseName,
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 10,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                  Text(
+                    secondaryLabel,
+                    style: const TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 10,
                     ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
@@ -145,16 +146,20 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
   }
 }
 
-class _PulsingDot extends StatefulWidget {
+class _StatusIndicator extends StatefulWidget {
   final Color color;
+  final bool isPaused;
 
-  const _PulsingDot({required this.color});
+  const _StatusIndicator({
+    required this.color,
+    required this.isPaused,
+  });
 
   @override
-  State<_PulsingDot> createState() => _PulsingDotState();
+  State<_StatusIndicator> createState() => _StatusIndicatorState();
 }
 
-class _PulsingDotState extends State<_PulsingDot>
+class _StatusIndicatorState extends State<_StatusIndicator>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _anim;
@@ -177,6 +182,23 @@ class _PulsingDotState extends State<_PulsingDot>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isPaused) {
+      return Container(
+        width: 18,
+        height: 18,
+        decoration: BoxDecoration(
+          color: widget.color.withValues(alpha: 0.14),
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          LucideIcons.pause,
+          size: 10,
+          color: widget.color,
+        ),
+      );
+    }
+
     return FadeTransition(
       opacity: _anim,
       child: Container(

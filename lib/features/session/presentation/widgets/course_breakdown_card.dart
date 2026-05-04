@@ -1,29 +1,41 @@
+import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/features/session/domain/planned_actual_analyser.dart';
+import 'package:campusiq/shared/widgets/campus_card.dart';
+import 'package:campusiq/shared/widgets/campus_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
-import 'package:campusiq/features/session/domain/planned_actual_analyser.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class CourseBreakdownCard extends StatelessWidget {
   final List<CourseStats> courses;
 
-  const CourseBreakdownCard({super.key, required this.courses});
+  const CourseBreakdownCard({
+    super.key,
+    required this.courses,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (courses.isEmpty) return const SizedBox.shrink();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('By course',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-            const SizedBox(height: 12),
-            ...courses.map((c) => _CourseRow(stats: c)),
-          ],
-        ),
+    return CampusCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              CampusChip(
+                label: 'By course',
+                icon: LucideIcons.bookCopy,
+                backgroundColor: AppColors.surfaceMuted,
+                foregroundColor: AppTheme.textPrimary,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ...courses.map((course) => _CourseRow(stats: course)),
+        ],
       ),
     );
   }
@@ -31,66 +43,90 @@ class CourseBreakdownCard extends StatelessWidget {
 
 class _CourseRow extends StatelessWidget {
   final CourseStats stats;
+
   const _CourseRow({required this.stats});
 
   @override
   Widget build(BuildContext context) {
-    final barFill = stats.completionRate.clamp(0.0, 1.0);
-    final isOver = stats.isOverStudied;
+    final fill = stats.completionRate.clamp(0.0, 1.0);
+    final accent = stats.isOverStudied
+        ? AppTheme.success
+        : fill >= 0.7
+            ? AppTheme.primary
+            : AppTheme.accent;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: InkWell(
         onTap: () => context.push('/course/${stats.courseCode}'),
-        borderRadius: BorderRadius.circular(4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(stats.courseCode,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 13)),
-                ),
-                Text(
-                  stats.plannedMinutes > 0
-                      ? '${stats.formattedActual} / ${stats.formattedPlanned}'
-                      : stats.formattedActual,
-                  style: const TextStyle(
-                      fontSize: 12, color: AppTheme.textSecondary),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: barFill,
-                minHeight: 6,
-                backgroundColor: Colors.grey.shade200,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  isOver
-                      ? AppTheme.success
-                      : barFill > 0.7
-                          ? AppTheme.accent
-                          : AppTheme.warning,
+        borderRadius: AppRadii.button,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          stats.courseCode,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                        ),
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(
+                          stats.courseName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppTheme.textSecondary,
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(
+                    stats.plannedMinutes > 0
+                        ? '${stats.formattedActual} / ${stats.formattedPlanned}'
+                        : stats.formattedActual,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: AppTheme.textPrimary,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: fill,
+                  minHeight: 8,
+                  backgroundColor: AppColors.surfaceMuted,
+                  valueColor: AlwaysStoppedAnimation<Color>(accent),
                 ),
               ),
-            ),
-            if (stats.plannedMinutes > 0) ...[
-              const SizedBox(height: 3),
+              const SizedBox(height: AppSpacing.xs),
               Text(
-                isOver
-                    ? 'Extra study — great!'
-                    : 'Need ${_fmt(stats.gapMinutes)} more',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: isOver ? AppTheme.success : AppTheme.textSecondary,
-                ),
+                stats.plannedMinutes == 0
+                    ? 'A self-directed study block with no timetable plan attached yet.'
+                    : stats.isOverStudied
+                        ? 'You went beyond plan here. Nicely done.'
+                        : 'Need ${_fmt(stats.gapMinutes)} more to match your timetable plan.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                      fontSize: 12,
+                    ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );

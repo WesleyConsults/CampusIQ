@@ -853,9 +853,11 @@ class _ActiveSessionResumeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = session.isPomodoroMode
-        ? 'Pomodoro in progress for ${session.courseCode}'
-        : 'Study session in progress for ${session.courseCode}';
+    final subtitle = session.isPaused
+        ? 'Session paused for ${session.courseCode}'
+        : session.isPomodoroMode
+            ? 'Pomodoro in progress for ${session.courseCode}'
+            : 'Study session in progress for ${session.courseCode}';
 
     return _SectionCard(
       icon: LucideIcons.timer,

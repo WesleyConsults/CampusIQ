@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/layout/shell_overlay_padding.dart';
 import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/features/ai/presentation/widgets/study_plan_tab.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/features/review/presentation/widgets/weekly_review_sheet.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
+import 'package:campusiq/features/session/domain/active_session_state.dart';
+import 'package:campusiq/features/session/domain/planned_actual_analyser.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
 import 'package:campusiq/features/session/presentation/providers/session_provider.dart';
 import 'package:campusiq/features/session/presentation/widgets/active_timer_card.dart';
@@ -13,12 +16,18 @@ import 'package:campusiq/features/session/presentation/widgets/course_breakdown_
 import 'package:campusiq/features/session/presentation/widgets/course_picker_sheet.dart';
 import 'package:campusiq/features/session/presentation/widgets/session_tile.dart';
 import 'package:campusiq/features/session/presentation/widgets/weekly_bar_chart.dart';
-import 'package:campusiq/features/review/presentation/widgets/weekly_review_sheet.dart';
-import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
-import 'package:campusiq/features/ai/presentation/widgets/study_plan_tab.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 import 'package:campusiq/features/streak/presentation/widgets/streak_action_button.dart';
+import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
+import 'package:campusiq/shared/widgets/campus_button.dart';
+import 'package:campusiq/shared/widgets/campus_card.dart';
+import 'package:campusiq/shared/widgets/campus_chip.dart';
+import 'package:campusiq/shared/widgets/campus_section_header.dart';
+import 'package:campusiq/shared/widgets/error_retry_widget.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class SessionScreen extends ConsumerStatefulWidget {
   const SessionScreen({super.key});
@@ -58,10 +67,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final picked = await showModalBottomSheet<PickedCourse>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadii.sheet),
       builder: (_) => const CoursePickerSheet(),
     );
 
@@ -140,78 +147,85 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        title: const Text('Sessions',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text('Sessions'),
         actions: [
-          const StreakActionButton(),
-          TextButton(
+          TextButton.icon(
             onPressed: () => showModalBottomSheet(
               context: context,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
               builder: (_) => const WeeklyReviewSheet(),
             ),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.primary,
-            ),
-            child: const Text(
-              'This Week',
-              style: TextStyle(color: AppTheme.primary),
-            ),
+            icon: const Icon(LucideIcons.calendarRange, size: 16),
+            label: const Text('This Week'),
           ),
+          const StreakActionButton(),
           IconButton(
-            icon: const Icon(Icons.auto_awesome_rounded),
-            tooltip: 'Insights',
             onPressed: () => context.push('/insights'),
+            tooltip: 'Insights',
+            icon: const Icon(LucideIcons.sparkles, size: 18),
           ),
+          const SizedBox(width: AppSpacing.xs),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppTheme.primary,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: AppTheme.textSecondary,
-          tabs: const [
-            Tab(text: 'History'),
-            Tab(text: 'Plan'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          _HistoryTab(
-            activeSession: activeSession,
-            semester: semester,
-            bottomContentPadding: bottomContentPadding,
-            onStart: (isPomodoroMode, focus, shortBreak, longBreak) =>
-                _startSession(
-              context,
-              isPomodoroMode: isPomodoroMode,
-              focusDuration: focus,
-              shortBreakDuration: shortBreak,
-              longBreakDuration: longBreak,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.sm,
+              AppSpacing.xl,
+              0,
             ),
-            onStop: () => _stopSession(semester),
-            onCancel: () =>
-                ref.read(activeSessionProvider.notifier).cancelSession(),
-            onPhaseExpired: _onPhaseExpired,
-            onSkipBreak: () =>
-                ref.read(activeSessionProvider.notifier).skipBreak(),
+            child: _TabSwitcher(controller: _tabController),
           ),
-          StudyPlanTab(bottomContentPadding: bottomContentPadding),
+          const SizedBox(height: AppSpacing.sm),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _HistoryTab(
+                  activeSession: activeSession,
+                  bottomContentPadding: bottomContentPadding,
+                  onStart: (isPomodoroMode, focus, shortBreak, longBreak) =>
+                      _startSession(
+                    context,
+                    isPomodoroMode: isPomodoroMode,
+                    focusDuration: focus,
+                    shortBreakDuration: shortBreak,
+                    longBreakDuration: longBreak,
+                  ),
+                  onPause: () =>
+                      ref.read(activeSessionProvider.notifier).pauseSession(),
+                  onResume: () =>
+                      ref.read(activeSessionProvider.notifier).resumeSession(),
+                  onStop: () => _stopSession(semester),
+                  onCancel: () =>
+                      ref.read(activeSessionProvider.notifier).cancelSession(),
+                  onPhaseExpired: _onPhaseExpired,
+                  onSkipBreak: () =>
+                      ref.read(activeSessionProvider.notifier).skipBreak(),
+                ),
+                StudyPlanTab(bottomContentPadding: bottomContentPadding),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-// ── History tab ───────────────────────────────────────────────────────────────
-
 class _HistoryTab extends ConsumerWidget {
-  final dynamic activeSession;
-  final String semester;
-  final void Function(bool isPomodoroMode, Duration focus, Duration shortBreak,
-      Duration longBreak) onStart;
+  final ActiveSessionState? activeSession;
+  final void Function(
+    bool isPomodoroMode,
+    Duration focus,
+    Duration shortBreak,
+    Duration longBreak,
+  ) onStart;
+  final VoidCallback onPause;
+  final VoidCallback onResume;
   final VoidCallback onStop;
   final VoidCallback onCancel;
   final VoidCallback onPhaseExpired;
@@ -220,8 +234,9 @@ class _HistoryTab extends ConsumerWidget {
 
   const _HistoryTab({
     required this.activeSession,
-    required this.semester,
     required this.onStart,
+    required this.onPause,
+    required this.onResume,
     required this.onStop,
     required this.onCancel,
     required this.onPhaseExpired,
@@ -232,17 +247,31 @@ class _HistoryTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionsAsync = ref.watch(allSessionsProvider);
-    final todayAnalytics = ref.watch(todayAnalyticsProvider);
+    final todaySummary = ref.watch(todayAnalyticsProvider) ??
+        DayAnalytics(
+          date: DateTime.now(),
+          sessions: const [],
+          totalActualMinutes: 0,
+          totalPlannedMinutes: 0,
+          perCourse: const [],
+        );
     final weeklyAnalytics = ref.watch(weeklyAnalyticsProvider);
 
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.xl,
+              0,
+            ),
             child: activeSession != null
                 ? ActiveTimerCard(
-                    session: activeSession,
+                    session: activeSession!,
+                    onPause: onPause,
+                    onResume: onResume,
                     onStop: onStop,
                     onCancel: onCancel,
                     onPhaseExpired: onPhaseExpired,
@@ -251,69 +280,96 @@ class _HistoryTab extends ConsumerWidget {
                 : _StartCard(onStart: onStart),
           ),
         ),
-        if (todayAnalytics != null && todayAnalytics.sessionCount > 0)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: AnalyticsSummaryCard(analytics: todayAnalytics),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.md,
+              AppSpacing.xl,
+              0,
             ),
+            child: AnalyticsSummaryCard(analytics: todaySummary),
           ),
-        if (todayAnalytics != null && todayAnalytics.perCourse.isNotEmpty)
+        ),
+        if (todaySummary.perCourse.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: CourseBreakdownCard(courses: todayAnalytics.perCourse),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.md,
+                AppSpacing.xl,
+                0,
+              ),
+              child: CourseBreakdownCard(courses: todaySummary.perCourse),
             ),
           ),
         if (weeklyAnalytics != null)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.md,
+                AppSpacing.xl,
+                0,
+              ),
               child: WeeklyBarChart(weekly: weeklyAnalytics),
             ),
           ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Row(
-              children: [
-                const Text('History',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                const Spacer(),
-                sessionsAsync.whenOrNull(
-                      data: (s) => Text('${s.length} sessions',
-                          style: const TextStyle(
-                              fontSize: 13, color: AppTheme.textSecondary)),
-                    ) ??
-                    const SizedBox.shrink(),
-              ],
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.xl,
+              AppSpacing.xl,
+              AppSpacing.sm,
+            ),
+            child: CampusSectionHeader(
+              title: 'Recent sessions',
+              subtitle: 'A calmer look at your latest focus history.',
+              trailing: sessionsAsync.whenOrNull(
+                    data: (sessions) => CampusChip(
+                      label:
+                          '${sessions.length} session${sessions.length == 1 ? '' : 's'}',
+                      icon: LucideIcons.history,
+                      backgroundColor: AppColors.surfaceMuted,
+                      foregroundColor: AppTheme.textPrimary,
+                    ),
+                  ) ??
+                  const SizedBox.shrink(),
             ),
           ),
         ),
         sessionsAsync.when(
           loading: () => const SliverToBoxAdapter(
-            child: Center(child: CircularProgressIndicator()),
+            child: Padding(
+              padding: EdgeInsets.all(AppSpacing.xl),
+              child: Center(child: CircularProgressIndicator()),
+            ),
           ),
-          error: (e, _) => SliverToBoxAdapter(
-            child: Center(child: Text('Error: $e')),
+          error: (error, _) => SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              child: ErrorRetryWidget(
+                message: 'We could not load your sessions right now.',
+                onRetry: () => ref.invalidate(allSessionsProvider),
+              ),
+            ),
           ),
           data: (sessions) {
             if (sessions.isEmpty) {
               return const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(
-                    child: Text('No sessions yet — start studying!',
-                        style: TextStyle(color: AppTheme.textSecondary)),
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                  child: _HistoryEmptyState(),
                 ),
               );
             }
-            return SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, i) {
-                  final session = sessions[i];
+
+            return SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              sliver: SliverList.separated(
+                itemBuilder: (context, index) {
+                  final session = sessions[index];
                   return SessionTile(
                     session: session,
                     onDelete: () => ref
@@ -321,7 +377,9 @@ class _HistoryTab extends ConsumerWidget {
                         ?.deleteSession(session.id),
                   );
                 },
-                childCount: sessions.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSpacing.md),
+                itemCount: sessions.length,
               ),
             );
           },
@@ -334,11 +392,47 @@ class _HistoryTab extends ConsumerWidget {
   }
 }
 
-// ── Start card with mode toggle ───────────────────────────────────────────────
+class _TabSwitcher extends StatelessWidget {
+  final TabController controller;
+
+  const _TabSwitcher({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: AppRadii.pill,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: TabBar(
+        controller: controller,
+        dividerColor: Colors.transparent,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: const BoxDecoration(
+          color: AppTheme.primary,
+          borderRadius: AppRadii.pill,
+        ),
+        labelColor: Colors.white,
+        unselectedLabelColor: AppTheme.textSecondary,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        tabs: const [
+          Tab(text: 'History'),
+          Tab(text: 'Plan'),
+        ],
+      ),
+    );
+  }
+}
 
 class _StartCard extends StatefulWidget {
-  final void Function(bool isPomodoroMode, Duration focus, Duration shortBreak,
-      Duration longBreak) onStart;
+  final void Function(
+    bool isPomodoroMode,
+    Duration focus,
+    Duration shortBreak,
+    Duration longBreak,
+  ) onStart;
+
   const _StartCard({required this.onStart});
 
   @override
@@ -347,113 +441,211 @@ class _StartCard extends StatefulWidget {
 
 class _StartCardState extends State<_StartCard> {
   bool _isPomodoroMode = false;
-  int _focusMinutes = 1;
-  int _shortBreakMinutes = 1;
+  bool _showPomodoroCustomizer = false;
+  int _focusMinutes = 25;
+  int _shortBreakMinutes = 5;
   int _longBreakMinutes = 15;
 
   void _adjust(
-      int current, int delta, int min, int max, void Function(int) update) {
+    int current,
+    int delta,
+    int min,
+    int max,
+    void Function(int) update,
+  ) {
     final next = current + delta;
-    if (next >= min && next <= max) setState(() => update(next));
+    if (next >= min && next <= max) {
+      setState(() => update(next));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade200, width: 0.5),
-      ),
+    final title = _isPomodoroMode ? 'Pomodoro focus' : 'Normal study session';
+    final description = _isPomodoroMode
+        ? 'Use focused rounds with gentle breaks when you want a clearer rhythm.'
+        : 'Pick a course and track your focus time without extra setup.';
+
+    return CampusCard(
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Mode toggle
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            padding: const EdgeInsets.all(4),
-            child: Row(
-              children: [
-                _ModeChip(
-                  label: 'Normal',
-                  icon: Icons.timer_outlined,
-                  selected: !_isPomodoroMode,
-                  onTap: () => setState(() => _isPomodoroMode = false),
-                ),
-                _ModeChip(
-                  label: 'Pomodoro',
-                  icon: Icons.hourglass_bottom_rounded,
-                  selected: _isPomodoroMode,
-                  onTap: () => setState(() => _isPomodoroMode = true),
-                ),
-              ],
-            ),
+          const CampusSectionHeader(
+            title: 'Ready to focus?',
+            subtitle: 'Choose a mode and start a calm study session.',
           ),
-
-          const SizedBox(height: 20),
-
+          const SizedBox(height: AppSpacing.lg),
+          _ModeToggle(
+            isPomodoroMode: _isPomodoroMode,
+            onChanged: (value) {
+              setState(() {
+                _isPomodoroMode = value;
+                if (!value) {
+                  _showPomodoroCustomizer = false;
+                }
+              });
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            description,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: _isPomodoroMode
+                ? [
+                    CampusChip(
+                      label: '${_focusMinutes} min focus',
+                      icon: LucideIcons.timer,
+                      backgroundColor: AppColors.goldSoft,
+                    ),
+                    CampusChip(
+                      label: '${_shortBreakMinutes} min break',
+                      icon: LucideIcons.coffee,
+                      backgroundColor: AppColors.surfaceMuted,
+                    ),
+                    CampusChip(
+                      label: '${_longBreakMinutes} min long break',
+                      icon: LucideIcons.moonStar,
+                      backgroundColor: AppColors.surfaceMuted,
+                    ),
+                  ]
+                : const [
+                    CampusChip(
+                      label: 'Course picker',
+                      icon: LucideIcons.bookOpen,
+                      backgroundColor: AppColors.goldSoft,
+                    ),
+                    CampusChip(
+                      label: 'Tracks real focus time',
+                      icon: LucideIcons.chartColumn,
+                      backgroundColor: AppColors.surfaceMuted,
+                    ),
+                  ],
+          ),
           if (_isPomodoroMode) ...[
-            _DurationStepper(
-              label: 'Focus',
-              minutes: _focusMinutes,
-              onDecrement: () =>
-                  _adjust(_focusMinutes, -5, 10, 60, (v) => _focusMinutes = v),
-              onIncrement: () =>
-                  _adjust(_focusMinutes, 5, 10, 60, (v) => _focusMinutes = v),
+            const SizedBox(height: AppSpacing.md),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _showPomodoroCustomizer = !_showPomodoroCustomizer;
+                  });
+                },
+                icon: Icon(
+                  _showPomodoroCustomizer
+                      ? LucideIcons.chevronUp
+                      : LucideIcons.slidersHorizontal,
+                  size: 16,
+                ),
+                label: Text(
+                  _showPomodoroCustomizer
+                      ? 'Hide customization'
+                      : 'Customize timer',
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
-            _DurationStepper(
-              label: 'Short Break',
-              minutes: _shortBreakMinutes,
-              onDecrement: () => _adjust(
-                  _shortBreakMinutes, -5, 5, 30, (v) => _shortBreakMinutes = v),
-              onIncrement: () => _adjust(
-                  _shortBreakMinutes, 5, 5, 30, (v) => _shortBreakMinutes = v),
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
+                child: Column(
+                  children: [
+                    _DurationStepper(
+                      label: 'Focus',
+                      minutes: _focusMinutes,
+                      onDecrement: () => _adjust(
+                        _focusMinutes,
+                        -5,
+                        10,
+                        60,
+                        (value) => _focusMinutes = value,
+                      ),
+                      onIncrement: () => _adjust(
+                        _focusMinutes,
+                        5,
+                        10,
+                        60,
+                        (value) => _focusMinutes = value,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _DurationStepper(
+                      label: 'Short break',
+                      minutes: _shortBreakMinutes,
+                      onDecrement: () => _adjust(
+                        _shortBreakMinutes,
+                        -5,
+                        5,
+                        30,
+                        (value) => _shortBreakMinutes = value,
+                      ),
+                      onIncrement: () => _adjust(
+                        _shortBreakMinutes,
+                        5,
+                        5,
+                        30,
+                        (value) => _shortBreakMinutes = value,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _DurationStepper(
+                      label: 'Long break',
+                      minutes: _longBreakMinutes,
+                      onDecrement: () => _adjust(
+                        _longBreakMinutes,
+                        -5,
+                        10,
+                        60,
+                        (value) => _longBreakMinutes = value,
+                      ),
+                      onIncrement: () => _adjust(
+                        _longBreakMinutes,
+                        5,
+                        10,
+                        60,
+                        (value) => _longBreakMinutes = value,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              crossFadeState: _showPomodoroCustomizer
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 180),
             ),
-            const SizedBox(height: 8),
-            _DurationStepper(
-              label: 'Long Break',
-              minutes: _longBreakMinutes,
-              onDecrement: () => _adjust(
-                  _longBreakMinutes, -5, 10, 60, (v) => _longBreakMinutes = v),
-              onIncrement: () => _adjust(
-                  _longBreakMinutes, 5, 10, 60, (v) => _longBreakMinutes = v),
-            ),
-            const SizedBox(height: 16),
-          ] else ...[
-            const Text(
-              'Pick a course and start your session',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-            ),
-            const SizedBox(height: 16),
           ],
-
+          const SizedBox(height: AppSpacing.lg),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
+            child: CampusButton(
               onPressed: () => widget.onStart(
                 _isPomodoroMode,
                 Duration(minutes: _focusMinutes),
                 Duration(minutes: _shortBreakMinutes),
                 Duration(minutes: _longBreakMinutes),
               ),
-              icon: Icon(_isPomodoroMode
-                  ? Icons.hourglass_bottom_rounded
-                  : Icons.play_arrow),
-              label: Text(
-                _isPomodoroMode ? 'Start Pomodoro' : 'Start Session',
-                style: const TextStyle(fontWeight: FontWeight.w700),
+              icon: Icon(
+                _isPomodoroMode ? LucideIcons.timerReset : LucideIcons.play,
+                size: 18,
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
+              child: Text(_isPomodoroMode ? 'Start Pomodoro' : 'Start Session'),
             ),
           ),
         ],
@@ -462,13 +654,56 @@ class _StartCardState extends State<_StartCard> {
   }
 }
 
-class _ModeChip extends StatelessWidget {
+class _ModeToggle extends StatelessWidget {
+  final bool isPomodoroMode;
+  final ValueChanged<bool> onChanged;
+
+  const _ModeToggle({
+    required this.isPomodoroMode,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: AppRadii.pill,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ModeSegment(
+              label: 'Normal',
+              icon: LucideIcons.bookOpen,
+              selected: !isPomodoroMode,
+              onTap: () => onChanged(false),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: _ModeSegment(
+              label: 'Pomodoro',
+              icon: LucideIcons.timerReset,
+              selected: isPomodoroMode,
+              onTap: () => onChanged(true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModeSegment extends StatelessWidget {
   final String label;
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
 
-  const _ModeChip({
+  const _ModeSegment({
     required this.label,
     required this.icon,
     required this.selected,
@@ -477,33 +712,39 @@ class _ModeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? AppTheme.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon,
-                  size: 16,
-                  color: selected ? Colors.white : AppTheme.textSecondary),
-              const SizedBox(width: 6),
-              Text(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppRadii.pill,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.primary : Colors.transparent,
+          borderRadius: AppRadii.pill,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: selected ? Colors.white : AppTheme.textSecondary,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(
+              child: Text(
                 label,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
                   color: selected ? Colors.white : AppTheme.textSecondary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -525,38 +766,114 @@ class _DurationStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 90,
-          child: Text(label,
-              style:
-                  const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-        ),
-        const Spacer(),
-        IconButton(
-          onPressed: onDecrement,
-          icon: const Icon(Icons.remove_circle_outline, size: 20),
-          color: AppTheme.primary,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-        ),
-        SizedBox(
-          width: 52,
-          child: Text(
-            '$minutes min',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+    return CampusCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      color: AppColors.surfaceMuted,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
           ),
+          _StepperButton(
+            icon: LucideIcons.minus,
+            onPressed: onDecrement,
+          ),
+          SizedBox(
+            width: 82,
+            child: Text(
+              '$minutes min',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+          _StepperButton(
+            icon: LucideIcons.plus,
+            onPressed: onIncrement,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _StepperButton({
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: AppRadii.pill,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: AppRadii.pill,
+          border: Border.all(color: AppColors.border),
         ),
-        IconButton(
-          onPressed: onIncrement,
-          icon: const Icon(Icons.add_circle_outline, size: 20),
-          color: AppTheme.primary,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-        ),
-      ],
+        child: Icon(icon, size: 16, color: AppTheme.primary),
+      ),
+    );
+  }
+}
+
+class _HistoryEmptyState extends StatelessWidget {
+  const _HistoryEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return CampusCard(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: AppColors.goldSoft,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(
+              LucideIcons.clock3,
+              color: AppTheme.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'No sessions yet',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Start your first study session and build your focus rhythm one calm block at a time.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
