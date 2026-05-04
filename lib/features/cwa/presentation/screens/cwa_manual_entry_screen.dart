@@ -7,6 +7,7 @@ import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 
 class CwaManualEntryScreen extends ConsumerStatefulWidget {
   final String mode;
@@ -293,28 +294,12 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
   Future<bool> _confirmDiscardIfNeeded() async {
     if (_isSaving || !_hasUnsavedChanges) return true;
 
-    final shouldDiscard = await showDialog<bool>(
+    final shouldDiscard = await showCampusConfirmDialog(
           context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Discard changes?'),
-            content: const Text(
-              'Your manual course entries have not been saved yet.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Keep editing'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Discard'),
-              ),
-            ],
-          ),
+          title: 'Discard changes?',
+          message: 'Your manual course entries have not been saved yet.',
+          confirmLabel: 'Discard',
+          cancelLabel: 'Keep editing',
         ) ??
         false;
 

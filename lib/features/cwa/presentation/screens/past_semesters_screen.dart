@@ -6,6 +6,7 @@ import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
+import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 
 class PastSemestersScreen extends ConsumerWidget {
   const PastSemestersScreen({super.key});
@@ -57,43 +58,29 @@ class PastSemestersScreen extends ConsumerWidget {
 
   void _confirmDelete(
       BuildContext context, WidgetRef ref, PastSemesterModel semester) {
-    showDialog(
+    showCampusConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remove semester?'),
-        content: Text(
-          'Remove "${semester.semesterLabel}" from your history? '
-          'This will affect your cumulative CWA.',
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              try {
-                final repo = ref.read(pastResultRepositoryProvider);
-                await repo?.delete(semester.id);
-              } catch (e) {
-                debugPrint('🔴 PastSemestersScreen delete failed: $e');
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text(
-                            'Could not remove semester. Please try again.')),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.warning,
-              foregroundColor: Colors.white,
+      title: 'Remove semester?',
+      message:
+          'Remove "${semester.semesterLabel}" from your history? This will affect your cumulative CWA.',
+      confirmLabel: 'Remove',
+      destructive: true,
+    ).then((confirmed) async {
+      if (confirmed != true) return;
+      try {
+        final repo = ref.read(pastResultRepositoryProvider);
+        await repo?.delete(semester.id);
+      } catch (e) {
+        debugPrint('🔴 PastSemestersScreen delete failed: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not remove semester. Please try again.'),
             ),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
+          );
+        }
+      }
+    });
   }
 }
 
@@ -156,10 +143,8 @@ class _SemesterCardState extends State<_SemesterCard> {
                         ),
                         const SizedBox(height: AppSpacing.xxxs),
                         Text(
-                          '$courseCount course${courseCount == 1 ? '' : 's'}' +
-                              (widget.semester.reportedSemesterCwa != null
-                                  ? ' • Reported CWA: ${widget.semester.reportedSemesterCwa?.toStringAsFixed(2)}'
-                                  : ''),
+                          '$courseCount course${courseCount == 1 ? '' : 's'}'
+                          '${widget.semester.reportedSemesterCwa != null ? ' • Reported CWA: ${widget.semester.reportedSemesterCwa?.toStringAsFixed(2)}' : ''}',
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppTheme.textSecondary,

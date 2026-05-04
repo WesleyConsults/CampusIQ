@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:campusiq/core/theme/app_tokens.dart';
+
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
+import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
+import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
 
 /// Shows full details of a slot. Options: edit or delete.
 class SlotDetailSheet extends StatelessWidget {
@@ -22,79 +25,90 @@ class SlotDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Color(slot.colorValue);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
-        MediaQuery.paddingOf(context).bottom + AppSpacing.lg,
+
+    return CampusModalSheet(
+      title: slot.courseCode,
+      subtitle: slot.courseName,
+      leading: _SlotIcon(color: color),
+      trailing: IconButton(
+        onPressed: () => Navigator.of(context).pop(),
+        icon: const Icon(LucideIcons.x, size: AppIconSizes.xl),
+        tooltip: 'Close',
+      ),
+      bottomBar: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                final navigator = Navigator.of(context);
+                final router = GoRouter.of(context);
+                navigator.pop();
+                router.push('/course/${slot.courseCode}');
+              },
+              icon: const Icon(LucideIcons.arrowUpRight, size: AppIconSizes.md),
+              label: const Text('Open Workspace'),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final confirm = await showCampusConfirmDialog(
+                      context: context,
+                      title: 'Delete timetable slot?',
+                      message:
+                          'Remove ${slot.courseCode} from your timetable? This will only delete this saved slot.',
+                      confirmLabel: 'Delete',
+                      destructive: true,
+                    );
+                    if (confirm != true || !context.mounted) return;
+                    Navigator.of(context).pop();
+                    onDelete();
+                  },
+                  icon: const Icon(LucideIcons.trash2, size: AppIconSizes.md),
+                  label: const Text('Delete'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.warning,
+                    side: const BorderSide(color: AppColors.border),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    onEdit();
+                  },
+                  icon: const Icon(LucideIcons.pencilLine, size: AppIconSizes.md),
+                  label: const Text('Edit'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(
-              width: 44,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Row(
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
-                  borderRadius: AppRadii.button,
-                ),
-                child: Icon(
-                  LucideIcons.bookOpen,
-                  color: color,
-                  size: AppIconSizes.xl,
-                ),
+              _MetaPill(
+                label: slot.slotType,
+                backgroundColor: color.withValues(alpha: 0.12),
+                foregroundColor: color,
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      slot.courseCode,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppTheme.textPrimary,
-                          ),
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      slot.courseName,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: AppRadii.pill,
-                ),
-                child: Text(
-                  slot.slotType,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+              _MetaPill(
+                label: TimetableConstants.dayFullLabels[slot.dayIndex],
+                backgroundColor: AppColors.surfaceMuted,
+                foregroundColor: AppTheme.textSecondary,
               ),
             ],
           ),
@@ -121,70 +135,72 @@ class SlotDetailSheet extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: AppSpacing.sm),
-                _DetailRow(
-                  icon: LucideIcons.calendarDays,
-                  label: TimetableConstants.dayFullLabels[slot.dayIndex],
+                const _DetailRow(
+                  icon: LucideIcons.briefcase,
+                  label:
+                      'Open the workspace for notes, sessions, and planning tied to this course.',
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          const _DetailRow(
-            icon: LucideIcons.briefcase,
-            label:
-                'Open this course workspace for notes, sessions, and planning.',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                context.push('/course/${slot.courseCode}');
-              },
-              icon: const Icon(LucideIcons.arrowUpRight, size: AppIconSizes.md),
-              label: const Text('Open Workspace'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primary,
-                side: const BorderSide(color: AppColors.border),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onDelete();
-                  },
-                  icon: const Icon(LucideIcons.trash2, size: AppIconSizes.md),
-                  label: const Text('Delete'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.warning,
-                    side: const BorderSide(color: AppColors.border),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onEdit();
-                  },
-                  icon: const Icon(LucideIcons.pencilLine, size: AppIconSizes.md),
-                  label: const Text('Edit'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _SlotIcon extends StatelessWidget {
+  final Color color;
+
+  const _SlotIcon({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: AppRadii.button,
+      ),
+      child: Icon(
+        LucideIcons.bookOpen,
+        color: color,
+        size: AppIconSizes.xl,
+      ),
+    );
+  }
+}
+
+class _MetaPill extends StatelessWidget {
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  const _MetaPill({
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: AppRadii.pill,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          color: foregroundColor,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -209,6 +225,7 @@ class _DetailRow extends StatelessWidget {
             style: const TextStyle(
               fontSize: 13,
               color: AppTheme.textSecondary,
+              height: 1.35,
             ),
           ),
         ),

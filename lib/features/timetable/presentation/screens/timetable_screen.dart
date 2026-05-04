@@ -80,9 +80,9 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
   void _showClassDetail(TimetableSlotModel slot) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => SlotDetailSheet(
         slot: slot,
         onEdit: () => _openAddClassSheet(existing: slot),

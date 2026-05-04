@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:markdown/markdown.dart' as md;
-import 'package:campusiq/features/ai/data/models/ai_message_model.dart';
 import 'package:intl/intl.dart';
+
+import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/features/ai/data/models/ai_message_model.dart';
 
 // ── Inline math: $...$ ───────────────────────────────────────────────────────
 
@@ -34,14 +36,18 @@ Widget _buildMath(String tex, {required bool display}) {
   return Math.tex(
     tex,
     mathStyle: display ? MathStyle.display : MathStyle.text,
-    // inherit: false prevents Math.build() from merging with DefaultTextStyle,
-    // which can have null fontSize/color inside MarkdownBody and crash on !.
-    textStyle:
-        const TextStyle(fontSize: 14, color: Colors.black87, inherit: false),
+    textStyle: const TextStyle(
+      fontSize: 14,
+      color: AppTheme.textPrimary,
+      inherit: false,
+    ),
     onErrorFallback: (_) => Text(
       tex,
       style: const TextStyle(
-          fontFamily: 'monospace', fontSize: 13, color: Colors.black54),
+        fontFamily: 'monospace',
+        fontSize: 13,
+        color: AppTheme.textSecondary,
+      ),
     ),
   );
 }
@@ -92,37 +98,59 @@ class AiMessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUser = message.role == 'user';
     final timeStr = DateFormat('HH:mm').format(message.createdAt);
+    final bubbleRadius = BorderRadius.only(
+      topLeft: const Radius.circular(AppRadii.lg),
+      topRight: const Radius.circular(AppRadii.lg),
+      bottomLeft: Radius.circular(isUser ? AppRadii.lg : AppRadii.xs),
+      bottomRight: Radius.circular(isUser ? AppRadii.xs : AppRadii.lg),
+    );
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.xs,
+        ),
         child: Column(
           crossAxisAlignment:
               isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             Container(
-              constraints: const BoxConstraints(maxWidth: 300),
-              padding: const EdgeInsets.all(AppSpacing.sm),
+              constraints: const BoxConstraints(maxWidth: 340),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm2,
+                AppSpacing.md,
+                AppSpacing.sm2,
+              ),
               decoration: BoxDecoration(
-                color: isUser
-                    ? Theme.of(context).primaryColor
-                    : Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-                border:
-                    !isUser ? Border.all(color: Colors.grey.shade300) : null,
+                color: isUser ? AppTheme.primary : AppColors.surface,
+                borderRadius: bubbleRadius,
+                border: !isUser
+                    ? Border.all(color: AppColors.border)
+                    : null,
+                boxShadow: !isUser ? AppShadows.soft : null,
               ),
               child: isUser
                   ? Text(
                       message.content,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
                     )
                   : _buildAssistantContent(context, message.content),
             ),
             const SizedBox(height: AppSpacing.xxs),
             Text(
               timeStr,
-              style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -161,21 +189,40 @@ class AiMessageBubble extends StatelessWidget {
       styleSheet: MarkdownStyleSheet.fromTheme(
         Theme.of(context),
       ).copyWith(
-        p: const TextStyle(color: Colors.black87, fontSize: 14, height: 1.4),
+        p: const TextStyle(
+          color: AppTheme.textPrimary,
+          fontSize: 14,
+          height: 1.65,
+        ),
         strong: const TextStyle(
-            color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
+          color: AppTheme.textPrimary,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
         em: const TextStyle(
-            color: Colors.black87, fontSize: 14, fontStyle: FontStyle.italic),
-        listBullet: const TextStyle(color: Colors.black87, fontSize: 14),
-        code: TextStyle(
+          color: AppTheme.textPrimary,
+          fontSize: 14,
+          fontStyle: FontStyle.italic,
+        ),
+        listBullet: const TextStyle(
+          color: AppTheme.textPrimary,
+          fontSize: 14,
+        ),
+        blockquote: const TextStyle(
+          color: AppTheme.textSecondary,
+          fontSize: 14,
+          height: 1.6,
+        ),
+        code: const TextStyle(
           fontSize: 13,
           fontFamily: 'monospace',
-          color: Colors.black87,
-          backgroundColor: Colors.grey.shade100,
+          color: AppTheme.textPrimary,
+          backgroundColor: AppColors.surfaceMuted,
         ),
         codeblockDecoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(AppRadii.xxs),
+          color: AppColors.surfaceMuted,
+          borderRadius: BorderRadius.circular(AppRadii.xs2),
+          border: Border.all(color: AppColors.border),
         ),
       ),
       builders: {

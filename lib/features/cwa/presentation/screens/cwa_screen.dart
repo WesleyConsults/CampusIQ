@@ -19,6 +19,8 @@ import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
 import 'package:campusiq/shared/widgets/campus_button.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
+import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
+import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
@@ -229,41 +231,50 @@ class CwaScreen extends ConsumerWidget {
   void _showImportSheet(BuildContext context, CwaViewMode viewMode) {
     final title =
         viewMode == CwaViewMode.semester ? 'Import Courses' : 'Import Results';
+    final subtitle = viewMode == CwaViewMode.semester
+        ? 'Bring in your current semester courses from a slip, photo, or manual entry.'
+        : 'Add a completed semester from a result slip, image, PDF, or manual entry.';
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => _ImportOptionsSheet(
         title: title,
+        subtitle: subtitle,
         options: [
           _ImportOption(
-            icon: Icons.camera_alt_outlined,
-            label: 'Take Photo',
+            icon: LucideIcons.camera,
+            label: 'Take photo',
+            subtitle: 'Capture a registration or result slip now.',
             onTap: () {
               Navigator.of(sheetContext).pop();
               _openImportScreen(context, viewMode, initialSource: 'camera');
             },
           ),
           _ImportOption(
-            icon: Icons.photo_library_outlined,
-            label: 'Upload Image',
+            icon: LucideIcons.imageUp,
+            label: 'Upload image',
+            subtitle: 'Pick an existing screenshot or scanned slip.',
             onTap: () {
               Navigator.of(sheetContext).pop();
               _openImportScreen(context, viewMode, initialSource: 'gallery');
             },
           ),
           _ImportOption(
-            icon: Icons.picture_as_pdf_outlined,
+            icon: LucideIcons.fileText,
             label: 'Choose PDF',
+            subtitle: 'Import a PDF copy of your registration or results.',
             onTap: () {
               Navigator.of(sheetContext).pop();
               _openImportScreen(context, viewMode, initialSource: 'pdf');
             },
           ),
           _ImportOption(
-            icon: Icons.edit_outlined,
-            label: 'Enter Manually',
+            icon: LucideIcons.squarePen,
+            label: 'Enter manually',
+            subtitle: 'Type the course details in yourself.',
             onTap: () {
               Navigator.of(sheetContext).pop();
               context.push(
@@ -373,80 +384,69 @@ enum _CwaMenuAction { target, history }
 class _ImportOption {
   final IconData icon;
   final String label;
+  final String subtitle;
   final VoidCallback onTap;
 
   const _ImportOption({
     required this.icon,
     required this.label,
+    required this.subtitle,
     required this.onTap,
   });
 }
 
 class _ImportOptionsSheet extends StatelessWidget {
   final String title;
+  final String subtitle;
   final List<_ImportOption> options;
 
   const _ImportOptionsSheet({
     required this.title,
+    required this.subtitle,
     required this.options,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadii.sheet,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.sm,
-            AppSpacing.lg,
-            AppSpacing.lg,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 42,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.divider,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xxs2),
-              const Text(
-                'Choose how you want to bring data into CampusIQ.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              for (final option in options) ...[
-                _ImportOptionTile(option: option),
-                if (option != options.last)
-                  const SizedBox(height: AppSpacing.sm),
-              ],
-            ],
-          ),
-        ),
+    return CampusModalSheet(
+      title: title,
+      subtitle: subtitle,
+      leading: const _ImportSheetIcon(),
+      trailing: IconButton(
+        onPressed: () => Navigator.of(context).pop(),
+        icon: const Icon(LucideIcons.x, size: AppIconSizes.xl),
+        tooltip: 'Close',
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final option in options) ...[
+            _ImportOptionTile(option: option),
+            if (option != options.last) const SizedBox(height: AppSpacing.sm),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ImportSheetIcon extends StatelessWidget {
+  const _ImportSheetIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: const BoxDecoration(
+        color: AppColors.goldSoft,
+        borderRadius: AppRadii.button,
+      ),
+      child: const Icon(
+        LucideIcons.fileUp,
+        color: AppTheme.primary,
+        size: AppIconSizes.xl,
       ),
     );
   }
@@ -469,25 +469,45 @@ class _ImportOptionTile extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadii.sm),
+                color: AppColors.surface,
+                borderRadius: AppRadii.button,
+                border: Border.all(color: AppColors.border),
               ),
-              child: Icon(option.icon, color: AppTheme.primary, size: AppIconSizes.xxl),
+              child: Icon(
+                option.icon,
+                color: AppTheme.primary,
+                size: AppIconSizes.xl,
+              ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: Text(
-                option.label,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    option.label,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    option.subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
               ),
             ),
             const Icon(
@@ -926,6 +946,7 @@ class _SemesterView extends ConsumerWidget {
                     onPressed: () => showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
+                      useSafeArea: true,
                       backgroundColor: Colors.transparent,
                       builder: (_) => const CwaCoachSheet(),
                     ),
@@ -984,6 +1005,16 @@ class _SemesterView extends ConsumerWidget {
                       onEdit: () =>
                           onOpenAddSheet(context, ref, existing: course),
                       onDelete: () async {
+                        final confirm = await showCampusConfirmDialog(
+                          context: context,
+                          title: 'Delete course?',
+                          message:
+                              'Remove ${course.code} from this semester projection? This only deletes the course entry from your current CWA setup.',
+                          confirmLabel: 'Delete',
+                          destructive: true,
+                        );
+                        if (confirm != true) return;
+
                         try {
                           await repo?.deleteCourse(course.id);
                         } catch (e) {

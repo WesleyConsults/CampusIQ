@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
-import 'package:campusiq/core/providers/subscription_provider.dart';
-import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_chat_provider.dart';
+import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
 import 'package:campusiq/features/ai/presentation/widgets/premium_gate_widget.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
 
 class CwaCoachSheet extends ConsumerStatefulWidget {
   const CwaCoachSheet({super.key});
@@ -61,93 +64,71 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
 
       await usageRepo.incrementUsage('chat');
 
-      if (mounted) {
-        setState(() {
-          _advice = advice;
-          _isLoading = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _advice = advice;
+        _isLoading = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Something went wrong. Please try again.';
-          _isLoading = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _error = 'Something went wrong. Please try again.';
+        _isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.5,
-      minChildSize: 0.3,
-      maxChildSize: 0.85,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // Handle
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(AppRadii.xxxs),
-                ),
-              ),
-              // Header
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: Row(
-                  children: [
-                    const Icon(Icons.auto_awesome,
-                        size: AppIconSizes.xl, color: AppTheme.primary),
-                    const SizedBox(width: AppSpacing.xs),
-                    const Text(
-                      'AI Coach',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close, size: AppIconSizes.xl),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              // Content
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: _buildContent(context),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+    return CampusModalSheet(
+      title: 'AI Coach',
+      subtitle: 'Personal guidance based on your current CWA outlook.',
+      leading: Container(
+        width: 48,
+        height: 48,
+        decoration: const BoxDecoration(
+          color: AppColors.goldSoft,
+          borderRadius: AppRadii.button,
+        ),
+        child: const Icon(
+          LucideIcons.sparkles,
+          color: AppTheme.primary,
+          size: AppIconSizes.xl,
+        ),
+      ),
+      trailing: IconButton(
+        onPressed: () => Navigator.of(context).pop(),
+        icon: const Icon(LucideIcons.x, size: AppIconSizes.xl),
+        tooltip: 'Close',
+      ),
+      scrollable: true,
+      maxHeightFactor: 0.88,
+      child: _buildContent(context),
     );
   }
 
   Widget _buildContent(BuildContext context) {
     if (_isLoading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 40),
-          child: CircularProgressIndicator(),
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceMuted,
+          borderRadius: AppRadii.card,
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const Column(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: AppSpacing.md),
+            Text(
+              'Building your CWA coaching notes…',
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -157,41 +138,73 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
     }
 
     if (_error != null) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: AppSpacing.xl),
-          Icon(Icons.error_outline, size: 40, color: Colors.grey.shade400),
-          const SizedBox(height: AppSpacing.sm),
-          Text(_error!,
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceMuted,
+          borderRadius: AppRadii.card,
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            const Icon(
+              LucideIcons.circleAlert,
+              size: AppIconSizes.status,
+              color: AppTheme.textSecondary,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _error!,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textSecondary)),
-          const SizedBox(height: AppSpacing.md),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _isLoading = true;
-                _error = null;
-              });
-              _loadAdvice();
-            },
-            child: const Text('Try again'),
-          ),
-        ],
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _isLoading = true;
+                  _error = null;
+                });
+                _loadAdvice();
+              },
+              icon: const Icon(LucideIcons.refreshCcw, size: AppIconSizes.md),
+              label: const Text('Try again'),
+            ),
+          ],
+        ),
       );
     }
 
-    if (_advice != null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
+    if (_advice == null) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceMuted,
+            borderRadius: AppRadii.card,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Text(
             _advice!,
             style: const TextStyle(
-                fontSize: 15, height: 1.6, color: AppTheme.textPrimary),
+              fontSize: 15,
+              height: 1.65,
+              color: AppTheme.textPrimary,
+            ),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          TextButton.icon(
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
             onPressed: () async {
               final nav = Navigator.of(context);
               final router = GoRouter.of(context);
@@ -202,14 +215,11 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
               nav.pop();
               router.push('/ai');
             },
-            icon: const Icon(Icons.arrow_forward, size: AppIconSizes.md),
+            icon: const Icon(LucideIcons.arrowRight, size: AppIconSizes.md),
             label: const Text('Ask a follow-up'),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.primary),
           ),
-        ],
-      );
-    }
-
-    return const SizedBox.shrink();
+        ),
+      ],
+    );
   }
 }
