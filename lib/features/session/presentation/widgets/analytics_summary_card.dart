@@ -3,7 +3,6 @@ import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/session/domain/planned_actual_analyser.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_chip.dart';
-import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -25,27 +24,65 @@ class AnalyticsSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CampusSectionHeader(
-            title: 'Today\'s progress',
-            subtitle: analytics.sessionCount == 0
-                ? 'No study logged yet. One focused block is enough to start well.'
-                : 'A quick snapshot of how your focus time is building today.',
-            trailing: CampusChip(
-              label: hasPlan ? '$completionRate% complete' : 'Today',
-              icon: hasPlan ? LucideIcons.target : LucideIcons.sunMedium,
-              backgroundColor:
-                  hasPlan ? AppColors.goldSoft : AppColors.surfaceMuted,
-              foregroundColor: AppTheme.textPrimary,
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stackHeader = constraints.maxWidth < 360;
+              final badge = CampusChip(
+                label: hasPlan ? '$completionRate%' : 'Today',
+                icon: hasPlan ? LucideIcons.target : LucideIcons.sunMedium,
+                backgroundColor:
+                    hasPlan ? AppColors.goldSoft : AppColors.surfaceMuted,
+                foregroundColor: AppTheme.textPrimary,
+              );
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (stackHeader) ...[
+                    Text(
+                      'Today\'s progress',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    badge,
+                  ] else
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Today\'s progress',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        badge,
+                      ],
+                    ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    analytics.sessionCount == 0
+                        ? 'No study logged yet. One focused block is enough to start well.'
+                        : 'A quick snapshot of how your focus time is building today.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.textSecondary,
+                          height: 1.45,
+                        ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: AppSpacing.lg),
-          GridView.count(
-            crossAxisCount: 2,
-            crossAxisSpacing: AppSpacing.md,
-            mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: 1.6,
+          GridView(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: AppSpacing.md,
+              mainAxisSpacing: AppSpacing.md,
+              mainAxisExtent: 112,
+            ),
             children: [
               _MetricTile(
                 label: 'Studied',
@@ -117,7 +154,10 @@ class _MetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: AppRadii.button,
@@ -125,22 +165,25 @@ class _MetricTile extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             icon,
-            size: 18,
+            size: 16,
             color: emphasize ? AppTheme.success : AppTheme.textSecondary,
           ),
+          const SizedBox(height: AppSpacing.sm),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 value,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontSize: 20,
                       color:
                           emphasize ? AppTheme.success : AppTheme.textPrimary,
                       fontWeight: FontWeight.w700,
+                      height: 1.1,
                     ),
               ),
               const SizedBox(height: AppSpacing.xxs),
@@ -148,6 +191,8 @@ class _MetricTile extends StatelessWidget {
                 label,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textSecondary,
+                      fontSize: 12,
+                      height: 1.2,
                     ),
               ),
             ],
