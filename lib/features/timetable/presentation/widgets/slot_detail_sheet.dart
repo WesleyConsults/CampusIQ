@@ -56,7 +56,7 @@ class SlotDetailSheet extends StatelessWidget {
                 child: Icon(
                   LucideIcons.bookOpen,
                   color: color,
-                  size: 20,
+                  size: AppIconSizes.xl,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -142,7 +142,7 @@ class SlotDetailSheet extends StatelessWidget {
                 Navigator.pop(context);
                 context.push('/course/${slot.courseCode}');
               },
-              icon: const Icon(LucideIcons.arrowUpRight, size: 16),
+              icon: const Icon(LucideIcons.arrowUpRight, size: AppIconSizes.md),
               label: const Text('Open Workspace'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.primary,
@@ -159,7 +159,7 @@ class SlotDetailSheet extends StatelessWidget {
                     Navigator.pop(context);
                     onDelete();
                   },
-                  icon: const Icon(LucideIcons.trash2, size: 16),
+                  icon: const Icon(LucideIcons.trash2, size: AppIconSizes.md),
                   label: const Text('Delete'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.warning,
@@ -174,7 +174,7 @@ class SlotDetailSheet extends StatelessWidget {
                     Navigator.pop(context);
                     onEdit();
                   },
-                  icon: const Icon(LucideIcons.pencilLine, size: 16),
+                  icon: const Icon(LucideIcons.pencilLine, size: AppIconSizes.md),
                   label: const Text('Edit'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
@@ -201,7 +201,7 @@ class _DetailRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: AppTheme.textSecondary),
+        Icon(icon, size: AppIconSizes.md, color: AppTheme.textSecondary),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
           child: Text(

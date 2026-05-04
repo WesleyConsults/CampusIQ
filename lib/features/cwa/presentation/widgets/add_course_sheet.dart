@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 
 class AddCourseSheet extends StatefulWidget {
@@ -67,9 +68,9 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
           children: [
             Text(
               widget.existing == null ? 'Add Course' : 'Edit Course',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.lg),
             TextFormField(
               controller: _codeController,
               decoration: const InputDecoration(
@@ -78,14 +79,14 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: 'Course name'),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.lg),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -122,7 +123,7 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
               activeColor: AppTheme.primary,
               onChanged: (v) => setState(() => _expectedScore = v),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.xs),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -132,7 +133,7 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(AppRadii.xs2)),
                 ),
                 child: Text(
                     widget.existing == null ? 'Add Course' : 'Save Changes'),

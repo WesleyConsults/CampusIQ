@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/course_hub/data/models/course_note_model.dart';
 import 'package:campusiq/features/course_hub/presentation/providers/course_note_provider.dart';
 
@@ -92,7 +93,7 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
                   height: 4,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppRadii.xxxs),
                   ),
                 ),
               ),
@@ -110,7 +111,7 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text('Cancel'),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.xs),
                     FilledButton(
                       onPressed: _isSaving ? null : _save,
                       child: _isSaving
@@ -141,12 +142,11 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
                           focusedBorder: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 8),
                         ),
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w600),
+                        style: Theme.of(context).textTheme.headlineSmall,
                         textInputAction: TextInputAction.next,
                       ),
                       const Divider(height: 1),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.xs),
                       TextField(
                         controller: _bodyController,
                         decoration: const InputDecoration(

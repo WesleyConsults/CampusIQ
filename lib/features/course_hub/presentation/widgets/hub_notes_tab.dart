@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/course_hub/data/models/course_note_model.dart';
 import 'package:campusiq/features/course_hub/presentation/providers/course_note_provider.dart';
 import 'package:campusiq/features/course_hub/presentation/widgets/note_editor_sheet.dart';
@@ -45,13 +46,13 @@ class HubNotesTab extends ConsumerWidget {
           body: notes.isEmpty
               ? const Center(
                   child: Padding(
-                    padding: EdgeInsets.all(32),
+                    padding: EdgeInsets.all(AppSpacing.xxl),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.notes_outlined,
                             size: 48, color: AppTheme.textSecondary),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.sm),
                         Text(
                           'No notes yet',
                           style: TextStyle(
@@ -59,7 +60,7 @@ class HubNotesTab extends ConsumerWidget {
                               fontWeight: FontWeight.w600,
                               color: AppTheme.textSecondary),
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: AppSpacing.xxs),
                         Text(
                           'Tap + to add your first note for this course.',
                           textAlign: TextAlign.center,
@@ -83,7 +84,7 @@ class HubNotesTab extends ConsumerWidget {
                         padding: const EdgeInsets.only(right: 20),
                         decoration: BoxDecoration(
                           color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadii.sm),
                         ),
                         child:
                             const Icon(Icons.delete_outline, color: Colors.red),
@@ -118,9 +119,9 @@ class _NoteTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(AppSpacing.sm2),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -131,7 +132,7 @@ class _NoteTile extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xxs),
               Text(
                 preview,
                 style: const TextStyle(
@@ -139,7 +140,7 @@ class _NoteTile extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.xxs2),
               Text(
                 dateLabel,
                 style: const TextStyle(

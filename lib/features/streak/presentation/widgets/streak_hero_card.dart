@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
 /// The large flame card at the top of the Streak screen.
@@ -19,10 +20,10 @@ class StreakHeroCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: isAlive ? AppTheme.primary : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.md2),
       ),
       child: Column(
         children: [
@@ -35,7 +36,7 @@ class StreakHeroCard extends StatelessWidget {
                 isAlive ? '🔥' : '💤',
                 style: const TextStyle(fontSize: 40),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.xs),
               Text(
                 '${streak.currentStreak}',
                 style: TextStyle(
@@ -58,7 +59,7 @@ class StreakHeroCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             streak.statusMessage,
             style: TextStyle(
@@ -70,12 +71,12 @@ class StreakHeroCard extends StatelessWidget {
 
           // Loss aversion banner
           if (streak.lossAversionMessage != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: AppTheme.warning.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadii.xs2),
                 border: Border.all(
                   color: AppTheme.warning.withValues(alpha: 0.4),
                   width: 0.5,
@@ -84,7 +85,7 @@ class StreakHeroCard extends StatelessWidget {
               child: Row(
                 children: [
                   const Text('⚠️', style: TextStyle(fontSize: 14)),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.xs),
                   Expanded(
                     child: Text(
                       streak.lossAversionMessage!,
@@ -100,7 +101,7 @@ class StreakHeroCard extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
 
           // Stats row
           Row(
@@ -147,7 +148,7 @@ class _Stat extends StatelessWidget {
         Text(value,
             style: TextStyle(
                 fontSize: 20, fontWeight: FontWeight.w700, color: color)),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppSpacing.xxxs),
         Text(label,
             style: const TextStyle(fontSize: 11, color: Colors.white54)),
       ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
 /// 7-day attendance row — student taps each day to mark attendance.
@@ -26,7 +27,7 @@ class AttendanceTracker extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -39,7 +40,7 @@ class AttendanceTracker extends StatelessWidget {
                 Row(
                   children: [
                     const Text('🎓', style: TextStyle(fontSize: 14)),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xxs),
                     Text(
                       '${attendanceStreak.currentStreak}d',
                       style: const TextStyle(
@@ -52,12 +53,12 @@ class AttendanceTracker extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xxs),
             const Text(
               'Tap a day to mark class attendance',
               style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: days.map((day) {
@@ -86,7 +87,7 @@ class AttendanceTracker extends StatelessWidget {
                               isToday ? FontWeight.w700 : FontWeight.w400,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppSpacing.xxs2),
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         width: 36,
@@ -105,7 +106,7 @@ class AttendanceTracker extends StatelessWidget {
                         alignment: Alignment.center,
                         child: isAttended
                             ? const Icon(Icons.check,
-                                color: Colors.white, size: 16)
+                                color: Colors.white, size: AppIconSizes.md)
                             : Text(
                                 '${day.day}',
                                 style: TextStyle(

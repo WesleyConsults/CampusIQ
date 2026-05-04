@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_import_provider.dart';
@@ -43,7 +44,7 @@ class ImportSlotReviewTile extends ConsumerWidget {
                   .read(timetableImportNotifierProvider.notifier)
                   .toggleSlot(index),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.xs),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +60,7 @@ class ImportSlotReviewTile extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.xxxs),
                   Text(
                     [
                       dayLabel,
@@ -76,12 +77,12 @@ class ImportSlotReviewTile extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.xs),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: chipColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(AppRadii.xxs),
               ),
               child: Text(
                 slot.slotType,

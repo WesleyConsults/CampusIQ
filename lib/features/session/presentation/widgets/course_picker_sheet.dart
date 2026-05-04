@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 
@@ -56,12 +57,12 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
       height: MediaQuery.of(context).size.height * 0.6,
       child: Column(
         children: [
-          const SizedBox(height: 16),
-          const Text(
+          const SizedBox(height: AppSpacing.md),
+          Text(
             'What are you studying?',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           TabBar(
             controller: _tabs,
             labelColor: AppTheme.primary,
@@ -134,7 +135,7 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
 
                 // Custom
                 Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     children: [
                       TextField(
@@ -143,13 +144,13 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
                             labelText: 'Course code (e.g. MATH 101)'),
                         textCapitalization: TextCapitalization.characters,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.sm),
                       TextField(
                         controller: _customNameCtrl,
                         decoration:
                             const InputDecoration(labelText: 'Course name'),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.lg),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -168,7 +169,7 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                                borderRadius: BorderRadius.circular(AppRadii.xs2)),
                           ),
                           child: const Text('Start Studying'),
                         ),

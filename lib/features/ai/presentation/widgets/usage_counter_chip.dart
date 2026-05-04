@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:go_router/go_router.dart';
 
 class UsageCounterChip extends StatelessWidget {
@@ -39,7 +40,7 @@ class UsageCounterChip extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.red.shade50,
                   border: Border.all(color: Colors.red.shade300),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppSpacing.xs),
                 ),
                 child: Text(
                   label,
@@ -52,7 +53,7 @@ class UsageCounterChip extends StatelessWidget {
               decoration: BoxDecoration(
                 color: chipColor.withOpacity(0.1),
                 border: Border.all(color: chipColor.withOpacity(0.3)),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppSpacing.xs),
               ),
               child: Text(
                 label,

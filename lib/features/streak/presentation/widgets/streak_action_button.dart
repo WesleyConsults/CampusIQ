@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
@@ -29,7 +30,7 @@ class StreakActionButton extends ConsumerWidget {
                   fontSize: 14,
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppSpacing.xxs),
               Icon(
                 studyStreak.currentStreak > 0
                     ? Icons.local_fire_department

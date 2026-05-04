@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/insights/domain/insight.dart';
 import 'package:campusiq/features/insights/presentation/providers/insight_provider.dart';
 import 'package:campusiq/features/insights/presentation/widgets/insight_card.dart';
@@ -48,12 +49,12 @@ class InsightsScreen extends ConsumerWidget {
             const SliverFillRemaining(
               child: Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32),
+                  padding: EdgeInsets.all(AppSpacing.xxl),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('💡', style: TextStyle(fontSize: 48)),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.sm),
                       Text(
                         'Log more sessions to generate insights.',
                         textAlign: TextAlign.center,

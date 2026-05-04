@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 
 /// 4-week rolling activity heatmap — darker = more sessions that day.
 class ActivityHeatmap extends StatelessWidget {
@@ -22,13 +23,13 @@ class ActivityHeatmap extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Last 4 weeks',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: List.generate(4, (week) {
                 return Expanded(
@@ -46,7 +47,7 @@ class ActivityHeatmap extends StatelessWidget {
                       }
 
                       return Padding(
-                        padding: const EdgeInsets.all(2),
+                        padding: const EdgeInsets.all(AppSpacing.xxxs),
                         child: Container(
                           width: double.infinity,
                           height: 14,
@@ -66,14 +67,14 @@ class ActivityHeatmap extends StatelessWidget {
                 );
               }),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.xs),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 const Text('Less',
                     style:
                         TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xxs),
                 ...List.generate(4, (i) {
                   return Container(
                     width: 10,
@@ -82,11 +83,11 @@ class ActivityHeatmap extends StatelessWidget {
                     decoration: BoxDecoration(
                       color:
                           AppTheme.primary.withValues(alpha: 0.15 + i * 0.25),
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(AppRadii.xxxs),
                     ),
                   );
                 }),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xxs),
                 const Text('More',
                     style:
                         TextStyle(fontSize: 10, color: AppTheme.textSecondary)),

@@ -112,12 +112,12 @@ final appRouter = GoRouter(
 );
 
 class _AppShell extends ConsumerWidget {
-  static const double _navHeight = 72;
-  static const double _navBottomMargin = 14;
-  static const double _navHorizontalMargin = 18;
-  static const double _timerGap = 12;
-  static const double _timerEstimatedHeight = 64;
-  static const double _fabSize = 58;
+  static const double _navHeight = AppSpacing.navHeight;
+  static const double _navBottomMargin = AppSpacing.navBottomMargin;
+  static const double _navHorizontalMargin = AppSpacing.navHorizontalMargin;
+  static const double _timerGap = AppSpacing.timerGap;
+  static const double _timerEstimatedHeight = AppSpacing.timerHeight;
+  static const double _fabSize = AppSpacing.fabSize;
 
   final Widget child;
   const _AppShell({required this.child});
@@ -304,7 +304,7 @@ class _ShellBottomNav extends StatelessWidget {
                       children: [
                         Icon(
                           icon,
-                          size: 20,
+                          size: AppIconSizes.xl,
                           color: iconColor,
                         ),
                         const SizedBox(height: AppSpacing.xs),
@@ -356,7 +356,7 @@ class _AiFab extends StatelessWidget {
         foregroundColor: AppTheme.primary,
         elevation: 0,
         shape: const RoundedRectangleBorder(borderRadius: AppRadii.pill),
-        child: Icon(lucide?.ai ?? LucideIcons.sparkles, size: 18),
+        child: Icon(lucide?.ai ?? LucideIcons.sparkles, size: AppIconSizes.lg),
       ),
     );
   }

@@ -313,7 +313,7 @@ class _TodaySummaryCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpacing.xxxs),
           Text(
             classSummary,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -324,7 +324,7 @@ class _TodaySummaryCard extends StatelessWidget {
                 ),
           ),
           if (classSlots.isNotEmpty || highlightedSlot != null) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: AppSpacing.xxxs),
             Text(
               highlightedSlot == null
                   ? helperLine
@@ -337,7 +337,7 @@ class _TodaySummaryCard extends StatelessWidget {
                   ),
             ),
           ] else ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: AppSpacing.xxxs),
             Text(
               helperLine,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -389,7 +389,7 @@ class _CompactSummaryChip extends StatelessWidget {
           children: [
             if (icon != null) ...[
               Icon(icon, size: 13, color: AppTheme.primary),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.xxs2),
             ],
             Text(
               label,
@@ -425,7 +425,7 @@ class _EmptyPage extends StatelessWidget {
               height: 72,
               decoration: BoxDecoration(
                 color: AppColors.surfaceMuted,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
               ),
               child: const Icon(
                 LucideIcons.calendarHeart,
@@ -448,7 +448,7 @@ class _EmptyPage extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             TextButton.icon(
               onPressed: onAdd,
-              icon: const Icon(LucideIcons.plus, size: 16),
+              icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
               label: const Text('Add class'),
             ),
           ],

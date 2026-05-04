@@ -9,11 +9,11 @@ double shellOverlayBottomPadding(
   double extraSpacing = AppSpacing.sm,
 }) {
   final bottomInset = MediaQuery.paddingOf(context).bottom;
-  const navHeight = 72.0;
-  const navBottomMargin = 14.0;
-  const aiFabSize = 58.0;
-  const timerEstimatedHeight = 64.0;
-  const timerGap = 12.0;
+  const navHeight = AppSpacing.navHeight;
+  const navBottomMargin = AppSpacing.navBottomMargin;
+  const aiFabSize = AppSpacing.fabSize;
+  const timerEstimatedHeight = AppSpacing.timerHeight;
+  const timerGap = AppSpacing.timerGap;
 
   final navReserve = bottomInset + navBottomMargin + navHeight;
   final aiReserve = navReserve + AppSpacing.md + aiFabSize;

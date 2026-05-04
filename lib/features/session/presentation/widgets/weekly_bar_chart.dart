@@ -166,7 +166,7 @@ class _WeeklyInsight extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: color),
+          Icon(icon, size: AppIconSizes.md, color: color),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(

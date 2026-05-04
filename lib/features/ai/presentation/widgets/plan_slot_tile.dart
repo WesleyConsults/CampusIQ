@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_slot_model.dart';
 
 class PlanSlotTile extends StatelessWidget {
@@ -82,7 +83,7 @@ class PlanSlotTile extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSpacing.xxxs),
                 Text(
                   '$durationLabel · $reason',
                   style: const TextStyle(

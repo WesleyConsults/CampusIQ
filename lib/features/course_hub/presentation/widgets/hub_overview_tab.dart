@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
@@ -61,7 +62,7 @@ class HubOverviewTab extends ConsumerWidget {
     final gradeLabel = _gradeLabel(course.expectedScore);
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       children: [
         // ── Course info card ─────────────────────────────────────────
         _InfoCard(
@@ -74,19 +75,19 @@ class HubOverviewTab extends ConsumerWidget {
                 value: '${course.creditHours.toInt()} credit hours'),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.sm),
 
         // ── Score card ───────────────────────────────────────────────
         Card(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Expected Score',
                     style:
                         TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
                     Text(
@@ -96,14 +97,14 @@ class HubOverviewTab extends ConsumerWidget {
                           fontWeight: FontWeight.w800,
                           color: AppTheme.primary),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.sm),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: _gradeColor(course.expectedScore)
                             .withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.md2),
                       ),
                       child: Text(
                         gradeLabel,
@@ -116,20 +117,20 @@ class HubOverviewTab extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.xs),
                 LinearProgressIndicator(
                   value: course.expectedScore / 100,
                   backgroundColor: Colors.grey.shade200,
                   valueColor: AlwaysStoppedAnimation<Color>(
                       _gradeColor(course.expectedScore)),
                   minHeight: 6,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppRadii.xs),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.sm),
 
         // ── CWA contribution ─────────────────────────────────────────
         _InfoCard(
@@ -152,7 +153,7 @@ class HubOverviewTab extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.sm),
 
         // ── Study stats ──────────────────────────────────────────────
         _InfoCard(
@@ -163,13 +164,13 @@ class HubOverviewTab extends ConsumerWidget {
             _InfoRow(label: 'Last studied', value: lastStudiedLabel),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.sm),
 
         // ── Streak mini ──────────────────────────────────────────────
         if (courseStreak != null)
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Row(
                 children: [
                   Container(
@@ -190,7 +191,7 @@ class HubOverviewTab extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,14 +242,14 @@ class _InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title,
                 style:
                     const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm),
             ...children,
           ],
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -102,12 +103,12 @@ class AiMessageBubble extends StatelessWidget {
           children: [
             Container(
               constraints: const BoxConstraints(maxWidth: 300),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: isUser
                     ? Theme.of(context).primaryColor
                     : Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
                 border:
                     !isUser ? Border.all(color: Colors.grey.shade300) : null,
               ),
@@ -118,7 +119,7 @@ class AiMessageBubble extends StatelessWidget {
                     )
                   : _buildAssistantContent(context, message.content),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xxs),
             Text(
               timeStr,
               style: TextStyle(color: Colors.grey[500], fontSize: 12),
@@ -174,7 +175,7 @@ class AiMessageBubble extends StatelessWidget {
         ),
         codeblockDecoration: BoxDecoration(
           color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(AppRadii.xxs),
         ),
       ),
       builders: {

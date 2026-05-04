@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/session/presentation/providers/session_provider.dart';
 import 'package:campusiq/features/session/presentation/widgets/session_tile.dart';
 import 'package:campusiq/features/session/presentation/widgets/weekly_bar_chart.dart';
@@ -29,13 +30,13 @@ class HubSessionsTab extends ConsumerWidget {
         if (courseSessions.isEmpty) {
           return const Center(
             child: Padding(
-              padding: EdgeInsets.all(32),
+              padding: EdgeInsets.all(AppSpacing.xxl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.timer_off_outlined,
                       size: 48, color: AppTheme.textSecondary),
-                  SizedBox(height: 12),
+                  SizedBox(height: AppSpacing.sm),
                   Text(
                     'No sessions yet',
                     style: TextStyle(
@@ -43,7 +44,7 @@ class HubSessionsTab extends ConsumerWidget {
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textSecondary),
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: AppSpacing.xxs),
                   Text(
                     'Start a study session to track your progress.',
                     textAlign: TextAlign.center,
@@ -67,7 +68,7 @@ class HubSessionsTab extends ConsumerWidget {
         );
 
         return ListView.builder(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           itemCount: courseSessions.length + 1,
           itemBuilder: (context, index) {
             if (index == 0) {

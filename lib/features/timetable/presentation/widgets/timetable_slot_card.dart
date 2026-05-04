@@ -33,10 +33,12 @@ class TimetableSlotCard extends StatelessWidget {
     final accent = Color(slot.colorValue);
     final background = Color.lerp(Colors.white, accent, 0.12) ?? Colors.white;
     final borderColor = accent.withValues(alpha: 0.24);
-    final isCompact = height < 64;
-    final showCourseName = height >= 56;
-    final showMeta = height >= 84;
-    final showTimeFooter = height >= 112;
+    final showCourseName =
+        height >= TimetableConstants.minSlotHeightForCourseName;
+    final showMeta = height >= TimetableConstants.minSlotHeightForMeta;
+    final showTimeFooter =
+        height >= TimetableConstants.minSlotHeightForTimeFooter;
+    final isCompact = !showCourseName;
     final secondaryMeta = slot.venue.isNotEmpty ? slot.venue : slot.slotType;
 
     return Positioned(
@@ -64,7 +66,7 @@ class TimetableSlotCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                width: 4,
+                width: AppSpacing.xxs,
                 decoration: BoxDecoration(
                   color: accent,
                   borderRadius: const BorderRadius.horizontal(
@@ -74,7 +76,7 @@ class TimetableSlotCard extends StatelessWidget {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                  padding: const EdgeInsets.all(AppSpacing.xs),
                   child: isCompact
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +92,7 @@ class TimetableSlotCard extends StatelessWidget {
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: AppSpacing.xxxs),
                             Text(
                               slot.startTimeLabel,
                               maxLines: 1,
@@ -117,7 +119,7 @@ class TimetableSlotCard extends StatelessWidget {
                               ),
                             ),
                             if (showCourseName) ...[
-                              const SizedBox(height: 2),
+                              const SizedBox(height: AppSpacing.xxxs),
                               Text(
                                 slot.courseName,
                                 maxLines: showMeta ? 2 : 1,
@@ -130,7 +132,7 @@ class TimetableSlotCard extends StatelessWidget {
                               ),
                             ],
                             if (showMeta) ...[
-                              const SizedBox(height: 4),
+                              const SizedBox(height: AppSpacing.xxs),
                               Text(
                                 secondaryMeta,
                                 maxLines: 1,

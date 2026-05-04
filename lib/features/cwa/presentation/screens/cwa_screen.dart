@@ -86,7 +86,7 @@ class CwaScreen extends ConsumerWidget {
             label: 'Import courses or results',
             child: TextButton.icon(
               onPressed: () => _showImportSheet(context, viewMode),
-              icon: const Icon(LucideIcons.fileUp, size: 18),
+              icon: const Icon(LucideIcons.fileUp, size: AppIconSizes.lg),
               label: const Text('Import'),
               style: TextButton.styleFrom(
                 foregroundColor: AppTheme.primary,
@@ -349,7 +349,7 @@ class _ToggleTab extends StatelessWidget {
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.all(4),
+            margin: const EdgeInsets.all(AppSpacing.xxs),
             decoration: BoxDecoration(
               color: active ? AppTheme.primary : Colors.transparent,
               borderRadius: AppRadii.button,
@@ -432,7 +432,7 @@ class _ImportOptionsSheet extends StatelessWidget {
                   color: AppTheme.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.xxs2),
               const Text(
                 'Choose how you want to bring data into CampusIQ.',
                 style: TextStyle(
@@ -479,7 +479,7 @@ class _ImportOptionTile extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
-              child: Icon(option.icon, color: AppTheme.primary, size: 22),
+              child: Icon(option.icon, color: AppTheme.primary, size: AppIconSizes.xxl),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -495,7 +495,7 @@ class _ImportOptionTile extends StatelessWidget {
             const Icon(
               LucideIcons.chevronRight,
               color: AppTheme.textSecondary,
-              size: 18,
+              size: AppIconSizes.lg,
             ),
           ],
         ),
@@ -531,7 +531,7 @@ class _SupportCard extends StatelessWidget {
               color: AppTheme.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
-            child: Icon(icon, color: AppTheme.primary, size: 20),
+            child: Icon(icon, color: AppTheme.primary, size: AppIconSizes.xl),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
@@ -568,6 +568,9 @@ class _QuickStatsGrid extends StatelessWidget {
 
   const _QuickStatsGrid({required this.items});
 
+  /// Scales with profile — reduce for compact, increase for comfortable.
+  static const double _quickStatCardHeight = 92;
+
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
@@ -578,7 +581,7 @@ class _QuickStatsGrid extends StatelessWidget {
         crossAxisCount: 2,
         mainAxisSpacing: AppSpacing.sm,
         crossAxisSpacing: AppSpacing.sm,
-        mainAxisExtent: 92,
+        mainAxisExtent: _quickStatCardHeight,
       ),
       itemBuilder: (context, index) => _QuickStatCard(item: items[index]),
     );
@@ -618,7 +621,7 @@ class _QuickStatCard extends StatelessWidget {
               color: AppTheme.textSecondary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xxs),
           Text(
             item.value,
             style: const TextStyle(
@@ -661,7 +664,7 @@ class _StateCard extends StatelessWidget {
               color: AppTheme.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppRadii.md),
             ),
-            child: Icon(icon, color: AppTheme.primary, size: 24),
+            child: Icon(icon, color: AppTheme.primary, size: AppIconSizes.xxxl),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
@@ -713,7 +716,7 @@ class _InlineActionButton extends StatelessWidget {
         : Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 16),
+              Icon(icon, size: AppIconSizes.md),
               const SizedBox(width: AppSpacing.xs),
               Text(label),
             ],
@@ -765,7 +768,7 @@ class _BottomCta extends StatelessWidget {
       label: label,
       child: CampusButton(
         onPressed: onPressed,
-        icon: Icon(icon, size: 16),
+        icon: Icon(icon, size: AppIconSizes.md),
         child: Text(label),
       ),
     );
@@ -928,7 +931,7 @@ class _SemesterView extends ConsumerWidget {
                       backgroundColor: Colors.transparent,
                       builder: (_) => const CwaCoachSheet(),
                     ),
-                    icon: const Icon(LucideIcons.sparkles, size: 16),
+                    icon: const Icon(LucideIcons.sparkles, size: AppIconSizes.md),
                     label: const Text('Coach'),
                   ),
                 ),
@@ -1341,7 +1344,7 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                             color: AppTheme.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.xxs),
                         Text(
                           '${widget.semester.courses.length} courses'
                           '${widget.semester.reportedSemesterCwa != null ? ' • Slip: ${widget.semester.reportedSemesterCwa!.toStringAsFixed(2)}' : ''}',
@@ -1374,7 +1377,7 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                   const SizedBox(width: AppSpacing.xs),
                   Icon(
                     _expanded ? Icons.expand_less : Icons.expand_more,
-                    size: 20,
+                    size: AppIconSizes.xl,
                     color: AppTheme.textSecondary,
                   ),
                 ],
@@ -1391,40 +1394,43 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                   AppSpacing.lg,
                   2,
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(c.courseCode,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(c.courseCode,
                               style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: AppTheme.primary,
                                   letterSpacing: 0.4)),
-                          Text(c.courseName,
+                        ),
+                        _ScorePill(mark: c.mark, score: c.score),
+                        const SizedBox(width: AppSpacing.xxs),
+                        _GradePill(grade: c.grade),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxxs),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(c.courseName,
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: AppTheme.textPrimary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis),
-                        ],
-                      ),
+                        ),
+                        Text(
+                          '${c.creditHours.toInt()} cr',
+                          style: const TextStyle(
+                              fontSize: 12, color: AppTheme.textSecondary),
+                        ),
+                      ],
                     ),
-                    Text(
-                      '${c.creditHours.toInt()} cr',
-                      style: const TextStyle(
-                          fontSize: 12, color: AppTheme.textSecondary),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    // Show the actual score used in CWA calculation.
-                    // If mark is null the code falls back to a grade midpoint —
-                    // flag that so the user knows to enter the real mark.
-                    _ScorePill(mark: c.mark, score: c.score),
-                    const SizedBox(width: AppSpacing.xs),
-                    _GradePill(grade: c.grade),
                   ],
                 ),
               ),
@@ -1465,7 +1471,7 @@ class _CurrentCourseRow extends StatelessWidget {
                     letterSpacing: 0.4,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xxs),
                 Text(
                   course.name,
                   style: const TextStyle(
@@ -1548,7 +1554,7 @@ class _ScorePill extends StatelessWidget {
               ),
             ),
             if (isApprox) ...[
-              const SizedBox(width: 2),
+              const SizedBox(width: AppSpacing.xxxs),
               const Icon(Icons.warning_amber_rounded,
                   size: 10, color: Color(0xFFF57F17)),
             ],
@@ -1578,11 +1584,14 @@ class _GradePill extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _colors[grade.toUpperCase()] ?? AppTheme.textSecondary;
     return Container(
-      width: 28,
-      height: 24,
+      constraints: const BoxConstraints(minWidth: 28),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xxs,
+        vertical: AppSpacing.xxxs,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(AppRadii.xs),
       ),
       alignment: Alignment.center,
       child: Text(

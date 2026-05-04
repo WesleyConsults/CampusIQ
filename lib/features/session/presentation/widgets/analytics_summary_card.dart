@@ -169,7 +169,7 @@ class _MetricTile extends StatelessWidget {
         children: [
           Icon(
             icon,
-            size: 16,
+            size: AppIconSizes.md,
             color: emphasize ? AppTheme.success : AppTheme.textSecondary,
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -179,7 +179,6 @@ class _MetricTile extends StatelessWidget {
               Text(
                 value,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontSize: 20,
                       color:
                           emphasize ? AppTheme.success : AppTheme.textPrimary,
                       fontWeight: FontWeight.w700,

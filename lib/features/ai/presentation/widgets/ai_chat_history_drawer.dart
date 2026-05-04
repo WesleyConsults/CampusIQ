@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_chat_provider.dart';
 
@@ -48,7 +49,7 @@ class AiChatHistoryDrawer extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           const Divider(height: 1),
           Expanded(
             child: chatState.sessions.isEmpty
@@ -82,7 +83,7 @@ class AiChatHistoryDrawer extends ConsumerWidget {
                           }
                         },
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 20),
+                          icon: const Icon(Icons.delete_outline, size: AppIconSizes.xl),
                           onPressed: () async {
                             final confirm = await showDialog<bool>(
                               context: context,

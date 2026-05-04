@@ -130,7 +130,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Icon(Icons.home_rounded, color: Colors.white, size: 32),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.sm),
                     Text(
                       'CampusIQ',
                       style: TextStyle(
@@ -139,7 +139,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xxs),
                     Text(
                       'Today is your home base',
                       style: TextStyle(color: Colors.white70, fontSize: 13),
@@ -200,7 +200,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             icon: const Icon(
               LucideIcons.bell,
               color: AppTheme.textPrimary,
-              size: 20,
+              size: AppIconSizes.xl,
             ),
             tooltip: 'Notification settings',
             onPressed: () => context.push('/settings'),
@@ -220,7 +220,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                     onPressed: _generatePlan,
                     icon: const Icon(
                       LucideIcons.sparkles,
-                      size: 16,
+                      size: AppIconSizes.md,
                       color: AppTheme.primary,
                     ),
                     label: const Text(
@@ -394,7 +394,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                       : '$pendingTasks task${pendingTasks == 1 ? '' : 's'} still need attention.',
                   trailing: OutlinedButton.icon(
                     onPressed: _showAddSheet,
-                    icon: const Icon(LucideIcons.plus, size: 16),
+                    icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
                     label: const Text('Add task'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(0, 40),
@@ -614,7 +614,7 @@ class _PageHeader extends StatelessWidget {
         ),
         TextButton.icon(
           onPressed: onAddTask,
-          icon: const Icon(LucideIcons.plus, size: 16),
+          icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
           label: const Text('Add task'),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(
@@ -707,7 +707,7 @@ class _HeroCard extends StatelessWidget {
                     vertical: AppSpacing.md,
                   ),
                 ),
-                icon: const Icon(LucideIcons.play, size: 16),
+                icon: const Icon(LucideIcons.play, size: AppIconSizes.md),
                 label: Text(content.actionLabel!),
               ),
             ],
@@ -877,7 +877,7 @@ class _ActiveSessionResumeCard extends StatelessWidget {
                     color: AppTheme.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xxs),
                 Text(
                   'Started at ${DateFormat('h:mm a').format(session.startTime)}',
                   style: const TextStyle(
@@ -891,7 +891,7 @@ class _ActiveSessionResumeCard extends StatelessWidget {
           const SizedBox(width: AppSpacing.md),
           FilledButton.icon(
             onPressed: () => context.go('/sessions'),
-            icon: const Icon(LucideIcons.play, size: 16),
+            icon: const Icon(LucideIcons.play, size: AppIconSizes.md),
             label: const Text('Resume'),
           ),
         ],
@@ -1062,7 +1062,7 @@ class _SectionCard extends StatelessWidget {
                   color: AppColors.surfaceMuted,
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
-                child: Icon(icon, size: 18, color: AppTheme.primary),
+                child: Icon(icon, size: AppIconSizes.lg, color: AppTheme.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -1077,7 +1077,7 @@ class _SectionCard extends StatelessWidget {
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xxs),
                     Text(
                       subtitle,
                       style: const TextStyle(
@@ -1158,6 +1158,8 @@ class _SummaryRow extends StatelessWidget {
   final String title;
   final String subtitle;
 
+  static const double _iconBoxSize = 36;
+
   const _SummaryRow({
     required this.icon,
     required this.title,
@@ -1170,13 +1172,13 @@ class _SummaryRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 36,
-          height: 36,
+          width: _iconBoxSize,
+          height: _iconBoxSize,
           decoration: BoxDecoration(
             color: AppColors.surfaceMuted,
             borderRadius: BorderRadius.circular(AppRadii.sm),
           ),
-          child: Icon(icon, size: 16, color: AppTheme.primary),
+          child: Icon(icon, size: AppIconSizes.md, color: AppTheme.primary),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
@@ -1191,7 +1193,7 @@ class _SummaryRow extends StatelessWidget {
                   color: AppTheme.textPrimary,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.xxxs),
               Text(
                 subtitle,
                 style: const TextStyle(
@@ -1245,7 +1247,7 @@ class _InfoRow extends StatelessWidget {
                   color: AppTheme.textPrimary,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.xxxs),
               Text(
                 subtitle,
                 style: const TextStyle(
@@ -1338,7 +1340,7 @@ class _EmptyPlanCard extends StatelessWidget {
                       )
                     : CampusButton(
                         onPressed: onGenerate,
-                        icon: const Icon(LucideIcons.sparkles, size: 16),
+                        icon: const Icon(LucideIcons.sparkles, size: AppIconSizes.md),
                         child: const Text('Generate plan'),
                       ),
               ),
@@ -1346,7 +1348,7 @@ class _EmptyPlanCard extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: onAddTask,
-                  icon: const Icon(LucideIcons.plus, size: 16),
+                  icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
                   label: const Text('Add task'),
                 ),
               ),
@@ -1379,7 +1381,7 @@ class _TaskGroupHeader extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: AppTheme.primary),
+            Icon(icon, size: AppIconSizes.md, color: AppTheme.primary),
             const SizedBox(width: AppSpacing.xs),
             Text(
               label,

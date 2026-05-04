@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_import_provider.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/import_slot_review_tile.dart';
 
@@ -98,7 +99,7 @@ class _IdleBody extends StatelessWidget {
                 color: AppTheme.primary,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.lg),
             const Text(
               'Import from Image',
               style: TextStyle(
@@ -107,7 +108,7 @@ class _IdleBody extends StatelessWidget {
                 color: AppTheme.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.xs),
             const Text(
               'Take a photo or upload an image of your university timetable and we\'ll fill it in automatically.',
               textAlign: TextAlign.center,
@@ -124,12 +125,12 @@ class _IdleBody extends StatelessWidget {
                   backgroundColor: AppTheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -141,7 +142,7 @@ class _IdleBody extends StatelessWidget {
                   side: const BorderSide(color: AppTheme.primary),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                 ),
               ),
@@ -167,7 +168,7 @@ class _LoadingBody extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const CircularProgressIndicator(),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             message,
             style: const TextStyle(
@@ -265,7 +266,7 @@ class _ReviewBody extends StatelessWidget {
                           AppTheme.textSecondary.withValues(alpha: 0.3),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                       ),
                     ),
                     child: Text(
@@ -296,7 +297,7 @@ class _ReviewBody extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       CircularProgressIndicator(),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppSpacing.md),
                       Text('Saving slots…'),
                     ],
                   ),
@@ -326,7 +327,7 @@ class _ErrorBody extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 56, color: AppTheme.warning),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
@@ -335,7 +336,7 @@ class _ErrorBody extends StatelessWidget {
                 color: AppTheme.textPrimary,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
             FilledButton.icon(
               icon: const Icon(Icons.refresh),
               label: const Text('Try Again'),
@@ -345,7 +346,7 @@ class _ErrorBody extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
               ),
             ),

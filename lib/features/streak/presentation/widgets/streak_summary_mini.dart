@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
 /// Compact streak summary — used as a row of three streak types.
@@ -25,14 +26,14 @@ class StreakSummaryRow extends StatelessWidget {
                 label: 'Study',
                 days: study.currentStreak,
                 isAlive: study.isAlive)),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.xs),
         Expanded(
             child: _MiniCard(
                 emoji: '🎓',
                 label: 'Attendance',
                 days: attendance.currentStreak,
                 isAlive: attendance.isAlive)),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.xs),
         Expanded(
             child: _MiniCard(
                 emoji: '📚',
@@ -63,13 +64,13 @@ class _MiniCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
         border: Border.all(color: Colors.grey.shade200, width: 0.5),
       ),
       child: Column(
         children: [
           Text(emoji, style: const TextStyle(fontSize: 20)),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xxs),
           Text(
             '$days${label == 'Courses' ? '' : 'd'}',
             style: TextStyle(

@@ -36,6 +36,12 @@ class AppTheme {
         color: textPrimary,
         height: 1.2,
       ),
+      headlineSmall: GoogleFonts.inter(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: textPrimary,
+        height: 1.2,
+      ),
       titleLarge: GoogleFonts.inter(
         fontSize: 20,
         fontWeight: FontWeight.w700,
@@ -71,6 +77,24 @@ class AppTheme {
         fontWeight: FontWeight.w600,
         color: textPrimary,
         height: 1.2,
+      ),
+      labelSmall: GoogleFonts.inter(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: textSecondary,
+        height: 1.2,
+      ),
+      bodySmall: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: textSecondary,
+        height: 1.35,
+      ),
+      titleSmall: GoogleFonts.inter(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: textPrimary,
+        height: 1.3,
       ),
     );
 
@@ -121,7 +145,7 @@ class AppTheme {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: baseTextTheme.titleLarge,
-        iconTheme: const IconThemeData(color: textPrimary, size: 22),
+        iconTheme: const IconThemeData(color: textPrimary, size: AppIconSizes.xxl),
       ),
       cardTheme: const CardThemeData(
         color: cardBg,

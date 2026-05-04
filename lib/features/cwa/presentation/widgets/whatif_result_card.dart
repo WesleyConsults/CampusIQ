@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 
 class WhatifResultCard extends StatelessWidget {
   final String? explanation;
@@ -20,10 +21,10 @@ class WhatifResultCard extends StatelessWidget {
           ? const SizedBox.shrink()
           : Container(
               margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: isLimit ? Colors.orange.shade50 : Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadii.xs2),
                 border: Border.all(
                   color:
                       isLimit ? Colors.orange.shade200 : Colors.blue.shade100,
@@ -37,7 +38,7 @@ class WhatifResultCard extends StatelessWidget {
                     size: 14,
                     color: isLimit ? Colors.orange.shade600 : AppTheme.primary,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.xs),
                   Expanded(
                     child: Text(
                       text,

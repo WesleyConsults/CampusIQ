@@ -44,7 +44,7 @@ class SessionTile extends StatelessWidget {
             height: 46,
             decoration: BoxDecoration(
               color: AppColors.surfaceMuted,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppSpacing.md),
             ),
             alignment: Alignment.center,
             child: Text(
@@ -122,7 +122,7 @@ class SessionTile extends StatelessWidget {
             onPressed: onDelete,
             icon: const Icon(
               LucideIcons.trash2,
-              size: 18,
+              size: AppIconSizes.lg,
               color: AppTheme.textSecondary,
             ),
             tooltip: 'Delete session',

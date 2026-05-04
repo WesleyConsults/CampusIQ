@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/features/settings/presentation/providers/settings_provider.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
@@ -24,7 +25,7 @@ class SettingsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (prefs) => ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           children: [
             // ── Notification toggles ────────────────────────────────────
             Card(
@@ -97,7 +98,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.lg),
 
             // ── Daily reminder time ──────────────────────────────────────
             Card(
@@ -127,12 +128,12 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xxl),
 
             // ── DEV ONLY: premium toggle ──────────────────────────────────
             if (kDebugMode) _DevPremiumTile(),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xxl),
 
             // ── Cancel all button ────────────────────────────────────────
             OutlinedButton.icon(

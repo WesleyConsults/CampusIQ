@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
@@ -106,7 +107,7 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppRadii.xxxs),
                   ),
                 ),
               ),
@@ -114,7 +115,7 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                 'Add Task',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
 
               // Label
               TextFormField(
@@ -125,7 +126,7 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                     ? 'Label is required'
                     : null,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.sm2),
 
               // Task type
               DropdownButtonFormField<String>(
@@ -142,7 +143,7 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                   if (v != null) setState(() => _taskType = v);
                 },
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.sm2),
 
               // Course picker (optional)
               if (courses.isNotEmpty)
@@ -163,7 +164,7 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                   ],
                   onChanged: (v) => setState(() => _selectedCourse = v),
                 ),
-              if (courses.isNotEmpty) const SizedBox(height: 14),
+              if (courses.isNotEmpty) const SizedBox(height: AppSpacing.sm2),
 
               // Duration
               TextFormField(
@@ -178,12 +179,12 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                   return null;
                 },
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.sm2),
 
               // Start time (optional)
               InkWell(
                 onTap: _pickTime,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadii.xs2),
                 child: InputDecorator(
                   decoration: const InputDecoration(
                     labelText: 'Start time (optional)',
@@ -201,7 +202,7 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xl),
 
               // Save button
               SizedBox(
@@ -213,7 +214,7 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(AppRadii.xs2)),
                   ),
                   child: _saving
                       ? const SizedBox(

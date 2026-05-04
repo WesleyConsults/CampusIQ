@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
@@ -398,7 +399,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                         mode: _mode,
                         onChanged: _onModeChanged,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       Text(
                         helperText,
                         style: const TextStyle(
@@ -407,7 +408,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                           height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       _SectionCard(
                         title: 'Semester Information',
                         child: Column(
@@ -419,7 +420,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                               onChanged: (value) =>
                                   setState(() => _academicYear = value),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.sm),
                             _DropdownField(
                               label: 'Semester',
                               value: _semesterLabel,
@@ -427,7 +428,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                               onChanged: (value) =>
                                   setState(() => _semesterLabel = value),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.sm),
                             _DropdownField(
                               label: 'Programme',
                               value: _programme,
@@ -435,7 +436,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                               onChanged: (value) =>
                                   setState(() => _programme = value),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.sm),
                             _DropdownField(
                               label: 'Level',
                               value: _level,
@@ -446,7 +447,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       _SectionCard(
                         title: 'Courses',
                         child: Column(
@@ -462,9 +463,9 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                                 onRemove: () => _removeCourse(course),
                               ),
                               if (course != _courses.last)
-                                const SizedBox(height: 12),
+                                const SizedBox(height: AppSpacing.sm),
                             ],
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.sm),
                             Align(
                               alignment: Alignment.centerLeft,
                               child: OutlinedButton.icon(
@@ -474,7 +475,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                               ),
                             ),
                             if (_showDuplicateWarning) ...[
-                              const SizedBox(height: 8),
+                              const SizedBox(height: AppSpacing.xs),
                               const Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
@@ -489,7 +490,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       _SectionCard(
                         title: 'Live Summary',
                         child: Wrap(
@@ -552,7 +553,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Semantics(
                               button: true,
@@ -620,7 +621,7 @@ class _ModeSwitcher extends StatelessWidget {
       height: 44,
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadii.sm2),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.65),
         ),
@@ -668,7 +669,7 @@ class _ModeTab extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             decoration: BoxDecoration(
               color: active ? colorScheme.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppRadii.sm2),
             ),
             alignment: Alignment.center,
             child: Text(
@@ -701,7 +702,7 @@ class _SectionCard extends StatelessWidget {
     return Card(
       color: colorScheme.surface,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -713,7 +714,7 @@ class _SectionCard extends StatelessWidget {
                 color: AppTheme.textPrimary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             child,
           ],
         ),
@@ -782,10 +783,10 @@ class _CourseEditorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadii.sm2),
         border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
@@ -808,7 +809,7 @@ class _CourseEditorCard extends StatelessWidget {
                   label: 'Remove course',
                   child: TextButton.icon(
                     onPressed: onRemove,
-                    icon: const Icon(Icons.delete_outline, size: 18),
+                    icon: const Icon(Icons.delete_outline, size: AppIconSizes.lg),
                     label: const Text('Remove Course'),
                     style: TextButton.styleFrom(
                       foregroundColor: AppTheme.warning,
@@ -818,7 +819,7 @@ class _CourseEditorCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           TextFormField(
             controller: course.codeController,
             decoration: InputDecoration(
@@ -836,7 +837,7 @@ class _CourseEditorCard extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           TextFormField(
             controller: course.titleController,
             decoration: const InputDecoration(labelText: 'Course Title'),
@@ -848,7 +849,7 @@ class _CourseEditorCard extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           TextFormField(
             controller: course.creditsController,
             decoration: const InputDecoration(labelText: 'Credits'),
@@ -868,7 +869,7 @@ class _CourseEditorCard extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           TextFormField(
             controller: course.scoreController,
             decoration: const InputDecoration(labelText: 'Expected Score (%)'),
@@ -910,7 +911,7 @@ class _SummaryStat extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -922,7 +923,7 @@ class _SummaryStat extends StatelessWidget {
               color: AppTheme.textSecondary,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.xxs2),
           Text(
             value,
             style: const TextStyle(

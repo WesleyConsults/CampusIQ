@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/ai/presentation/providers/weekly_review_provider.dart';
 
 class WeeklyReviewBanner extends ConsumerWidget {
@@ -25,15 +26,15 @@ class WeeklyReviewBanner extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: AppTheme.primary.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           border: Border(
             left: BorderSide(color: AppTheme.primary, width: 3),
           ),
         ),
         child: Row(
           children: [
-            const Icon(Icons.auto_awesome, size: 18, color: AppTheme.primary),
-            const SizedBox(width: 10),
+            const Icon(Icons.auto_awesome, size: AppIconSizes.lg, color: AppTheme.primary),
+            const SizedBox(width: AppSpacing.xs2),
             const Expanded(
               child: Text(
                 'Your week in review is ready \u2192',

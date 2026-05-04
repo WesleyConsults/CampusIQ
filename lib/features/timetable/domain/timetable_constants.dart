@@ -26,18 +26,27 @@ class TimetableConstants {
   static const int gridEndMinutes = gridEndHour * 60;
   static const int totalGridMinutes = gridEndMinutes - gridStartMinutes; // 840
 
-  /// Height in pixels per minute in the grid
+  // ── Grid density ──────────────────────────────────────────────────────────
+  /// Height in pixels per minute. Primary scale knob for timetable density.
+  /// 1.0 = default, ~0.8 = compact, ~1.2 = comfortable.
   static const double pixelsPerMinute = 1.0;
+
+  /// Minimum slot height before a slot collapses to compact-only view.
+  static const double minSlotHeightForCourseName = 56;
+  /// Minimum slot height for showing venue / slot type metadata.
+  static const double minSlotHeightForMeta = 84;
+  /// Minimum slot height for showing the time-range footer.
+  static const double minSlotHeightForTimeFooter = 112;
 
   /// Total grid height in pixels
   static const double totalGridHeight =
-      totalGridMinutes * pixelsPerMinute; // 1260px
+      totalGridMinutes * pixelsPerMinute; // 840px
 
   /// Width of the time label column on the left
   static const double timeLabelWidth = 52.0;
 
   /// Height of each hour row label
-  static const double hourRowHeight = 60.0 * pixelsPerMinute; // 90px
+  static const double hourRowHeight = 60.0 * pixelsPerMinute; // 60px at default scale
 
   /// Slot type options
   static const List<String> slotTypes = ['Lecture', 'Practical', 'Tutorial'];

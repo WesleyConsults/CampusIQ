@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/review/domain/weekly_review_data.dart';
 import 'package:campusiq/features/review/presentation/providers/review_provider.dart';
 
@@ -131,7 +132,7 @@ class _ReviewContent extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
               color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(AppRadii.xxxs),
             ),
           ),
         ),
@@ -141,13 +142,13 @@ class _ReviewContent extends StatelessWidget {
           '📊 Week in Review',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
         ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xxs),
         Text(
           _dateRange(),
           style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
         ).animate().fadeIn(delay: 80.ms, duration: 300.ms),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.lg),
 
         // ── Stats row ─────────────────────────────────────────────────────
         Row(
@@ -157,13 +158,13 @@ class _ReviewContent extends StatelessWidget {
               value: _formatMinutes(data.totalMinutesStudied),
               icon: '📚',
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.xs2),
             _StatCard(
               label: 'Best day',
               value: data.bestDay ?? '—',
               icon: '📅',
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.xs2),
             _StatCard(
               label: 'Streak',
               value: '${data.currentStreak}d',
@@ -176,14 +177,14 @@ class _ReviewContent extends StatelessWidget {
               delay: 150.ms,
             ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.lg),
 
         // ── Highlights ────────────────────────────────────────────────────
         const Text(
           'Highlights',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ).animate().fadeIn(delay: 220.ms, duration: 300.ms),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppSpacing.xs2),
 
         if (data.mostStudiedCourse == null && data.mostNeglectedCourse == null)
           const Padding(
@@ -201,7 +202,7 @@ class _ReviewContent extends StatelessWidget {
               value: data.mostStudiedCourse!,
               color: AppTheme.success,
             ).animate().fadeIn(delay: 280.ms, duration: 300.ms),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           if (data.mostNeglectedCourse != null)
             _HighlightChip(
               emoji: '⚠️',
@@ -211,14 +212,14 @@ class _ReviewContent extends StatelessWidget {
             ).animate().fadeIn(delay: 340.ms, duration: 300.ms),
         ],
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xl),
 
         // ── Reflection ────────────────────────────────────────────────────
         const Text(
           'What will you improve next week?',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ).animate().fadeIn(delay: 400.ms, duration: 300.ms),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppSpacing.xs2),
 
         TextField(
           controller: noteController,
@@ -235,7 +236,7 @@ class _ReviewContent extends StatelessWidget {
         ).animate().fadeIn(delay: 460.ms, duration: 300.ms),
 
         if (!readOnly) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -245,7 +246,7 @@ class _ReviewContent extends StatelessWidget {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(AppRadii.xs2)),
               ),
               child: saving
                   ? const SizedBox(
@@ -260,7 +261,7 @@ class _ReviewContent extends StatelessWidget {
           ).animate().fadeIn(delay: 500.ms, duration: 300.ms),
         ],
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
 
         // ── Close ─────────────────────────────────────────────────────────
         TextButton(
@@ -290,13 +291,13 @@ class _StatCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           border: Border.all(color: Colors.grey.shade200, width: 0.5),
         ),
         child: Column(
           children: [
             Text(icon, style: const TextStyle(fontSize: 24)),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xxs),
             Text(
               value,
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
@@ -334,13 +335,13 @@ class _HighlightChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadii.xs2),
         border: Border.all(color: color.withAlpha(60), width: 0.5),
       ),
       child: Row(
         children: [
           Text(emoji, style: const TextStyle(fontSize: 18)),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.xs2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

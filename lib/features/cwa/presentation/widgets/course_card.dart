@@ -115,7 +115,7 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                           ],
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppSpacing.xxs2),
                       Text(
                         widget.course.name,
                         maxLines: 2,
@@ -163,8 +163,8 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                           value: 'workspace',
                           child: Row(
                             children: [
-                              Icon(LucideIcons.bookOpen, size: 16),
-                              SizedBox(width: 8),
+                              Icon(LucideIcons.bookOpen, size: AppIconSizes.md),
+                              SizedBox(width: AppSpacing.xs),
                               Text('Open Workspace'),
                             ],
                           ),
@@ -206,7 +206,7 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                   onPressed: () => setState(() => _expanded = !_expanded),
                   icon: Icon(
                     _expanded ? Icons.expand_less : Icons.tune,
-                    size: 16,
+                    size: AppIconSizes.md,
                   ),
                   label:
                       Text(_expanded ? 'Hide score control' : 'Adjust score'),
@@ -363,7 +363,7 @@ class _CompactInfoBlock extends StatelessWidget {
               color: AppTheme.textSecondary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xxs),
           Text(
             value,
             style: TextStyle(

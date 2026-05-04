@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/domain/registration_course_import.dart';
 import 'package:campusiq/features/cwa/presentation/providers/registration_slip_import_provider.dart';
 
@@ -97,11 +98,11 @@ class _IdleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           const Text(
             'Import your courses',
             style: TextStyle(
@@ -110,26 +111,26 @@ class _IdleView extends StatelessWidget {
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           const Text(
             'Upload your course registration slip and the AI will extract your courses automatically.',
             style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.xxl),
           _OptionTile(
             icon: Icons.camera_alt_outlined,
             label: 'Take a photo',
             subtitle: 'Use your camera to capture the slip',
             onTap: notifier.pickFromCamera,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           _OptionTile(
             icon: Icons.photo_library_outlined,
             label: 'Upload image from gallery',
             subtitle: 'Pick a JPG or PNG from your photos',
             onTap: notifier.pickFromGallery,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           _OptionTile(
             icon: Icons.picture_as_pdf_outlined,
             label: 'Choose a PDF',
@@ -144,7 +145,7 @@ class _IdleView extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
         ],
       ),
     );
@@ -168,9 +169,9 @@ class _OptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadii.sm2),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadii.sm2),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
@@ -181,11 +182,11 @@ class _OptionTile extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: AppTheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
-                child: Icon(icon, color: AppTheme.primary, size: 24),
+                child: Icon(icon, color: AppTheme.primary, size: AppIconSizes.xxxl),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,7 +197,7 @@ class _OptionTile extends StatelessWidget {
                           fontSize: 15,
                           color: AppTheme.textPrimary,
                         )),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.xxxs),
                     Text(subtitle,
                         style: const TextStyle(
                           fontSize: 13,
@@ -206,7 +207,7 @@ class _OptionTile extends StatelessWidget {
                 ),
               ),
               const Icon(Icons.chevron_right,
-                  color: AppTheme.textSecondary, size: 20),
+                  color: AppTheme.textSecondary, size: AppIconSizes.xl),
             ],
           ),
         ),
@@ -228,7 +229,7 @@ class _LoadingView extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const CircularProgressIndicator(),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             message,
             style: const TextStyle(
@@ -292,14 +293,14 @@ class _ReviewView extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.xs),
 
         // Course list
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
             itemCount: state.courses.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs2),
             itemBuilder: (context, i) {
               final course = state.courses[i];
               final isSelected = state.selectedIndexes.contains(i);
@@ -334,7 +335,7 @@ class _ReviewView extends StatelessWidget {
                   disabledBackgroundColor: AppTheme.textSecondary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                 ),
               ),
@@ -363,10 +364,10 @@ class _ReviewCourseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: isSelected ? Colors.white : AppTheme.surface,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadii.sm),
       elevation: isSelected ? 1 : 0,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
         onTap: onToggle,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -378,10 +379,10 @@ class _ReviewCourseCard extends StatelessWidget {
                 onChanged: (_) => onToggle(),
                 activeColor: AppTheme.primary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppRadii.xs),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.xxs2),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +396,7 @@ class _ReviewCourseCard extends StatelessWidget {
                         letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.xxxs),
                     Text(
                       course.courseName,
                       style: const TextStyle(
@@ -404,7 +405,7 @@ class _ReviewCourseCard extends StatelessWidget {
                       ),
                     ),
                     if (isSelected) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpacing.xs2),
                       Row(
                         children: [
                           const Text(
@@ -484,11 +485,11 @@ class _StepButton extends StatelessWidget {
           color: onTap != null
               ? AppTheme.primary.withValues(alpha: 0.1)
               : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(AppRadii.xxs),
         ),
         child: Icon(
           icon,
-          size: 16,
+          size: AppIconSizes.md,
           color: onTap != null ? AppTheme.primary : AppTheme.textSecondary,
         ),
       ),
@@ -508,7 +509,7 @@ class _DoneView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -519,9 +520,9 @@ class _DoneView extends StatelessWidget {
                 color: AppTheme.success,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check, color: Colors.white, size: 36),
+              child: const Icon(Icons.check, color: Colors.white, size: AppIconSizes.status),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               '$count course${count == 1 ? '' : 's'} added to CWA',
               style: const TextStyle(
@@ -530,13 +531,13 @@ class _DoneView extends StatelessWidget {
                 color: AppTheme.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.xs),
             const Text(
               'You can update expected scores and credit hours from the CWA screen.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xxl),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -546,7 +547,7 @@ class _DoneView extends StatelessWidget {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                 ),
                 child: const Text('Done'),
@@ -570,12 +571,12 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(AppSpacing.xxl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.error_outline, size: 56, color: AppTheme.warning),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           const Text(
             'Something went wrong',
             style: TextStyle(
@@ -584,7 +585,7 @@ class _ErrorView extends StatelessWidget {
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.xs2),
           Text(
             message,
             textAlign: TextAlign.center,
@@ -603,7 +604,7 @@ class _ErrorView extends StatelessWidget {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 13),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadii.xs2),
               ),
             ),
           ),

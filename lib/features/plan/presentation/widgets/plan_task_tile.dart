@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 import 'package:campusiq/features/plan/presentation/providers/plan_provider.dart';
@@ -59,10 +60,10 @@ class PlanTaskTile extends ConsumerWidget {
               margin: const EdgeInsets.symmetric(vertical: 4),
               decoration: BoxDecoration(
                 color: accent,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppRadii.xs),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.xs),
             // Check icon
             GestureDetector(
               onTap: () => repo?.markComplete(task.id, !done),
@@ -72,11 +73,11 @@ class PlanTaskTile extends ConsumerWidget {
                   done ? Icons.check_circle : Icons.radio_button_unchecked,
                   color:
                       done ? const Color(0xFF1D9E75) : const Color(0xFF6B7280),
-                  size: 24,
+                  size: AppIconSizes.xxxl,
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.sm),
             // Label + chips
             Expanded(
               child: Padding(
@@ -101,13 +102,13 @@ class PlanTaskTile extends ConsumerWidget {
                       ),
                     ),
                     if (task.isManual) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xxs),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppRadii.xs),
                         ),
                         child: const Text(
                           'custom',

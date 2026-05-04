@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
@@ -30,7 +31,7 @@ class PastSemestersScreen extends ConsumerWidget {
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             itemCount: semesters.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
             itemBuilder: (context, i) => _SemesterCard(
               semester: semesters[i],
               onDelete: () => _confirmDelete(context, ref, semesters[i]),
@@ -129,13 +130,13 @@ class _SemesterCardState extends State<_SemesterCard> {
 
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadii.sm2),
       elevation: 1,
       child: Column(
         children: [
           // Header row
           InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadii.sm2),
             onTap: () => setState(() => _expanded = !_expanded),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
@@ -153,7 +154,7 @@ class _SemesterCardState extends State<_SemesterCard> {
                             color: AppTheme.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppSpacing.xxxs),
                         Text(
                           '$courseCount course${courseCount == 1 ? '' : 's'}' +
                               (widget.semester.reportedSemesterCwa != null
@@ -172,7 +173,7 @@ class _SemesterCardState extends State<_SemesterCard> {
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppTheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppRadii.md2),
                     ),
                     child: Text(
                       cwa.toStringAsFixed(1),
@@ -183,10 +184,10 @@ class _SemesterCardState extends State<_SemesterCard> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xxs),
                   IconButton(
                     icon: const Icon(Icons.delete_outline,
-                        size: 20, color: AppTheme.textSecondary),
+                        size: AppIconSizes.xl, color: AppTheme.textSecondary),
                     onPressed: widget.onDelete,
                     tooltip: 'Remove',
                   ),
@@ -207,7 +208,7 @@ class _SemesterCardState extends State<_SemesterCard> {
                 semesterId: widget.semester.id,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.xs),
           ],
         ],
       ),
@@ -315,7 +316,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
             ),
           ),
           // Mark input
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.xs),
           _MarkInput(
             mark: _mark,
             onChanged: (val) {
@@ -323,7 +324,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
               _save();
             },
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.xs),
           // Credits stepper (compact)
           Row(
             children: [
@@ -363,13 +364,13 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
               ),
             ],
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.xs2),
           // Grade dropdown
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(AppRadii.xxs),
               border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
             child: DropdownButtonHideUnderline(
@@ -425,7 +426,7 @@ class _MiniButton extends StatelessWidget {
         color: enabled
             ? AppTheme.primary.withValues(alpha: 0.1)
             : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppRadii.xs),
       ),
       child: Icon(
         icon,
@@ -494,7 +495,7 @@ class _MarkInputState extends State<_MarkInput> {
           filled: true,
           fillColor: AppTheme.primary.withValues(alpha: 0.1),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppRadii.xxs),
             borderSide: BorderSide.none,
           ),
           hintText: '-',
@@ -518,13 +519,13 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: const EdgeInsets.all(AppSpacing.xxxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.history_edu_outlined,
                 size: 64, color: AppTheme.textSecondary),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             const Text(
               'No past results yet',
               style: TextStyle(
@@ -533,7 +534,7 @@ class _EmptyState extends StatelessWidget {
                 color: AppTheme.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.xs),
             const Text(
               'Import your previous semester result slips to unlock your true cumulative CWA.',
               textAlign: TextAlign.center,
@@ -550,7 +551,7 @@ class _EmptyState extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 13),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
               ),
             ),

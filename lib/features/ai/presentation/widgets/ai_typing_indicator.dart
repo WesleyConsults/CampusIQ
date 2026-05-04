@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class AiTypingIndicator extends StatelessWidget {
@@ -11,19 +12,19 @@ class AiTypingIndicator extends StatelessWidget {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
             border: Border.all(color: Colors.grey.shade300, width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _AnimatedDot(delay: 0),
-              SizedBox(width: 4),
+              SizedBox(width: AppSpacing.xxs),
               _AnimatedDot(delay: 100),
-              SizedBox(width: 4),
+              SizedBox(width: AppSpacing.xxs),
               _AnimatedDot(delay: 200),
             ],
           ),

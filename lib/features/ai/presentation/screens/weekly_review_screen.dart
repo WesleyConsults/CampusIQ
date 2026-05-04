@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/features/ai/presentation/providers/weekly_review_provider.dart';
 import 'package:campusiq/features/ai/presentation/widgets/review_section_card.dart';
@@ -71,7 +72,7 @@ class WeeklyReviewScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.md),
             Text('Generating your weekly review...',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
           ],
@@ -82,12 +83,12 @@ class WeeklyReviewScreen extends ConsumerWidget {
     if (reviewState.error != null && reviewState.review == null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               Text(reviewState.error!,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppTheme.textSecondary)),
@@ -100,16 +101,16 @@ class WeeklyReviewScreen extends ConsumerWidget {
     if (!reviewState.hasReviewThisWeek || reviewState.review == null) {
       return const Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
+          padding: EdgeInsets.all(AppSpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.calendar_month_outlined,
                   size: 56, color: AppTheme.textSecondary),
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.md),
               Text('No review yet',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.xs),
               Text(
                 'Your weekly review generates each Monday. Check back then.',
                 textAlign: TextAlign.center,
@@ -168,14 +169,14 @@ class WeeklyReviewScreen extends ConsumerWidget {
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                       child: TextButton.icon(
                         onPressed: () => context.push('/ai'),
-                        icon: const Icon(Icons.arrow_forward, size: 16),
+                        icon: const Icon(Icons.arrow_forward, size: AppIconSizes.md),
                         label: const Text('Ask about this review'),
                         style: TextButton.styleFrom(
                             foregroundColor: AppTheme.primary),
                       ),
                     ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
           ],
         );
       },

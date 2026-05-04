@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
 class NextMilestoneCard extends StatelessWidget {
@@ -13,11 +14,11 @@ class NextMilestoneCard extends StatelessWidget {
     if (next == null) {
       return const Card(
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.md),
           child: Row(
             children: [
               Text('💯', style: TextStyle(fontSize: 28)),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   'All milestones unlocked. You are a legend.',
@@ -34,14 +35,14 @@ class NextMilestoneCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Text(next.emoji, style: const TextStyle(fontSize: 28)),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,9 +68,9 @@ class NextMilestoneCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm),
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppRadii.xs),
               child: LinearProgressIndicator(
                 value: progress.clamp(0, 1),
                 minHeight: 8,
@@ -78,7 +79,7 @@ class NextMilestoneCard extends StatelessWidget {
                     const AlwaysStoppedAnimation<Color>(AppTheme.accent),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.xxs2),
             Text(
               '${streak.longestStreak} / ${next.days} days',
               style:

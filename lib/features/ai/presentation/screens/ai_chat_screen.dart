@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_chat_provider.dart';
@@ -53,7 +54,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.notifications_outlined, size: 36),
+        icon: const Icon(Icons.notifications_outlined, size: AppIconSizes.status),
         title: const Text('Stay on track with CampusIQ',
             textAlign: TextAlign.center),
         content: const Text(
@@ -127,12 +128,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         title: Row(
           children: [
             const Text('AI Coach'),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.xs),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: Colors.amber.shade100,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppRadii.xs),
               ),
               child: Text(
                 'BETA',
@@ -215,7 +216,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   error: (_, __) => const SizedBox.shrink(),
                 ),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     border: Border(
                       top: BorderSide(color: Colors.grey.shade200),
@@ -230,7 +231,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                           decoration: InputDecoration(
                             hintText: 'Ask me anything...',
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppSpacing.xs),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -241,7 +242,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                           maxLines: 3,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.xs),
                       IconButton(
                         onPressed: chatState.isLoading ? null : _handleSend,
                         icon: const Icon(Icons.send),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/milestone.dart';
 
 class MilestoneGrid extends StatelessWidget {
@@ -16,7 +17,7 @@ class MilestoneGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -33,7 +34,7 @@ class MilestoneGrid extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -87,7 +88,7 @@ class _BadgeTile extends StatelessWidget {
           color: isUnlocked
               ? AppTheme.accent.withValues(alpha: 0.1)
               : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           border: Border.all(
             color: isUnlocked
                 ? AppTheme.accent.withValues(alpha: 0.4)
@@ -104,7 +105,7 @@ class _BadgeTile extends StatelessWidget {
               isUnlocked ? milestone.emoji : '🔒',
               style: const TextStyle(fontSize: 24),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xxs),
             Text(
               '${milestone.days}d',
               style: TextStyle(
@@ -114,7 +115,7 @@ class _BadgeTile extends StatelessWidget {
               ),
             ),
             if (isNext) ...[
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.xxxs),
               Text(
                 '${milestone.days - currentStreak} left',
                 style:

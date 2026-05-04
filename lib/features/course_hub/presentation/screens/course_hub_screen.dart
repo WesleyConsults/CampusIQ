@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
@@ -33,20 +34,20 @@ class CourseHubScreen extends ConsumerWidget {
         if (course == null) {
           return Scaffold(
             appBar: AppBar(title: Text(courseCode)),
-            body: const Center(
+            body: Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.school_outlined, size: 48, color: Colors.grey),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.sm),
                     Text(
                       'Course not found',
                       style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          Theme.of(context).textTheme.titleMedium,
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xxs),
                     Text(
                       'Add this course in the CWA tab first.',
                       textAlign: TextAlign.center,
@@ -89,15 +90,15 @@ class CourseHubScreen extends ConsumerWidget {
                 tabAlignment: TabAlignment.start,
                 tabs: [
                   Tab(
-                    icon: Icon(Icons.dashboard_outlined, size: 18),
+                    icon: Icon(Icons.dashboard_outlined, size: AppIconSizes.lg),
                     text: 'Overview',
                   ),
                   Tab(
-                    icon: Icon(Icons.timer_outlined, size: 18),
+                    icon: Icon(Icons.timer_outlined, size: AppIconSizes.lg),
                     text: 'Sessions',
                   ),
                   Tab(
-                    icon: Icon(Icons.notes_outlined, size: 18),
+                    icon: Icon(Icons.notes_outlined, size: AppIconSizes.lg),
                     text: 'Notes',
                   ),
                 ],

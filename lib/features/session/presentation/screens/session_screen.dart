@@ -156,14 +156,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               backgroundColor: Colors.transparent,
               builder: (_) => const WeeklyReviewSheet(),
             ),
-            icon: const Icon(LucideIcons.calendarRange, size: 16),
+            icon: const Icon(LucideIcons.calendarRange, size: AppIconSizes.md),
             label: const Text('This Week'),
           ),
           const StreakActionButton(),
           IconButton(
             onPressed: () => context.push('/insights'),
             tooltip: 'Insights',
-            icon: const Icon(LucideIcons.sparkles, size: 18),
+            icon: const Icon(LucideIcons.sparkles, size: AppIconSizes.lg),
           ),
           const SizedBox(width: AppSpacing.xs),
         ],
@@ -551,7 +551,7 @@ class _StartCardState extends State<_StartCard> {
                   _showPomodoroCustomizer
                       ? LucideIcons.chevronUp
                       : LucideIcons.slidersHorizontal,
-                  size: 16,
+                  size: AppIconSizes.md,
                 ),
                 label: Text(
                   _showPomodoroCustomizer
@@ -643,7 +643,7 @@ class _StartCardState extends State<_StartCard> {
               ),
               icon: Icon(
                 _isPomodoroMode ? LucideIcons.timerReset : LucideIcons.play,
-                size: 18,
+                size: AppIconSizes.lg,
               ),
               child: Text(_isPomodoroMode ? 'Start Pomodoro' : 'Start Session'),
             ),
@@ -730,7 +730,7 @@ class _ModeSegment extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 16,
+              size: AppIconSizes.md,
               color: selected ? Colors.white : AppTheme.textSecondary,
             ),
             const SizedBox(width: AppSpacing.xs),
@@ -756,6 +756,8 @@ class _DurationStepper extends StatelessWidget {
   final int minutes;
   final VoidCallback onDecrement;
   final VoidCallback onIncrement;
+
+  static const double _durationDisplayWidth = 82;
 
   const _DurationStepper({
     required this.label,
@@ -788,7 +790,7 @@ class _DurationStepper extends StatelessWidget {
             onPressed: onDecrement,
           ),
           SizedBox(
-            width: 82,
+            width: _durationDisplayWidth,
             child: Text(
               '$minutes min',
               textAlign: TextAlign.center,
@@ -811,6 +813,8 @@ class _StepperButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
 
+  static const double _size = 34;
+
   const _StepperButton({
     required this.icon,
     required this.onPressed,
@@ -822,14 +826,14 @@ class _StepperButton extends StatelessWidget {
       onTap: onPressed,
       borderRadius: AppRadii.pill,
       child: Container(
-        width: 34,
-        height: 34,
+        width: _size,
+        height: _size,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: AppRadii.pill,
           border: Border.all(color: AppColors.border),
         ),
-        child: Icon(icon, size: 16, color: AppTheme.primary),
+        child: Icon(icon, size: AppIconSizes.md, color: AppTheme.primary),
       ),
     );
   }
@@ -849,12 +853,12 @@ class _HistoryEmptyState extends StatelessWidget {
             height: 52,
             decoration: BoxDecoration(
               color: AppColors.goldSoft,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppRadii.md),
             ),
             child: const Icon(
               LucideIcons.clock3,
               color: AppTheme.primary,
-              size: 24,
+              size: AppIconSizes.xxxl,
             ),
           ),
           const SizedBox(height: AppSpacing.md),

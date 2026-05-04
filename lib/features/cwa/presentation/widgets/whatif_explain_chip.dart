@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 
 class WhatifExplainChip extends StatelessWidget {
   final bool isLoading;
@@ -23,7 +24,7 @@ class WhatifExplainChip extends StatelessWidget {
             color: isLoading
                 ? Colors.grey.shade100
                 : AppTheme.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.md2),
             border: Border.all(
               color: isLoading
                   ? Colors.grey.shade300

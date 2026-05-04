@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class PlanProgressBar extends StatelessWidget {
@@ -54,10 +55,10 @@ class PlanProgressBar extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.xxs2),
             // Progress track
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSpacing.xs),
               child: Stack(
                 children: [
                   Container(
@@ -72,7 +73,7 @@ class PlanProgressBar extends StatelessWidget {
                     width: constraints.maxWidth * progress,
                     decoration: BoxDecoration(
                       color: color,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppSpacing.xs),
                     ),
                   ),
                 ],

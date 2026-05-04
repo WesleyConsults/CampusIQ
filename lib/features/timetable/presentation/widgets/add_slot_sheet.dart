@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
@@ -137,9 +138,9 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
               Text(
                 widget.existing == null ? 'Add Class' : 'Edit Class',
                 style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    Theme.of(context).textTheme.headlineSmall,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
 
               // Fast selection from CWA courses
               ref.watch(coursesProvider).when(
@@ -153,7 +154,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                             style: TextStyle(
                                 fontSize: 13, color: AppTheme.textSecondary),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.xs),
                           SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: Row(
@@ -176,7 +177,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                               }).toList(),
                             ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: AppSpacing.lg),
                         ],
                       );
                     },
@@ -197,7 +198,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                 ),
                 onChanged: (v) => setState(() => _dayIndex = v!),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
 
               TextFormField(
                 controller: _codeController,
@@ -207,14 +208,14 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Course name'),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               TextFormField(
                 controller: _venueController,
                 decoration:
@@ -222,7 +223,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
 
               // Time pickers
               Row(
@@ -234,7 +235,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                       onTap: () => _pickTime(true),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _TimeTile(
                       label: 'End time',
@@ -244,7 +245,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
 
               // Slot type
               DropdownButtonFormField<String>(
@@ -256,7 +257,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                     .toList(),
                 onChanged: (v) => setState(() => _slotType = v!),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
 
               SizedBox(
                 width: double.infinity,
@@ -267,7 +268,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(AppRadii.xs2)),
                   ),
                   child: Text(
                       widget.existing == null ? 'Add Class' : 'Save Changes'),
@@ -297,7 +298,7 @@ class _TimeTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadii.xs2),
           border: Border.all(color: Colors.grey.shade300),
         ),
         child: Column(
@@ -306,10 +307,10 @@ class _TimeTile extends StatelessWidget {
             Text(label,
                 style: const TextStyle(
                     fontSize: 11, color: AppTheme.textSecondary)),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xxs),
             Text(value,
                 style:
-                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                    Theme.of(context).textTheme.titleSmall),
           ],
         ),
       ),

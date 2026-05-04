@@ -137,7 +137,7 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
             const Icon(
               LucideIcons.chevronRight,
               color: AppTheme.textSecondary,
-              size: 16,
+              size: AppIconSizes.md,
             ),
           ],
         ),

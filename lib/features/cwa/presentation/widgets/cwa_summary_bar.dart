@@ -73,7 +73,7 @@ class CwaSummaryBar extends StatelessWidget {
                 letterSpacing: 0.3,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.xxs2),
           ],
           Text(
             heroValue,
@@ -84,7 +84,7 @@ class CwaSummaryBar extends StatelessWidget {
               height: 0.94,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xxs),
           Text(
             label,
             style: const TextStyle(
@@ -123,7 +123,7 @@ class CwaSummaryBar extends StatelessWidget {
               minHeight: 6,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.xxs2),
           Text(
             insight,
             style: const TextStyle(
@@ -153,7 +153,7 @@ class _DetailStat extends StatelessWidget {
       children: [
         Text(label,
             style: const TextStyle(color: Colors.white54, fontSize: 11)),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xxs),
         Text(value,
             style: TextStyle(
                 color: valueColor, fontSize: 16, fontWeight: FontWeight.w700)),

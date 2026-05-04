@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_chat_provider.dart';
@@ -98,7 +99,7 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
                 height: 4,
                 decoration: BoxDecoration(
                   color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppRadii.xxxs),
                 ),
               ),
               // Header
@@ -108,8 +109,8 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
                 child: Row(
                   children: [
                     const Icon(Icons.auto_awesome,
-                        size: 20, color: AppTheme.primary),
-                    const SizedBox(width: 8),
+                        size: AppIconSizes.xl, color: AppTheme.primary),
+                    const SizedBox(width: AppSpacing.xs),
                     const Text(
                       'AI Coach',
                       style:
@@ -118,7 +119,7 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
                     const Spacer(),
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close, size: 20),
+                      icon: const Icon(Icons.close, size: AppIconSizes.xl),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -130,7 +131,7 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: _buildContent(context),
                 ),
               ),
@@ -159,13 +160,13 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xl),
           Icon(Icons.error_outline, size: 40, color: Colors.grey.shade400),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           Text(_error!,
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppTheme.textSecondary)),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           TextButton(
             onPressed: () {
               setState(() {
@@ -189,7 +190,7 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
             style: const TextStyle(
                 fontSize: 15, height: 1.6, color: AppTheme.textPrimary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xl),
           TextButton.icon(
             onPressed: () async {
               final nav = Navigator.of(context);
@@ -201,7 +202,7 @@ class _CwaCoachSheetState extends ConsumerState<CwaCoachSheet> {
               nav.pop();
               router.push('/ai');
             },
-            icon: const Icon(Icons.arrow_forward, size: 16),
+            icon: const Icon(Icons.arrow_forward, size: AppIconSizes.md),
             label: const Text('Ask a follow-up'),
             style: TextButton.styleFrom(foregroundColor: AppTheme.primary),
           ),

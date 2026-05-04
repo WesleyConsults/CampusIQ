@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
 class CourseStreakList extends StatelessWidget {
@@ -19,13 +20,13 @@ class CourseStreakList extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Per-course streaks',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm),
             ...sorted.map((entry) => _CourseStreakRow(
                   courseCode: entry.key,
                   result: entry.value,
@@ -68,7 +69,7 @@ class _CourseStreakRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +95,7 @@ class _CourseStreakRow extends StatelessWidget {
                 isAlive ? '🔥' : '💤',
                 style: const TextStyle(fontSize: 16),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppSpacing.xxs),
               Text(
                 '${result.currentStreak}d',
                 style: TextStyle(

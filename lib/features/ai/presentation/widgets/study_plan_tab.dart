@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/features/ai/presentation/providers/study_plan_provider.dart';
 import 'package:campusiq/features/ai/presentation/widgets/plan_day_card.dart';
@@ -49,7 +50,7 @@ class StudyPlanTab extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 CircularProgressIndicator(),
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.md),
                 Text(
                   'Reading your timetable and sessions...',
                   style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
@@ -63,17 +64,17 @@ class StudyPlanTab extends ConsumerWidget {
         if (planState.error != null) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.error_outline,
                       size: 48, color: Colors.grey.shade400),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(planState.error!,
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: AppTheme.textSecondary)),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.md),
                   ElevatedButton(
                     onPressed: () =>
                         ref.read(studyPlanProvider.notifier).generatePlan(),
@@ -89,25 +90,25 @@ class StudyPlanTab extends ConsumerWidget {
         if (!planState.isGenerated) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(AppSpacing.xxl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.calendar_month_outlined,
                       size: 56, color: AppTheme.textSecondary),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.md),
                   const Text(
                     'No study plan yet',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.xs),
                   const Text(
                     'Generate a personalised 7-day plan based on your timetable and courses.',
                     textAlign: TextAlign.center,
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.xl),
                   ElevatedButton.icon(
                     onPressed: () =>
                         ref.read(studyPlanProvider.notifier).generatePlan(),
@@ -119,7 +120,7 @@ class StudyPlanTab extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 24, vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(AppRadii.xs2)),
                     ),
                   ),
                 ],
@@ -167,7 +168,7 @@ class StudyPlanTab extends ConsumerWidget {
                 child: OutlinedButton.icon(
                   onPressed: () =>
                       ref.read(studyPlanProvider.notifier).generatePlan(),
-                  icon: const Icon(Icons.refresh, size: 16),
+                  icon: const Icon(Icons.refresh, size: AppIconSizes.md),
                   label: const Text('Regenerate Plan'),
                 ),
               ),

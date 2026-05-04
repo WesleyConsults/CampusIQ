@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_slot_model.dart';
 import 'package:campusiq/features/ai/presentation/widgets/plan_slot_tile.dart';
 
@@ -14,7 +15,7 @@ class PlanDayCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.sm2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -26,7 +27,7 @@ class PlanDayCard extends StatelessWidget {
                 color: AppTheme.primary,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.xxs2),
             if (slots.isEmpty)
               const Text(
                 'Rest day — no free blocks available',
