@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
+import 'package:campusiq/shared/widgets/campus_modal_action_row.dart';
+import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
 
 class AddSlotSheet extends ConsumerStatefulWidget {
   final int dayIndex;
@@ -55,9 +59,8 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
       _dayIndex = existing.dayIndex;
     } else {
       _startMinutes = widget.prefillStartMinutes ??
-          TimetableConstants.gridStartMinutes + 120; // 8AM default
-      _endMinutes =
-          widget.prefillEndMinutes ?? _startMinutes + 120; // 2hr default
+          TimetableConstants.gridStartMinutes + 120;
+      _endMinutes = widget.prefillEndMinutes ?? _startMinutes + 120;
       _slotType = TimetableConstants.slotTypes.first;
       _dayIndex = widget.dayIndex;
     }
@@ -77,14 +80,13 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
         TimeOfDay(hour: currentMinutes ~/ 60, minute: currentMinutes % 60);
     final picked = await showTimePicker(context: context, initialTime: initial);
     if (picked == null) return;
+
     int total = picked.hour * 60 + picked.minute;
-    // Auto-promote sub-grid times (before 6 AM) to PM only when the picker
-    // opened in AM mode. If the picker opened in PM the user explicitly
-    // switched to AM — honour that choice.
     final openedInAm = currentMinutes < 12 * 60;
     if (total < TimetableConstants.gridStartMinutes && openedInAm) {
       total += 12 * 60;
     }
+
     setState(() {
       if (isStart) {
         _startMinutes = total;
@@ -121,161 +123,190 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.existing == null ? 'Add Class' : 'Edit Class',
-                style:
-                    Theme.of(context).textTheme.headlineSmall,
+    final isEditing = widget.existing != null;
+    final isPrefilled =
+        !isEditing &&
+        widget.prefillStartMinutes != null &&
+        widget.prefillEndMinutes != null;
+
+    return Form(
+      key: _formKey,
+      child: CampusModalSheet(
+        title: isEditing ? 'Edit Class' : 'Add Class',
+        subtitle: isPrefilled
+            ? 'You opened a free block, so the time is already prefilled.'
+            : 'Add the class details so your timetable stays calm and easy to scan.',
+        leading: const _ModalIcon(),
+        scrollable: true,
+        maxHeightFactor: 0.94,
+        bottomBar: CampusModalActionRow(
+          primaryLabel: isEditing ? 'Save Changes' : 'Add Class',
+          onPrimaryPressed: _submit,
+          secondaryLabel: 'Cancel',
+          onSecondaryPressed: () => Navigator.of(context).pop(),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isPrefilled) ...[
+              _PrefillNotice(
+                startLabel: TimetableConstants.minutesToLabel(_startMinutes),
+                endLabel: TimetableConstants.minutesToLabel(_endMinutes),
               ),
               const SizedBox(height: AppSpacing.lg),
+            ],
+            ref.watch(coursesProvider).when(
+                  data: (courses) {
+                    if (courses.isEmpty) return const SizedBox.shrink();
 
-              // Fast selection from CWA courses
-              ref.watch(coursesProvider).when(
-                    data: (courses) {
-                      if (courses.isEmpty) return const SizedBox.shrink();
-                      return Column(
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceMuted,
+                        borderRadius: AppRadii.button,
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Select from My Courses:',
-                            style: TextStyle(
-                                fontSize: 13, color: AppTheme.textSecondary),
+                          Text(
+                            'Quick fill from your CWA courses',
+                            style: Theme.of(context).textTheme.titleSmall,
                           ),
-                          const SizedBox(height: AppSpacing.xs),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: courses.map((course) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: ActionChip(
-                                    label: Text(course.code),
-                                    backgroundColor:
-                                        AppTheme.primary.withValues(alpha: 0.1),
-                                    side: BorderSide.none,
-                                    onPressed: () {
-                                      setState(() {
-                                        _codeController.text = course.code;
-                                        _nameController.text = course.name;
-                                      });
-                                    },
-                                  ),
-                                );
-                              }).toList(),
-                            ),
+                          const SizedBox(height: AppSpacing.xxs),
+                          Text(
+                            'Tap a course to prefill the code and title.',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
                           ),
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.sm),
+                          Wrap(
+                            spacing: AppSpacing.xs,
+                            runSpacing: AppSpacing.xs,
+                            children: courses.map((course) {
+                              return ActionChip(
+                                label: Text(course.code),
+                                avatar: const Icon(
+                                  LucideIcons.bookOpen,
+                                  size: AppIconSizes.sm,
+                                  color: AppTheme.primary,
+                                ),
+                                backgroundColor: AppColors.surface,
+                                side: const BorderSide(color: AppColors.border),
+                                labelStyle: Theme.of(context)
+                                    .textTheme
+                                    .labelMedium
+                                    ?.copyWith(color: AppTheme.primary),
+                                onPressed: () {
+                                  setState(() {
+                                    _codeController.text = course.code;
+                                    _nameController.text = course.name;
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
                         ],
-                      );
-                    },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-
-              // Day selector
-              DropdownButtonFormField<int>(
-                key: ValueKey(_dayIndex),
-                initialValue: _dayIndex,
-                decoration: const InputDecoration(labelText: 'Day'),
-                items: List.generate(
-                  TimetableConstants.dayFullLabels.length,
-                  (i) => DropdownMenuItem(
-                      value: i,
-                      child: Text(TimetableConstants.dayFullLabels[i])),
+                      ),
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
                 ),
-                onChanged: (v) => setState(() => _dayIndex = v!),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-
-              TextFormField(
-                controller: _codeController,
-                decoration: const InputDecoration(
-                    labelText: 'Course code (e.g. COE 456)'),
-                textCapitalization: TextCapitalization.characters,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Course name'),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextFormField(
-                controller: _venueController,
-                decoration:
-                    const InputDecoration(labelText: 'Venue (e.g. Hall 3)'),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Time pickers
-              Row(
-                children: [
-                  Expanded(
-                    child: _TimeTile(
-                      label: 'Start time',
-                      value: TimetableConstants.minutesToLabel(_startMinutes),
-                      onTap: () => _pickTime(true),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: _TimeTile(
-                      label: 'End time',
-                      value: TimetableConstants.minutesToLabel(_endMinutes),
-                      onTap: () => _pickTime(false),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Slot type
-              DropdownButtonFormField<String>(
-                key: ValueKey(_slotType),
-                initialValue: _slotType,
-                decoration: const InputDecoration(labelText: 'Type'),
-                items: TimetableConstants.slotTypes
-                    .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                    .toList(),
-                onChanged: (v) => setState(() => _slotType = v!),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadii.xs2)),
-                  ),
-                  child: Text(
-                      widget.existing == null ? 'Add Class' : 'Save Changes'),
+            const SizedBox(height: AppSpacing.lg),
+            DropdownButtonFormField<int>(
+              key: ValueKey(_dayIndex),
+              initialValue: _dayIndex,
+              decoration: const InputDecoration(labelText: 'Day'),
+              items: List.generate(
+                TimetableConstants.dayFullLabels.length,
+                (i) => DropdownMenuItem(
+                  value: i,
+                  child: Text(TimetableConstants.dayFullLabels[i]),
                 ),
               ),
-            ],
-          ),
+              onChanged: (v) => setState(() => _dayIndex = v!),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextFormField(
+              controller: _codeController,
+              decoration: const InputDecoration(
+                labelText: 'Course code',
+                hintText: 'COE 456',
+              ),
+              textCapitalization: TextCapitalization.characters,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Course name',
+                hintText: 'Signals and Systems',
+              ),
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextFormField(
+              controller: _venueController,
+              decoration: const InputDecoration(
+                labelText: 'Venue',
+                hintText: 'Hall 3',
+              ),
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Time',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Pick the start and end time for this class block.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _TimeTile(
+                    label: 'Start time',
+                    value: TimetableConstants.minutesToLabel(_startMinutes),
+                    icon: LucideIcons.clock3,
+                    onTap: () => _pickTime(true),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _TimeTile(
+                    label: 'End time',
+                    value: TimetableConstants.minutesToLabel(_endMinutes),
+                    icon: LucideIcons.clock4,
+                    onTap: () => _pickTime(false),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _DurationBadge(minutes: _endMinutes - _startMinutes),
+            const SizedBox(height: AppSpacing.md),
+            DropdownButtonFormField<String>(
+              key: ValueKey(_slotType),
+              initialValue: _slotType,
+              decoration: const InputDecoration(labelText: 'Type'),
+              items: TimetableConstants.slotTypes
+                  .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                  .toList(),
+              onChanged: (v) => setState(() => _slotType = v!),
+            ),
+          ],
         ),
       ),
     );
@@ -285,34 +316,149 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
 class _TimeTile extends StatelessWidget {
   final String label;
   final String value;
+  final IconData icon;
   final VoidCallback onTap;
 
-  const _TimeTile(
-      {required this.label, required this.value, required this.onTap});
+  const _TimeTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppRadii.xs2),
-          border: Border.all(color: Colors.grey.shade300),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadii.button,
+        child: Ink(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceMuted,
+            borderRadius: AppRadii.button,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: AppIconSizes.md,
+                    color: AppTheme.textSecondary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(value, style: Theme.of(context).textTheme.titleSmall),
+            ],
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 11, color: AppTheme.textSecondary)),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(value,
-                style:
-                    Theme.of(context).textTheme.titleSmall),
-          ],
-        ),
+      ),
+    );
+  }
+}
+
+class _ModalIcon extends StatelessWidget {
+  const _ModalIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: AppColors.goldSoft,
+        borderRadius: AppRadii.button,
+      ),
+      child: const Icon(
+        LucideIcons.calendarPlus2,
+        color: AppTheme.primary,
+        size: AppIconSizes.xl,
+      ),
+    );
+  }
+}
+
+class _PrefillNotice extends StatelessWidget {
+  final String startLabel;
+  final String endLabel;
+
+  const _PrefillNotice({
+    required this.startLabel,
+    required this.endLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.goldSoft,
+        borderRadius: AppRadii.button,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            LucideIcons.sparkles,
+            size: AppIconSizes.md,
+            color: AppTheme.primary,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'Free block detected from $startLabel to $endLabel. We kept that timing ready for you.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.primary,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DurationBadge extends StatelessWidget {
+  final int minutes;
+
+  const _DurationBadge({required this.minutes});
+
+  @override
+  Widget build(BuildContext context) {
+    final hours = minutes / 60;
+    final hasFraction = minutes % 60 != 0;
+    final label = hasFraction
+        ? '${hours.toStringAsFixed(1)} hr session'
+        : '${hours.toStringAsFixed(0)} hr session';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: AppRadii.pill,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: AppTheme.primary,
+            ),
       ),
     );
   }

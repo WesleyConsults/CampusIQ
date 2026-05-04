@@ -67,8 +67,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final picked = await showModalBottomSheet<PickedCourse>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: AppRadii.sheet),
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => const CoursePickerSheet(),
     );
 
@@ -509,17 +509,17 @@ class _StartCardState extends State<_StartCard> {
             children: _isPomodoroMode
                 ? [
                     CampusChip(
-                      label: '${_focusMinutes} min focus',
+                      label: '$_focusMinutes min focus',
                       icon: LucideIcons.timer,
                       backgroundColor: AppColors.goldSoft,
                     ),
                     CampusChip(
-                      label: '${_shortBreakMinutes} min break',
+                      label: '$_shortBreakMinutes min break',
                       icon: LucideIcons.coffee,
                       backgroundColor: AppColors.surfaceMuted,
                     ),
                     CampusChip(
-                      label: '${_longBreakMinutes} min long break',
+                      label: '$_longBreakMinutes min long break',
                       icon: LucideIcons.moonStar,
                       backgroundColor: AppColors.surfaceMuted,
                     ),
