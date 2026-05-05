@@ -83,8 +83,9 @@ Strict three-layer structure per feature:
   - `Academic pulse` summary in a 2-column metric grid
   - `Today at a glance` summary rows
   - `Progress` section with the plan progress bar
-  - lower-priority detail cards for classes, free blocks, and task groups
+  - `Today's plan` task groups with a single visible `Add task` action
 - The earlier `Suggested focus` section was removed during refinement; the Today screen now flows directly from hero card into academic summary content.
+- The earlier `Today in detail` block was also removed so timetable specifics live in the `Table` tab instead of competing with the Home screen's core actions.
 - Bottom-safe spacing on Today was refined so lower Home content can scroll fully above the floating shell nav.
 - Long plan-task labels now wrap to 2 lines and ellipsize instead of overflowing into the time/duration column.
 

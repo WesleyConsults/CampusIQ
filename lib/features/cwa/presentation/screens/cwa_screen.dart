@@ -899,40 +899,6 @@ class _SemesterView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.xs,
-                  AppSpacing.xl,
-                  0,
-                ),
-                child: _SupportCard(
-                  icon: LucideIcons.fileUp,
-                  title: 'Import courses',
-                  subtitle:
-                      'Scan your registration slip or add courses manually without rebuilding this semester from scratch.',
-                  actions: [
-                    _InlineActionButton(
-                      label: 'Import',
-                      icon: LucideIcons.fileUp,
-                      onPressed: () => Navigator.of(context, rootNavigator: true).push(
-                        MaterialPageRoute(
-                          builder: (_) => const RegistrationSlipImportScreen(),
-                        ),
-                      ),
-                    ),
-                    _InlineActionButton(
-                      label: 'Add manually',
-                      primary: false,
-                      icon: LucideIcons.plus,
-                      onPressed: () =>
-                          context.push('/cwa/manual-entry?mode=semester'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
                   AppSpacing.lg,
                   AppSpacing.xl,
                   0,
@@ -950,7 +916,8 @@ class _SemesterView extends ConsumerWidget {
                       backgroundColor: Colors.transparent,
                       builder: (_) => const CwaCoachSheet(),
                     ),
-                    icon: const Icon(LucideIcons.sparkles, size: AppIconSizes.md),
+                    icon:
+                        const Icon(LucideIcons.sparkles, size: AppIconSizes.md),
                     label: const Text('Coach'),
                   ),
                 ),
@@ -1167,7 +1134,8 @@ class _CumulativeView extends ConsumerWidget {
                     _InlineActionButton(
                       label: 'Import',
                       icon: LucideIcons.fileUp,
-                      onPressed: () => Navigator.of(context, rootNavigator: true).push(
+                      onPressed: () =>
+                          Navigator.of(context, rootNavigator: true).push(
                         MaterialPageRoute(
                           builder: (_) => const ResultSlipImportScreen(),
                         ),
@@ -1194,7 +1162,8 @@ class _CumulativeView extends ConsumerWidget {
                     action: _InlineActionButton(
                       label: 'Import Results',
                       icon: LucideIcons.fileUp,
-                      onPressed: () => Navigator.of(context, rootNavigator: true).push(
+                      onPressed: () =>
+                          Navigator.of(context, rootNavigator: true).push(
                         MaterialPageRoute(
                           builder: (_) => const ResultSlipImportScreen(),
                         ),

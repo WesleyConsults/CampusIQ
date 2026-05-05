@@ -25,6 +25,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+enum _PlanOverflowAction { regenerate }
+
 class PlanScreen extends ConsumerStatefulWidget {
   const PlanScreen({super.key});
 
@@ -53,10 +55,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => const AddManualTaskSheet(),
     );
   }
@@ -205,46 +205,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             tooltip: 'Notification settings',
             onPressed: () => context.push('/settings'),
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: _isGenerating
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppTheme.primary,
-                    ),
-                  )
-                : OutlinedButton.icon(
-                    onPressed: _generatePlan,
-                    icon: const Icon(
-                      LucideIcons.sparkles,
-                      size: AppIconSizes.md,
-                      color: AppTheme.primary,
-                    ),
-                    label: const Text(
-                      'Generate',
-                      style: TextStyle(
-                        color: AppTheme.primary,
-                        fontSize: 12,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppTheme.border),
-                      foregroundColor: AppTheme.primary,
-                      backgroundColor: AppColors.surface.withValues(alpha: 0.8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      minimumSize: Size.zero,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: AppRadii.button,
-                      ),
-                    ),
-                  ),
-          ),
         ],
       ),
       body: tasksAsync.when(
@@ -335,7 +295,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 _PageHeader(
                   greeting: greeting,
                   dateLabel: dateLabel,
-                  onAddTask: _showAddSheet,
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 _HeroCard(content: heroContent),
@@ -377,33 +336,69 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                   _ActiveSessionResumeCard(session: activeSession),
                 ],
                 const SizedBox(height: AppSpacing.xl),
-                const CampusSectionHeader(
-                  title: 'Today in detail',
-                  subtitle:
-                      'The rest of your schedule stays here when you need specifics.',
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _TodayClassesCard(slots: todaySlots),
-                const SizedBox(height: AppSpacing.md),
-                _FreeBlocksCard(freeBlocks: freeBlocks),
-                const SizedBox(height: AppSpacing.xl),
                 CampusSectionHeader(
                   title: 'Today\'s plan',
                   subtitle: pendingTasks == 0
                       ? 'Everything here is either complete or ready when you are.'
                       : '$pendingTasks task${pendingTasks == 1 ? '' : 's'} still need attention.',
-                  trailing: OutlinedButton.icon(
-                    onPressed: _showAddSheet,
-                    icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
-                    label: const Text('Add task'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 40),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                    ),
-                  ),
+                  trailing: tasks.isEmpty
+                      ? null
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: _showAddSheet,
+                              icon: const Icon(
+                                LucideIcons.plus,
+                                size: AppIconSizes.md,
+                              ),
+                              label: const Text('Add task'),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 40),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
+                                  vertical: AppSpacing.sm,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            _isGenerating
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppTheme.primary,
+                                    ),
+                                  )
+                                : PopupMenuButton<_PlanOverflowAction>(
+                                    tooltip: 'More plan actions',
+                                    icon: const Icon(LucideIcons.ellipsis),
+                                    onSelected: (action) {
+                                      if (action ==
+                                          _PlanOverflowAction.regenerate) {
+                                        _generatePlan();
+                                      }
+                                    },
+                                    itemBuilder: (context) => const [
+                                      PopupMenuItem(
+                                        value: _PlanOverflowAction.regenerate,
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              LucideIcons.sparkles,
+                                              size: AppIconSizes.md,
+                                              color: AppTheme.primary,
+                                            ),
+                                            SizedBox(width: AppSpacing.sm),
+                                            Text('Regenerate plan'),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ],
+                        ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 if (tasks.isEmpty)
@@ -579,51 +574,29 @@ class _DrawerItem extends StatelessWidget {
 class _PageHeader extends StatelessWidget {
   final String greeting;
   final String dateLabel;
-  final VoidCallback onAddTask;
 
   const _PageHeader({
     required this.greeting,
     required this.dateLabel,
-    required this.onAddTask,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                greeting,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppTheme.primary,
-                    ),
+        Text(
+          greeting,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: AppTheme.primary,
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                dateLabel,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
-              ),
-            ],
-          ),
         ),
-        TextButton.icon(
-          onPressed: onAddTask,
-          icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
-          label: const Text('Add task'),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          dateLabel,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
         ),
       ],
     );
@@ -948,90 +921,6 @@ class _ProgressOverviewCard extends StatelessWidget {
   }
 }
 
-class _TodayClassesCard extends StatelessWidget {
-  final List<TimetableSlotModel> slots;
-
-  const _TodayClassesCard({required this.slots});
-
-  @override
-  Widget build(BuildContext context) {
-    if (slots.isEmpty) {
-      return const _SectionCard(
-        icon: LucideIcons.calendarDays,
-        title: 'Classes',
-        subtitle: 'No timetable entries were found for today.',
-        child: _MutedBodyText(
-          'Your schedule is open, so you can decide how much structure you want.',
-        ),
-      );
-    }
-
-    return _SectionCard(
-      icon: LucideIcons.calendarDays,
-      title: 'Classes',
-      subtitle:
-          '${slots.length} class${slots.length == 1 ? '' : 'es'} scheduled today',
-      child: Column(
-        children: [
-          for (var i = 0; i < slots.take(3).length; i++) ...[
-            _InfoRow(
-              icon: LucideIcons.bookOpen,
-              title: slots[i].courseCode,
-              subtitle:
-                  '${slots[i].startTimeLabel} - ${slots[i].endTimeLabel} • ${slots[i].venue}',
-            ),
-            if (i != slots.take(3).length - 1)
-              const Divider(height: 16, color: AppColors.divider),
-          ],
-          if (slots.length > 3) ...[
-            const SizedBox(height: AppSpacing.sm),
-            const _MutedBodyText('Open Table for the full timetable.'),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _FreeBlocksCard extends StatelessWidget {
-  final List<FreeBlock> freeBlocks;
-
-  const _FreeBlocksCard({required this.freeBlocks});
-
-  @override
-  Widget build(BuildContext context) {
-    if (freeBlocks.isEmpty) {
-      return const _SectionCard(
-        icon: LucideIcons.clock3,
-        title: 'Free blocks',
-        subtitle: 'No major free blocks were detected today.',
-        child: _MutedBodyText(
-          'Shorter gaps can still work well for review, admin, or rest.',
-        ),
-      );
-    }
-
-    return _SectionCard(
-      icon: LucideIcons.clock3,
-      title: 'Free blocks',
-      subtitle: 'The calmest windows for study or errands',
-      child: Column(
-        children: [
-          for (var i = 0; i < freeBlocks.take(3).length; i++) ...[
-            _InfoRow(
-              icon: LucideIcons.sparkles,
-              title: '${freeBlocks[i].startLabel} - ${freeBlocks[i].endLabel}',
-              subtitle: '${freeBlocks[i].durationMinutes} min available',
-            ),
-            if (i != freeBlocks.take(3).length - 1)
-              const Divider(height: 16, color: AppColors.divider),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 class _SectionCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -1062,7 +951,8 @@ class _SectionCard extends StatelessWidget {
                   color: AppColors.surfaceMuted,
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
-                child: Icon(icon, size: AppIconSizes.lg, color: AppTheme.primary),
+                child:
+                    Icon(icon, size: AppIconSizes.lg, color: AppTheme.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -1209,74 +1099,6 @@ class _SummaryRow extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  const _InfoRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceMuted,
-            borderRadius: BorderRadius.circular(AppRadii.sm),
-          ),
-          child: Icon(icon, size: 14, color: AppTheme.primary),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xxxs),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MutedBodyText extends StatelessWidget {
-  final String text;
-
-  const _MutedBodyText(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-    );
-  }
-}
-
 class _EmptyPlanCard extends StatelessWidget {
   final VoidCallback onGenerate;
   final VoidCallback onAddTask;
@@ -1340,7 +1162,8 @@ class _EmptyPlanCard extends StatelessWidget {
                       )
                     : CampusButton(
                         onPressed: onGenerate,
-                        icon: const Icon(LucideIcons.sparkles, size: AppIconSizes.md),
+                        icon: const Icon(LucideIcons.sparkles,
+                            size: AppIconSizes.md),
                         child: const Text('Generate plan'),
                       ),
               ),
