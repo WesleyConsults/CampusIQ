@@ -1,8 +1,8 @@
 # CampusIQ — MVP Completion Report
 
-**Date:** 2026-05-03
+**Date:** 2026-05-05
 **Package:** com.wesleyconsults.campusiq
-**Status:** v1.0 Lean Build with UI Navigation Redesign (Phases 0–8 complete)
+**Status:** v1.0 Lean Build — UI Redesign & Release Polish Complete (Phases 1–8). Runtime device testing required before beta release.
 
 ---
 
@@ -12,166 +12,209 @@ CampusIQ is a Flutter-based academic planning app built Android-first for Ghanai
 
 ---
 
-## Session Update: UI Navigation Redesign (Phases 0–8)
+## UI Redesign and Release Polish Update
 
-This session completed the full CampusIQ UI navigation redesign through Phase 8 without expanding feature scope or introducing new database concepts.
+**Completed:** 2026-05-05
+**Scope:** Full visual redesign of every major screen, modal, and support surface. All business logic, providers, repositories, and Isar schemas were preserved. No new features or database concepts were introduced.
 
-### What changed
+The UI redesign and static QA pass are complete. Runtime device testing is still required before beta release.
 
-- The shell navigation now uses **4 bottom-nav destinations**: `Home`, `CWA`, `Table`, and `Sessions`.
-- The internal route `/plan` remains the launch route, and the screen is now user-facing **Today**, acting as the student's home base. It is also directly accessible via the **Home** bottom nav tab.
-- `Today` now has a **top-left menu button** that opens secondary destinations:
-  - `Today`
-  - `Streak`
-  - `Insights`
-  - `Weekly Review`
-  - `Settings`
-  - `Subscribe`
-- The shell still preserves the **global AI FAB** and the **active-session floating mini timer**.
-- Shell tabs now render full height behind the floating nav, and each tab owns its own trailing overlay clearance so content can scroll above the nav, AI FAB, and mini timer without a permanent dead band.
-- The final shell structure is now:
-  - `Home` at `/plan`
-  - `CWA` at `/cwa`
-  - `Table` at `/timetable`
-  - `Sessions` at `/sessions`
+### Design System
 
-### CWA redesign delivered in this session
+| Token | Value |
+|---|---|
+| Font | Inter (Google Fonts) |
+| Icon style | Lucide-style |
+| Background | Soft off-white (`AppColors.surface`) |
+| Cards / surfaces | White with large rounded corners |
+| Primary colour | Deep navy (`AppColors.primary`) |
+| Accent | Muted gold (`AppColors.goldSoft`), used sparingly |
+| Spacing | Generous and consistent via `AppSpacing` tokens |
+| Tone | Calm, supportive, student-friendly |
 
-- The CWA screen header now follows a clearer structure:
-  - `CWA`
-  - `Import`
-  - `More`
-- Returning to Today from CWA now relies on the shared **Home** bottom-nav tab instead of a dedicated AppBar Home action.
-- The **Semester / Cumulative** segmented switcher stays directly under the app bar because it changes screen meaning.
-- Semester mode now presents:
-  - current semester CWA summary
-  - course-wise course list
-  - credits summary
-  - import helper CTA
-- Cumulative mode now presents:
-  - cumulative CWA summary
-  - academic history / past semesters
-  - total credit context where data exists
-- Existing Course Hub entry points from CWA were preserved.
+Reusable token files:
+- `lib/core/theme/app_tokens.dart` — colours, spacing, radii, shadows
+- `lib/core/theme/app_theme.dart` — Material 3 theme with Inter typography
 
-### CWA import flow delivered in this session
+Reusable shared widgets delivered: cards, buttons, chips, section headers, modal components, empty state, error retry, offline banner.
 
-- Tapping `Import` on CWA now opens a **rounded Material 3 bottom sheet** with:
-  - `Take Photo`
-  - `Upload Image`
-  - `Choose PDF`
-  - `Enter Manually`
-- Existing registration-slip and result-slip import flows were **reused**, not replaced.
-- Camera, gallery, and PDF options can now deep-link directly into the existing import screens with an initial source.
-- `Enter Manually` now opens a dedicated full-screen route:
-  - `/cwa/manual-entry?mode=semester|cumulative`
+---
 
-### Manual entry delivered in this session
+### Phase 1 — Design System Foundation
 
-- The new **Enter Courses Manually** screen is a focused full-screen form outside the shell.
-- It intentionally does **not** show:
-  - bottom navigation
-  - the shell AI FAB
-- It supports both `Semester` and `Cumulative` modes, defaulting from the mode selected in CWA.
-- It includes:
-  - semester information card
-  - repeatable course cards
-  - validation
-  - duplicate course-code warning
-  - live course / credit / estimated CWA summary
-  - sticky `Cancel` and `Save Courses` actions
-- Saving reuses the existing repositories and models:
-  - `CourseModel` / `CwaRepository` for semester
-  - `PastSemesterModel` / `PastResultRepository` for cumulative
-- Back and cancel now protect against accidental data loss with an unsaved-changes discard flow.
+- Inter typography scaled across all text styles
+- Lucide-style icon set adopted throughout
+- Deep navy / muted gold / soft off-white palette applied globally
+- Reusable tokens created for colours, spacing, radii, shadows, and typography
+- Reusable widgets built: cards, buttons, chips, section headers, modal header/handle/action row
+- Global theme cleaned up — hardcoded colours and spacing replaced with token references
 
-### Polish and accessibility completed in this session
+### Phase 2 — App Shell + Bottom Navigation
 
-- Consistent padding, spacing, border radius, and card styling were aligned across:
-  - Today
-  - bottom navigation
-  - CWA
-  - CWA import bottom sheet
-  - manual entry
-- Touch targets and semantics/tooltips were improved for:
-  - Home
-  - Import
-  - Add course
-  - Remove course
-  - Save courses
-  - Cancel
-- The manual-entry screen was hardened for:
-  - keyboard-safe scrolling
-  - sticky bottom actions on small screens
-  - dark-mode resilience
-  - reduced overflow risk
+- 4-tab bottom nav: **Home, CWA, Table, Sessions**
+- Floating rounded pill-shaped bottom navigation bar with semi-transparent background, border, and drop shadow
+- `_ShellBottomNav` renders four destinations with Lucide icons; selected tab gets tinted background and bold label
+- `_AiFab` — smaller, calmer gold sparkles FAB positioned bottom-right above the nav bar; pushes `/ai`
+- `FloatingMiniTimer` — appears above the nav bar when a session is active; pushes `/sessions` on tap
+- AI page (`/ai`) moved outside bottom-nav shell (full-screen push route)
+- Shell tabs render full height with in-page trailing overlay clearance so content scrolls above the nav, AI FAB, and mini timer
+- Safe-area and bottom-nav spacing refined — content is no longer permanently clipped above the navbar
+- Contrast fixes for header action buttons
 
-### Final regression and cleanup completed in this session
+### Phase 3 — Home / Today Screen Redesign
 
-- Added widget regression coverage in:
-  - `test/ui_redesign_regression_test.dart`
-- Regression smoke coverage now checks:
-  - shell navigation presence
-  - shell AI FAB visibility
-  - CWA import sheet options
-  - manual-entry rendering on small screens
-  - active-session mini timer visibility
-- A small-screen manual-entry dropdown overflow issue was found and fixed by making the dropdowns expand safely and ellipsize long values.
+- Premium Home dashboard at `/plan` (initial route)
+- In-body greeting header with date
+- Hero card driven by active session / current class / next class / "day open" state
+- `Academic pulse` — 2-column grid of compact tiles (CWA metrics, streak)
+- `Today at a glance` — class count, pending study tasks, progress summary
+- `Progress` section with plan progress bar
+- Lower detail sections: active session resume card, today's classes, free blocks, task list (Planned classes / Suggested study tasks / Personal tasks)
+- `Suggested focus` section removed during refinement to reduce first-screen congestion
+- Free-block metric removed from Today at a glance
+- Local add-task FAB removed to avoid competing with shell AI FAB; task creation remains available through inline actions
+- Bottom-safe spacing refined so lower Home content scrolls above the floating bottom nav
+- Small-screen overflows fixed: tightened academic pulse tile padding/typography, long task labels wrap to 2 lines with ellipsis, stable trailing column for task time/duration
 
-### Home tab + back-button navigation fix (2026-05-02)
+### Phase 4 — CWA Screen Redesign
 
-- Added **Home** as the first bottom nav tab, giving Today (`/plan`) a direct tab alongside CWA, Table, and Sessions.
-- Bottom nav now has 4 destinations: Home, CWA, Table, Sessions.
-- Fixed Android back-button behaviour: detail/drill-down screens now use `context.push()` instead of `context.go()`.
-  - **Before:** Pressing Back from AI Chat, Streak, Insights, or Settings exited to the phone launcher.
-  - **After:** Pressing Back returns to the previous screen inside the app.
-  - Shell tab switches still use `go()`, which is correct — Back from a tab exits the app.
-- Files changed:
-  - `app_router.dart`: AI FAB now uses `push('/ai')`
-  - `streak_action_button.dart`: Streak nav now uses `push('/streak')`
-  - `plan_screen.dart`: Drawer links (Streak, Insights, Settings) now use `push: true`; Settings icon now uses `push('/settings')`
+- CWA screen redesigned around academic performance
+- Semester / Cumulative segmented control directly under the app bar
+- CWA hero card displaying projected CWA, target, and gap
+- Compact stats cards — credits summary, course count, import helper CTA
+- Compact course cards with score slider, grade chip, and overflow menu (Open Workspace, Edit, Delete)
+- Subtitle under CWA title removed for cleaner header
+- Import action in AppBar opens a polished rounded bottom sheet (Take Photo, Upload Image, Choose PDF, Enter Manually)
+- Add Course visibility and bottom-nav overlap issues fixed
+- Hero card and stats overflow refinements
+- CWA calculations, import, and manual entry logic preserved
 
-### Validation completed in-session
+### Phase 5 — Table / Timetable Screen Redesign
 
-- `dart format .`
-- `flutter analyze`
-- `flutter test`
+- Timetable redesigned to feel calmer and easier to scan
+- Day selector pills polished — horizontal scrollable row of 7 days
+- Compact day summary card (selected day, class count, next/first class, free-block count)
+- Daily timetable restored as full-page scrollable content — no longer trapped in a small inner scroll box
+- Class blocks visible and readable with calmer card styling
+- Free blocks visible as lighter, less dominant indicators
+- Summary card made smaller to prioritise timetable content
+- Blank gap above bottom nav reduced
+- Add/edit/delete slot and free-block detection logic preserved
 
-The latest validation runs completed successfully aside from the repo's pre-existing non-blocking analyzer warnings/info items.
+### Phase 6 — Sessions Screen Redesign
 
-Current validation state:
-- `dart format .` passed
-- `flutter test` passed
-- `flutter analyze` still reports the existing repo baseline of 56 warnings/info items, mainly generated Riverpod deprecations, experimental Isar generated API warnings, and a few unrelated lint issues outside this redesign scope
+- Sessions redesigned as a calm focus room
+- Start Session card with Normal / Pomodoro segmented toggle
+- Today's progress card redesigned — no overflow
+- History / Plan tab controls polished
+- Normal and Pomodoro flow preserved
+- Active session behaviour preserved
+- Mini timer preserved
+- Today's progress overflow fixed
+- Plan tab FormatException fixed with safe parsing and fallbacks
+- Session logic and timer logic preserved
 
-### Home / Today redesign pass (2026-05-03)
+### Phase 7A — Bottom Sheets, Dialogs, and Pickers Polish
 
-- Completed the Phase 3 **Home / Today / Plan** redesign and refinement without changing routes, providers, repositories, or business logic.
-- The Today screen now uses a calmer content hierarchy:
-  - in-body greeting header
-  - premium hero card driven by active session / class / no-class state
-  - compact `Academic pulse` summary
-  - `Today at a glance`
-  - `Progress`
-  - lower-priority detail sections below
-- The earlier `Suggested focus` section was removed during refinement to reduce congestion in the first screenful.
-- `Academic pulse` was refined into a **2-column grid** of compact tiles instead of stretched vertical strips.
-- `Today at a glance` was kept, but the free-block metric was removed so the section feels more intentional.
-- The Home screen's local add-task FAB was removed to avoid competing with the shell AI FAB; task creation remains available through inline actions.
-- Bottom-safe spacing on Today was refined so lower Home content can scroll above the floating bottom navigation more reliably.
-- Small-screen Today overflows were fixed by:
-  - tightening the academic pulse tile padding and typography
-  - allowing long plan-task labels to wrap to 2 lines with ellipsis
-  - reserving a stable trailing column for task time and duration
+- Shared modal sheet system with consistent header, handle, and action row
+- AddCourseSheet polished
+- AddSlotSheet polished
+- CoursePickerSheet polished
+- CWA import options sheet polished
+- SlotDetailSheet polished
+- CWA coach sheet polished
+- Confirmation dialogs standardised across the app
+- Delete confirmations added where safe (courses, sessions, notes, timetable slots)
+- Keyboard-safe modal behaviour improved
 
-### Validation completed for the Home redesign pass
+### Phase 7B — AI Chat Screen Polish
 
-- `flutter analyze lib/features/plan/presentation/screens/plan_screen.dart` passed
-- `flutter analyze lib/features/plan/presentation/widgets/plan_task_tile.dart lib/features/plan/presentation/screens/plan_screen.dart` passed
-- `flutter test` passed
-- `flutter analyze` remained at the same baseline of 56 pre-existing warnings/info items
-- `flutter run -d macos --no-resident` could not complete in this environment because `xcodebuild` was unavailable
-- `flutter run -d chrome --no-resident` surfaced pre-existing Isar-generated JavaScript integer compile errors unrelated to the Home redesign
+- AI Chat polished as full-screen secondary route (`/ai`, no bottom nav)
+- Premium header with back navigation
+- Improved empty state and starter prompts
+- Improved message bubbles (user right, assistant left)
+- Improved input composer with send button
+- Improved chat history drawer (end drawer with past conversations)
+- Markdown rendering via `MarkdownBody` preserved
+- LaTeX math rendering via `Math.tex()` for inline `$...$` and display `$$...$$` preserved
+- AI API, prompt templates, and usage logic unchanged
+
+### Phase 7C — Course Hub Polish
+
+- Course Hub (`/course/:courseCode`) polished as a focused 3-tab course workspace
+- Improved course header and summary card
+- Improved tab bar: Overview, Sessions, Notes
+- Overview tab: course info, expected score with progress bar + grade chip, CWA impact, study stats, streak mini-card
+- Sessions tab: course-scoped bar chart and session history
+- Notes tab: note list with FAB, Dismissible delete, edit via NoteEditorSheet
+- Note editor modal styling improved
+- Course navigation logic preserved (entry from CWA course card, timetable slot, sessions breakdown)
+- Files tab and per-course AI tab removed in v1.0 launch scope reduction
+
+### Phase 7D — Import + Manual Entry Flow Polish
+
+- Manual course entry screen (`/cwa/manual-entry`) polished — focused full-screen form, no bottom nav, no AI FAB
+- Import review, loading, and error states polished
+- Past semester / history screen polished
+- Validation preserved (empty fields, duplicate course codes, non-numeric values)
+- Keyboard-safe form behaviour preserved
+- Parsing and save logic unchanged
+
+### Phase 7E — Settings, Streak, Insights, Weekly Review Polish
+
+- Settings screen polished — notification toggles, daily reminder time picker, cancel all button, DEV premium toggle
+- Streak screen polished — hero card, milestone grid, activity heatmap, course streak list, attendance tracker
+- Insights screen polished — insight cards with animated entry
+- Weekly Review sheet and full-screen route polished
+- All support screens aligned to the premium design direction
+- Business logic preserved throughout
+
+### Phase 8 — Full QA, Consistency Cleanup, Release Polish
+
+- Consistency cleanup across the entire UI
+- Hardcoded colours replaced with tokens in multiple files
+- Contrast bug fixed in timetable import screen
+- Modal sheet pattern made more consistent
+- Unused imports removed
+- Bottom nav and safe-area approach inspected and hardened
+- Keyboard safety inspected across all form screens
+- No new analyzer issues introduced
+- Remaining analyzer warnings classified as pre-existing (generated Riverpod deprecations, experimental Isar API warnings)
+- App ready for on-device beta testing
+
+### Current Navigation Summary
+
+**Shell route (bottom nav):**
+- `Home` at `/plan` — user-facing Today dashboard
+- `CWA` at `/cwa` — CWA Target Planner
+- `Table` at `/timetable` — Class Timetable
+- `Sessions` at `/sessions` — Study Session Tracker
+
+**Full-screen routes (outside shell, no bottom nav):**
+- `/ai` — AI Coach & Chat (opened via gold sparkles FAB)
+- `/streak` — Streak System (via drawer from Today)
+- `/insights` — Insights (via drawer from Today)
+- `/settings` — Settings (via drawer or bell icon from Today)
+- `/ai/weekly-review` — AI Weekly Review
+- `/course/:courseCode` — Course Hub Workspace
+- `/timetable/import` — Timetable Image Import
+- `/cwa/manual-entry` — Manual Course Entry
+- `/subscribe` — Premium subscription
+
+**Navigation behaviour:**
+- Tab switches use `context.go()` — back from a tab exits the app
+- Drill-down screens use `context.push()` — back returns to the previous screen
+- Today screen has a local drawer (hamburger menu) with links to Today, Streak, Insights, Weekly Review, Settings, and Subscribe
+- AI FAB and active-session mini timer render inside `_AppShell` and persist across all tab switches
+
+### Validation Summary
+
+- `dart format .` — passed
+- `flutter test` — passed
+- `flutter analyze` — pre-existing baseline of ~56 warnings/info items (generated Riverpod deprecations, experimental Isar API warnings), no new issues introduced
+- `flutter run -d macos` — not tested (xcodebuild unavailable in this environment)
+- `flutter run -d chrome` — not tested (pre-existing Isar JS compile errors unrelated to redesign)
+- **On-device Android testing:** not yet performed — required before beta release
 
 ---
 
@@ -211,24 +254,24 @@ Business logic is never placed in widgets. Domain layer has zero Flutter depende
 
 ## Current Navigation Snapshot
 
-### Shell routes
+### Shell routes (bottom nav tabs)
 
-- `/plan` — user-facing **Today**
-- `/cwa`
-- `/timetable`
-- `/sessions`
-- `/streak`
-- `/insights`
-- `/settings`
-- `/ai`
+- `/plan` — user-facing **Today** (Home tab)
+- `/cwa` — CWA Target Planner
+- `/timetable` — Class Timetable (Table tab)
+- `/sessions` — Study Session Tracker
 
-### Full-screen routes outside the shell
+### Full-screen routes outside the shell (no bottom nav, no AI FAB)
 
-- `/subscribe`
-- `/ai/weekly-review`
-- `/course/:courseCode`
-- `/timetable/import`
-- `/cwa/manual-entry`
+- `/ai` — AI Coach & Chat (opened via gold sparkles FAB)
+- `/streak` — Streak System (via drawer from Today)
+- `/insights` — Insights (via drawer from Today)
+- `/settings` — Settings (via drawer or bell icon from Today)
+- `/ai/weekly-review` — AI Weekly Review
+- `/course/:courseCode` — Course Hub Workspace
+- `/timetable/import` — Timetable Image Import
+- `/cwa/manual-entry` — Manual Course Entry
+- `/subscribe` — Premium subscription
 
 These full-screen routes intentionally do not show the bottom nav or shell AI FAB.
 
@@ -278,39 +321,29 @@ lib/
 │   │           ├── add_course_sheet.dart
 │   │           ├── course_card.dart
 │   │           ├── cwa_coach_sheet.dart           — Phase 13: AI CWA coach bottom sheet
-│   │           ├── cwa_summary_bar.dart           — Phase 15.3: cumulative CWA display
+│   │           ├── cwa_summary_bar.dart           — hero CWA display (semester + cumulative)
 │   │           ├── whatif_explain_chip.dart       — Phase 13: AI explanation chip
 │   │           └── whatif_result_card.dart        — Phase 13: what-if result display
-│   ├── timetable/                                 — Phase 2 + 3
+│   ├── timetable/                                 — Phase 2 + redesign
 │   │   ├── data/models/timetable_slot_model.dart
-│   │   ├── data/models/personal_slot_model.dart
 │   │   ├── data/repositories/timetable_repository.dart
-│   │   ├── data/repositories/personal_slot_repository.dart
 │   │   ├── domain/
 │   │   │   ├── free_time_detector.dart
-│   │   │   ├── personal_slot_category.dart
-│   │   │   ├── recurrence_type.dart
-│   │   │   ├── slot_expander.dart
 │   │   │   ├── timetable_constants.dart
 │   │   │   ├── timetable_slot_import.dart          — Phase 15.2: parsed slot value object
-│   │   │   └── timetable_vision_parser.dart        — Phase 15.2: DeepSeek VL2 image → slots
+│   │   │   └── timetable_vision_parser.dart        — Phase 15.2: image → slots
 │   │   └── presentation/
 │   │       ├── providers/timetable_provider.dart
-│   │       ├── providers/personal_slot_provider.dart
 │   │       ├── providers/timetable_import_provider.dart — Phase 15.2: import state machine
 │   │       ├── screens/timetable_screen.dart
 │   │       ├── screens/timetable_import_screen.dart    — Phase 15.2: full-screen import UI
 │   │       └── widgets/
 │   │           ├── add_slot_sheet.dart
-│   │           ├── add_personal_slot_sheet.dart
+│   │           ├── class_timetable_grid.dart
 │   │           ├── day_selector.dart
-│   │           ├── dual_layer_grid.dart
 │   │           ├── free_block_indicator.dart
 │   │           ├── import_slot_review_tile.dart         — Phase 15.2: review list tile
-│   │           ├── personal_slot_card.dart
-│   │           ├── personal_slot_detail_sheet.dart
 │   │           ├── slot_detail_sheet.dart
-│   │           ├── timetable_page_indicator.dart
 │   │           └── timetable_slot_card.dart
 │   ├── session/                                   — Phase 4
 │   │   ├── data/models/study_session_model.dart
@@ -361,25 +394,18 @@ lib/
 │   │   └── presentation/
 │   │       ├── providers/review_provider.dart
 │   │       └── widgets/weekly_review_sheet.dart   — draggable sheet with stats + reflection
-│   ├── plan/                                      — Phase 15
+│   ├── plan/                                      — Phase 15 + redesign
 │   │   ├── data/
 │   │   │   ├── models/daily_plan_task_model.dart  — Isar @collection
-│   │   │   ├── models/exam_model.dart             — Isar @collection
-│   │   │   ├── repositories/daily_plan_repository.dart
-│   │   │   └── repositories/exam_repository.dart
+│   │   │   └── repositories/daily_plan_repository.dart
 │   │   ├── domain/
-│   │   │   ├── exam_prep_planner.dart             — exam-mode task prioritiser
 │   │   │   ├── plan_generator.dart                — free-block aware daily plan generator
 │   │   │   └── plan_task.dart                     — PlanTask value object
 │   │   └── presentation/
-│   │       ├── providers/exam_mode_provider.dart
 │   │       ├── providers/plan_provider.dart
 │   │       ├── screens/plan_screen.dart
 │   │       └── widgets/
 │   │           ├── add_manual_task_sheet.dart
-│   │           ├── exam_manager_sheet.dart
-│   │           ├── exam_mode_activation_sheet.dart
-│   │           ├── exam_mode_transition.dart
 │   │           ├── plan_progress_bar.dart
 │   │           └── plan_task_tile.dart
 │   ├── settings/                                  — Phase 14 / Phase 15
@@ -464,20 +490,21 @@ lib/
 
 | Route | Screen | Phase |
 |---|---|---|
-| `/plan` | Daily Study Plan (initial route) | 15 |
-| `/cwa` | CWA Target Planner | 1, 13 |
-| `/timetable` | Class Timetable (single-layer grid) | 2 |
-| `/sessions` | Study Session Tracker + Analytics Dashboard | 4 |
-| `/streak` | Streak System + Milestone Gallery | 5 |
-| `/insights` | Insights System (accessible from Sessions screen) | 9 |
-| `/ai` | AI Coach & Academic Assistant Chatbot | 12 |
+| `/plan` | Today — Home Dashboard (initial route) | 15 + redesign |
+| `/cwa` | CWA Target Planner | 1, 13 + redesign |
+| `/timetable` | Class Timetable (single-layer, full-page scroll) | 2 + redesign |
+| `/sessions` | Study Session Tracker + Analytics Dashboard | 4 + redesign |
+| `/streak` | Streak System + Milestone Gallery | 5 + redesign |
+| `/insights` | Insights System | 9 + redesign |
+| `/ai` | AI Coach & Academic Assistant Chatbot | 12 + redesign |
 | `/ai/weekly-review` | AI-powered Weekly Review (full screen) | 15 |
-| `/settings` | Notification Settings + DEV premium toggle | 14 |
+| `/settings` | Notification Settings + DEV premium toggle | 14 + redesign |
 | `/subscribe` | Premium subscription upsell stub | 12+ |
-| `/course/:courseCode` | Course Hub Workspace (3-tab per-course workspace) | 15.1 |
+| `/course/:courseCode` | Course Hub Workspace (3-tab: Overview, Sessions, Notes) | 15.1 + redesign |
 | `/timetable/import` | Timetable Image Import (full-screen, no bottom nav) | 15.2 |
+| `/cwa/manual-entry` | Manual Course Entry (full-screen, no bottom nav) | redesign |
 
-Navigation uses a `ShellRoute` with a 4-destination bottom nav bar: Home, CWA, Table, Sessions. Tab switches use `context.go()`; drill-down screens (AI Chat, Streak, Insights, Settings, Course Hub, etc.) use `context.push()` for proper back-button behaviour. The floating mini-timer and AI Assistant FAB are rendered inside `_AppShell` and persist across all tab switches. Shell tabs now render at full height and use in-page trailing overlay clearance so their final content can scroll above the nav/FAB/timer stack cleanly.
+Navigation uses a `ShellRoute` with a 4-destination floating pill-shaped bottom nav bar: Home, CWA, Table, Sessions. Tab switches use `context.go()`; drill-down screens (AI Chat, Streak, Insights, Settings, Course Hub, etc.) use `context.push()` for proper back-button behaviour. The floating mini-timer and gold AI Assistant FAB are rendered inside `_AppShell` and persist across all tab switches. Shell tabs render at full height and use in-page trailing overlay clearance so content scrolls above the nav/FAB/timer stack cleanly. Full-screen routes intentionally do not show the bottom nav or AI FAB.
 
 ---
 
@@ -1031,7 +1058,19 @@ flutter run
 
 ---
 
-## What Comes Next (Post-Phase 15.5)
+## What Comes Next (Post-Redesign)
+
+### Immediate — Before Beta Release
+
+| Action | Notes |
+|---|---|
+| **Build APK** | `flutter build apk --debug` or `--release` |
+| **Install on real device** | Physical Android device (not just emulator) |
+| **Run updated E2E test checklist** | `_dev/E2E_TEST_CHECKLIST.md` — work through all 13 sections |
+| **Send APK to friend/tester** | Collect fresh-eyes feedback on UX, bugs, and performance |
+| **Fix critical issues** | Any crash, major overflow, or broken flow found during device testing |
+
+### Short-term — Beta → Production
 
 | Feature | Notes |
 |---|---|
@@ -1039,6 +1078,11 @@ flutter run
 | Onboarding flow | University + programme picker, initial target CWA setup |
 | Semester switcher | Archive/restore courses and timetable per semester |
 | Premium payment integration | Replace `SubscribeScreenStub` with real in-app purchase flow |
+
+### Longer-term
+
+| Feature | Notes |
+|---|---|
 | Multi-university support | Extend beyond KNUST |
 | Cloud sync | Optional backup of Isar data |
 | Push notifications (remote) | Server-triggered alerts via FCM for AI-personalized content |

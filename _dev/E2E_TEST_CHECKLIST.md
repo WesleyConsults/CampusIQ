@@ -1,6 +1,8 @@
 # CampusIQ — End-to-End User Test Checklist
 
-Use this document to manually test the app as a real user would, from first launch through every major feature. Work through each section in order. The checklist below has been updated to match the final UI navigation redesign completed through Phase 8.
+Use this document to manually test the app as a real user would, from first launch through every major feature. Work through each section in order.
+
+**This checklist has been updated for the redesigned premium UI.** The app now uses a floating pill-shaped bottom nav (Home | CWA | Table | Sessions), a gold AI sparkles FAB, and a calm premium design system (deep navy, muted gold, soft off-white, Inter font, Lucide icons).
 
 Mark each item `[x]` as you confirm it works.
 
@@ -14,153 +16,199 @@ Mark each item `[x]` as you confirm it works.
 
 ---
 
-## 1. App Launch & Navigation Shell
+## 1. Fresh Install / Launch
 
-### 1.1 Cold launch
+### 1.1 First launch
 - [ ] App opens without crash
-- [ ] Lands on the **Today** screen at `/plan` (not a blank screen)
-- [ ] Top-left AppBar action is a visible **menu/drawer** icon, not a Home button
-- [ ] Bottom navigation bar shows 4 tabs: **Home, CWA, Table, Sessions**
-- [ ] AI Assistant is visible as a Floating Action Button (FAB)
-- [ ] If no session is active, no mini timer is shown above the shell
+- [ ] Lands on the **Today** screen at `/plan` (Home tab)
+- [ ] Soft off-white background (`AppColors.surface`) appears
+- [ ] Bottom navigation bar shows exactly 4 tabs: **Home, CWA, Table, Sessions**
+- [ ] Bottom nav is a floating pill shape (rounded, semi-transparent, with shadow)
+- [ ] Gold AI sparkles FAB is visible at the bottom-right, above the nav bar
+- [ ] If no session is active, no mini timer is shown
+- [ ] No overflow on launch
 
-### 1.2 Bottom navigation
+### 1.2 Hot restart / relaunch
+- [ ] Hot restart — app returns to Today without crash
+- [ ] Full app kill and relaunch — app opens to Today
+
+---
+
+## 2. App Shell / Navigation
+
+### 2.1 Bottom navigation
 - [ ] Tap **Home** — navigates to Today screen (`/plan`)
-- [ ] Tap **CWA** — navigates to CWA screen
-- [ ] Tap **Table** — navigates to Timetable screen
-- [ ] Tap **Sessions** — navigates to Sessions screen
-- [ ] Tap **AI** (FAB) — navigates to AI Chat screen
-- [ ] Active bottom tab is visually highlighted
-- [ ] No crash or blank screen on any tab or FAB
+- [ ] Tap **CWA** — navigates to CWA screen (`/cwa`)
+- [ ] Tap **Table** — navigates to Timetable screen (`/timetable`)
+- [ ] Tap **Sessions** — navigates to Sessions screen (`/sessions`)
+- [ ] Active bottom tab is visually highlighted (tinted background, bold label)
+- [ ] No crash or blank screen on any tab
 
-### 1.3 Today home base
-- [ ] Today AppBar title reads **Today** (or equivalent user-facing Today label)
-- [ ] Notification/bell action is visible in the header
-- [ ] Screen shows an in-body greeting / welcome section
-- [ ] A hero card is visible near the top of the Today screen
-- [ ] Screen shows **Academic pulse**
-- [ ] Academic pulse renders as a **2-column grid** of compact summary tiles
-- [ ] Screen shows **Today at a glance**
-- [ ] Today at a glance does **not** show a free-block metric
-- [ ] Screen shows a **Progress** section with the plan progress bar
-- [ ] Screen shows current CWA / streak context through the summary cards
-- [ ] Screen still shows today's classes if timetable data exists
-- [ ] Screen still shows free-time blocks in the lower detail area if timetable data exists
-- [ ] Screen shows daily plan task content
-- [ ] The old **Suggested focus** section is not present
-- [ ] If a study session is active, a resume/active-session surface is visible on Today
-- [ ] Lower Today content scrolls fully above the floating bottom nav / AI FAB
-- [ ] No RenderFlex / bottom overflow appears on a standard ~360 dp width screen
+### 2.2 AI FAB
+- [ ] AI FAB is visible on all 4 shell tabs (Home, CWA, Table, Sessions)
+- [ ] Tap AI FAB — navigates to AI Chat screen (`/ai`)
+- [ ] AI Chat screen has **no bottom nav**
+- [ ] Back from AI Chat returns to the previous tab
+- [ ] AI FAB shows a gold sparkles icon and has a pill shape
+
+### 2.3 Full-screen routes (no bottom nav)
+- [ ] `/ai` — no bottom nav visible
+- [ ] `/streak` — no bottom nav visible
+- [ ] `/insights` — no bottom nav visible
+- [ ] `/settings` — no bottom nav visible
+- [ ] `/ai/weekly-review` — no bottom nav visible
+- [ ] `/course/:courseCode` — no bottom nav visible
+- [ ] `/timetable/import` — no bottom nav visible
+- [ ] `/cwa/manual-entry` — no bottom nav, no AI FAB visible
+- [ ] `/subscribe` — no bottom nav visible
+
+### 2.4 Back navigation
+- [ ] From AI Chat (opened via FAB), press system back — returns to the previous tab
+- [ ] From Streak (opened via drawer), press system back — returns to Today
+- [ ] From Insights (opened via drawer), press system back — returns to Today
+- [ ] From Settings, press system back — returns to the screen you came from
+- [ ] From Weekly Review, press system back — returns to the previous screen
+- [ ] From Course Hub, press system back — returns to the screen that opened it
+- [ ] From any bottom nav tab (Home, CWA, Table, Sessions), press system back — exits to phone launcher (expected)
+- [ ] No "back press" results in a blank screen
+
+### 2.5 Bottom nav content clearance
+- [ ] Shell tabs render full height
+- [ ] Content on each tab scrolls fully above the floating bottom nav, AI FAB, and mini timer (when active)
+- [ ] No content permanently hidden behind the nav bar
+- [ ] No persistent dead band at the bottom of any tab
+
+---
+
+## 3. Home Screen (Today)
+
+### 3.1 Header and structure
+- [ ] Greeting header visible with date
+- [ ] AppBar shows hamburger menu icon (left), streak action button, bell icon, and Generate button (right)
+- [ ] Title reads **Today**
+- [ ] Hero card is visible near the top (context-sensitive: active session resume, current class, next class, or "day open")
+
+### 3.2 Academic Pulse
+- [ ] Academic Pulse section visible
+- [ ] Renders as a **2-column grid** of compact tiles
+- [ ] Shows CWA metrics and streak context
+- [ ] No text clipping or overflow in tiles on a standard ~360dp screen
+
+### 3.3 Today at a Glance
+- [ ] Today at a Glance section visible
+- [ ] Shows class count, pending study tasks, and progress
+- [ ] Does **not** show a free-block metric
+- [ ] No overflow
+
+### 3.4 Progress section
+- [ ] Progress section visible with plan progress bar
+- [ ] Progress bar shows completed/total tasks
+- [ ] Celebration message shown when all tasks done
+
+### 3.5 Lower content
+- [ ] Active session resume card visible if a session is active
+- [ ] Today's classes section shows timetable slots for today (if data exists)
+- [ ] Free blocks section shows detected free windows (if timetable data exists)
+- [ ] Task list shows three groups: Planned classes, Suggested study tasks, Personal tasks
 - [ ] Long task labels wrap/truncate cleanly without overlapping the time/duration column
+- [ ] Lower content scrolls fully above the floating bottom nav
 
-### 1.4 Drawer navigation from Today
-- [ ] Tap the top-left menu icon on Today — drawer opens
-- [ ] Drawer includes **Today**
-- [ ] Drawer includes **Streak**
-- [ ] Drawer includes **Insights**
-- [ ] Drawer includes **Weekly Review**
-- [ ] Drawer includes **Settings**
-- [ ] Drawer includes **Subscribe**
-- [ ] Tap **Today** — returns to `/plan`
-- [ ] Tap **Streak** — opens `/streak`
-- [ ] Tap **Insights** — opens `/insights`
+### 3.6 Sections not present
+- [ ] Suggested focus section is **not** present
+- [ ] Local add-task FAB is **not** present (task creation available via inline actions)
+
+### 3.7 Drawer (Today's local menu)
+- [ ] Tap hamburger menu icon — drawer opens from the left
+- [ ] Drawer includes: Today, Streak, Insights, Weekly Review, Settings, Subscribe
+- [ ] Tap **Today** — closes drawer, stays on Today
+- [ ] Tap **Streak** — opens `/streak` (full-screen, no bottom nav)
+- [ ] Tap **Insights** — opens `/insights` (full-screen, no bottom nav)
 - [ ] Tap **Weekly Review** — opens `/ai/weekly-review`
 - [ ] Tap **Settings** — opens `/settings`
 - [ ] Tap **Subscribe** — opens `/subscribe`
 - [ ] Back/close safely dismisses the drawer without crash
 
-### 1.5 Home-return pattern on module screens
-- [ ] From Today, open **CWA** — return to Today using the **Home** bottom-nav tab
-- [ ] From Today, open **Table** — return to Today using the **Home** bottom-nav tab
-- [ ] From Today, open **Sessions** — return to Today using the **Home** bottom-nav tab
-- [ ] CWA, Table, and Sessions do not show a duplicate or misleading Home AppBar action
-
-### 1.6 Shell-only chrome rules
-- [ ] Bottom navigation appears on shell screens only
-- [ ] AI FAB appears on shell screens only
-- [ ] Shell tabs render full height; lower content is not permanently clipped above the navbar
-- [ ] Full-screen routes such as `/cwa/manual-entry`, `/timetable/import`, `/course/:courseCode`, and `/ai/weekly-review` do not show the bottom nav
-- [ ] `/cwa/manual-entry` does not show the AI FAB
-
 ---
 
-## 2. CWA Target Planner (`/cwa`)
+## 4. CWA Screen
 
-> **Do this before Sessions and AI features** — courses added here appear in those screens.
+> Do this before Sessions and AI features — courses added here appear in those screens.
 
-### 2.1 Empty state
+### 4.1 Empty state and header
 - [ ] CWA opens without crash
-- [ ] AppBar does not show a duplicate **Home** button on the left
 - [ ] AppBar title reads **CWA**
 - [ ] AppBar shows a visible **Import** action on the right
-- [ ] Overflow / More action is visible if secondary actions exist
-- [ ] The **Semester / Cumulative** segmented switcher is visible directly under the app bar
-
-### 2.2 Semester / Cumulative switcher
+- [ ] The **Semester / Cumulative** segmented control is visible directly under the app bar
 - [ ] Default selection is **Semester**
+
+### 4.2 Semester / Cumulative switcher
 - [ ] Tap **Cumulative** — cumulative content appears
 - [ ] Tap **Semester** — current semester content appears again
 - [ ] Existing CWA data remains visible after switching modes
-- [ ] Existing CWA calculations still update correctly
+- [ ] CWA calculations still update correctly after mode switch
 
-### 2.3 Semester mode structure
-- [ ] Semester mode shows a **Current Semester CWA** summary/card
-- [ ] Semester mode shows course-wise CWA content
-- [ ] Semester mode shows a credits summary
-- [ ] Semester mode shows an import helper row or CTA near the top
+### 4.3 Semester mode
+- [ ] CWA hero card displays projected CWA, target, and gap
+- [ ] Compact stats cards show credits summary and course count
+- [ ] Import helper row or CTA visible near the top
+- [ ] Course cards are compact and readable
+- [ ] Long course names do not overflow
+- [ ] CWA calculation updates correctly when scores change
 
-### 2.4 Cumulative mode structure
-- [ ] Cumulative mode shows cumulative CWA summary
-- [ ] Cumulative mode shows past semesters / academic history
-- [ ] Cumulative mode shows total credits or history/trend context if data exists
-- [ ] Existing cumulative actions still work
-
-### 2.5 CWA calculation
-- [ ] Summary bar at the top shows a projected CWA
+### 4.4 CWA calculation
 - [ ] Tap the **Target CWA** area — slider dialog opens
 - [ ] Drag the slider to set a target (e.g. 75)
-- [ ] Confirm — summary bar now shows Target, Projected, and Gap
+- [ ] Confirm — hero card now shows Target, Projected, and Gap
 - [ ] Adjust the score slider on a course card — projected CWA updates live
 
-### 2.6 High-impact indicator
-- [ ] One course card should show a "high impact" indicator (the one whose score change affects CWA most)
+### 4.5 High-impact indicator
+- [ ] One course card shows a "high impact" indicator (course whose score change affects CWA most)
 
-### 2.7 Edit and delete
+### 4.6 Edit and delete courses
 - [ ] Tap the **edit icon** on a course card — `AddCourseSheet` opens pre-filled
 - [ ] Change the score, save — card updates
-- [ ] Delete a course (swipe or delete button) — card disappears, CWA recalculates
+- [ ] Delete a course (swipe or delete button) — confirmation appears
+- [ ] Confirm delete — card disappears, CWA recalculates
 - [ ] Re-add the course so you have at least 3 for later tests
 
-### 2.8 Open Course Hub from CWA
+### 4.7 Open Course Hub from CWA
 - [ ] Tap the **⋮ menu** on any course card → menu shows "Open Workspace", Edit, Delete
 - [ ] Tap **"Open Workspace"** → navigates to that course's Course Hub
 - [ ] Back arrow returns to the CWA screen
 
-### 2.9 AI Coaching
-- [ ] Tap **"Get AI Coaching"** button
+### 4.8 AI Coaching
+- [ ] In the "Course performance" section header, tap the **"Coach"** button (sparkles icon)
 - [ ] `CwaCoachSheet` opens with AI-generated advice
 - [ ] Advice is relevant to your current courses and gap
 - [ ] Sheet dismisses on back/swipe
 
-### 2.10 Import bottom sheet
+### 4.9 Cumulative mode
+- [ ] Switch to **Cumulative** mode
+- [ ] Cumulative CWA summary displayed
+- [ ] Past semesters / academic history visible (if data exists)
+- [ ] Total credits or history/trend context shown
+- [ ] Existing cumulative actions still work
+
+### 4.10 Bottom-nav / overflow
+- [ ] Add Course not hidden behind nav
+- [ ] Lower CWA content scrolls fully above the floating bottom nav
+- [ ] No overflow on hero card or stats cards
+- [ ] Semester/Cumulative switcher does not overlap with course list
+
+---
+
+## 5. CWA Import / Manual Entry
+
+### 5.1 Import bottom sheet
 - [ ] Tap the **Import** action in the CWA AppBar
-- [ ] A rounded bottom sheet opens
+- [ ] A polished rounded bottom sheet opens
 - [ ] Background dims behind the sheet
 - [ ] Drag handle is visible
-- [ ] Four large tappable rows are shown:
-  - [ ] `Take Photo`
-  - [ ] `Upload Image`
-  - [ ] `Choose PDF`
-  - [ ] `Enter Manually`
-- [ ] Each row shows a clear icon:
-  - [ ] Camera
-  - [ ] Image/gallery
-  - [ ] PDF/document
-  - [ ] Pencil/edit
+- [ ] Four tappable rows shown: **Take Photo**, **Upload Image**, **Choose PDF**, **Enter Manually**
+- [ ] Each row shows a clear icon
 - [ ] Swiping down or tapping outside dismisses the sheet safely
-- [ ] Import button has a tooltip/semantic label
 
-### 2.11 Registration Slip Import from Semester mode
+### 5.2 Registration Slip Import (Semester mode)
 - [ ] In **Semester** mode, tap **Import**
 - [ ] Tap **Take Photo**, **Upload Image**, or **Choose PDF**
 - [ ] `RegistrationSlipImportScreen` opens (no bottom nav, no AI FAB)
@@ -177,103 +225,70 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Imported courses are now visible in the CWA course list
 - [ ] Back button at any step resets the flow and returns to CWA without crash
 
-- [ ] Tap **Home** after import — returns to Today safely
-
-### 2.12 Result Slip Import from Cumulative mode
+### 5.3 Result Slip Import (Cumulative mode)
 - [ ] Switch to **Cumulative** mode
-- [ ] Tap **Import**
-- [ ] Tap **Take Photo**, **Upload Image**, or **Choose PDF**
+- [ ] Tap **Import** → **Take Photo**, **Upload Image**, or **Choose PDF**
 - [ ] `ResultSlipImportScreen` opens
-- [ ] In cumulative mode, the import title/label is appropriate for results or semester records
-- [ ] Review / save flow still works
-- [ ] Tap the existing cumulative history entry point (if present) → `PastSemestersScreen` opens
-- [ ] Empty state shows "No past results yet" with an **Import First Result** button
-- [ ] Back arrow returns to CWA
-
-### 2.13 Result Slip Import (Cumulative CWA)
-- [ ] On `PastSemestersScreen`, tap the **FAB (+ Add Semester)**
-- [ ] `ResultSlipImportScreen` opens
-- [ ] Three option tiles visible: **Take a photo**, **Upload image from gallery**, **Choose a PDF**
-- [ ] Select a valid result slip image → loading state shows "AI is reading your result slip…"
+- [ ] Select a valid result slip image → loading state
 - [ ] **Label step** appears — text field with placeholder "e.g. Year 1 Sem 1"
-- [ ] Quick-pick chips shown (Year 1 Sem 1 … Year 4 Sem 2) — tap one to fill the field
-- [ ] Type a label manually → **Continue to Review** button enables
-- [ ] Tap Continue — Review screen appears
-- [ ] Review screen shows: semester label, courses found count, optional "Reported Sem CWA" and "Reported Cum CWA" chips (if printed on slip)
-- [ ] Each selected course shows: course code, course name, mark input (numeric), grade dropdown (A/B/C/D/F, colour-coded), credit hours stepper
-- [ ] Change a grade to 'A' → grade chip turns green
-- [ ] Type a mark (e.g. 82) — mark field updates
-- [ ] Deselect a course — controls hide; row greys out
-- [ ] Tap **"Import N courses"** → saving → Done screen confirming label saved
-- [ ] Tap Done → returns to `PastSemestersScreen`
-- [ ] Imported semester card appears with: label, course count, calculated CWA badge
+- [ ] Quick-pick chips shown (Year 1 Sem 1 … Year 4 Sem 2)
+- [ ] Tap **Continue to Review** → Review screen appears
+- [ ] Review screen shows: semester label, courses found count, CWA chips
+- [ ] Each course shows: code, name, mark input, grade dropdown, credit stepper
+- [ ] Grades are colour-coded (A=green, F=red, etc.)
+- [ ] Tap **"Import N courses"** → saving → Done screen
+- [ ] Tap Done → returns to CWA or PastSemestersScreen
+- [ ] Cumulative CWA on main CWA screen reflects the imported semester
 
-### 2.14 Manual entry screen
+### 5.4 Manual Entry screen
 - [ ] From **Semester** mode, tap **Import** → **Enter Manually**
 - [ ] Full-screen `Enter Courses Manually` page opens
-- [ ] Bottom navigation is not visible
-- [ ] AI FAB is not visible
-- [ ] AppBar shows Back, title, and `Save draft`
+- [ ] Bottom navigation is **not** visible
+- [ ] AI FAB is **not** visible
 - [ ] Segmented switcher shows **Semester** and **Cumulative**
-- [ ] Default mode matches the mode used on CWA before opening the screen
-- [ ] Helper text updates when switching between Semester and Cumulative
+- [ ] Default mode matches the CWA mode before opening
 - [ ] Semester information card is visible
 - [ ] At least one course card is visible by default
-- [ ] Home button is not shown on this screen
-- [ ] Manual-entry screen scrolls correctly on a small device
-- [ ] Opening the keyboard does not cover the active field or the bottom action area
-- [ ] Sticky `Cancel` and `Save Courses` actions remain usable on a small screen
-- [ ] No RenderFlex overflow appears while entering data
-- [ ] Tap **Add Another Course** — a new course card is added
-- [ ] Tap **Remove Course** on a removable card — that card disappears safely
+- [ ] Tap **Add Another Course** — a new course card appears
+- [ ] Tap **Remove Course** — that card disappears
 - [ ] Live Summary updates when course fields change
-- [ ] Add, Remove, Save Courses, and Cancel actions expose semantic labels/tooltips
+
+### 5.5 Manual Entry validation
 - [ ] Empty course code shows validation
 - [ ] Empty course title shows validation
 - [ ] Non-numeric or zero credits show validation
 - [ ] Non-numeric or out-of-range score shows validation
 - [ ] Duplicate course code shows a warning
 - [ ] Duplicate course code does not silently save duplicate data
+
+### 5.6 Manual Entry save / cancel
 - [ ] Tap **Cancel** — returns safely to CWA
-- [ ] Tap **Back** with unsaved changes — discard confirmation appears and behaves safely
-- [ ] Re-open manual entry, fill valid values, tap **Save Courses**
+- [ ] Tap **Back** with unsaved changes — discard confirmation appears
+- [ ] Discard confirmation behaves safely (cancel keeps editing, discard returns to CWA)
+- [ ] Fill valid values, tap **Save Courses**
 - [ ] Screen closes back to CWA
-- [ ] Newly saved semester courses appear in Semester mode or saved cumulative records appear in Cumulative/history flows
+- [ ] Newly saved courses appear in CWA course list
 - [ ] CWA refreshes immediately after save
 
-### 2.15 Past Semesters Screen management
-- [ ] Semester card is collapsed by default — tap to expand, reveals course rows
-- [ ] Each course row shows: code, name, mark field, credit stepper, grade dropdown — all editable inline
-- [ ] Edit a grade inline → card CWA badge recalculates immediately
-- [ ] Tap **delete icon** on semester card → confirmation dialog appears
-- [ ] Confirm delete → semester card disappears; cumulative CWA on CWA screen updates
-- [ ] Import a second past semester — both cards appear; cumulative CWA updates to include both
-- [ ] Cumulative CWA on the main CWA screen now reflects all past semesters + current semester
+### 5.7 Manual Entry keyboard and scroll
+- [ ] Screen scrolls correctly on a small device
+- [ ] Opening the keyboard does not cover the active field or the bottom action area
+- [ ] Sticky `Cancel` and `Save Courses` actions remain usable on a small screen
+- [ ] No RenderFlex overflow while entering data
 
-### 2.16 Final redesign regression smoke checks
-- [ ] Launch app → Today
-- [ ] Today → CWA (via bottom nav)
-- [ ] CWA → Home (via bottom nav) → Today
-- [ ] Today → Table (via bottom nav)
-- [ ] Table → Home (via bottom nav) → Today
-- [ ] Today → Sessions (via bottom nav)
-- [ ] Sessions → Home (via bottom nav) → Today
-- [ ] CWA `Semester` / `Cumulative` switching still preserves visible data
-- [ ] Existing Course Hub entry points from CWA still work
-- [ ] CWA → Import bottom sheet still shows all four options
-- [ ] Existing photo/image/PDF import flows still open the correct screens
-- [ ] Manual entry save returns to CWA and refreshed data is visible
-- [ ] Active session mini timer still appears when a session is active
-- [ ] Lower CWA content scrolls fully above the floating bottom nav / AI FAB
-- [ ] Lower Table content scrolls fully above the floating bottom nav / AI FAB with no persistent dead band
-- [ ] Lower Sessions History and Sessions Plan content scroll above the floating bottom nav / AI FAB
-- [ ] `Settings`, `Insights`, `Streak`, `Weekly Review`, and `Subscribe` routes still open
+### 5.8 Past Semesters management
+- [ ] Semester card is collapsed by default — tap to expand
+- [ ] Each course row shows: code, name, mark field, credit stepper, grade dropdown — all editable inline
+- [ ] Edit a grade inline → CWA badge recalculates immediately
+- [ ] Tap **delete icon** on semester card → confirmation dialog appears
+- [ ] Confirm delete → semester card disappears; cumulative CWA updates
+- [ ] Import a second past semester — both cards appear; cumulative CWA includes both
 
 ---
 
-## 3. Timetable (`/timetable`)
+## 6. Table / Timetable
 
-### 3.1 Header, day selector, and summary
+### 6.1 Header, day selector, and summary
 - [ ] AppBar title reads **Table**
 - [ ] Scanner/import action is visible in the AppBar
 - [ ] Add (`+`) action is visible in the AppBar
@@ -282,592 +297,413 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Today is highlighted by default
 - [ ] Compact day summary card is visible near the top
 - [ ] Summary card updates when the selected day changes
-- [ ] Summary card can show selected day, class count, next/first class, and free-block count without overflow
+- [ ] Summary card shows: selected day, class count, next/first class, free-block count — no overflow
 
-### 3.2 Timeline layout and scrolling
+### 6.2 Timeline layout and scrolling
 - [ ] `Daily timeline` header is visible above the timetable
-- [ ] The actual timetable grid is the main page content under the summary card
-- [ ] The whole page scrolls naturally; timetable is not trapped inside a tiny inner vertical scroll box
-- [ ] Class blocks are visible and readable
-- [ ] Free blocks are visible when available and are visually lighter than class blocks
-- [ ] The final timetable content scrolls above the floating bottom nav and AI FAB
-- [ ] No persistent blank band remains above the navbar on the Table page
+- [ ] The timetable grid is the main page content — full-page scrollable
+- [ ] Timetable is **not** trapped inside a small nested vertical scroll box
+- [ ] Class blocks are visible and readable with calmer card styling
+- [ ] Free blocks are visible and are visually lighter than class blocks
+- [ ] Long course/location text does not overflow on slot cards
 
-### 3.3 Add a class slot
+### 6.3 Add a class slot
 - [ ] Tap the AppBar `+` action
 - [ ] `AddSlotSheet` opens
-- [ ] Fill in: Course (e.g. "Engineering Mathematics"), day, start time, end time, venue
+- [ ] Fill in: Course, day, start time, end time, venue
 - [ ] Tap **Save** — slot appears on the grid for that day/time
 - [ ] Add at least **2 class slots** on different days
 
-### 3.4 Tap on an existing slot
+### 6.4 Tap on an existing slot
 - [ ] Tap a class slot on the grid → `SlotDetailSheet` opens with details
 - [ ] Edit the venue — saves correctly
-- [ ] Tap **"Open Workspace"** on a class slot → navigates to that course's Course Hub (no bottom nav visible)
+- [ ] Tap **"Open Workspace"** on a class slot → navigates to Course Hub (no bottom nav)
 - [ ] Back arrow on Course Hub returns to the Timetable screen
 
-### 3.5 Free blocks, empty state, and open space
+### 6.5 Free blocks and empty state
 - [ ] Tap a visible free block — add sheet opens with that time range pre-filled
 - [ ] On a day with no classes, a calm empty state is shown instead of a blank page
 - [ ] Empty-state add action still opens the add sheet
 - [ ] Tapping open timetable space still opens the add flow without crashing
 
-### 3.6 Import from image — entry point
-- [ ] Scanner icon (document scanner) is visible in the Timetable AppBar alongside the "+" button
+### 6.6 Bottom-nav / overflow
+- [ ] Final timetable content scrolls above the floating bottom nav and AI FAB
+- [ ] No persistent blank band remains above the navbar
+- [ ] Bottom nav does not hide the last timetable entry
+
+### 6.7 Timetable import — entry point
+- [ ] Scanner icon is visible in the Timetable AppBar alongside the "+" button
 - [ ] Tap the scanner icon → navigates to `/timetable/import` (no bottom nav visible)
-- [ ] Back arrow returns to the Timetable screen without saving anything
+- [ ] Back arrow returns to the Timetable screen without saving
 
 ---
 
-## 4. Study Sessions (`/sessions`)
+## 7. Sessions
 
-> Requires at least one course from Step 2.
+> Requires at least one course from Section 4.
 
-### 4.1 Start a session
-- [ ] Sessions screen shows **"Start Session"** card (no active session)
+### 7.1 AppBar and header
+- [ ] AppBar title reads **Sessions**
+- [ ] **"This Week"** button visible in AppBar (calendarRange icon) — opens weekly review sheet
+- [ ] Streak action button visible in AppBar (fire icon)
+- [ ] Insights button visible in AppBar (sparkles icon) — navigates to `/insights`
+
+### 7.2 Start a session — Normal mode
+- [ ] Sessions screen shows calm focus room layout
+- [ ] Start card shows **Normal / Pomodoro** segmented toggle
+- [ ] Default selection is **Normal** — button reads "Start Session" with a play icon
 - [ ] Tap **"Start Session"** — `CoursePickerSheet` opens
-- [ ] Sheet lists courses from your CWA (Engineering Mathematics, etc.)
+- [ ] Sheet lists courses from your CWA
 - [ ] Select a course — sheet closes
-- [ ] Active session card appears with a live timer running
-- [ ] Timer counts up in real time
+- [ ] Active session card appears with a live timer running (counts up)
 
-### 4.2 Floating mini timer
-- [ ] Navigate to another tab (e.g. CWA or AI) while session is running
+### 7.3 Today's progress
+- [ ] Today's progress card is visible
+- [ ] Shows today's duration and session count
+- [ ] No overflow on the progress card
+
+### 7.4 Floating mini timer
+- [ ] Navigate to another tab (e.g. CWA or Home) while session is running
 - [ ] A **floating timer chip** appears at the bottom of the screen
+- [ ] Timer shows running elapsed time
 - [ ] Tap the floating timer — navigates back to Sessions screen
-- [ ] Lower Sessions content still scrolls above the floating bottom nav / AI FAB / mini timer
+- [ ] Mini timer does not overlap nav badly
+- [ ] Lower Sessions content still scrolls above the floating nav/FAB/timer
 
-### 4.3 Stop and save
+### 7.5 Stop and save
 - [ ] Return to Sessions tab
 - [ ] Tap **Stop** on the active session card
 - [ ] Session is saved and appears in the **History** list
 - [ ] History item shows: course name, start time, duration
 - [ ] Timer card returns to "Start Session" state
 
-### 4.4 Cancel a session (without saving)
+### 7.6 Cancel a session (without saving)
 - [ ] Start a new session
 - [ ] Tap **Cancel** (not Stop)
 - [ ] Session is discarded — does NOT appear in history
 
-### 4.5 Analytics
+### 7.7 History and analytics
+- [ ] History tab shows saved sessions in reverse-chronological order
+- [ ] Swipe a history item to **delete** it — it disappears
 - [ ] After saving at least one session, analytics cards appear:
   - Today's duration and session count
   - Course breakdown
-  - Weekly bar chart (may show one bar)
-- [ ] Scroll near the bottom of Sessions History — the last visible content clears the floating bottom nav / AI FAB
+  - Weekly bar chart
 
-### 4.6 Open Course Hub from Sessions breakdown
+### 7.8 Plan tab
+- [ ] Tap the **Plan** tab inside Sessions
+- [ ] Plan tab does **not** throw FormatException
+- [ ] AI study plan displays (or empty state if no data yet)
+- [ ] Malformed plan values show fallback instead of crashing
+- [ ] Plan content scrolls above the floating bottom nav
+
+### 7.9 Open Course Hub from Sessions breakdown
 - [ ] Scroll to the **"By course"** breakdown card
 - [ ] Tap any course row → navigates to that course's Course Hub
 - [ ] Back arrow returns to the Sessions screen
 
-### 4.7 History management
-- [ ] History list shows saved sessions
-- [ ] Swipe a history item to **delete** it — it disappears
-
-### 4.8 Plan tab
-- [ ] Tap the **Plan** tab inside Sessions
-- [ ] AI study plan displays (or empty state if no data yet)
-- [ ] Lower Study Plan content scrolls above the floating bottom nav / AI FAB
-
-### 4.9 Insights
-- [ ] Tap the **Insights** icon in the AppBar (if visible)
-- [ ] Navigates to `/insights` screen with insight cards
-- [ ] Back arrow returns to Sessions
-
-### 4.10 Pomodoro mode — setup and UI
-
-- [ ] Start card shows a **Normal / Pomodoro** segmented toggle at the top
-- [ ] Default selection is **Normal** — button reads "Start Session" with a play icon
+### 7.10 Pomodoro mode — setup and UI
+- [ ] Start card shows **Normal / Pomodoro** segmented toggle
 - [ ] Tap the **Pomodoro** chip — button changes to "Start Pomodoro" with an hourglass icon
-- [ ] Subtitle below toggle reads "25 min focus · 5 min break · 4 rounds"
+- [ ] Subtitle reads "25 min focus · 5 min break · 4 rounds"
 - [ ] Tap **"Start Pomodoro"** — `CoursePickerSheet` opens; select a course
-- [ ] Active timer card appears — background is **primary blue** (same as Normal)
+- [ ] Active timer card appears — background is primary blue
 - [ ] Timer shows a **countdown** (24:59, 24:58…) not a count-up
-- [ ] Label below countdown reads **"Round 1 of 4  ·  Focus"**
-- [ ] Four progress dots are visible — first dot filled (accent color), rest hollow
+- [ ] Label reads **"Round 1 of 4  ·  Focus"**
+- [ ] Four progress dots are visible — first dot filled, rest hollow
 - [ ] Buttons show **Cancel** (left) and **Stop & Save** (right)
 
-### 4.11 Pomodoro mode — floating mini-timer
-
+### 7.11 Pomodoro — floating mini-timer
 - [ ] Navigate to another tab while Pomodoro is running
-- [ ] Floating pill shows **"R1 Focus · 24:xx"** with a countdown (not a count-up)
-- [ ] Pill color is **primary blue** during focus phase
+- [ ] Floating pill shows **"R1 Focus · 24:xx"** with a countdown
+- [ ] Pill colour is primary blue during focus phase
 - [ ] Tapping the pill navigates back to Sessions
 - [ ] Timer count is still accurate after returning
 
-### 4.12 Pomodoro mode — break phase transition
-
-> To test this quickly, set a short focus duration manually in code or wait; for manual testing use a real 25-min focus block. The key behaviors to verify:
-
-- [ ] When the focus countdown reaches **0:00**, the card background changes to **green**
+### 7.12 Pomodoro — break phase transition
+- [ ] When focus countdown reaches **0:00**, card background changes to **green**
 - [ ] Label updates to **"Round 1 of 4  ·  Short Break"** with a 5:00 countdown
 - [ ] Left button changes to **"Skip Break"**; right button remains **"Stop & Save"**
-- [ ] Floating mini-timer pill turns **green** and shows "R1 Break · 04:xx"
-- [ ] Tap **"Skip Break"** — immediately transitions to Round 2 focus (primary blue card, Round 2 of 4 label)
+- [ ] Floating mini-timer turns **green** and shows "R1 Break · 04:xx"
+- [ ] Tap **"Skip Break"** — immediately transitions to Round 2 focus (primary blue, Round 2 of 4)
 - [ ] Round 2 progress dot fills; Round 1 dot remains filled
 
-### 4.13 Pomodoro mode — session complete state
+### 7.13 Pomodoro — session complete
+- [ ] After Round 4 focus ends, card enters **Long Break** (green, "Round 4 of 4 · Long Break")
+- [ ] When all phases done, card shows **"Session Complete!"**
+- [ ] Below the title: "4 rounds · 100m focused" (or actual rounds × minutes)
+- [ ] Only **"Stop & Save"** button shown (no Cancel or Skip)
+- [ ] Tap **"Stop & Save"** — session saved and appears in History
 
-- [ ] After Round 4 focus ends, the card enters a **Long Break** (green, "Round 4 of 4 · Long Break")
-- [ ] When long break ends (or after skipping it), card shows **"Session Complete!"** in accent color
-- [ ] Below the title: "4 rounds · 100m focused" (or actual rounds completed × minutes)
-- [ ] Only a **"Stop & Save"** button is shown (no Cancel or Skip)
-- [ ] Tap **"Stop & Save"** — session is saved and appears in History
-
-### 4.14 Pomodoro mode — save and history
-
+### 7.14 Pomodoro — save and history
 - [ ] Pomodoro session tile in History shows a **small hourglass icon** next to the duration
-- [ ] Duration shown reflects **focus time only** — 25 min × completed rounds (break time excluded)
-- [ ] Stopping mid-round (during a focus phase) includes partial focus time in the saved duration
-- [ ] Stopping during a break saves only the focus time accumulated so far (break minutes not counted)
-- [ ] A Pomodoro session where the user stops with < 1 minute of focus **does NOT** appear in history
+- [ ] Duration reflects **focus time only** — break time excluded
+- [ ] Stopping mid-round includes partial focus time
+- [ ] Stopping during a break saves only accumulated focus time
+- [ ] Pomodoro session with < 1 minute of focus does NOT appear in history
 - [ ] Normal sessions in the same history list show **no hourglass icon**
 
-### 4.15 Pomodoro — analytics and weekly summary
-
-- [ ] After saving a Pomodoro session, **today's analytics card** shows the correct focus minutes
-- [ ] The **weekly bar chart** includes Pomodoro focus minutes for the correct day
-- [ ] Tap **"This Week"** in the AppBar → weekly review sheet shows total minutes including Pomodoro focus time
+### 7.15 Pomodoro — analytics
+- [ ] Today's analytics card shows correct focus minutes (not break time)
+- [ ] Weekly bar chart includes Pomodoro focus minutes for the correct day
+- [ ] "This Week" review sheet shows total minutes including Pomodoro focus time
 - [ ] No double-counting of break time in any summary
 
 ---
 
-## 5. Streak System (`/streak`)
+## 8. AI Chat
 
-> Streaks build automatically as you log sessions. After Step 4 you should have at least 1 study day.
-
-### 5.1 Streak display
-- [ ] Streak hero card shows current streak count (at least 1 after logging a session today)
-- [ ] Summary row shows: Study Streak, Attendance Streak, Active Course Streaks
-
-### 5.2 Milestones
-- [ ] Milestone grid is visible
-- [ ] Locked milestones show as greyed out (7-day, 14-day, 30-day, etc.)
-- [ ] "Next milestone" progress card shows how many days to the next badge
-
-### 5.3 Attendance tracker
-- [ ] Attendance row shows days of the week
-- [ ] Tap a day to toggle attendance — visual indicator changes
-- [ ] Attendance streak count updates
-
-### 5.4 Per-course streaks
-- [ ] List shows a streak entry per course you've studied
-- [ ] Streaks reflect sessions logged in Step 4
-
-### 5.5 Activity heatmap
-- [ ] Heatmap calendar renders without error
-- [ ] Today's cell has a colored dot (indicating a session was logged)
-
-### 5.6 At-risk badge
-- [ ] (Simulate or wait) If no session is logged on a new day, the Streak tab badge should appear
-- [ ] Badge is red/orange fire indicator
-
----
-
-## 6. AI Coach & Chat (`/ai`)
-
-### 6.1 Notification permission dialog (first visit only)
-- [ ] On the very first visit to the AI tab, a dialog appears: **"Allow notifications?"**
-- [ ] Tap **"Not now"** — dialog dismisses, chat screen loads
-- [ ] Revisit AI tab — dialog does NOT appear again
-
-### 6.2 Chat interface
+### 8.1 Open and basic chat
+- [ ] Tap gold AI FAB → AI Chat opens as full-screen route (no bottom nav)
+- [ ] Premium header with back navigation visible
 - [ ] Chat input field is at the bottom
+- [ ] Empty state / starter prompts visible (if implemented)
 - [ ] Type a study-related question (e.g. "How should I prepare for my exams?")
 - [ ] Tap **Send** — message appears as a user bubble on the right
 - [ ] Typing indicator (dots) appears briefly
 - [ ] AI response appears on the left
 - [ ] Response is readable, relevant, no crash
 
-### 6.2a Markdown & math rendering
-- [ ] Ask **"Explain compound interest with the formula"** — response uses **bold** text and bullet points rendered correctly (not as raw `**` or `-`)
-- [ ] Ask **"What is the quadratic formula?"** — formula renders as typeset math (not raw LaTeX like `\frac{-b \pm ...}`)
-- [ ] Ask **"Find the eigenvalues of the matrix [[2,1],[1,2]]"** — eigenvalue expressions render inline
-- [ ] Ask **"Show me step-by-step Gaussian elimination on a 2×2 system"** — display math blocks (`$$...$$`) render centered, no red crash screen
-- [ ] Ask **"What are the roots of x² - 5x + 6 = 0, show working"** — mixed markdown steps + math renders without crash
+### 8.2 Markdown and math rendering
+- [ ] Ask **"Explain compound interest with the formula"** — response uses **bold** text and bullet points rendered correctly (not raw `**` or `-`)
+- [ ] Ask **"What is the quadratic formula?"** — formula renders as typeset math (not raw LaTeX)
+- [ ] Ask **"Show me step-by-step Gaussian elimination on a 2×2 system"** — display math blocks (`$$...$$`) render centred, no red crash screen
+- [ ] Ask **"What are the roots of x² - 5x + 6 = 0, show working"** — mixed markdown + math renders without crash
 - [ ] Confirm no red error screen on any math-heavy response
-- [ ] Inline code in AI responses (e.g. variable names) renders with monospace grey background
+- [ ] Inline code in AI responses renders with monospace grey background
 - [ ] If AI outputs an unparseable LaTeX expression, it falls back to monospace plain text (not a crash)
 
-### 6.3 Usage counter
+### 8.3 Long response and scrolling
+- [ ] Send a prompt that produces a long multi-paragraph response
+- [ ] Chat scrolls smoothly
+- [ ] Input is not hidden by the keyboard
+
+### 8.4 Usage counter
 - [ ] A counter near the top or input shows remaining free queries (e.g. "2 queries left today")
 - [ ] Counter decrements with each message sent
 - [ ] After using all free queries, a **"Upgrade to Premium"** gate card appears
 
-### 6.4 Chat history drawer
+### 8.5 Chat history drawer
 - [ ] Tap the **History icon** in the AppBar (top right)
 - [ ] End drawer opens with list of past conversations
 - [ ] Tap a past conversation — chat loads with previous messages
 - [ ] Swipe drawer closed
+- [ ] Delete chat confirmation works (if implemented)
 
-### 6.5 ~~Exam Prep card~~ *(Removed in v1.0)*
-
-> The Exam Prep feature card and `/ai/exam-prep` route have been removed. The AI screen no longer shows this card.
-
----
-
-## 8. Plan Screen (`/plan`)
-
-> Works best after adding courses (Step 2) and timetable slots (Step 3).
-
-### 8.1 Generate a daily plan
-- [ ] Navigate to **Plan** tab
-- [ ] Tap the **Generate** button (AppBar)
-- [ ] Loading state is shown (spinner or shimmer)
-- [ ] Plan cards appear organized into sections: Classes, Study
-- [ ] Tasks are sensible (study tasks for your courses, class tasks matching timetable)
-
-### 8.2 Task sections
-- [ ] **Classes section** (blue): shows timetabled classes for today
-- [ ] **Study section** (green): shows AI-suggested study tasks
-
-### 8.3 Mark a task complete
-- [ ] Tap a task — it marks as complete (checkbox/strikethrough)
-- [ ] Progress bar at the top increments
-
-### 8.4 Add a manual task
-- [ ] Tap the **FAB** (+ icon)
-- [ ] `AddManualTaskSheet` opens
-- [ ] Fill in a task name and optionally a course
-- [ ] Save — task appears in the plan
-
-### 8.5 Dismiss/delete a task
-- [ ] Swipe a task tile left or right to dismiss it
-- [ ] Task is removed from the list
-
-### 8.6 ~~Exam Mode~~ *(Removed in v1.0)*
-
-> Exam Mode FAB, ExamModeActivationSheet, ExamManagerSheet, exam banner, and exam progress cards have been removed.
+### 8.6 Back navigation
+- [ ] Press system back — returns to the previous tab (not phone launcher)
 
 ---
 
-## 9. Settings (`/settings`)
+## 9. Course Hub
 
-Navigate to Settings via the AppBar icon on any supported screen (e.g. AI or Plan screens — look for a gear icon).
+> Setup: complete Sections 4, 6, and 7 first. Current launch scope: 3 tabs — Overview, Sessions, Notes.
 
-### 9.1 Open settings
-- [ ] Settings screen loads without crash
-- [ ] All toggle switches are visible
-
-### 9.2 Notification toggles
-- [ ] Toggle **Study Reminders** on — switch flips
-- [ ] Toggle **Streak Alerts** on
-- [ ] Toggle **Milestone Alerts** on
-- [ ] Toggle **Weekly Review prompt** on
-- [ ] Each toggle persists if you leave and return to Settings
-
-### 9.3 Daily reminder time picker
-- [ ] Tap the **daily reminder time card**
-- [ ] `TimePicker` dialog opens
-- [ ] Select a time (e.g. 8:00 PM)
-- [ ] Confirm — card now shows "8:00 PM"
-
-### 9.4 Cancel all notifications
-- [ ] Tap **"Cancel all notifications"** (red button)
-- [ ] Confirm action — all scheduled notifications are cleared
-- [ ] A snackbar or feedback confirms cancellation
-
----
-
-## 10. Weekly Review (`/ai/weekly-review`)
-
-> Best tested on a Monday or after logging multiple sessions across several days.
-
-### 10.1 Navigate to weekly review
-- [ ] On the AI screen, look for a **Weekly Review banner** (visible on Mondays or when a review is ready)
-- [ ] Tap it — navigates to `/ai/weekly-review`
-
-### 10.2 Review sections
-- [ ] **"Your week at a glance"** — always visible, shows session stats
-- [ ] **"Wins this week"** — visible or blurred (free users see blur overlay)
-- [ ] **"Something to fix"** — visible or blurred
-- [ ] **"Your #1 priority"** — visible or blurred
-
-### 10.3 Premium gate (free user)
-- [ ] Blurred sections show **"Upgrade to Premium"** overlay text
-- [ ] Tapping the overlay may navigate to `/subscribe`
-
-### 10.4 "Ask about this review"
-- [ ] If on premium (or in dev mode), **"Ask about this review"** button is visible
-- [ ] Tapping it navigates to the AI Chat screen with the review pre-loaded as context
-
----
-
-## 11. Cross-Feature Smoke Tests
-
-These tests verify features work together correctly.
-
-### 11.1 Session → Streak update
-- [ ] Log a study session (Step 4)
-- [ ] Go to Streak tab
-- [ ] Study streak count has incremented or is at least 1
-
-### 11.2 Session → Analytics
-- [ ] After logging 2+ sessions for different courses, go to Sessions → Analytics cards
-- [ ] Course breakdown shows multiple courses with correct durations
-
-### 11.3 CWA course → Sessions course picker
-- [ ] Go to Sessions → Start Session
-- [ ] `CoursePickerSheet` lists the same courses you added in CWA (Step 2)
-
-### 11.4 ~~CWA course → Exam Prep course chips~~ *(Removed in v1.0)*
-
-> Exam Prep Generator has been removed; this cross-feature test no longer applies.
-
-### 11.5 Timetable → Plan screen
-- [ ] Go to Plan, tap Generate
-- [ ] Class tasks in the plan match the class slots you added in Timetable (Step 3)
-
-### 11.6 Notifications flow
-- [ ] Go to Settings, enable all notification types
-- [ ] Set a study reminder time to 1–2 minutes from now
-- [ ] Lock device / minimize app
-- [ ] Notification appears at the set time with correct message
-
-### 11.7 Mini timer persistence
-- [ ] Start a session in Sessions tab
-- [ ] Navigate through all 4 bottom nav tabs one by one
-- [ ] Mini floating timer is visible on every tab
-- [ ] Timer count is still running (not reset)
-- [ ] Return to Sessions — active session card is still live
-
-### 11.8 Pomodoro → Streak update
-- [ ] Complete a Pomodoro session (at least 1 focus round saved)
-- [ ] Go to Streak tab — study streak count reflects the session logged today
-
-### 11.9 Pomodoro → Weekly Review minutes
-- [ ] Log a Pomodoro session (e.g. 2 rounds = 50 min focus)
-- [ ] Tap **"This Week"** on the Sessions AppBar
-- [ ] Weekly Review sheet total minutes includes the 50 min (not 60 min with breaks, not 0)
-
----
-
-## 12. Edge Cases & Error States
-
-### 12.1 No internet — AI features
-- [ ] Turn off internet / airplane mode
-- [ ] Go to AI Chat — type a message and send
-- [ ] App shows an error message (not a crash)
-- [ ] Error message is user-friendly (not a raw stack trace)
-- [ ] Repeat for Exam Prep generation and CWA Coach
-
-### 12.2 Empty states
-- [ ] Clear all courses from CWA — screen shows empty state prompt
-- [ ] Go to Exam Prep with no courses — shows "No courses found" message
-- [ ] Start app with no sessions logged — Sessions history shows empty state
-
-### 12.3 Long content
-- [ ] Add a course name longer than 30 characters — card still renders without overflow
-- [ ] In AI Chat, send a very long message — input field scrolls or wraps correctly
-- [ ] AI response that is several paragraphs long — chat scrolls smoothly
-
-### 12.4 Back navigation
-- [ ] From Settings, press system back — returns to the screen you came from
-- [ ] From Weekly Review, press system back — returns to AI Chat
-- [ ] From Course Hub, press system back — returns to the screen that opened it
-- [ ] From AI Chat (opened via FAB), press system back — returns to the previous tab
-- [ ] From Streak (opened via drawer), press system back — returns to Today
-- [ ] From Insights (opened via drawer), press system back — returns to Today
-- [ ] From any bottom nav tab (Home, CWA, Table, Sessions), press system back — exits to phone launcher (expected)
-- [ ] No "back press" results in a blank screen
-
----
-
-## 13. Course Hub Workspace (`/course/:courseCode`)
-
-> **Setup:** complete Steps 2, 3, and 4 first — courses, timetable slots, sessions, and streaks must exist.
-> Current launch scope: 3 tabs only — Overview, Sessions, Notes.
-
-### 13.1 Entry points
-- [ ] Timetable → tap a class slot → tap **"Open Workspace"** → hub opens for that course, no bottom nav visible
-- [ ] CWA → tap **⋮** on a course card → tap **"Open Workspace"** → hub opens for that course
-- [ ] Sessions → tap any course row in the "By course" breakdown → hub opens for that course
+### 9.1 Entry points
+- [ ] CWA → tap **⋮** on a course card → tap **"Open Workspace"** → hub opens, no bottom nav
+- [ ] Timetable → tap a class slot → tap **"Open Workspace"** → hub opens for that course
+- [ ] Sessions → tap any course row in "By course" breakdown → hub opens
 - [ ] Back arrow on the hub returns to the screen that launched it
-- [ ] Open hub for Course A → back → open hub for Course B → Course B's data is shown (no stale data from A)
+- [ ] Open hub for Course A → back → open hub for Course B → Course B's data is shown (no stale data)
 
-### 13.2 Overview tab
-- [ ] Course code, name, and credit hours are correct
-- [ ] Expected score % and grade letter chip match the CWA planner
-- [ ] "This course contributes X pts" is shown under CWA Impact
-- [ ] Current CWA figure is shown
-- [ ] Session count and total study time are accurate (cross-check with Sessions history)
-- [ ] "Last studied" shows a sensible day count, or "Not studied yet" for an unused course
-- [ ] Streak mini-card shows the correct per-course streak and alive/broken status
-
-### 13.3 Sessions tab
-- [ ] Only sessions for **this** course appear — sessions from other courses are absent
-- [ ] Sessions are in reverse-chronological order
-- [ ] Weekly bar chart reflects only this course's study time
-- [ ] Empty state shows for a course that has never been studied
-
-### 13.4 Notes tab — create
-- [ ] Tap the **+** FAB → `NoteEditorSheet` opens
-- [ ] Enter a title and body → tap **Save** → note appears in the list immediately (Isar stream, no refresh needed)
-- [ ] Note tile shows: title, first line of body as a preview, and timestamp
-
-### 13.5 Notes tab — edit & delete
-- [ ] Tap an existing note → editor opens pre-filled with the title and body
-- [ ] Edit the body → Save → list shows updated content
-- [ ] Swipe a note left → it disappears from the list immediately
-- [ ] Notes from Course A do **not** appear in Course B's Notes tab
-- [ ] Empty state shows when no notes exist
-
-### 13.6 Tab scope confirmation
+### 9.2 Tab bar
 - [ ] Tab bar shows exactly **3 tabs**: **Overview**, **Sessions**, **Notes**
 - [ ] **Files** tab is not visible
 - [ ] **AI Chat** tab is not visible
-- [ ] Switching between the 3 tabs works without crash
+- [ ] Switching between tabs works without crash
 
-### 13.7 Stability
-- [ ] Hot restart → notes and per-course stats are still present on their respective tabs
-- [ ] Full app restart → notes and per-course stats are still present
+### 9.3 Overview tab
+- [ ] Course code, name, and credit hours are correct
+- [ ] Expected score % and grade letter chip match the CWA planner
+- [ ] "This course contributes X pts" shown under CWA Impact
+- [ ] Current CWA figure shown
+- [ ] Session count and total study time accurate
+- [ ] "Last studied" shows sensible day count or "Not studied yet"
+- [ ] Streak mini-card shows correct per-course streak and alive/broken status
+
+### 9.4 Sessions tab
+- [ ] Only sessions for **this** course appear
+- [ ] Sessions are in reverse-chronological order
+- [ ] Weekly bar chart reflects only this course's study time
+- [ ] Empty state shows for a course never studied
+
+### 9.5 Notes tab — create
+- [ ] Tap the **+** FAB → note editor opens
+- [ ] Enter a title and body → tap **Save** → note appears in the list immediately
+- [ ] Note tile shows: title, first line preview, and timestamp
+
+### 9.6 Notes tab — edit and delete
+- [ ] Tap an existing note → editor opens pre-filled
+- [ ] Edit the body → Save → list shows updated content
+- [ ] Swipe a note left → it disappears from the list
+- [ ] Notes from Course A do not appear in Course B's Notes tab
+- [ ] Empty state shows when no notes exist
+
+### 9.7 Stability
+- [ ] Hot restart → notes and per-course stats persist
+- [ ] Full app restart → notes and per-course stats persist
 - [ ] No red-screen errors on any of the 3 tabs
-- [ ] No overflow or render errors on a standard ~360 dp width screen
-
-### 13.8 ~~Flashcards tab~~ *(Removed in v1.0)*
-
-> The Flashcards tab, Files tab, and per-course AI Chat tab have been removed from the Course Hub for the launch build. The hub now has 3 tabs: Overview, Sessions, Notes.
+- [ ] No overflow on a standard ~360dp screen
 
 ---
 
-## 14. Timetable Image Import (`/timetable/import`)
+## 10. Modals / Bottom Sheets / Dialogs
 
-> **Setup:** requires internet access (DeepSeek Vision API call). Have a clear photo of a university timetable ready — a printed KNUST timetable or a screenshot of one.
+### 10.1 Bottom sheets
+- [ ] Add Course sheet — opens, closes, saves correctly
+- [ ] Add Slot sheet — opens, closes, saves correctly
+- [ ] Course Picker sheet — lists courses, selection works
+- [ ] Import Options sheet — four options, each navigates correctly
+- [ ] Slot Detail sheet — details visible, edit works, Open Workspace works
+- [ ] CWA Coach sheet — AI advice loads, dismisses on back/swipe
+- [ ] Note Editor sheet — opens in create and edit modes
+- [ ] All sheets have a drag handle
+- [ ] All sheets dismiss on swipe down
+- [ ] All sheets dim the background
 
-### 14.1 Idle screen
-- [ ] Screen shows a scanner icon, a title "Import Timetable", explanatory subtitle text
-- [ ] Two buttons visible: **"Take Photo"** and **"Choose from Gallery"**
-- [ ] No bottom navigation bar is shown
+### 10.2 Confirmation dialogs
+- [ ] Delete course confirmation appears and works
+- [ ] Delete session confirmation appears and works
+- [ ] Delete note confirmation appears and works
+- [ ] Delete timetable slot confirmation appears and works
+- [ ] Discard unsaved changes confirmation appears and works
+- [ ] No destructive action executes without confirmation
 
-### 14.2 Camera path
-- [ ] Tap **"Take Photo"** → device camera opens
-- [ ] Take a photo of a timetable → camera closes
-- [ ] Screen transitions to **"Extracting timetable…"** loading state (spinner + message)
-- [ ] After API response, screen shows the review list (not a crash or blank screen)
+### 10.3 Keyboard behaviour
+- [ ] Bottom sheets adjust correctly when keyboard opens
+- [ ] Form fields inside sheets are not hidden by keyboard
+- [ ] Dismissing keyboard does not break sheet state
 
-### 14.3 Gallery path
-- [ ] Tap **"Choose from Gallery"** → system image picker opens
-- [ ] Select an existing timetable image → picker closes
-- [ ] Loading state appears ("Extracting timetable…") then review list
-
-### 14.4 Cancel — camera
-- [ ] Tap **"Take Photo"** → camera opens → press back without taking a photo
-- [ ] Returns to the idle screen (no error, no crash)
-
-### 14.5 Cancel — gallery
-- [ ] Tap **"Choose from Gallery"** → picker opens → press back without selecting
-- [ ] Returns to the idle screen
-
-### 14.6 Review screen
-- [ ] At least one slot card is shown for a real timetable image
-- [ ] Each slot tile shows: course code + course name, day, start–end time, venue (if detected), slot type chip
-- [ ] Slot type chip is color-coded: Lecture (navy), Practical (teal), Tutorial (orange)
-- [ ] All slots are pre-selected (checkboxes are ticked) by default
-- [ ] Slot count chip at the top reflects the number found (e.g. "8 slots found")
-- [ ] AppBar shows **"Import (N)"** action button (N = selected count)
-- [ ] Bottom bar shows **"Import N Slot(s)"** button
-
-### 14.7 Select / deselect
-- [ ] Tap a slot tile → checkbox toggles off; "Import (N)" count decrements
-- [ ] Tap again → checkbox toggles back on
-- [ ] Tap **"Deselect All"** → all checkboxes clear; Import button becomes disabled (greyed)
-- [ ] Tap **"Select All"** → all checkboxes re-tick; Import button re-enables
-- [ ] When zero slots selected, bottom bar shows "Select slots to import" (disabled)
-
-### 14.8 Confirm import
-- [ ] With at least one slot selected, tap **"Import N Slot(s)"**
-- [ ] Saving overlay (semi-transparent + spinner) appears briefly
-- [ ] App navigates automatically to `/timetable`
-- [ ] Imported slots appear on the correct days in the Class Timetable grid
-- [ ] No duplicate imports if navigated away and returned
-
-### 14.9 Error — no slots found
-- [ ] Upload a non-timetable image (e.g. a selfie or blank page)
-- [ ] Error state shows: **"No timetable slots found. Try a clearer photo."**
-- [ ] **"Try Again"** button resets to the idle screen
-
-### 14.10 Error — no internet
-- [ ] Turn off internet → pick a timetable image
-- [ ] Error state shows an API error message (not a crash, not a raw stack trace)
-- [ ] **"Try Again"** button resets to idle
-
-### 14.11 Imported slots persist
-- [ ] After a successful import, hot-restart the app
-- [ ] Go to Timetable → imported slots are still present on their respective days
-- [ ] Tap an imported slot → `SlotDetailSheet` opens with correct details
-- [ ] "Open Workspace" on an imported slot navigates to the correct Course Hub
+### 10.4 Visual consistency
+- [ ] No white-on-light buttons (contrast issue)
+- [ ] All sheet headers use consistent styling
+- [ ] Action rows are consistently positioned
+- [ ] No overflow on any sheet
 
 ---
 
-## 15. Performance & Stability
+## 11. Settings / Streak / Insights / Weekly Review
 
-- [ ] Scroll the CWA course list quickly — no jank or dropped frames
-- [ ] Scroll the Streak heatmap — no jank
-- [ ] Scroll the Sessions history list with 10+ items — smooth
-- [ ] Open and close bottom sheets 5+ times rapidly — no crashes or ghost sheets
-- [ ] Switch between all 4 bottom nav tabs rapidly — no crash, state is preserved
-- [ ] Leave the session timer running for 5+ minutes — timer is still accurate on return
-- [ ] Kill and reopen the app during an active session — session state is restored (timer continues or session is recoverable)
-- [ ] Switch rapidly between Course Hub tabs — no crash, tab state is preserved
-- [ ] Open and close the Course Hub for 3 different courses in sequence — correct data each time
+### 11.1 Settings
+- [ ] Settings screen loads without crash
+- [ ] All notification toggle switches visible: Study Reminders, Streak Alerts, Milestone Alerts, Weekly Review prompt
+- [ ] Each toggle persists if you leave and return to Settings
+- [ ] Tap the **daily reminder time card** → TimePicker dialog opens
+- [ ] Select a time (e.g. 8:00 PM) → card updates
+- [ ] Tap **"Cancel all notifications"** → confirmation → all scheduled notifications cleared
+- [ ] DEV premium toggle visible (debug builds only)
+- [ ] No overflow on the settings screen
+
+### 11.2 Streak
+- [ ] Streak screen opens (via drawer from Today)
+- [ ] Streak hero card shows current streak count
+- [ ] Summary row shows: Study Streak, Attendance Streak, Active Course Streaks
+- [ ] Milestone grid visible with locked/unlocked states
+- [ ] "Next milestone" progress card shows days remaining
+- [ ] Attendance tracker — tap a day to toggle attendance
+- [ ] Per-course streak list reflects sessions logged
+- [ ] Activity heatmap renders without error
+- [ ] Today's cell has a coloured dot (if session logged)
+- [ ] No overflow on the streak screen
+
+### 11.3 Insights
+- [ ] Insights screen opens (via drawer from Today)
+- [ ] Insight cards display with animated entry
+- [ ] Cards show relevant analysis (best study day, neglected courses, etc.)
+- [ ] No crash with zero data
+- [ ] No overflow
+
+### 11.4 Weekly Review
+- [ ] Weekly Review opens (via drawer from Today or Mondays auto-prompt)
+- [ ] Stats display: total minutes, best day, streak
+- [ ] Highlight chips visible
+- [ ] Reflection text field works
+- [ ] Save works — reflection persists
+- [ ] Keyboard does not hide actions
+- [ ] No overflow
 
 ---
 
-## 16. Phase 15.5 — Stability Hardening Smoke Tests
+## 12. Edge Case Testing
 
-> These tests verify the hardening work from Phase 15.5. Run them after completing sections 1–15.
+### 12.1 No data states
+- [ ] No courses — CWA shows empty state prompt, no crash
+- [ ] No timetable entries — Timetable shows calm empty state
+- [ ] No sessions — Sessions history shows empty state
+- [ ] No study days — Streak shows empty/zero state
+- [ ] No tasks — Plan/Home shows empty state
+- [ ] No notes — Course Hub Notes tab shows empty state
 
-### 16.1 Offline detection — AI features
+### 12.2 Many data states
+- [ ] Many courses (10+) — CWA scrolls smoothly, no overflow
+- [ ] Many timetable entries — grid renders correctly, overlapping slots split into columns
+- [ ] Many sessions (20+) — History scrolls smoothly
+- [ ] Long course names (30+ chars) — cards render without overflow
+- [ ] Long locations — timetable slot cards do not overflow
+- [ ] Long AI response — chat scrolls smoothly, no crash
 
-- [ ] Turn on **airplane mode**
-- [ ] Go to **AI Chat** → type a message and send → error state appears with `"You are offline. AI features require a connection."` — no crash, no stuck spinner
-- [ ] Go to **Exam Prep** → tap Generate → same offline error state appears
-- [ ] Go to **CWA screen** → tap "Get AI Coaching" → error message shown — app does not hang
-- [ ] Go to **Timetable Import** → pick an image → offline error state shown before any API call
-- [ ] Go to **Registration Slip Import** → pick an image → offline error shown
-- [ ] Turn airplane mode **off** → retry each feature → it works normally
+### 12.3 Screen size extremes
+- [ ] Small Android screen (~360dp) — no overflow on any major screen
+- [ ] Large Android screen — layout scales appropriately, no stretched cards
 
-### 16.2 Error states — every screen shows feedback on failure
+### 12.4 Keyboard behaviour
+- [ ] Keyboard open on forms — fields remain visible
+- [ ] Keyboard open on bottom sheets — sheet adjusts correctly
+- [ ] Dismissing keyboard — no layout jump or broken state
 
-- [ ] Simulate a provider failure (or fresh-install with empty Isar) and verify each screen shows a spinner or empty state — **no blank white screen**
-- [ ] On any screen with an `ErrorRetryWidget`, tap **"Try Again"** — provider reloads and content appears (or shows loading)
-- [ ] **CWA screen**: delete all courses → empty state message visible, no crash
-- [ ] **Sessions screen**: no sessions → empty state message visible
-- [ ] **Streak screen**: no study days → empty state message (not a blank card)
-- [ ] **Plan screen**: no tasks → empty state visible
-- [ ] **Course Hub — Notes tab**: no notes → empty state visible
+### 12.5 Scrolling
+- [ ] Scroll to bottom of Home screen — all content visible above nav
+- [ ] Scroll to bottom of CWA screen — all courses visible
+- [ ] Scroll to bottom of Table screen — full timetable visible
+- [ ] Scroll to bottom of Sessions History — all sessions visible
+- [ ] Scroll to bottom of AI Chat — all messages visible
+- [ ] Scroll to bottom of Course Hub tabs — all content visible
 
-### 16.3 Navigation safety — invalid course code
+### 12.6 No internet — AI features
+- [ ] Turn on airplane mode
+- [ ] Go to AI Chat — type a message and send → error message (not crash)
+- [ ] Error message is user-friendly (not a raw stack trace)
+- [ ] Go to CWA Coach → error message shown, app does not hang
+- [ ] Go to Timetable Import → pick an image → offline error shown
+- [ ] Go to Registration Slip Import → pick an image → offline error shown
+- [ ] Turn airplane mode off → retry each feature → works normally
 
-- [ ] Manually navigate to `/course/` (empty code) — redirects to `/cwa` with a snackbar "Course not found."
-- [ ] Navigate to `/course/FAKE999` (nonexistent course) → fallback scaffold appears: "This course no longer exists" with a back button — no crash
-- [ ] Back button on the fallback scaffold navigates correctly (no stuck nav stack)
+### 12.7 Active Pomodoro edge cases
+- [ ] Background app mid-Pomodoro countdown → return → countdown is still accurate
+- [ ] Rapidly tap Skip Break multiple times → only one phase transition fires
+- [ ] Kill app during active Pomodoro → relaunch → no active session shown, no phantom timer
+- [ ] Rapid tab switching during active Pomodoro → timer remains accurate
 
-### 16.4 Course Hub scope safety
+---
 
-- [ ] Open any Course Hub and confirm **Files** tab is absent
-- [ ] Open any Course Hub and confirm **AI Chat** tab is absent
-- [ ] Navigation into and out of the 3-tab hub still works from CWA, Timetable, and Sessions
+## 13. Release / Beta Readiness
 
-### 16.5 Timer reliability — edge cases
+### 13.1 Build and analyze
+- [ ] `flutter clean` — completes without error
+- [ ] `flutter pub get` — completes without error
+- [ ] `flutter analyze` — no new issues (pre-existing baseline acceptable)
+- [ ] `dart run build_runner build --delete-conflicting-outputs` — completes
+- [ ] `flutter test` — all tests pass
 
-- [ ] Start a **Normal session** → background the app for 2+ minutes → return → elapsed time is correct (not reset to zero, not stuck)
-- [ ] Start a **Pomodoro session** → background the app mid-countdown → return → countdown is still accurate (time not frozen)
-- [ ] During Pomodoro focus, rapidly tap **Skip Break** (when break starts) multiple times → only one phase transition fires — no double advance
-- [ ] Kill the app during an active Pomodoro → relaunch → no active session shown, no crash, no phantom timer
+### 13.2 Build APK
+- [ ] `flutter build apk --debug` — builds successfully
+- [ ] `flutter build apk --release` — builds successfully (if signing configured)
+- [ ] APK installs on real device
+- [ ] App opens on real device without crash
 
-### 16.6 Isar write safety
+### 13.3 Device testing
+- [ ] Installed APK on real Android device
+- [ ] Sent APK to at least one friend/tester
+- [ ] Tester feedback collected
+- [ ] Critical crashes documented and fixed
+- [ ] Major overflow issues documented and fixed
 
-- [ ] In **CWA screen**, add a course → summary bar updates → hot restart → course persists
-- [ ] In **Course Hub → Notes tab**, add a note → hot restart → note persists
-- [ ] In **Session screen**, stop & save a session → hot restart → session appears in history
-- [ ] No red-screen or crash on any of the above — if an Isar write fails, a snackbar is shown
-
-### 16.7 Global crash capture
-
-- [ ] Check logcat (or flutter logs) during normal use — no unhandled `🔴 UNCAUGHT ERROR:` lines during normal flows
-- [ ] App recovers from any in-app error without showing a red debug screen to the user
+### 13.4 Pre-store checks
+- [ ] Privacy policy reviewed for Play Store compliance
+- [ ] App permissions reviewed (notifications, camera, storage)
+- [ ] App icon and name correct
+- [ ] No test/debug data visible to users
+- [ ] API keys in `.env` (not hardcoded)
 
 ---
 
@@ -875,33 +711,22 @@ These tests verify features work together correctly.
 
 | Section | Status | Notes |
 |---|---|---|
-| 1. App Launch & Navigation (incl. Home tab + back button) | | |
-| 2. CWA Planner | | |
-| 3. Timetable | | |
-| 4. Study Sessions — Normal mode | | |
-| 4a. Pomodoro mode (4.10–4.15) | | |
-| 5. Streak System | | |
-| 6. AI Coach & Chat | | |
-| 6a. AI Markdown & Math Rendering | | |
-| 7. ~~Exam Prep Generator~~ | REMOVED | Deleted in v1.0 |
-| 8. Plan Screen | | |
-| 9. Settings | | |
-| 10. Weekly Review | | |
-| 11. Cross-Feature Tests | | |
-| 11a. Pomodoro cross-feature (11.8–11.9) | | |
-| 12. Edge Cases | | |
-| 13. Course Hub Workspace (3-tab) | | |
-| 14. Timetable Image Import | | |
-| 15. Performance & Stability | | |
-| 16a. Offline detection (15.5) | | |
-| 16b. Error/empty states (15.5) | | |
-| 16c. Navigation safety (15.5) | | |
-| 16d. Course Hub scope safety (15.5) | | |
-| 16e. Timer reliability (15.5) | | |
-| 16f. Isar write safety (15.5) | | |
+| 1. Fresh Install / Launch | | |
+| 2. App Shell / Navigation | | |
+| 3. Home Screen (Today) | | |
+| 4. CWA Screen | | |
+| 5. CWA Import / Manual Entry | | |
+| 6. Table / Timetable | | |
+| 7. Sessions (Normal + Pomodoro) | | |
+| 8. AI Chat | | |
+| 9. Course Hub | | |
+| 10. Modals / Bottom Sheets / Dialogs | | |
+| 11. Settings / Streak / Insights / Weekly Review | | |
+| 12. Edge Case Testing | | |
+| 13. Release / Beta Readiness | | |
 
-**Tester:** ___________________  
-**Date:** ___________________  
-**Build / Commit:** ___________________  
-**Device / Emulator:** ___________________  
+**Tester:** ___________________
+**Date:** ___________________
+**Build / Commit:** ___________________
+**Device / Emulator:** ___________________
 **Android Version:** ___________________
