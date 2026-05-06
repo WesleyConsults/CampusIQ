@@ -78,9 +78,9 @@ class _CourseCardState extends ConsumerState<CourseCard> {
 
     return Padding(
       padding:
-          const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 4),
+          const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 3),
       child: CampusCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.sm2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -121,7 +121,7 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
                           height: 1.25,
@@ -177,7 +177,7 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.xs2),
             Row(
               children: [
                 Expanded(
@@ -187,7 +187,7 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                     valueColor: gradeColor,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.xs2),
                 Expanded(
                   child: _CompactInfoBlock(
                     label: 'Status',
@@ -199,7 +199,7 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.xs2),
             Row(
               children: [
                 TextButton.icon(
@@ -232,7 +232,7 @@ class _CourseCardState extends ConsumerState<CourseCard> {
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
               secondChild: Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                padding: const EdgeInsets.only(top: AppSpacing.xs2),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -346,8 +346,8 @@ class _CompactInfoBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
+        horizontal: AppSpacing.xs2,
+        vertical: AppSpacing.xxs2,
       ),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
@@ -361,13 +361,14 @@ class _CompactInfoBlock extends StatelessWidget {
             style: const TextStyle(
               fontSize: 10,
               color: AppTheme.textSecondary,
+              height: 1.15,
             ),
           ),
-          const SizedBox(height: AppSpacing.xxs),
+          const SizedBox(height: AppSpacing.xxxs),
           Text(
             value,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: valueColor,
             ),

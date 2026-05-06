@@ -46,10 +46,10 @@ class CwaSummaryBar extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
         AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.sm,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -79,7 +79,7 @@ class CwaSummaryBar extends StatelessWidget {
             heroValue,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 38,
+              fontSize: 34,
               fontWeight: FontWeight.w800,
               height: 0.94,
             ),
@@ -89,11 +89,11 @@ class CwaSummaryBar extends StatelessWidget {
             label,
             style: const TextStyle(
               color: Colors.white70,
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               Expanded(
@@ -103,7 +103,7 @@ class CwaSummaryBar extends StatelessWidget {
                   valueColor: AppTheme.accent,
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: _DetailStat(
                   label: 'Gap',
@@ -113,14 +113,14 @@ class CwaSummaryBar extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               value: progressValue,
               backgroundColor: Colors.white.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(gapColor),
-              minHeight: 6,
+              minHeight: 5,
             ),
           ),
           const SizedBox(height: AppSpacing.xxs2),
@@ -128,8 +128,8 @@ class CwaSummaryBar extends StatelessWidget {
             insight,
             style: const TextStyle(
               color: Colors.white70,
-              fontSize: 12,
-              height: 1.35,
+              fontSize: 11,
+              height: 1.3,
             ),
           ),
         ],
@@ -153,10 +153,10 @@ class _DetailStat extends StatelessWidget {
       children: [
         Text(label,
             style: const TextStyle(color: Colors.white54, fontSize: 11)),
-        const SizedBox(height: AppSpacing.xxs),
+        const SizedBox(height: AppSpacing.xxxs),
         Text(value,
             style: TextStyle(
-                color: valueColor, fontSize: 16, fontWeight: FontWeight.w700)),
+                color: valueColor, fontSize: 15, fontWeight: FontWeight.w700)),
       ],
     );
   }

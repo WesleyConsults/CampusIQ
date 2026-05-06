@@ -25,6 +25,9 @@ import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
 class CwaScreen extends ConsumerWidget {
+  static const double _compactSectionGap = AppSpacing.md;
+  static const double _compactListGap = AppSpacing.xs2;
+
   const CwaScreen({super.key});
 
   Future<void> _openAddSheet(BuildContext context, WidgetRef ref,
@@ -132,7 +135,7 @@ class CwaScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
-              AppSpacing.sm,
+              AppSpacing.xs,
               AppSpacing.xl,
               0,
             ),
@@ -313,7 +316,7 @@ class _ViewToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 52,
+      height: 46,
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: AppRadii.button,
@@ -367,7 +370,7 @@ class _ToggleTab extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: active ? Colors.white : AppTheme.textSecondary,
               ),
@@ -423,7 +426,7 @@ class _ImportOptionsSheet extends StatelessWidget {
         children: [
           for (final option in options) ...[
             _ImportOptionTile(option: option),
-            if (option != options.last) const SizedBox(height: AppSpacing.sm),
+            if (option != options.last) const SizedBox(height: AppSpacing.xs2),
           ],
         ],
       ),
@@ -465,8 +468,8 @@ class _ImportOptionTile extends StatelessWidget {
       onTap: option.onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
+          horizontal: AppSpacing.sm2,
+          vertical: AppSpacing.sm2,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,7 +488,7 @@ class _ImportOptionTile extends StatelessWidget {
                 size: AppIconSizes.xl,
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -493,7 +496,7 @@ class _ImportOptionTile extends StatelessWidget {
                   Text(
                     option.label,
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
                     ),
@@ -502,9 +505,9 @@ class _ImportOptionTile extends StatelessWidget {
                   Text(
                     option.subtitle,
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       color: AppTheme.textSecondary,
-                      height: 1.35,
+                      height: 1.3,
                     ),
                   ),
                 ],
@@ -538,41 +541,41 @@ class _SupportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CampusCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: Icon(icon, color: AppTheme.primary, size: AppIconSizes.xl),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             title,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.xxs2),
           Text(
             subtitle,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               color: AppTheme.textSecondary,
-              height: 1.45,
+              height: 1.35,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs2),
           Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
+            spacing: AppSpacing.xs2,
+            runSpacing: AppSpacing.xs2,
             children: actions,
           ),
         ],
@@ -587,7 +590,7 @@ class _QuickStatsGrid extends StatelessWidget {
   const _QuickStatsGrid({required this.items});
 
   /// Scales with profile — reduce for compact, increase for comfortable.
-  static const double _quickStatCardHeight = 92;
+  static const double _quickStatCardHeight = 82;
 
   @override
   Widget build(BuildContext context) {
@@ -597,8 +600,8 @@ class _QuickStatsGrid extends StatelessWidget {
       itemCount: items.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: AppSpacing.sm,
-        crossAxisSpacing: AppSpacing.sm,
+        mainAxisSpacing: AppSpacing.xs2,
+        crossAxisSpacing: AppSpacing.xs2,
         mainAxisExtent: _quickStatCardHeight,
       ),
       itemBuilder: (context, index) => _QuickStatCard(item: items[index]),
@@ -626,7 +629,7 @@ class _QuickStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CampusCard(
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.xs2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -637,13 +640,14 @@ class _QuickStatCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 10,
               color: AppTheme.textSecondary,
+              height: 1.15,
             ),
           ),
           const SizedBox(height: AppSpacing.xxs),
           Text(
             item.value,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 17,
               fontWeight: FontWeight.w800,
               color: AppTheme.textPrimary,
             ),
@@ -670,14 +674,14 @@ class _StateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CampusCard(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 56,
-            height: 56,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppRadii.md),
@@ -689,23 +693,23 @@ class _StateCard extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.xxs2),
           Text(
             subtitle,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               color: AppTheme.textSecondary,
-              height: 1.5,
+              height: 1.4,
             ),
           ),
           if (action != null) ...[
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.md),
             action!,
           ],
         ],
@@ -803,9 +807,9 @@ class _SectionNote extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        fontSize: 13,
+        fontSize: 12,
         color: AppTheme.textSecondary,
-        height: 1.45,
+        height: 1.35,
       ),
     );
   }
@@ -855,7 +859,7 @@ class _SemesterView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.md,
+                  AppSpacing.xs2,
                   AppSpacing.xl,
                   0,
                 ),
@@ -875,7 +879,7 @@ class _SemesterView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.sm,
+                  AppSpacing.xs2,
                   AppSpacing.xl,
                   0,
                 ),
@@ -899,7 +903,7 @@ class _SemesterView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.lg,
+                  CwaScreen._compactSectionGap,
                   AppSpacing.xl,
                   0,
                 ),
@@ -929,7 +933,7 @@ class _SemesterView extends ConsumerWidget {
                   AppSpacing.xl,
                   6,
                   AppSpacing.xl,
-                  AppSpacing.xs,
+                  AppSpacing.xxxs,
                 ),
                 child: _SectionNote(
                   text: hasCourses
@@ -1008,9 +1012,9 @@ class _SemesterView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.sm,
+                  CwaScreen._compactListGap,
                   AppSpacing.xl,
-                  AppSpacing.sm,
+                  AppSpacing.xs2,
                 ),
                 child: _BottomCta(
                   label: 'Add Course',
@@ -1071,7 +1075,7 @@ class _CumulativeView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.xl,
+                  CwaScreen._compactSectionGap,
                   AppSpacing.xl,
                   0,
                 ),
@@ -1091,7 +1095,7 @@ class _CumulativeView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.lg,
+                  CwaScreen._compactSectionGap,
                   AppSpacing.xl,
                   0,
                 ),
@@ -1115,7 +1119,7 @@ class _CumulativeView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.lg,
+                  CwaScreen._compactSectionGap,
                   AppSpacing.xl,
                   0,
                 ),
@@ -1150,7 +1154,7 @@ class _CumulativeView extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.xl,
-                    AppSpacing.lg,
+                    CwaScreen._compactSectionGap,
                     AppSpacing.xl,
                     0,
                   ),
@@ -1177,7 +1181,7 @@ class _CumulativeView extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.xl,
-                    AppSpacing.xl,
+                    CwaScreen._compactSectionGap,
                     AppSpacing.xl,
                     AppSpacing.sm,
                   ),
@@ -1193,7 +1197,7 @@ class _CumulativeView extends ConsumerWidget {
                   (context, i) => Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.xl,
-                      vertical: 6,
+                      vertical: 4,
                     ),
                     child: _PastSemesterSummaryCard(semester: semesters[i]),
                   ),
@@ -1205,7 +1209,7 @@ class _CumulativeView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.xl,
+                  CwaScreen._compactSectionGap,
                   AppSpacing.xl,
                   AppSpacing.sm,
                 ),
@@ -1217,7 +1221,7 @@ class _CumulativeView extends ConsumerWidget {
                   trailing: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
-                      vertical: 6,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
                       color: AppTheme.success.withValues(alpha: 0.12),
@@ -1253,7 +1257,7 @@ class _CumulativeView extends ConsumerWidget {
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.xl,
-                        vertical: 6,
+                        vertical: 4,
                       ),
                       child: _CurrentCourseRow(course: c),
                     );
@@ -1265,9 +1269,9 @@ class _CumulativeView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.lg,
+                  CwaScreen._compactSectionGap,
                   AppSpacing.xl,
-                  AppSpacing.lg,
+                  AppSpacing.md,
                 ),
                 child: _BottomCta(
                   label: 'Add Semester',
@@ -1323,10 +1327,10 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
             onTap: () => setState(() => _expanded = !_expanded),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
                 AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
+                AppSpacing.sm2,
+                AppSpacing.sm2,
+                AppSpacing.sm2,
               ),
               child: Row(
                 children: [
@@ -1338,7 +1342,7 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                           widget.semester.semesterLabel,
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
-                            fontSize: 15,
+                            fontSize: 14,
                             color: AppTheme.textPrimary,
                           ),
                         ),
@@ -1357,7 +1361,7 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
-                      vertical: 6,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceMuted,
@@ -1367,7 +1371,7 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                       cwa.toStringAsFixed(1),
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 13,
+                        fontSize: 12,
                         color: AppTheme.primary,
                       ),
                     ),
@@ -1387,9 +1391,9 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
             ...widget.semester.courses.map(
               (c) => Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.xs2,
+                  AppSpacing.md,
                   2,
                 ),
                 child: Column(
@@ -1451,8 +1455,8 @@ class _CurrentCourseRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return CampusCard(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm2,
       ),
       child: Row(
         children: [
@@ -1473,8 +1477,9 @@ class _CurrentCourseRow extends StatelessWidget {
                 Text(
                   course.name,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     color: AppTheme.textPrimary,
+                    height: 1.25,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1490,7 +1495,7 @@ class _CurrentCourseRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,
-              vertical: 6,
+              vertical: 4,
             ),
             decoration: BoxDecoration(
               color: AppColors.surfaceMuted,
