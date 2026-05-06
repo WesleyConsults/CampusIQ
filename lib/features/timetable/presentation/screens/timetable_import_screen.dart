@@ -45,7 +45,7 @@ class TimetableImportScreen extends ConsumerWidget {
               child: Text(
                 'Import (${state.selectedIndexes.length})',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -205,8 +205,11 @@ class _ReviewBody extends StatelessWidget {
           children: [
             // Select all / deselect all bar
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: AppTheme.cardBg,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              color: AppColors.surfaceMuted,
               child: Row(
                 children: [
                   Text(
@@ -253,7 +256,12 @@ class _ReviewBody extends StatelessWidget {
             // Bottom confirm bar
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                ),
                 child: SizedBox(
                   width: double.infinity,
                   child: FilledButton(

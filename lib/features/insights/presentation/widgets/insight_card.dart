@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:campusiq/features/insights/domain/insight.dart';
@@ -49,9 +48,9 @@ class InsightCard extends StatelessWidget {
           vertical: AppSpacing.xxs2,
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadii.sm),
-          border: Border.all(color: Colors.grey.shade200, width: 0.5),
+          border: Border.all(color: AppColors.border, width: 0.5),
         ),
         child: IntrinsicHeight(
           child: Row(
@@ -97,7 +96,7 @@ class InsightCard extends StatelessWidget {
                         insight.message,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               height: 1.4,
-                              color: const Color(0xFF1A1A2E),
+                              color: AppColors.textPrimary,
                             ),
                       ),
                       if (insight.courseCode != null) ...[
