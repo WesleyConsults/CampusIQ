@@ -35,6 +35,9 @@ class PlanScreen extends ConsumerStatefulWidget {
 }
 
 class _PlanScreenState extends ConsumerState<PlanScreen> {
+  static const double _homeCompactSectionGap = AppSpacing.lg;
+  static const double _homeCompactHeaderGap = AppSpacing.sm;
+
   bool _isGenerating = false;
 
   Future<void> _generatePlan() async {
@@ -296,14 +299,27 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                   greeting: greeting,
                   dateLabel: dateLabel,
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: _homeCompactSectionGap),
                 _HeroCard(content: heroContent),
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: _homeCompactSectionGap),
                 const CampusSectionHeader(
                   title: 'Academic pulse',
                   subtitle: 'A compact look at where your momentum stands.',
+                  titleStyle: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                    height: 1.2,
+                  ),
+                  subtitleStyle: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textSecondary,
+                    height: 1.35,
+                  ),
+                  subtitleSpacing: AppSpacing.xxs2,
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: _homeCompactHeaderGap),
                 _AcademicPulseCard(
                   projectedCwa: projectedCwa,
                   targetCwa: targetCwa,
@@ -606,6 +622,11 @@ class _PageHeader extends StatelessWidget {
 class _HeroCard extends StatelessWidget {
   final _HeroContent content;
 
+  static const EdgeInsets _padding = EdgeInsets.symmetric(
+    horizontal: AppSpacing.lg,
+    vertical: AppSpacing.lg,
+  );
+
   const _HeroCard({required this.content});
 
   @override
@@ -621,14 +642,14 @@ class _HeroCard extends StatelessWidget {
         boxShadow: AppShadows.card,
       ),
       child: Padding(
-        padding: AppSpacing.cardPadding,
+        padding: _padding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
+                vertical: AppSpacing.xxs2,
               ),
               decoration: BoxDecoration(
                 color: AppColors.gold.withValues(alpha: 0.16),
@@ -642,42 +663,48 @@ class _HeroCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
+                      fontSize: 11,
                     ),
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.md),
             Text(
               content.title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
+                    height: 1.15,
                   ),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.xs2),
             Text(
               content.body,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Colors.white.withValues(alpha: 0.92),
+                    fontSize: 15,
+                    height: 1.35,
                   ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               content.meta,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.72),
+                    fontSize: 13,
+                    height: 1.35,
                   ),
             ),
             if (content.actionLabel != null && content.onAction != null) ...[
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.md),
               FilledButton.tonalIcon(
                 onPressed: content.onAction,
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: AppTheme.primary,
-                  minimumSize: const Size(0, 48),
+                  minimumSize: const Size(0, 44),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.md,
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
                   ),
                 ),
                 icon: const Icon(LucideIcons.play, size: AppIconSizes.md),
@@ -748,16 +775,16 @@ class _AcademicPulseCard extends StatelessWidget {
     ];
 
     return CampusCard(
-      padding: AppSpacing.compactCardPadding,
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: tiles.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          mainAxisSpacing: AppSpacing.sm,
-          crossAxisSpacing: AppSpacing.sm,
-          childAspectRatio: 1.5,
+          mainAxisSpacing: AppSpacing.xs2,
+          crossAxisSpacing: AppSpacing.xs2,
+          childAspectRatio: 1.72,
         ),
         itemBuilder: (_, index) => tiles[index],
       ),
@@ -1004,7 +1031,7 @@ class _MetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
+        vertical: AppSpacing.xs2,
       ),
       decoration: BoxDecoration(
         color: accentColor.withValues(alpha: 0.08),
@@ -1022,19 +1049,21 @@ class _MetricTile extends StatelessWidget {
             style: const TextStyle(
               fontSize: 11,
               color: AppTheme.textSecondary,
+              height: 1.2,
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.xxs2),
           Text(
             value,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w700,
               color: accentColor == AppColors.gold
                   ? AppTheme.primary
                   : accentColor,
+              height: 1.15,
             ),
           ),
         ],

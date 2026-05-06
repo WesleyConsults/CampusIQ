@@ -5,12 +5,18 @@ class CampusSectionHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final TextStyle? titleStyle;
+  final TextStyle? subtitleStyle;
+  final double subtitleSpacing;
 
   const CampusSectionHeader({
     super.key,
     required this.title,
     this.subtitle,
     this.trailing,
+    this.titleStyle,
+    this.subtitleStyle,
+    this.subtitleSpacing = AppSpacing.xs,
   });
 
   @override
@@ -24,14 +30,15 @@ class CampusSectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: textTheme.titleLarge),
+              Text(title, style: titleStyle ?? textTheme.titleLarge),
               if (subtitle != null) ...[
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: subtitleSpacing),
                 Text(
                   subtitle!,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                  style: subtitleStyle ??
+                      textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                 ),
               ],
             ],
