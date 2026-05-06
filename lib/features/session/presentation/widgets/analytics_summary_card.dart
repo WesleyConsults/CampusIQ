@@ -21,6 +21,10 @@ class AnalyticsSummaryCard extends StatelessWidget {
     final hasPlan = analytics.totalPlannedMinutes > 0;
 
     return CampusCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm2,
+        vertical: AppSpacing.sm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -41,9 +45,11 @@ class AnalyticsSummaryCard extends StatelessWidget {
                   if (stackHeader) ...[
                     Text(
                       'Today\'s progress',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontSize: 16,
+                          ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.xs),
                     badge,
                   ] else
                     Row(
@@ -52,36 +58,31 @@ class AnalyticsSummaryCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             'Today\'s progress',
-                            style: Theme.of(context).textTheme.titleLarge,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontSize: 16,
+                                ),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.xs2),
                         badge,
                       ],
                     ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    analytics.sessionCount == 0
-                        ? 'No study logged yet. One focused block is enough to start well.'
-                        : 'A quick snapshot of how your focus time is building today.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                          height: 1.45,
-                        ),
-                  ),
                 ],
               );
             },
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.xs2),
           GridView(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: AppSpacing.md,
-              mainAxisSpacing: AppSpacing.md,
-              mainAxisExtent: 112,
+              crossAxisSpacing: AppSpacing.xs,
+              mainAxisSpacing: AppSpacing.xs,
+              mainAxisExtent: 64,
             ),
             children: [
               _MetricTile(
@@ -111,12 +112,12 @@ class AnalyticsSummaryCard extends StatelessWidget {
             ],
           ),
           if (hasPlan) ...[
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xs2),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
                 value: analytics.completionRate.clamp(0, 1),
-                minHeight: 8,
+                minHeight: 5,
                 backgroundColor: AppColors.surfaceMuted,
                 valueColor: AlwaysStoppedAnimation<Color>(
                   completionRate >= 100 ? AppTheme.success : AppTheme.primary,
@@ -155,46 +156,53 @@ class _MetricTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
+        horizontal: AppSpacing.xs2,
+        vertical: AppSpacing.xxs2,
       ),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: AppRadii.button,
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(
             icon,
-            size: AppIconSizes.md,
+            size: AppIconSizes.sm,
             color: emphasize ? AppTheme.success : AppTheme.textSecondary,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color:
-                          emphasize ? AppTheme.success : AppTheme.textPrimary,
-                      fontWeight: FontWeight.w700,
-                      height: 1.1,
-                    ),
-              ),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                      height: 1.2,
-                    ),
-              ),
-            ],
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color:
+                            emphasize ? AppTheme.success : AppTheme.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        height: 1.05,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.xxxs),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                        fontSize: 10,
+                        height: 1.1,
+                      ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

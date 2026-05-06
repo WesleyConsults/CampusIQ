@@ -38,6 +38,8 @@ class SessionScreen extends ConsumerStatefulWidget {
 
 class _SessionScreenState extends ConsumerState<SessionScreen>
     with SingleTickerProviderStateMixin {
+  static const double _compactSectionGap = AppSpacing.xs2;
+
   late final TabController _tabController;
 
   @override
@@ -173,13 +175,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
-              AppSpacing.sm,
+              AppSpacing.xs,
               AppSpacing.xl,
               0,
             ),
             child: _TabSwitcher(controller: _tabController),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs2),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -263,7 +265,7 @@ class _HistoryTab extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
-              AppSpacing.lg,
+              _SessionScreenState._compactSectionGap,
               AppSpacing.xl,
               0,
             ),
@@ -284,7 +286,7 @@ class _HistoryTab extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
-              AppSpacing.md,
+              _SessionScreenState._compactSectionGap,
               AppSpacing.xl,
               0,
             ),
@@ -296,7 +298,7 @@ class _HistoryTab extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.xl,
-                AppSpacing.md,
+                _SessionScreenState._compactSectionGap,
                 AppSpacing.xl,
                 0,
               ),
@@ -308,7 +310,7 @@ class _HistoryTab extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.xl,
-                AppSpacing.md,
+                _SessionScreenState._compactSectionGap,
                 AppSpacing.xl,
                 0,
               ),
@@ -319,9 +321,9 @@ class _HistoryTab extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
+              _SessionScreenState._compactSectionGap,
               AppSpacing.xl,
-              AppSpacing.xl,
-              AppSpacing.sm,
+              AppSpacing.xs2,
             ),
             child: CampusSectionHeader(
               title: 'Recent sessions',
@@ -378,7 +380,7 @@ class _HistoryTab extends ConsumerWidget {
                   );
                 },
                 separatorBuilder: (_, __) =>
-                    const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.xs2),
                 itemCount: sessions.length,
               ),
             );
@@ -467,7 +469,7 @@ class _StartCardState extends State<_StartCard> {
         : 'Pick a course and track your focus time without extra setup.';
 
     return CampusCard(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -475,7 +477,7 @@ class _StartCardState extends State<_StartCard> {
             title: 'Ready to focus?',
             subtitle: 'Choose a mode and start a calm study session.',
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           _ModeToggle(
             isPomodoroMode: _isPomodoroMode,
             onChanged: (value) {
@@ -487,25 +489,28 @@ class _StartCardState extends State<_StartCard> {
               });
             },
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: AppTheme.textPrimary,
                   fontWeight: FontWeight.w700,
+                  fontSize: 15,
                 ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.xxs2),
           Text(
             description,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.textSecondary,
+                  fontSize: 13,
+                  height: 1.35,
                 ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
+            spacing: AppSpacing.xs2,
+            runSpacing: AppSpacing.xs2,
             children: _isPomodoroMode
                 ? [
                     CampusChip(
@@ -538,7 +543,7 @@ class _StartCardState extends State<_StartCard> {
                   ],
           ),
           if (_isPomodoroMode) ...[
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
@@ -563,7 +568,7 @@ class _StartCardState extends State<_StartCard> {
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
               secondChild: Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xs),
+                padding: const EdgeInsets.only(top: AppSpacing.xxs2),
                 child: Column(
                   children: [
                     _DurationStepper(
@@ -584,7 +589,7 @@ class _StartCardState extends State<_StartCard> {
                         (value) => _focusMinutes = value,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.xs2),
                     _DurationStepper(
                       label: 'Short break',
                       minutes: _shortBreakMinutes,
@@ -603,7 +608,7 @@ class _StartCardState extends State<_StartCard> {
                         (value) => _shortBreakMinutes = value,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.xs2),
                     _DurationStepper(
                       label: 'Long break',
                       minutes: _longBreakMinutes,
@@ -631,7 +636,7 @@ class _StartCardState extends State<_StartCard> {
               duration: const Duration(milliseconds: 180),
             ),
           ],
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           SizedBox(
             width: double.infinity,
             child: CampusButton(
@@ -666,7 +671,7 @@ class _ModeToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.xs),
+      padding: const EdgeInsets.all(AppSpacing.xxs2),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: AppRadii.pill,
@@ -718,8 +723,8 @@ class _ModeSegment extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.sm2,
+          vertical: AppSpacing.xs2,
         ),
         decoration: BoxDecoration(
           color: selected ? AppTheme.primary : Colors.transparent,
@@ -770,8 +775,8 @@ class _DurationStepper extends StatelessWidget {
   Widget build(BuildContext context) {
     return CampusCard(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
+        horizontal: AppSpacing.sm2,
+        vertical: AppSpacing.xs2,
       ),
       color: AppColors.surfaceMuted,
       child: Row(
@@ -780,7 +785,7 @@ class _DurationStepper extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
             ),
@@ -795,6 +800,7 @@ class _DurationStepper extends StatelessWidget {
               '$minutes min',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
             ),
@@ -845,12 +851,13 @@ class _HistoryEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CampusCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
               color: AppColors.goldSoft,
               borderRadius: BorderRadius.circular(AppRadii.md),
@@ -866,14 +873,17 @@ class _HistoryEmptyState extends StatelessWidget {
             'No sessions yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
+                  fontSize: 15,
                 ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.xxs2),
           Text(
             'Start your first study session and build your focus rhythm one calm block at a time.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.textSecondary,
+                  fontSize: 13,
+                  height: 1.35,
                 ),
           ),
         ],
