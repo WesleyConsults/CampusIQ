@@ -58,6 +58,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     final result = await showModalBottomSheet<TimetableSlotModel>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => AddSlotSheet(

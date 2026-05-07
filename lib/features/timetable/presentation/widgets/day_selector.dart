@@ -15,7 +15,7 @@ class DaySelector extends ConsumerWidget {
     final allSlots = ref.watch(allSlotsProvider).valueOrNull ?? [];
 
     return SizedBox(
-      height: 52,
+      height: 42,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.zero,
@@ -29,10 +29,10 @@ class DaySelector extends ConsumerWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOut,
-              margin: const EdgeInsets.only(right: AppSpacing.xs),
+              margin: const EdgeInsets.only(right: AppSpacing.xxs2),
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
               ),
               decoration: BoxDecoration(
                 color: isActive ? AppTheme.primary : Colors.white,
@@ -51,14 +51,14 @@ class DaySelector extends ConsumerWidget {
                     style: TextStyle(
                       color: isActive ? Colors.white : AppTheme.textSecondary,
                       fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: 12,
                     ),
                   ),
                   if (hasSlots) ...[
-                    const SizedBox(width: AppSpacing.xs),
+                    const SizedBox(width: AppSpacing.xxs2),
                     Container(
-                      width: 6,
-                      height: 6,
+                      width: 5,
+                      height: 5,
                       decoration: BoxDecoration(
                         color: isActive ? Colors.white : AppTheme.accent,
                         shape: BoxShape.circle,

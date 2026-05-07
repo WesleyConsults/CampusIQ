@@ -22,8 +22,8 @@ class AnalyticsSummaryCard extends StatelessWidget {
 
     return CampusCard(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm2,
-        vertical: AppSpacing.sm,
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs2,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,7 +49,7 @@ class AnalyticsSummaryCard extends StatelessWidget {
                             fontSize: 16,
                           ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.xxs2),
                     badge,
                   ] else
                     Row(
@@ -74,15 +74,16 @@ class AnalyticsSummaryCard extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: AppSpacing.xs2),
+          const SizedBox(height: AppSpacing.xs),
           GridView(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: AppSpacing.xs,
-              mainAxisSpacing: AppSpacing.xs,
-              mainAxisExtent: 64,
+              crossAxisSpacing: AppSpacing.xs2,
+              mainAxisSpacing: AppSpacing.xs2,
+              mainAxisExtent: 48,
             ),
             children: [
               _MetricTile(
@@ -112,12 +113,12 @@ class AnalyticsSummaryCard extends StatelessWidget {
             ],
           ),
           if (hasPlan) ...[
-            const SizedBox(height: AppSpacing.xs2),
+            const SizedBox(height: AppSpacing.xs),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
                 value: analytics.completionRate.clamp(0, 1),
-                minHeight: 5,
+                minHeight: 4,
                 backgroundColor: AppColors.surfaceMuted,
                 valueColor: AlwaysStoppedAnimation<Color>(
                   completionRate >= 100 ? AppTheme.success : AppTheme.primary,
@@ -156,8 +157,8 @@ class _MetricTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs2,
-        vertical: AppSpacing.xxs2,
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
@@ -169,10 +170,10 @@ class _MetricTile extends StatelessWidget {
         children: [
           Icon(
             icon,
-            size: AppIconSizes.sm,
+            size: AppIconSizes.xs,
             color: emphasize ? AppTheme.success : AppTheme.textSecondary,
           ),
-          const SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: AppSpacing.xxs2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +186,7 @@ class _MetricTile extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color:
                             emphasize ? AppTheme.success : AppTheme.textPrimary,
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         height: 1.05,
                       ),
@@ -197,7 +198,7 @@ class _MetricTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textSecondary,
-                        fontSize: 10,
+                        fontSize: 9,
                         height: 1.1,
                       ),
                 ),

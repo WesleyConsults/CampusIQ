@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
@@ -124,8 +125,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.existing != null;
-    final isPrefilled =
-        !isEditing &&
+    final isPrefilled = !isEditing &&
         widget.prefillStartMinutes != null &&
         widget.prefillEndMinutes != null;
 
@@ -159,57 +159,14 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                   data: (courses) {
                     if (courses.isEmpty) return const SizedBox.shrink();
 
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceMuted,
-                        borderRadius: AppRadii.button,
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Quick fill from your CWA courses',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: AppSpacing.xxs),
-                          Text(
-                            'Tap a course to prefill the code and title.',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Wrap(
-                            spacing: AppSpacing.xs,
-                            runSpacing: AppSpacing.xs,
-                            children: courses.map((course) {
-                              return ActionChip(
-                                label: Text(course.code),
-                                avatar: const Icon(
-                                  LucideIcons.bookOpen,
-                                  size: AppIconSizes.sm,
-                                  color: AppTheme.primary,
-                                ),
-                                backgroundColor: AppColors.surface,
-                                side: const BorderSide(color: AppColors.border),
-                                labelStyle: Theme.of(context)
-                                    .textTheme
-                                    .labelMedium
-                                    ?.copyWith(color: AppTheme.primary),
-                                onPressed: () {
-                                  setState(() {
-                                    _codeController.text = course.code;
-                                    _nameController.text = course.name;
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
+                    return _QuickFillCourses(
+                      courses: courses,
+                      onSelected: (course) {
+                        setState(() {
+                          _codeController.text = course.code;
+                          _nameController.text = course.name;
+                        });
+                      },
                     );
                   },
                   loading: () => const SizedBox.shrink(),
@@ -313,6 +270,66 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
   }
 }
 
+class _QuickFillCourses extends StatelessWidget {
+  final List<CourseModel> courses;
+  final ValueChanged<CourseModel> onSelected;
+
+  const _QuickFillCourses({
+    required this.courses,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: AppRadii.button,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Quick fill', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.xs),
+          SizedBox(
+            height: 36,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: courses.length,
+              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.xs),
+              itemBuilder: (context, index) {
+                final course = courses[index];
+                return ActionChip(
+                  visualDensity: VisualDensity.compact,
+                  label: Text(course.code),
+                  avatar: const Icon(
+                    LucideIcons.bookOpen,
+                    size: AppIconSizes.sm,
+                    color: AppTheme.primary,
+                  ),
+                  backgroundColor: AppColors.surface,
+                  side: const BorderSide(color: AppColors.border),
+                  labelStyle: Theme.of(context)
+                      .textTheme
+                      .labelMedium
+                      ?.copyWith(color: AppTheme.primary),
+                  onPressed: () => onSelected(course),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TimeTile extends StatelessWidget {
   final String label;
   final String value;
@@ -377,7 +394,7 @@ class _ModalIcon extends StatelessWidget {
     return Container(
       width: 48,
       height: 48,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.goldSoft,
         borderRadius: AppRadii.button,
       ),
@@ -404,7 +421,7 @@ class _PrefillNotice extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.goldSoft,
         borderRadius: AppRadii.button,
       ),

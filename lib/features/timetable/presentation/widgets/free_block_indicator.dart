@@ -17,7 +17,8 @@ class FreeBlockIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final topOffset =
         (block.startMinutes - TimetableConstants.gridStartMinutes) *
-            TimetableConstants.pixelsPerMinute;
+                TimetableConstants.pixelsPerMinute +
+            TimetableConstants.gridTopPadding;
     final height = block.durationMinutes * TimetableConstants.pixelsPerMinute;
     final showLabel = height >= 36;
     final showTimeRange = height >= 56;

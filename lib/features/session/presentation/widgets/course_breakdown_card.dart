@@ -20,11 +20,15 @@ class CourseBreakdownCard extends StatelessWidget {
     if (courses.isEmpty) return const SizedBox.shrink();
 
     return CampusCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs2,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: const [
+          const Row(
+            children: [
               CampusChip(
                 label: 'By course',
                 icon: LucideIcons.bookCopy,
@@ -33,7 +37,7 @@ class CourseBreakdownCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.xs),
           ...courses.map((course) => _CourseRow(stats: course)),
         ],
       ),
@@ -56,12 +60,15 @@ class _CourseRow extends StatelessWidget {
             : AppTheme.accent;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs2),
       child: InkWell(
         onTap: () => context.push('/course/${stats.courseCode}'),
         borderRadius: AppRadii.button,
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xs,
+            vertical: AppSpacing.xs2,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -77,9 +84,10 @@ class _CourseRow extends StatelessWidget {
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
+                                    fontSize: 14,
                                   ),
                         ),
-                        const SizedBox(height: AppSpacing.xxs),
+                        const SizedBox(height: AppSpacing.xxxs),
                         Text(
                           stats.courseName,
                           maxLines: 1,
@@ -99,44 +107,25 @@ class _CourseRow extends StatelessWidget {
                         : stats.formattedActual,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: AppTheme.textPrimary,
+                          fontSize: 12,
                         ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.xs),
               ClipRRect(
                 borderRadius: BorderRadius.circular(999),
                 child: LinearProgressIndicator(
                   value: fill,
-                  minHeight: 8,
+                  minHeight: 5,
                   backgroundColor: AppColors.surfaceMuted,
                   valueColor: AlwaysStoppedAnimation<Color>(accent),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                stats.plannedMinutes == 0
-                    ? 'A self-directed study block with no timetable plan attached yet.'
-                    : stats.isOverStudied
-                        ? 'You went beyond plan here. Nicely done.'
-                        : 'Need ${_fmt(stats.gapMinutes)} more to match your timetable plan.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                    ),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  String _fmt(int minutes) {
-    final h = minutes ~/ 60;
-    final m = minutes % 60;
-    if (h == 0) return '${m}m';
-    if (m == 0) return '${h}h';
-    return '${h}h ${m}m';
   }
 }

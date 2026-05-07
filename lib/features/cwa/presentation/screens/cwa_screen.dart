@@ -35,6 +35,7 @@ class CwaScreen extends ConsumerWidget {
     final result = await showModalBottomSheet<CourseModel>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => AddCourseSheet(

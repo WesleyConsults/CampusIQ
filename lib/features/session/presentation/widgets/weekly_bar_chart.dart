@@ -23,6 +23,10 @@ class WeeklyBarChart extends StatelessWidget {
     final dayLabels = ['M', 'T', 'W', 'T', 'F', 'S'];
 
     return CampusCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs2,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -44,9 +48,9 @@ class WeeklyBarChart extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.xxs2),
           SizedBox(
-            height: 116,
+            height: 100,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: List.generate(weekly.days.length, (index) {
@@ -68,14 +72,15 @@ class WeeklyBarChart extends StatelessWidget {
                               : '0m',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontSize: 10,
+                                    fontSize: 9,
+                                    height: 1,
                                     color: AppTheme.textSecondary,
                                   ),
                         ),
-                        const SizedBox(height: AppSpacing.xs),
+                        const SizedBox(height: AppSpacing.xxs),
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
-                          height: (fill * 72).clamp(8, 72),
+                          height: (fill * 56).clamp(5, 56),
                           decoration: BoxDecoration(
                             color: isToday
                                 ? AppTheme.primary
@@ -83,13 +88,15 @@ class WeeklyBarChart extends StatelessWidget {
                             borderRadius: BorderRadius.circular(999),
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xs),
+                        const SizedBox(height: AppSpacing.xxs),
                         Text(
                           dayLabels[index],
                           style: Theme.of(context)
                               .textTheme
                               .labelMedium
                               ?.copyWith(
+                                fontSize: 10,
+                                height: 1,
                                 color: isToday
                                     ? AppTheme.primary
                                     : AppTheme.textSecondary,
@@ -105,7 +112,7 @@ class WeeklyBarChart extends StatelessWidget {
             ),
           ),
           if (weekly.mostStudiedCourse.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xxs2),
             Row(
               children: [
                 Expanded(
@@ -116,7 +123,7 @@ class WeeklyBarChart extends StatelessWidget {
                     color: AppTheme.success,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.xs2),
                 Expanded(
                   child: _WeeklyInsight(
                     icon: LucideIcons.trendingDown,
@@ -158,7 +165,10 @@ class _WeeklyInsight extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs2,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: AppRadii.button,
@@ -166,26 +176,30 @@ class _WeeklyInsight extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: AppIconSizes.md, color: color),
-          const SizedBox(width: AppSpacing.sm),
+          Icon(icon, size: AppIconSizes.xs, color: color),
+          const SizedBox(width: AppSpacing.xxs2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textSecondary,
-                        fontSize: 12,
+                        fontSize: 10,
+                        height: 1.1,
                       ),
                 ),
-                const SizedBox(height: AppSpacing.xxs),
+                const SizedBox(height: AppSpacing.xxxs),
                 Text(
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
+                        fontSize: 13,
                       ),
                 ),
               ],

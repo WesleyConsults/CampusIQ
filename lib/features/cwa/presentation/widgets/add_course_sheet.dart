@@ -101,7 +101,6 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
             _MetricSliderCard(
               label: 'Credit hours',
               valueLabel: '${_creditHours.toInt()} units',
-              helper: 'Adjust this to match the weight used in your semester.',
               value: _creditHours,
               min: 1,
               max: 6,
@@ -112,7 +111,6 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
             _MetricSliderCard(
               label: 'Expected score',
               valueLabel: '${_expectedScore.toInt()}%',
-              helper: 'CampusIQ uses this to update your live CWA forecast.',
               value: _expectedScore,
               min: 0,
               max: 100,
@@ -150,7 +148,6 @@ class _ModalIcon extends StatelessWidget {
 class _MetricSliderCard extends StatelessWidget {
   final String label;
   final String valueLabel;
-  final String helper;
   final double value;
   final double min;
   final double max;
@@ -160,7 +157,6 @@ class _MetricSliderCard extends StatelessWidget {
   const _MetricSliderCard({
     required this.label,
     required this.valueLabel,
-    required this.helper,
     required this.value,
     required this.min,
     required this.max,
@@ -173,9 +169,9 @@ class _MetricSliderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
         AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.xxs2,
       ),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
@@ -186,24 +182,12 @@ class _MetricSliderCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      helper,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                    ),
-                  ],
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -215,14 +199,18 @@ class _MetricSliderCard extends StatelessWidget {
               ),
             ],
           ),
-          Slider(
-            value: value,
-            min: min,
-            max: max,
-            divisions: divisions,
-            activeColor: AppTheme.primary,
-            inactiveColor: AppColors.border,
-            onChanged: onChanged,
+          const SizedBox(height: AppSpacing.xxs),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(trackHeight: 3),
+            child: Slider(
+              value: value,
+              min: min,
+              max: max,
+              divisions: divisions,
+              activeColor: AppTheme.primary,
+              inactiveColor: AppColors.border,
+              onChanged: onChanged,
+            ),
           ),
         ],
       ),

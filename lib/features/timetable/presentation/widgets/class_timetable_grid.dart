@@ -46,7 +46,8 @@ class ClassTimetableGrid extends StatelessWidget {
                 );
 
                 return Container(
-                  height: TimetableConstants.totalGridHeight,
+                  height: TimetableConstants.totalGridHeight +
+                      TimetableConstants.gridTopPadding,
                   decoration: BoxDecoration(
                     color: AppColors.surfaceMuted.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(AppRadii.md),
@@ -159,11 +160,13 @@ class _TimeLabels extends StatelessWidget {
     );
     return SizedBox(
       width: TimetableConstants.timeLabelWidth,
-      height: TimetableConstants.totalGridHeight,
+      height: TimetableConstants.totalGridHeight +
+          TimetableConstants.gridTopPadding,
       child: Stack(
         children: hours.map((hour) {
           final top = (hour - TimetableConstants.gridStartHour) *
-              TimetableConstants.hourRowHeight;
+                  TimetableConstants.hourRowHeight +
+              TimetableConstants.gridTopPadding;
           final label = hour == 0
               ? '12 AM'
               : hour < 12
@@ -197,10 +200,12 @@ class _HourLines extends StatelessWidget {
     const hours =
         TimetableConstants.gridEndHour - TimetableConstants.gridStartHour;
     return SizedBox(
-      height: TimetableConstants.totalGridHeight,
+      height: TimetableConstants.totalGridHeight +
+          TimetableConstants.gridTopPadding,
       child: Stack(
         children: List.generate(hours, (i) {
-          final top = i * TimetableConstants.hourRowHeight;
+          final top = i * TimetableConstants.hourRowHeight +
+              TimetableConstants.gridTopPadding;
           return Positioned(
             top: top,
             left: 0,
@@ -228,7 +233,8 @@ class _CurrentTimeIndicator extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final top = (nowMins - TimetableConstants.gridStartMinutes) *
-        TimetableConstants.pixelsPerMinute;
+            TimetableConstants.pixelsPerMinute +
+        TimetableConstants.gridTopPadding;
     return Positioned(
       top: top,
       left: 0,
