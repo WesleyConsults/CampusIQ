@@ -595,6 +595,7 @@ class _QuickStatsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
+      padding: EdgeInsets.zero,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: items.length,
@@ -629,27 +630,39 @@ class _QuickStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CampusCard(
-      padding: const EdgeInsets.all(AppSpacing.xs2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs2,
+        vertical: AppSpacing.xs,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(item.icon, size: 15, color: AppTheme.primary),
-          const Spacer(),
+          Icon(item.icon, size: AppIconSizes.sm, color: AppTheme.primary),
+          const SizedBox(height: AppSpacing.xxxs),
           Text(
             item.label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 10,
               color: AppTheme.textSecondary,
               height: 1.15,
             ),
           ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            item.value,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: AppTheme.textPrimary,
+          const SizedBox(height: AppSpacing.xxxs),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              item.value,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textPrimary,
+              ),
             ),
           ),
         ],
@@ -903,7 +916,7 @@ class _SemesterView extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  CwaScreen._compactSectionGap,
+                  AppSpacing.xs,
                   AppSpacing.xl,
                   0,
                 ),
@@ -927,21 +940,21 @@ class _SemesterView extends ConsumerWidget {
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  6,
-                  AppSpacing.xl,
-                  AppSpacing.xxxs,
-                ),
-                child: _SectionNote(
-                  text: hasCourses
-                      ? 'Adjust only the courses you want to focus on. Your projected CWA updates live as you edit.'
-                      : 'Start with one course and CampusIQ will calculate the rest from there.',
+            if (!hasCourses)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    6,
+                    AppSpacing.xl,
+                    AppSpacing.xxxs,
+                  ),
+                  child: _SectionNote(
+                    text:
+                        'Start with one course and CampusIQ will calculate the rest from there.',
+                  ),
                 ),
               ),
-            ),
             if (!hasCourses)
               SliverToBoxAdapter(
                 child: Padding(

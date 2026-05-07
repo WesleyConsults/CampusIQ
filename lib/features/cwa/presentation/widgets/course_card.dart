@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
-import 'package:campusiq/features/ai/domain/context_builder.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
-import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
-import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
-import 'package:campusiq/features/cwa/presentation/providers/whatif_provider.dart';
-import 'package:campusiq/features/cwa/presentation/widgets/whatif_explain_chip.dart';
-import 'package:campusiq/features/cwa/presentation/widgets/whatif_result_card.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
-import 'package:campusiq/shared/widgets/campus_chip.dart';
 
-class CourseCard extends ConsumerStatefulWidget {
+class CourseCard extends StatefulWidget {
   final CourseModel course;
   final bool isHighImpact;
   final VoidCallback onEdit;
@@ -31,10 +23,10 @@ class CourseCard extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<CourseCard> createState() => _CourseCardState();
+  State<CourseCard> createState() => _CourseCardState();
 }
 
-class _CourseCardState extends ConsumerState<CourseCard> {
+class _CourseCardState extends State<CourseCard> {
   late double _sliderValue;
   late double
       _savedScore; // score at the time this card was mounted — does not change during drag
@@ -65,14 +57,10 @@ class _CourseCardState extends ConsumerState<CourseCard> {
     }
   }
 
-  String get _courseId => widget.course.id.toString();
   bool get _isAdjusted => (_sliderValue - _savedScore).abs() >= 1.0;
 
   @override
   Widget build(BuildContext context) {
-    final whatifState = ref.watch(whatifProvider);
-    final explanation = whatifState.explanations[_courseId];
-    final isLoading = whatifState.isLoading[_courseId] ?? false;
     final gradeColor = _scoreTone(_sliderValue);
     final scoreLabel = '${_sliderValue.toInt()}%';
 
@@ -106,12 +94,7 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                           ),
                           if (widget.isHighImpact) ...[
                             const SizedBox(width: AppSpacing.xs),
-                            CampusChip(
-                              label: 'High impact',
-                              backgroundColor:
-                                  AppTheme.accent.withValues(alpha: 0.16),
-                              foregroundColor: AppTheme.accent,
-                            ),
+                            const _ImpactPill(),
                           ],
                         ],
                       ),
@@ -134,14 +117,6 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      '${widget.course.creditHours.toInt()} cr',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                     PopupMenuButton<String>(
                       tooltip: 'Course options',
                       padding: EdgeInsets.zero,
@@ -190,11 +165,9 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                 const SizedBox(width: AppSpacing.xs2),
                 Expanded(
                   child: _CompactInfoBlock(
-                    label: 'Status',
-                    value: widget.isHighImpact ? 'High impact' : 'On watch',
-                    valueColor: widget.isHighImpact
-                        ? AppTheme.accent
-                        : AppTheme.primary,
+                    label: 'Credits',
+                    value: '${widget.course.creditHours.toInt()} cr',
+                    valueColor: AppTheme.primary,
                   ),
                 ),
               ],
@@ -265,20 +238,9 @@ class _CourseCardState extends ConsumerState<CourseCard> {
                       inactiveColor: AppColors.divider,
                       onChanged: (value) {
                         setState(() => _sliderValue = value);
-                        ref.read(whatifProvider.notifier).setAdjustedScore(
-                              _courseId,
-                              value,
-                              _savedScore,
-                            );
                         widget.onScoreChanged(value);
                       },
                     ),
-                    if (_isAdjusted)
-                      WhatifExplainChip(
-                        isLoading: isLoading,
-                        onTap: () => _triggerExplain(),
-                      ),
-                    WhatifResultCard(explanation: explanation),
                   ],
                 ),
               ),
@@ -299,36 +261,6 @@ class _CourseCardState extends ConsumerState<CourseCard> {
     if (score >= 55) return AppTheme.accent;
     return AppTheme.warning;
   }
-
-  void _triggerExplain() {
-    final courses = ref.read(coursesProvider).valueOrNull ?? [];
-    final pairs = courses
-        .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
-        .toList();
-    final originalCwa = CwaCalculator.calculate(pairs);
-
-    final courseIndex = courses.indexWhere((c) => c.id == widget.course.id);
-    final newCwa = courseIndex >= 0
-        ? CwaCalculator.whatIf(
-            courses: pairs, index: courseIndex, newScore: _sliderValue)
-        : originalCwa;
-
-    final targetCwa = ref.read(targetCwaProvider);
-
-    ref.read(whatifProvider.notifier).explainChange(
-          _courseId,
-          WhatIfInput(
-            courseCode: widget.course.code,
-            courseName: widget.course.name,
-            creditHours: widget.course.creditHours.toInt(),
-            originalScore: _savedScore,
-            newScore: _sliderValue,
-            originalCwa: originalCwa,
-            newCwa: newCwa,
-            targetCwa: targetCwa,
-          ),
-        );
-  }
 }
 
 class _CompactInfoBlock extends StatelessWidget {
@@ -345,35 +277,71 @@ class _CompactInfoBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: const BoxConstraints(
+        minWidth: 142,
+        minHeight: 58,
+      ),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs2,
-        vertical: AppSpacing.xxs2,
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs2,
       ),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: BorderRadius.circular(AppRadii.md),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             label,
+            textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 10,
+              fontSize: 11,
               color: AppTheme.textSecondary,
               height: 1.15,
             ),
           ),
-          const SizedBox(height: AppSpacing.xxxs),
+          const SizedBox(height: AppSpacing.xxs),
           Text(
             value,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
               color: valueColor,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ImpactPill extends StatelessWidget {
+  const _ImpactPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppTheme.accent.withValues(alpha: 0.14),
+        borderRadius: AppRadii.pill,
+      ),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xxs2,
+        ),
+        child: Text(
+          'High impact',
+          style: TextStyle(
+            color: AppTheme.accent,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            height: 1,
+          ),
+        ),
       ),
     );
   }

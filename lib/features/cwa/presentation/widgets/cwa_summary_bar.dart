@@ -38,11 +38,7 @@ class CwaSummaryBar extends StatelessWidget {
         : isOnTrack
             ? 'On track'
             : gap.toCwaString();
-    final insight = !hasData
-        ? (emptyStateMessage ?? 'Add your data to see how you are performing.')
-        : isOnTrack
-            ? 'Your current projection is meeting your target. Keep this rhythm steady.'
-            : 'You are ${gap.toCwaString()} points away from your target. A small improvement can close the gap.';
+    final insight = _buildInsight(isOnTrack);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -135,6 +131,38 @@ class CwaSummaryBar extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _buildInsight(bool isOnTrack) {
+    if (!hasData) {
+      return emptyStateMessage ??
+          'Add your data to see how you are performing.';
+    }
+
+    if (isOnTrack) {
+      return switch (_insightVariant(4)) {
+        0 => 'Your current projection is meeting your target.',
+        1 => 'You are on track for your target CWA.',
+        2 => 'Your projected CWA is holding above target.',
+        _ => 'Your target is within reach from this projection.',
+      };
+    }
+
+    final gapText = gap.toCwaString();
+    return switch (_insightVariant(5)) {
+      0 => 'You are $gapText points away from your target.',
+      1 => 'Only $gapText points separate you from your target.',
+      2 => 'Your current gap is $gapText points from target.',
+      3 => 'You need $gapText more points to meet your target.',
+      _ => 'Your target is $gapText points above this projection.',
+    };
+  }
+
+  int _insightVariant(int count) {
+    final seed = (projected * 10).round() +
+        (target * 10).round() +
+        (gap.abs() * 10).round();
+    return seed.abs() % count;
   }
 }
 
