@@ -15,7 +15,6 @@ import 'package:campusiq/features/streak/presentation/widgets/streak_action_butt
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
-import 'package:campusiq/shared/widgets/campus_button.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
@@ -303,33 +302,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 _HeroCard(content: heroContent),
                 const SizedBox(height: _homeCompactSectionGap),
                 const CampusSectionHeader(
-                  title: 'Academic pulse',
-                  subtitle: 'A compact look at where your momentum stands.',
-                  titleStyle: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                    height: 1.2,
-                  ),
-                  subtitleStyle: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textSecondary,
-                    height: 1.35,
-                  ),
-                  subtitleSpacing: AppSpacing.xxs2,
-                ),
-                const SizedBox(height: _homeCompactHeaderGap),
-                _AcademicPulseCard(
-                  projectedCwa: projectedCwa,
-                  targetCwa: targetCwa,
-                  cwaGap: cwaGap,
-                  studyStreak: studyStreak,
-                  attendanceStreak: attendanceStreak,
-                  totalCourseStreaks: totalCourseStreaks,
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                const CampusSectionHeader(
                   title: 'Today at a glance',
                   subtitle:
                       'See your classes, focus load, and progress in one pass.',
@@ -498,6 +470,24 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             ),
           ],
         ],
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.xl,
+              AppSpacing.xl,
+              0,
+            ),
+            child: _AcademicPulseSection(
+              projectedCwa: projectedCwa,
+              targetCwa: targetCwa,
+              cwaGap: cwaGap,
+              studyStreak: studyStreak,
+              attendanceStreak: attendanceStreak,
+              totalCourseStreaks: totalCourseStreaks,
+            ),
+          ),
+        ),
         SliverToBoxAdapter(child: SizedBox(height: bottomContentPadding)),
       ],
     );
@@ -718,6 +708,59 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
+class _AcademicPulseSection extends StatelessWidget {
+  final double projectedCwa;
+  final double targetCwa;
+  final double cwaGap;
+  final StreakResult studyStreak;
+  final StreakResult attendanceStreak;
+  final int totalCourseStreaks;
+
+  const _AcademicPulseSection({
+    required this.projectedCwa,
+    required this.targetCwa,
+    required this.cwaGap,
+    required this.studyStreak,
+    required this.attendanceStreak,
+    required this.totalCourseStreaks,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const CampusSectionHeader(
+          title: 'Academic pulse',
+          subtitle: 'A compact look at where your momentum stands.',
+          titleStyle: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+            height: 1.2,
+          ),
+          subtitleStyle: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.textSecondary,
+            height: 1.35,
+          ),
+          subtitleSpacing: AppSpacing.xxs2,
+        ),
+        const SizedBox(height: _PlanScreenState._homeCompactHeaderGap),
+        _AcademicPulseCard(
+          projectedCwa: projectedCwa,
+          targetCwa: targetCwa,
+          cwaGap: cwaGap,
+          studyStreak: studyStreak,
+          attendanceStreak: attendanceStreak,
+          totalCourseStreaks: totalCourseStreaks,
+        ),
+      ],
+    );
+  }
+}
+
 class _AcademicPulseCard extends StatelessWidget {
   final double projectedCwa;
   final double targetCwa;
@@ -775,8 +818,14 @@ class _AcademicPulseCard extends StatelessWidget {
     ];
 
     return CampusCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
       child: GridView.builder(
+        padding: EdgeInsets.zero,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: tiles.length,
@@ -1039,11 +1088,12 @@ class _MetricTile extends StatelessWidget {
         border: Border.all(color: accentColor.withValues(alpha: 0.12)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,
+            textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -1052,9 +1102,10 @@ class _MetricTile extends StatelessWidget {
               height: 1.2,
             ),
           ),
-          const SizedBox(height: AppSpacing.xxs2),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             value,
+            textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -1129,6 +1180,8 @@ class _SummaryRow extends StatelessWidget {
 }
 
 class _EmptyPlanCard extends StatelessWidget {
+  static const double _actionButtonHeight = 52;
+
   final VoidCallback onGenerate;
   final VoidCallback onAddTask;
   final bool isGenerating;
@@ -1142,12 +1195,13 @@ class _EmptyPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CampusCard(
+      padding: AppSpacing.compactCardPadding,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
               color: AppColors.surfaceMuted,
               borderRadius: BorderRadius.circular(AppRadii.lg),
@@ -1158,7 +1212,7 @@ class _EmptyPlanCard extends StatelessWidget {
               color: AppTheme.primary,
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           Text(
             'Nothing is mapped out yet',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -1173,13 +1227,13 @@ class _EmptyPlanCard extends StatelessWidget {
                   color: AppTheme.textSecondary,
                 ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
                 child: isGenerating
                     ? const SizedBox(
-                        height: 52,
+                        height: _actionButtonHeight,
                         child: ElevatedButton(
                           onPressed: null,
                           child: SizedBox(
@@ -1189,19 +1243,59 @@ class _EmptyPlanCard extends StatelessWidget {
                           ),
                         ),
                       )
-                    : CampusButton(
+                    : ElevatedButton(
                         onPressed: onGenerate,
-                        icon: const Icon(LucideIcons.sparkles,
-                            size: AppIconSizes.md),
-                        child: const Text('Generate plan'),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(0, _actionButtonHeight),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                          ),
+                        ),
+                        child: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                LucideIcons.sparkles,
+                                size: AppIconSizes.md,
+                              ),
+                              SizedBox(width: AppSpacing.xs),
+                              Text(
+                                'Generate plan',
+                                maxLines: 1,
+                                softWrap: false,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: OutlinedButton.icon(
+                child: OutlinedButton(
                   onPressed: onAddTask,
-                  icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
-                  label: const Text('Add task'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, _actionButtonHeight),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
+                  ),
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(LucideIcons.plus, size: AppIconSizes.md),
+                        SizedBox(width: AppSpacing.xs),
+                        Text(
+                          'Add task',
+                          maxLines: 1,
+                          softWrap: false,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
