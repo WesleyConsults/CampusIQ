@@ -63,6 +63,11 @@ If both exist for the same semester, the cumulative view can't deduplicate or cr
 - Either adopt the freeform label on `CourseModel` or a structured key on `PastSemesterModel`
 - Use this identifier to prevent double-counting in cumulative calculations
 
+**Decision**:
+- Keep `semesterLabel` for display
+- Add `semesterKey` to `PastSemesterModel` as the source-of-truth identifier
+- Make level/programme optional metadata, not required for CWA logic
+
 ---
 
 ## Gap 5 — Manual entry for past semesters asks for score, not grade
