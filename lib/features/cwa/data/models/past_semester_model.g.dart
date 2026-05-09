@@ -52,6 +52,11 @@ const PastSemesterModelSchema = CollectionSchema(
       id: 6,
       name: r'semesterLabel',
       type: IsarType.string,
+    ),
+    r'zzPendingResults': PropertySchema(
+      id: 7,
+      name: r'zzPendingResults',
+      type: IsarType.bool,
     )
   },
   estimateSize: _pastSemesterModelEstimateSize,
@@ -105,6 +110,7 @@ void _pastSemesterModelSerialize(
   writer.writeDouble(offsets[4], object.reportedCumulativeCwa);
   writer.writeDouble(offsets[5], object.reportedSemesterCwa);
   writer.writeString(offsets[6], object.semesterLabel);
+  writer.writeBool(offsets[7], object.isPendingResults);
 }
 
 PastSemesterModel _pastSemesterModelDeserialize(
@@ -128,6 +134,7 @@ PastSemesterModel _pastSemesterModelDeserialize(
   object.reportedCumulativeCwa = reader.readDoubleOrNull(offsets[4]);
   object.reportedSemesterCwa = reader.readDoubleOrNull(offsets[5]);
   object.semesterLabel = reader.readString(offsets[6]);
+  object.isPendingResults = reader.readBool(offsets[7]);
   return object;
 }
 
@@ -158,6 +165,8 @@ P _pastSemesterModelDeserializeProp<P>(
       return (reader.readDoubleOrNull(offset)) as P;
     case 6:
       return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -931,6 +940,16 @@ extension PastSemesterModelQueryFilter
       ));
     });
   }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      isPendingResultsEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzPendingResults',
+        value: value,
+      ));
+    });
+  }
 }
 
 extension PastSemesterModelQueryObject
@@ -1029,6 +1048,20 @@ extension PastSemesterModelQuerySortBy
       sortBySemesterLabelDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterLabel', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByIsPendingResults() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPendingResults', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByIsPendingResultsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPendingResults', Sort.desc);
     });
   }
 }
@@ -1131,6 +1164,20 @@ extension PastSemesterModelQuerySortThenBy
       return query.addSortBy(r'semesterLabel', Sort.desc);
     });
   }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByIsPendingResults() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPendingResults', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByIsPendingResultsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPendingResults', Sort.desc);
+    });
+  }
 }
 
 extension PastSemesterModelQueryWhereDistinct
@@ -1175,6 +1222,13 @@ extension PastSemesterModelQueryWhereDistinct
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'semesterLabel',
           caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QDistinct>
+      distinctByIsPendingResults() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzPendingResults');
     });
   }
 }
@@ -1235,6 +1289,13 @@ extension PastSemesterModelQueryProperty
       return query.addPropertyName(r'semesterLabel');
     });
   }
+
+  QueryBuilder<PastSemesterModel, bool, QQueryOperations>
+      isPendingResultsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzPendingResults');
+    });
+  }
 }
 
 // **************************************************************************
@@ -1277,6 +1338,11 @@ const PastCourseEntrySchema = Schema(
       id: 5,
       name: r'score',
       type: IsarType.double,
+    ),
+    r'zzProjectedMark': PropertySchema(
+      id: 6,
+      name: r'zzProjectedMark',
+      type: IsarType.bool,
     )
   },
   estimateSize: _pastCourseEntryEstimateSize,
@@ -1309,6 +1375,7 @@ void _pastCourseEntrySerialize(
   writer.writeString(offsets[3], object.grade);
   writer.writeDouble(offsets[4], object.mark);
   writer.writeDouble(offsets[5], object.score);
+  writer.writeBool(offsets[6], object.isProjectedMark);
 }
 
 PastCourseEntry _pastCourseEntryDeserialize(
@@ -1323,6 +1390,7 @@ PastCourseEntry _pastCourseEntryDeserialize(
   object.creditHours = reader.readDouble(offsets[2]);
   object.grade = reader.readString(offsets[3]);
   object.mark = reader.readDoubleOrNull(offsets[4]);
+  object.isProjectedMark = reader.readBool(offsets[6]);
   return object;
 }
 
@@ -1345,6 +1413,8 @@ P _pastCourseEntryDeserializeProp<P>(
       return (reader.readDoubleOrNull(offset)) as P;
     case 5:
       return (reader.readDouble(offset)) as P;
+    case 6:
+      return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -1972,6 +2042,16 @@ extension PastCourseEntryQueryFilter
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<PastCourseEntry, PastCourseEntry, QAfterFilterCondition>
+      isProjectedMarkEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzProjectedMark',
+        value: value,
       ));
     });
   }

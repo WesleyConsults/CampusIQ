@@ -119,24 +119,25 @@ class CwaSummaryBar extends StatelessWidget {
               minHeight: 5,
             ),
           ),
-          const SizedBox(height: AppSpacing.xxs2),
-          Text(
-            insight,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 11,
-              height: 1.3,
+          if (insight != null) ...[
+            const SizedBox(height: AppSpacing.xxs2),
+            Text(
+              insight,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+                height: 1.3,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  String _buildInsight(bool isOnTrack) {
+  String? _buildInsight(bool isOnTrack) {
     if (!hasData) {
-      return emptyStateMessage ??
-          'Add your data to see how you are performing.';
+      return emptyStateMessage;
     }
 
     if (isOnTrack) {

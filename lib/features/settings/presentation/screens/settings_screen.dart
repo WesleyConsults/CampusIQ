@@ -6,6 +6,8 @@ import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
+import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
 import 'package:campusiq/features/settings/presentation/providers/settings_provider.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 
@@ -15,11 +17,12 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final prefsAsync = ref.watch(notificationPrefsProvider);
+    final activeSemesterKey = ref.watch(activeSemesterProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        title: const Text('Notification Settings',
+        title: const Text('Settings',
             style: TextStyle(fontWeight: FontWeight.w700)),
       ),
       body: prefsAsync.when(
@@ -28,6 +31,34 @@ class SettingsScreen extends ConsumerWidget {
         data: (prefs) => ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
+            Card(
+              child: ListTile(
+                leading: const Icon(
+                  LucideIcons.calendarDays,
+                  color: AppTheme.textSecondary,
+                ),
+                title: const Text(
+                  'Active semester',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                subtitle: Text(
+                  formatActiveSemesterLabel(activeSemesterKey),
+                  style: const TextStyle(color: AppTheme.textSecondary),
+                ),
+                trailing: const Icon(
+                  LucideIcons.chevronRight,
+                  color: AppTheme.textSecondary,
+                ),
+                onTap: () => showActiveSemesterDialog(
+                  context,
+                  ref,
+                  activeSemesterKey,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+
             // ── Notification toggles ────────────────────────────────────
             Card(
               child: Column(

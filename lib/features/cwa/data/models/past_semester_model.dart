@@ -19,6 +19,10 @@ class PastSemesterModel {
   /// Optional: what the slip actually says for cumulative CWA
   double? reportedCumulativeCwa;
 
+  /// True when this semester was archived before official results were out.
+  @Name('zzPendingResults')
+  bool isPendingResults = false;
+
   /// Credits Calc from the CUMULATIVE column of the slip summary table.
   /// When present, used directly instead of reconstructing from individual marks.
   double? cumulativeCreditsCalc;
@@ -36,6 +40,7 @@ class PastSemesterModel {
     required this.courses,
     this.reportedSemesterCwa,
     this.reportedCumulativeCwa,
+    this.isPendingResults = false,
     this.cumulativeCreditsCalc,
     this.cumulativeWeightedMarks,
   });
@@ -54,6 +59,10 @@ class PastCourseEntry {
   /// Exact number grade (e.g., 79.0) if parsed/entered, giving exact CWA.
   double? mark;
 
+  /// True when [mark] is a projected placeholder awaiting official results.
+  @Name('zzProjectedMark')
+  bool isProjectedMark = false;
+
   PastCourseEntry();
 
   PastCourseEntry.create({
@@ -62,6 +71,7 @@ class PastCourseEntry {
     required this.creditHours,
     required this.grade,
     this.mark,
+    this.isProjectedMark = false,
   });
 
   /// KNUST letter-grade → numeric score used in CWA calculation.

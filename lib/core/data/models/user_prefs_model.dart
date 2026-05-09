@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import 'package:campusiq/core/constants/app_constants.dart';
 
 part 'user_prefs_model.g.dart';
 
@@ -31,6 +32,16 @@ class UserPrefsModel {
 
   /// Minute of hour for the daily reminder. Default 0.
   int dailyReminderMinute = 0;
+
+  // ── CWA preferences ───────────────────────────────────────────────────────
+
+  /// Current working semester used by semester-scoped features.
+  @Name('zzActiveSemesterKey')
+  String activeSemesterKey = AppConstants.defaultSemesterKey;
+
+  /// Student's desired CWA target used by projected and cumulative gap views.
+  @Name('zzTargetCwa')
+  double targetCwa = AppConstants.distinctionThreshold;
 
   // ── Weekly Review ─────────────────────────────────────────────────────────
 

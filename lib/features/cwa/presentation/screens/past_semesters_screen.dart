@@ -37,6 +37,9 @@ class PastSemestersScreen extends ConsumerWidget {
             itemBuilder: (context, i) => _SemesterCard(
               semester: semesters[i],
               onDelete: () => _confirmDelete(context, ref, semesters[i]),
+              onFinalize: semesters[i].isPendingResults
+                  ? () => _confirmFinalize(context, ref, semesters[i])
+                  : null,
             ),
           );
         },
@@ -83,6 +86,55 @@ class PastSemestersScreen extends ConsumerWidget {
       }
     });
   }
+
+  void _confirmFinalize(
+    BuildContext context,
+    WidgetRef ref,
+    PastSemesterModel semester,
+  ) {
+    showCampusConfirmDialog(
+      context: context,
+      title: 'Finalize official results?',
+      message:
+          'This will stop treating "${semester.semesterLabel}" as a pending estimate after every projected placeholder mark has been replaced with an official mark.',
+      confirmLabel: 'Finalize',
+    ).then((confirmed) async {
+      if (confirmed != true) return;
+      try {
+        final repo = ref.read(pastResultRepositoryProvider);
+        if (repo == null) return;
+        final latest = await repo.getAll();
+        final model = latest.firstWhere((s) => s.id == semester.id);
+        final hasMissingMarks =
+            model.courses.any((course) => course.mark == null);
+        final hasProjectedMarks =
+            model.courses.any((course) => course.isProjectedMark);
+        if (hasMissingMarks || hasProjectedMarks) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Replace every projected placeholder with an official mark before finalizing.',
+                ),
+              ),
+            );
+          }
+          return;
+        }
+        model.isPendingResults = false;
+        await repo.update(model);
+      } catch (e) {
+        debugPrint('🔴 PastSemestersScreen finalize failed: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not finalize results. Please try again.'),
+            ),
+          );
+        }
+      }
+    });
+  }
 }
 
 // ─── Semester card ────────────────────────────────────────────────────────────
@@ -90,8 +142,13 @@ class PastSemestersScreen extends ConsumerWidget {
 class _SemesterCard extends StatefulWidget {
   final PastSemesterModel semester;
   final VoidCallback onDelete;
+  final VoidCallback? onFinalize;
 
-  const _SemesterCard({required this.semester, required this.onDelete});
+  const _SemesterCard({
+    required this.semester,
+    required this.onDelete,
+    this.onFinalize,
+  });
 
   @override
   State<_SemesterCard> createState() => _SemesterCardState();
@@ -151,6 +208,27 @@ class _SemesterCardState extends State<_SemesterCard> {
                             color: AppTheme.textSecondary,
                           ),
                         ),
+                        if (widget.semester.isPendingResults) ...[
+                          const SizedBox(height: AppSpacing.xxs),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: const Text(
+                              'Awaiting official marks',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -177,6 +255,11 @@ class _SemesterCardState extends State<_SemesterCard> {
                     onPressed: widget.onDelete,
                     tooltip: 'Remove',
                   ),
+                  if (widget.onFinalize != null)
+                    TextButton(
+                      onPressed: widget.onFinalize,
+                      child: const Text('Update Results'),
+                    ),
                   Icon(
                     _expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
                     color: AppTheme.textSecondary,
@@ -188,10 +271,23 @@ class _SemesterCardState extends State<_SemesterCard> {
           // Expanded course list
           if (_expanded) ...[
             const Divider(height: 1, indent: 16, endIndent: 16),
+            if (widget.semester.isPendingResults)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 10, 16, 4),
+                child: Text(
+                  'Projected marks are placeholders. Replace each one with the official mark from your result slip, then finalize the semester.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
+              ),
             ...widget.semester.courses.map(
               (c) => _CourseRow(
                 course: c,
                 semesterId: widget.semester.id,
+                isPendingResults: widget.semester.isPendingResults,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -207,8 +303,13 @@ class _SemesterCardState extends State<_SemesterCard> {
 class _CourseRow extends ConsumerStatefulWidget {
   final PastCourseEntry course;
   final int semesterId;
+  final bool isPendingResults;
 
-  const _CourseRow({required this.course, required this.semesterId});
+  const _CourseRow({
+    required this.course,
+    required this.semesterId,
+    required this.isPendingResults,
+  });
 
   @override
   ConsumerState<_CourseRow> createState() => _CourseRowState();
@@ -218,6 +319,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
   late String _grade;
   late double _credits;
   double? _mark;
+  late bool _isProjectedMark;
 
   static const _grades = ['A', 'B', 'C', 'D', 'F'];
   static const _gradeColors = {
@@ -234,6 +336,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
     _grade = widget.course.grade.toUpperCase();
     _credits = widget.course.creditHours;
     _mark = widget.course.mark;
+    _isProjectedMark = widget.course.isProjectedMark;
   }
 
   Future<void> _save() async {
@@ -250,8 +353,9 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
             courseCode: c.courseCode,
             courseName: c.courseName,
             creditHours: _credits,
-            grade: _grade,
+            grade: _mark != null ? _gradeFromScore(_mark!) : _grade,
             mark: _mark,
+            isProjectedMark: _isProjectedMark,
           );
         }
         return c;
@@ -273,6 +377,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
   @override
   Widget build(BuildContext context) {
     final color = _gradeColors[_grade] ?? AppTheme.textSecondary;
+    final gradeIsDerivedFromMark = _mark != null || widget.isPendingResults;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -305,8 +410,15 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
           const SizedBox(width: AppSpacing.xs),
           _MarkInput(
             mark: _mark,
+            isProjected: _isProjectedMark,
             onChanged: (val) {
-              setState(() => _mark = val);
+              setState(() {
+                _mark = val;
+                _isProjectedMark = false;
+                if (val != null) {
+                  _grade = _gradeFromScore(val);
+                }
+              });
               _save();
             },
           ),
@@ -351,7 +463,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
             ],
           ),
           const SizedBox(width: AppSpacing.xs2),
-          // Grade dropdown
+          // Grade display / editor
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
@@ -359,37 +471,47 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
               borderRadius: BorderRadius.circular(AppRadii.xxs),
               border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _grades.contains(_grade) ? _grade : 'F',
-                isDense: true,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: color,
-                ),
-                dropdownColor: Colors.white,
-                items: _grades
-                    .map((g) => DropdownMenuItem(
-                          value: g,
-                          child: Text(
-                            g,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                              color: _gradeColors[g] ?? AppTheme.textSecondary,
-                            ),
-                          ),
-                        ))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) {
-                    setState(() => _grade = v);
-                    _save();
-                  }
-                },
-              ),
-            ),
+            child: gradeIsDerivedFromMark
+                ? Text(
+                    _grades.contains(_grade) ? _grade : 'F',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: color,
+                    ),
+                  )
+                : DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _grades.contains(_grade) ? _grade : 'F',
+                      isDense: true,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: color,
+                      ),
+                      dropdownColor: Colors.white,
+                      items: _grades
+                          .map((g) => DropdownMenuItem(
+                                value: g,
+                                child: Text(
+                                  g,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                    color: _gradeColors[g] ??
+                                        AppTheme.textSecondary,
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) {
+                          setState(() => _grade = v);
+                          _save();
+                        }
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -427,9 +549,14 @@ class _MiniButton extends StatelessWidget {
 
 class _MarkInput extends StatefulWidget {
   final double? mark;
+  final bool isProjected;
   final ValueChanged<double?> onChanged;
 
-  const _MarkInput({required this.mark, required this.onChanged});
+  const _MarkInput({
+    required this.mark,
+    required this.isProjected,
+    required this.onChanged,
+  });
 
   @override
   State<_MarkInput> createState() => _MarkInputState();
@@ -481,12 +608,14 @@ class _MarkInputState extends State<_MarkInput> {
         decoration: InputDecoration(
           contentPadding: EdgeInsets.zero,
           filled: true,
-          fillColor: AppTheme.primary.withValues(alpha: 0.1),
+          fillColor: widget.isProjected
+              ? Colors.orange.withValues(alpha: 0.12)
+              : AppTheme.primary.withValues(alpha: 0.1),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadii.xxs),
             borderSide: BorderSide.none,
           ),
-          hintText: '-',
+          hintText: widget.isProjected ? 'proj' : '-',
         ),
         onChanged: (val) {
           final number = double.tryParse(val);
@@ -495,6 +624,14 @@ class _MarkInputState extends State<_MarkInput> {
       ),
     );
   }
+}
+
+String _gradeFromScore(double score) {
+  if (score >= 80) return 'A';
+  if (score >= 70) return 'B';
+  if (score >= 60) return 'C';
+  if (score >= 50) return 'D';
+  return 'F';
 }
 
 // ─── Empty state ──────────────────────────────────────────────────────────────

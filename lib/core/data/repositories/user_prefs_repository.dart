@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
+import 'package:campusiq/core/constants/app_constants.dart';
 import 'package:campusiq/core/data/models/user_prefs_model.dart';
 
 class UserPrefsRepository {
@@ -129,6 +130,42 @@ class UserPrefsRepository {
     final prefs = await _getOrCreate();
     prefs.dailyReminderHour = hour;
     prefs.dailyReminderMinute = minute;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<String> getActiveSemesterKey() async {
+    final prefs = await _getOrCreate();
+    final semesterKey = prefs.activeSemesterKey.trim();
+    if (semesterKey.isEmpty) return AppConstants.defaultSemesterKey;
+    return semesterKey;
+  }
+
+  Future<void> setActiveSemesterKey(String semesterKey) async {
+    final prefs = await _getOrCreate();
+    prefs.activeSemesterKey = semesterKey.trim().isEmpty
+        ? AppConstants.defaultSemesterKey
+        : semesterKey.trim();
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<double> getTargetCwa() async {
+    final prefs = await _getOrCreate();
+    return prefs.targetCwa.clamp(40.0, AppConstants.maxCwa).toDouble();
+  }
+
+  Future<void> setTargetCwa(double value) async {
+    final prefs = await _getOrCreate();
+    prefs.targetCwa = value.clamp(40.0, AppConstants.maxCwa).toDouble();
     try {
       await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
     } catch (e) {

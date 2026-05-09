@@ -30,6 +30,10 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
 
   late CwaViewMode _mode;
   late CwaViewMode _initialMode;
+  late String _initialAcademicYear;
+  late String _initialSemesterLabel;
+  late String _initialProgramme;
+  late String _initialLevel;
   String _academicYear = _academicYears.first;
   String _semesterLabel = _semesters.first;
   String _programme = _programmes.first;
@@ -66,6 +70,11 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
         ? CwaViewMode.cumulative
         : CwaViewMode.semester;
     _initialMode = _mode;
+    _syncSemesterMetadataFromActiveKey(ref.read(activeSemesterProvider));
+    _initialAcademicYear = _academicYear;
+    _initialSemesterLabel = _semesterLabel;
+    _initialProgramme = _programme;
+    _initialLevel = _level;
     _courses.add(_CourseDraft()..addListener(_refreshDerivedState));
   }
 
@@ -90,10 +99,10 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
 
   bool get _hasUnsavedChanges {
     if (_mode != _initialMode ||
-        _academicYear != _academicYears.first ||
-        _semesterLabel != _semesters.first ||
-        _programme != _programmes.first ||
-        _level != _levels.last ||
+        _academicYear != _initialAcademicYear ||
+        _semesterLabel != _initialSemesterLabel ||
+        _programme != _initialProgramme ||
+        _level != _initialLevel ||
         _courses.length > 1) {
       return true;
     }
@@ -165,6 +174,27 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
 
   void _syncCwaMode() {
     ref.read(cwaViewModeProvider.notifier).state = _mode;
+  }
+
+  void _syncSemesterMetadataFromActiveKey(String semesterKey) {
+    final match = RegExp(r'^(\d{4})-Sem([12])$').firstMatch(semesterKey.trim());
+    if (match == null) return;
+
+    final startYear = int.parse(match.group(1)!);
+    final semesterNumber = int.parse(match.group(2)!);
+    _academicYear = '$startYear/${startYear + 1}';
+    _semesterLabel = semesterNumber == 1 ? _semesters.first : _semesters.last;
+  }
+
+  String _formatSemesterKey(String semesterKey) {
+    final match = RegExp(r'^(\d{4})-Sem([12])$').firstMatch(semesterKey.trim());
+    if (match == null) return semesterKey;
+
+    final startYear = int.parse(match.group(1)!);
+    final semesterNumber = int.parse(match.group(2)!);
+    final semesterLabel =
+        semesterNumber == 1 ? _semesters.first : _semesters.last;
+    return '$startYear/${startYear + 1} • $semesterLabel';
   }
 
   Future<void> _saveCourses() async {
@@ -326,8 +356,10 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final activeSemesterKey = ref.watch(activeSemesterProvider);
+    final activeSemesterDisplay = _formatSemesterKey(activeSemesterKey);
     final helperText = _mode == CwaViewMode.semester
-        ? 'Mode: Semester\nAdd your semester courses manually.'
+        ? 'Mode: Semester\nAdd your semester courses for $activeSemesterDisplay.'
         : 'Mode: Cumulative\nAdd courses from a completed semester.';
     final navigator = Navigator.of(context);
     final router = GoRouter.of(context);
@@ -392,42 +424,71 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _SectionCard(
-                        title: 'Semester Information',
-                        child: Column(
-                          children: [
-                            _DropdownField(
-                              label: 'Academic Year',
-                              value: _academicYear,
-                              items: _academicYears,
-                              onChanged: (value) =>
-                                  setState(() => _academicYear = value),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            _DropdownField(
-                              label: 'Semester',
-                              value: _semesterLabel,
-                              items: _semesters,
-                              onChanged: (value) =>
-                                  setState(() => _semesterLabel = value),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            _DropdownField(
-                              label: 'Programme',
-                              value: _programme,
-                              items: _programmes,
-                              onChanged: (value) =>
-                                  setState(() => _programme = value),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            _DropdownField(
-                              label: 'Level',
-                              value: _level,
-                              items: _levels,
-                              onChanged: (value) =>
-                                  setState(() => _level = value),
-                            ),
-                          ],
-                        ),
+                        title: _mode == CwaViewMode.semester
+                            ? 'Active Semester'
+                            : 'Semester Information',
+                        child: _mode == CwaViewMode.semester
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    activeSemesterDisplay,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    'Change this from the CWA screen when you move into a new semester.',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: AppColors.textSecondary,
+                                          height: 1.4,
+                                        ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                children: [
+                                  _DropdownField(
+                                    label: 'Academic Year',
+                                    value: _academicYear,
+                                    items: _academicYears,
+                                    onChanged: (value) =>
+                                        setState(() => _academicYear = value),
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _DropdownField(
+                                    label: 'Semester',
+                                    value: _semesterLabel,
+                                    items: _semesters,
+                                    onChanged: (value) =>
+                                        setState(() => _semesterLabel = value),
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _DropdownField(
+                                    label: 'Programme',
+                                    value: _programme,
+                                    items: _programmes,
+                                    onChanged: (value) =>
+                                        setState(() => _programme = value),
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _DropdownField(
+                                    label: 'Level',
+                                    value: _level,
+                                    items: _levels,
+                                    onChanged: (value) =>
+                                        setState(() => _level = value),
+                                  ),
+                                ],
+                              ),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _SectionCard(

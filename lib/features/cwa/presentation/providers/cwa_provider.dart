@@ -1,17 +1,41 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:campusiq/core/constants/app_constants.dart';
+import 'package:campusiq/core/data/repositories/user_prefs_repository.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/data/repositories/cwa_repository.dart';
 import 'package:campusiq/features/cwa/data/repositories/past_result_repository.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
-import 'package:campusiq/core/constants/app_constants.dart';
 
 enum CwaViewMode { semester, cumulative }
 
-/// Active semester — becomes user-configurable in a later phase.
-final activeSemesterProvider =
-    StateProvider<String>((ref) => AppConstants.defaultSemesterKey);
+/// User preference repository for CWA semester settings.
+final cwaPrefsRepositoryProvider = Provider<UserPrefsRepository?>((ref) {
+  final isarAsync = ref.watch(isarProvider);
+  return isarAsync.whenOrNull(data: (isar) => UserPrefsRepository(isar));
+});
+
+/// Persisted active semester for semester-scoped features.
+final activeSemesterPrefsProvider = StreamProvider<String>((ref) async* {
+  final isar = await ref.watch(isarProvider.future);
+  final repo = UserPrefsRepository(isar);
+  await repo.getPrefs();
+
+  await for (final prefs in repo.watchPrefs()) {
+    final semesterKey = prefs?.activeSemesterKey.trim() ?? '';
+    yield semesterKey.isEmpty ? AppConstants.defaultSemesterKey : semesterKey;
+  }
+});
+
+/// Current active semester used across CWA, timetable, and sessions.
+final activeSemesterProvider = Provider<String>((ref) {
+  final semester = ref.watch(activeSemesterPrefsProvider).valueOrNull;
+  if (semester == null || semester.isEmpty) {
+    return AppConstants.defaultSemesterKey;
+  }
+  return semester;
+});
 
 /// Repository — only available once Isar is open.
 final cwaRepositoryProvider = Provider<CwaRepository?>((ref) {
@@ -20,15 +44,30 @@ final cwaRepositoryProvider = Provider<CwaRepository?>((ref) {
 });
 
 /// Live stream of courses for the active semester.
-final coursesProvider = StreamProvider<List<CourseModel>>((ref) {
-  final repo = ref.watch(cwaRepositoryProvider);
+final coursesProvider = StreamProvider<List<CourseModel>>((ref) async* {
   final semester = ref.watch(activeSemesterProvider);
-  if (repo == null) return const Stream.empty();
-  return repo.watchCourses(semester);
+  final isar = await ref.watch(isarProvider.future);
+  yield* CwaRepository(isar).watchCourses(semester);
 });
 
-/// User's target CWA — persisted to Isar in Phase 2.
-final targetCwaProvider = StateProvider<double>((ref) => 70.0);
+/// Persisted target CWA preference.
+final targetCwaPrefsProvider = StreamProvider<double>((ref) async* {
+  final isar = await ref.watch(isarProvider.future);
+  final repo = UserPrefsRepository(isar);
+  await repo.getPrefs();
+
+  await for (final prefs in repo.watchPrefs()) {
+    final target = prefs?.targetCwa ?? AppConstants.distinctionThreshold;
+    yield target.clamp(40.0, AppConstants.maxCwa).toDouble();
+  }
+});
+
+/// Current target CWA used by gap calculations.
+final targetCwaProvider = Provider<double>((ref) {
+  final target = ref.watch(targetCwaPrefsProvider).valueOrNull;
+  if (target == null) return AppConstants.distinctionThreshold;
+  return target;
+});
 
 /// Computed projected CWA from current courses.
 final projectedCwaProvider = Provider<double>((ref) {
@@ -55,10 +94,20 @@ final pastResultRepositoryProvider = Provider<PastResultRepository?>((ref) {
 });
 
 /// Live stream of all past semester results, ordered by createdAt.
-final pastSemestersProvider = StreamProvider<List<PastSemesterModel>>((ref) {
-  final repo = ref.watch(pastResultRepositoryProvider);
-  if (repo == null) return const Stream.empty();
-  return repo.watchAll();
+final pastSemestersProvider =
+    StreamProvider<List<PastSemesterModel>>((ref) async* {
+  final isar = await ref.watch(isarProvider.future);
+  yield* PastResultRepository(isar).watchAll();
+});
+
+final pendingPastSemestersProvider = Provider<List<PastSemesterModel>>((ref) {
+  final all = ref.watch(pastSemestersProvider).valueOrNull ?? [];
+  return all.where((semester) => semester.isPendingResults).toList();
+});
+
+final officialPastSemestersProvider = Provider<List<PastSemesterModel>>((ref) {
+  final all = ref.watch(pastSemestersProvider).valueOrNull ?? [];
+  return all.where((semester) => !semester.isPendingResults).toList();
 });
 
 // ─── View mode toggle (per-session, not persisted) ────────────────────────────
@@ -125,6 +174,39 @@ final cumulativeCwaProvider = Provider<double>((ref) {
   return CwaCalculator.calculateCumulative(
     pastSemesters: pastPairs,
     currentCourses: currentPairs,
+  );
+});
+
+/// Recorded cumulative CWA from official result history only.
+final officialRecordedCwaProvider = Provider<double>((ref) {
+  final pastSemesters = ref.watch(officialPastSemestersProvider);
+  if (pastSemesters.isEmpty) return 0.0;
+
+  PastSemesterModel? anchor;
+  try {
+    anchor = pastSemesters.lastWhere(
+      (s) =>
+          s.cumulativeWeightedMarks != null && s.cumulativeCreditsCalc != null,
+    );
+  } catch (_) {
+    anchor = null;
+  }
+
+  if (anchor != null) {
+    final credits = anchor.cumulativeCreditsCalc!;
+    if (credits == 0) return 0.0;
+    return anchor.cumulativeWeightedMarks! / credits;
+  }
+
+  final pastPairs = pastSemesters.map((sem) {
+    return sem.courses
+        .map((c) => (creditHours: c.creditHours, score: c.score))
+        .toList();
+  }).toList();
+
+  return CwaCalculator.calculateCumulative(
+    pastSemesters: pastPairs,
+    currentCourses: const [],
   );
 });
 

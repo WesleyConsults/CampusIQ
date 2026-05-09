@@ -12,7 +12,9 @@ import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/cwa_summary_bar.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/course_card.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/cwa_coach_sheet.dart';
+import 'package:campusiq/features/cwa/presentation/screens/complete_semester_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
@@ -71,6 +73,33 @@ class CwaScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _openCompleteSemester(
+    BuildContext context,
+    WidgetRef ref,
+    List<CourseModel> courses,
+  ) async {
+    if (courses.isEmpty) return;
+
+    final nextSemesterLabel =
+        await Navigator.of(context, rootNavigator: true).push<String>(
+      MaterialPageRoute(
+        builder: (_) => CompleteSemesterScreen(
+          currentSemesterKey: ref.read(activeSemesterProvider),
+          courses: courses,
+        ),
+      ),
+    );
+
+    if (nextSemesterLabel == null || !context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Semester completed. You are now in $nextSemesterLabel.',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final viewMode = ref.watch(cwaViewModeProvider);
@@ -105,6 +134,13 @@ class CwaScreen extends ConsumerWidget {
             icon: const Icon(LucideIcons.ellipsisVertical),
             onSelected: (action) {
               switch (action) {
+                case _CwaMenuAction.semester:
+                  showActiveSemesterDialog(
+                    context,
+                    ref,
+                    ref.read(activeSemesterProvider),
+                  );
+                  return;
                 case _CwaMenuAction.target:
                   _showTargetDialog(
                     context,
@@ -118,6 +154,10 @@ class CwaScreen extends ConsumerWidget {
               }
             },
             itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: _CwaMenuAction.semester,
+                child: Text('Change active semester'),
+              ),
               const PopupMenuItem(
                 value: _CwaMenuAction.target,
                 child: Text('Set target CWA'),
@@ -151,6 +191,7 @@ class CwaScreen extends ConsumerWidget {
             child: viewMode == CwaViewMode.semester
                 ? _SemesterView(
                     onOpenAddSheet: _openAddSheet,
+                    onOpenCompleteSemester: _openCompleteSemester,
                     bottomContentPadding: bottomContentPadding,
                   )
                 : _CumulativeView(
@@ -217,9 +258,37 @@ class CwaScreen extends ConsumerWidget {
           TextButton(
               onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
-            onPressed: () {
-              ref.read(targetCwaProvider.notifier).state = temp;
-              Navigator.pop(ctx);
+            onPressed: () async {
+              final repo = ref.read(cwaPrefsRepositoryProvider);
+              if (repo == null) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Your target settings are not ready yet. Please try again.',
+                      ),
+                    ),
+                  );
+                }
+                Navigator.pop(ctx);
+                return;
+              }
+
+              try {
+                await repo.setTargetCwa(temp);
+                if (ctx.mounted) Navigator.pop(ctx);
+              } catch (e) {
+                debugPrint('🔴 CwaScreen _showTargetDialog failed: $e');
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Could not save your target CWA. Please try again.',
+                      ),
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primary,
@@ -383,7 +452,7 @@ class _ToggleTab extends StatelessWidget {
   }
 }
 
-enum _CwaMenuAction { target, history }
+enum _CwaMenuAction { semester, target, history }
 
 class _ImportOption {
   final IconData icon;
@@ -675,13 +744,13 @@ class _QuickStatCard extends StatelessWidget {
 class _StateCard extends StatelessWidget {
   final IconData icon;
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final Widget? action;
 
   const _StateCard({
     required this.icon,
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     this.action,
   });
 
@@ -712,16 +781,18 @@ class _StateCard extends StatelessWidget {
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.xxs2),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppTheme.textSecondary,
-              height: 1.4,
+          if (subtitle != null && subtitle!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xxs2),
+            Text(
+              subtitle!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
+                height: 1.4,
+              ),
             ),
-          ),
+          ],
           if (action != null) ...[
             const SizedBox(height: AppSpacing.md),
             action!,
@@ -834,10 +905,13 @@ class _SectionNote extends StatelessWidget {
 class _SemesterView extends ConsumerWidget {
   final Future<void> Function(BuildContext, WidgetRef, {CourseModel? existing})
       onOpenAddSheet;
+  final Future<void> Function(BuildContext, WidgetRef, List<CourseModel>)
+      onOpenCompleteSemester;
   final double bottomContentPadding;
 
   const _SemesterView({
     required this.onOpenAddSheet,
+    required this.onOpenCompleteSemester,
     required this.bottomContentPadding,
   });
 
@@ -884,8 +958,6 @@ class _SemesterView extends ConsumerWidget {
                   label: 'Projected CWA',
                   eyebrow: 'Current semester',
                   hasData: hasCourses,
-                  emptyStateMessage:
-                      'Add your courses to see your semester projection and where to improve.',
                 ),
               ),
             ),
@@ -942,21 +1014,6 @@ class _SemesterView extends ConsumerWidget {
               ),
             ),
             if (!hasCourses)
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    AppSpacing.xl,
-                    6,
-                    AppSpacing.xl,
-                    AppSpacing.xxxs,
-                  ),
-                  child: _SectionNote(
-                    text:
-                        'Start with one course and CampusIQ will calculate the rest from there.',
-                  ),
-                ),
-              ),
-            if (!hasCourses)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -968,8 +1025,6 @@ class _SemesterView extends ConsumerWidget {
                   child: _StateCard(
                     icon: LucideIcons.bookOpen,
                     title: 'No courses added yet',
-                    subtitle:
-                        'Add your semester courses to see your projected CWA, target gap, and which courses need more attention.',
                     action: _BottomCta(
                       label: 'Add Course',
                       icon: LucideIcons.plus,
@@ -1037,6 +1092,30 @@ class _SemesterView extends ConsumerWidget {
                 ),
               ),
             ),
+            if (hasCourses)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    0,
+                    AppSpacing.xl,
+                    AppSpacing.xs2,
+                  ),
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        onOpenCompleteSemester(context, ref, courses),
+                    icon: const Icon(LucideIcons.badgeCheck),
+                    label: const Text('Finish Semester'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      foregroundColor: AppTheme.primary,
+                      side: BorderSide(
+                        color: AppTheme.primary.withValues(alpha: 0.24),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             SliverToBoxAdapter(
               child: SizedBox(height: bottomContentPadding),
             ),
@@ -1061,8 +1140,10 @@ class _CumulativeView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final semestersAsync = ref.watch(pastSemestersProvider);
+    final pendingSemesters = ref.watch(pendingPastSemestersProvider);
     final currentCoursesAsync = ref.watch(coursesProvider);
     final cumulativeCwa = ref.watch(cumulativeCwaProvider);
+    final officialRecordedCwa = ref.watch(officialRecordedCwaProvider);
     final totalCredits = ref.watch(totalCreditsProvider);
     final target = ref.watch(targetCwaProvider);
     final gap = ref.watch(cumulativeGapProvider);
@@ -1078,10 +1159,12 @@ class _CumulativeView extends ConsumerWidget {
       ),
       data: (semesters) {
         final currentCourses = currentCoursesAsync.valueOrNull ?? [];
+        final pendingCount = pendingSemesters.length;
 
         final hasPast = semesters.isNotEmpty;
         final hasCurrent = currentCourses.isNotEmpty;
         final hasAnyData = hasPast || hasCurrent;
+        final hasPending = pendingCount > 0;
 
         return CustomScrollView(
           slivers: [
@@ -1098,7 +1181,9 @@ class _CumulativeView extends ConsumerWidget {
                   target: target,
                   gap: gap,
                   label: 'Cumulative CWA',
-                  eyebrow: 'Across all semesters',
+                  eyebrow: hasCurrent || hasPending
+                      ? 'Estimated with current + pending data'
+                      : 'From recorded semesters',
                   hasData: hasAnyData,
                   emptyStateMessage:
                       'Import past result slips to build your academic history and unlock your cumulative CWA.',
@@ -1125,10 +1210,41 @@ class _CumulativeView extends ConsumerWidget {
                       value: '${totalCredits.toInt()} cr',
                       icon: LucideIcons.chartColumn,
                     ),
+                    if (hasPending)
+                      _QuickStatItem(
+                        label: 'Pending results',
+                        value: '$pendingCount',
+                        icon: LucideIcons.clock3,
+                      ),
                   ],
                 ),
               ),
             ),
+            if (hasPending)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    CwaScreen._compactSectionGap,
+                    AppSpacing.xl,
+                    0,
+                  ),
+                  child: _SupportCard(
+                    icon: LucideIcons.badgeAlert,
+                    title: 'Pending results are still estimates',
+                    subtitle:
+                        '$pendingCount semester record${pendingCount == 1 ? '' : 's'} ${pendingCount == 1 ? 'is' : 'are'} still awaiting official results. Your main cumulative number includes those archived projections, while recorded results only currently sit at ${officialRecordedCwa.toStringAsFixed(1)}.',
+                    actions: [
+                      _InlineActionButton(
+                        label: 'Review History',
+                        primary: false,
+                        icon: LucideIcons.bookOpen,
+                        onPressed: () => onOpenHistory(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
