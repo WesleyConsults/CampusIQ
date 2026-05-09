@@ -16,12 +16,28 @@ class ResultSlipParseResult {
   /// From the "Weighted Marks" cumulative column in the slip summary table.
   final double? cumulativeWeightedMarks;
 
+  /// Start year parsed from the slip header, e.g. 2024 for "2024/2025".
+  final int? academicYearStart;
+
+  /// 1 or 2, parsed from the slip header.
+  final int? semesterNumber;
+
+  /// e.g. 300, parsed from the slip header.
+  final int? level;
+
+  /// e.g. "Computer Engineering", parsed from the slip header.
+  final String? programme;
+
   const ResultSlipParseResult({
     required this.courses,
     this.reportedSemesterCwa,
     this.reportedCumulativeCwa,
     this.cumulativeCreditsCalc,
     this.cumulativeWeightedMarks,
+    this.academicYearStart,
+    this.semesterNumber,
+    this.level,
+    this.programme,
   });
 }
 
@@ -37,23 +53,31 @@ class ResultSlipParser {
   static const _prompt =
       'You are a KNUST result slip data extractor. Read every number exactly as printed — do NOT estimate or infer. '
       'Extract the following from the slip:\n\n'
-      '1. COURSE TABLE — every row in the course table:\n'
+      '1. HEADER METADATA — look near the top of the slip for:\n'
+      '   - academic_year_start: the starting year of the academic year (e.g. 2024 for "2024/2025 Academic Year").'
+      ' null if not visible.\n'
+      '   - semester_number: 1 for "First Semester", 2 for "Second Semester". null if not visible.\n'
+      '   - level: the student level number only (e.g. 300 for "Level 300", "L300", or "300"). null if not visible.\n'
+      '   - programme: the programme name (e.g. "Computer Engineering", "BSc Computer Science"). null if not visible.\n\n'
+      '2. COURSE TABLE — every row in the course table:\n'
       '   - course_code: module code (e.g. "COE 261")\n'
       '   - course_name: full title\n'
       '   - credit_hours: number from CREDITS column (default 3 only if column is missing)\n'
       '   - mark: integer/decimal from MARKS column — MUST be copied exactly. null ONLY if no MARKS column exists.\n'
       '   - grade: letter from GRADE column (use F for any failing grade)\n\n'
-      '2. SUMMARY TABLE (the Semester / Cumulative box at the bottom):\n'
+      '3. SUMMARY TABLE (the Semester / Cumulative box at the bottom):\n'
       '   - semester_cwa: the Weighted Average from the SEMESTER column\n'
       '   - cumulative_cwa: the Weighted Average from the CUMULATIVE column\n'
       '   - cumulative_credits_calc: the Credits Calc value from the CUMULATIVE column\n'
       '   - cumulative_weighted_marks: the Weighted Marks value from the CUMULATIVE column\n\n'
       'Return ONLY a JSON object with these exact top-level keys:\n'
+      '"academic_year_start", "semester_number", "level", "programme", '
       '"courses", "semester_cwa", "cumulative_cwa", "cumulative_credits_calc", "cumulative_weighted_marks".\n'
-      'All five keys must be present. Use null for any value not visible on the slip.\n'
+      'All keys must be present. Use null for any value not visible on the slip.\n'
       'Return nothing except the JSON. No explanation. No markdown. No code fences.\n\n'
-      'Example for a slip showing Weighted Marks 8655 and Credits Calc 173 in the cumulative column:\n'
-      '{"semester_cwa":65.05,"cumulative_cwa":50.03,"cumulative_credits_calc":173,"cumulative_weighted_marks":8655,'
+      'Example:\n'
+      '{"academic_year_start":2024,"semester_number":2,"level":300,"programme":"Computer Engineering",'
+      '"semester_cwa":65.05,"cumulative_cwa":50.03,"cumulative_credits_calc":173,"cumulative_weighted_marks":8655,'
       '"courses":['
       '{"course_code":"COE 454","course_name":"SOFTWARE ENGINEERING","credit_hours":3,"mark":79,"grade":"A"},'
       '{"course_code":"COE 480","course_name":"FAULT DIAGNOSIS AND FAILURE TOLERANCE","credit_hours":3,"mark":40,"grade":"D"}'
@@ -162,6 +186,11 @@ class ResultSlipParser {
             (parsedObj['cumulative_credits_calc'] as num?)?.toDouble(),
         cumulativeWeightedMarks:
             (parsedObj['cumulative_weighted_marks'] as num?)?.toDouble(),
+        academicYearStart:
+            (parsedObj['academic_year_start'] as num?)?.toInt(),
+        semesterNumber: (parsedObj['semester_number'] as num?)?.toInt(),
+        level: (parsedObj['level'] as num?)?.toInt(),
+        programme: parsedObj['programme'] as String?,
       );
     } on TimeoutException {
       throw Exception(

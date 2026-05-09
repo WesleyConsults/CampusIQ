@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/domain/past_course_result.dart';
+import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/providers/result_slip_import_provider.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
 
 class ResultSlipImportScreen extends ConsumerStatefulWidget {
   final String? initialSource;
@@ -51,6 +53,9 @@ class _ResultSlipImportScreenState
   Widget build(BuildContext context) {
     final state = ref.watch(resultSlipImportNotifierProvider);
     final notifier = ref.read(resultSlipImportNotifierProvider.notifier);
+    final activeSemester = ActiveSemesterSelection.fromKey(
+      ref.watch(activeSemesterProvider),
+    );
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
@@ -70,7 +75,14 @@ class _ResultSlipImportScreenState
                 ? 'AI is reading your result slip…'
                 : 'Opening file…',
           ),
-        ResultImportStep.labelling => _LabelView(notifier: notifier),
+        ResultImportStep.labelling => _LabelView(
+            notifier: notifier,
+            initialSelection: activeSemester,
+            parsedAcademicYearStart: state.parsedAcademicYearStart,
+            parsedSemesterNumber: state.parsedSemesterNumber,
+            parsedLevel: state.parsedLevel,
+            parsedProgramme: state.parsedProgramme,
+          ),
         ResultImportStep.reviewing =>
           _ReviewView(state: state, notifier: notifier),
         ResultImportStep.saving => const _LoadingView('Saving results…'),
@@ -177,7 +189,8 @@ class _OptionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadii.sm2),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 18),
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md, vertical: 18),
           child: Row(
             children: [
               Container(
@@ -187,7 +200,8 @@ class _OptionTile extends StatelessWidget {
                   color: AppTheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
-                child: Icon(icon, color: AppTheme.primary, size: AppIconSizes.xxxl),
+                child: Icon(icon,
+                    color: AppTheme.primary, size: AppIconSizes.xxxl),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -247,122 +261,262 @@ class _LoadingView extends StatelessWidget {
 
 class _LabelView extends StatefulWidget {
   final ResultSlipImportNotifier notifier;
-  const _LabelView({required this.notifier});
+  final ActiveSemesterSelection initialSelection;
+  final int? parsedAcademicYearStart;
+  final int? parsedSemesterNumber;
+  final int? parsedLevel;
+  final String? parsedProgramme;
+
+  const _LabelView({
+    required this.notifier,
+    required this.initialSelection,
+    this.parsedAcademicYearStart,
+    this.parsedSemesterNumber,
+    this.parsedLevel,
+    this.parsedProgramme,
+  });
 
   @override
   State<_LabelView> createState() => _LabelViewState();
 }
 
 class _LabelViewState extends State<_LabelView> {
-  final _controller = TextEditingController();
+  late int _selectedStartYear;
+  late int _selectedSemesterNumber;
+  final _levelController = TextEditingController();
+  final _programmeController = TextEditingController();
 
-  static const _suggestions = [
-    'Year 1 Sem 1',
-    'Year 1 Sem 2',
-    'Year 2 Sem 1',
-    'Year 2 Sem 2',
-    'Year 3 Sem 1',
-    'Year 3 Sem 2',
-    'Year 4 Sem 1',
-    'Year 4 Sem 2',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _selectedStartYear =
+        widget.parsedAcademicYearStart ?? widget.initialSelection.startYear;
+    _selectedSemesterNumber =
+        widget.parsedSemesterNumber ?? widget.initialSelection.semesterNumber;
+
+    final parsedLevel = widget.parsedLevel;
+    if (parsedLevel != null) {
+      _levelController.text = parsedLevel.toString();
+    }
+
+    final parsedProgramme = widget.parsedProgramme;
+    if (parsedProgramme != null) {
+      _programmeController.text = parsedProgramme;
+    }
+  }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _levelController.dispose();
+    _programmeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final yearOptions = _academicYearOptions(_selectedStartYear);
+    final selection = ActiveSemesterSelection(
+      startYear: _selectedStartYear,
+      semesterNumber: _selectedSemesterNumber,
+    );
+    final previewLabel = _buildSemesterLabel(selection);
+
+    return ListView(
       padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: AppSpacing.md),
-          const Text(
-            'Which semester is this?',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+      children: [
+        const SizedBox(height: AppSpacing.md),
+        const Text(
+          'Which semester is this?',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        const Text(
+          'Pick the academic year and semester. Level and programme are optional labels for your own reference.',
+          style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+        ),
+        const SizedBox(height: 28),
+        DropdownButtonFormField<int>(
+          initialValue: _selectedStartYear,
+          decoration: InputDecoration(
+            labelText: 'Academic Year',
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              borderSide: BorderSide.none,
             ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          const Text(
-            'Give this result slip a label so you can identify it later.',
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
-          ),
-          const SizedBox(height: 28),
-          TextField(
-            controller: _controller,
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              hintText: 'e.g. Year 1 Sem 1',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            ),
-            onSubmitted: (_) => _onContinue(),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          // Quick-pick chips
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _suggestions.map((s) {
-              return ActionChip(
-                label: Text(s,
-                    style: const TextStyle(
-                        fontSize: 13, color: AppTheme.textPrimary)),
-                backgroundColor: Colors.white,
-                side: BorderSide(color: Colors.grey.shade200),
-                onPressed: () {
-                  _controller.text = s;
-                  _controller.selection = TextSelection.fromPosition(
-                    TextPosition(offset: s.length),
-                  );
-                },
-              );
-            }).toList(),
-          ),
-          const Spacer(),
-          SizedBox(
-            width: double.infinity,
-            child: ValueListenableBuilder(
-              valueListenable: _controller,
-              builder: (_, value, __) => ElevatedButton(
-                onPressed: value.text.trim().isEmpty ? null : _onContinue,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppTheme.textSecondary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                  ),
+          items: yearOptions
+              .map(
+                (year) => DropdownMenuItem<int>(
+                  value: year,
+                  child: Text('$year/${year + 1}'),
                 ),
-                child: const Text('Continue to Review'),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() => _selectedStartYear = value);
+          },
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        DropdownButtonFormField<int>(
+          initialValue: _selectedSemesterNumber,
+          decoration: InputDecoration(
+            labelText: 'Semester',
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          items: const [
+            DropdownMenuItem<int>(
+              value: 1,
+              child: Text('First Semester'),
+            ),
+            DropdownMenuItem<int>(
+              value: 2,
+              child: Text('Second Semester'),
+            ),
+          ],
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() => _selectedSemesterNumber = value);
+          },
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TextField(
+          controller: _levelController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'Level (optional)',
+            hintText: 'e.g. 300',
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TextField(
+          controller: _programmeController,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            labelText: 'Programme (optional)',
+            hintText: 'e.g. Computer Engineering',
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Saved as',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxxs),
+              Text(
+                previewLabel,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.primary,
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppTheme.textSecondary,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
             ),
+            child: const Text('Continue to Review'),
           ),
-          const SizedBox(height: AppSpacing.md),
-        ],
-      ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+      ],
     );
   }
 
+  List<int> _academicYearOptions(int selectedYear) {
+    final currentYear = DateTime.now().year;
+    final years = <int>{
+      selectedYear,
+      for (var year = currentYear - 6; year <= currentYear + 1; year++) year,
+    }.toList()
+      ..sort((a, b) => b.compareTo(a));
+    return years;
+  }
+
+  String _buildSemesterLabel(ActiveSemesterSelection selection) {
+    final parts = <String>[selection.displayLabel];
+    final level = _levelController.text.trim();
+    final programme = _programmeController.text.trim();
+
+    if (level.isNotEmpty) {
+      final normalized =
+          level.toUpperCase().startsWith('L') ? level.toUpperCase() : 'L$level';
+      parts.add(normalized);
+    }
+    if (programme.isNotEmpty) parts.add(programme);
+
+    return parts.join(' • ');
+  }
+
   void _onContinue() {
-    final label = _controller.text.trim();
-    if (label.isEmpty) return;
-    widget.notifier.confirmLabel(label);
+    final selection = ActiveSemesterSelection(
+      startYear: _selectedStartYear,
+      semesterNumber: _selectedSemesterNumber,
+    );
+    widget.notifier.confirmSemesterIdentity(
+      semesterKey: selection.key,
+      semesterLabel: _buildSemesterLabel(selection),
+    );
   }
 }
 
@@ -414,7 +568,8 @@ class _ReviewView extends StatelessWidget {
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: AppTheme.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(AppRadii.xxs),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.xxs),
                               ),
                               child: Text(
                                 'Reported Sem CWA: ${state.reportedSemesterCwa?.toStringAsFixed(2)}',
@@ -430,7 +585,8 @@ class _ReviewView extends StatelessWidget {
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: AppTheme.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(AppRadii.xxs),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.xxs),
                               ),
                               child: Text(
                                 'Reported Cum CWA: ${state.reportedCumulativeCwa?.toStringAsFixed(2)}',
@@ -855,7 +1011,8 @@ class _DoneView extends StatelessWidget {
                 color: AppTheme.success,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(LucideIcons.check, color: Colors.white, size: AppIconSizes.status),
+              child: const Icon(LucideIcons.check,
+                  color: Colors.white, size: AppIconSizes.status),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -917,7 +1074,8 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(LucideIcons.circleAlert, size: AppIconSizes.error, color: AppTheme.warning),
+          const Icon(LucideIcons.circleAlert,
+              size: AppIconSizes.error, color: AppTheme.warning),
           const SizedBox(height: AppSpacing.md),
           const Text(
             'Something went wrong',

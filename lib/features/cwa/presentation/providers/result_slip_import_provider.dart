@@ -28,6 +28,7 @@ class ResultImportState {
   final ResultImportStep step;
   final List<PastCourseResult> courses;
   final Set<int> selectedIndexes;
+  final String semesterKey;
   final String semesterLabel;
   final String? errorMessage;
   final double? reportedSemesterCwa;
@@ -35,33 +36,51 @@ class ResultImportState {
   final double? cumulativeCreditsCalc;
   final double? cumulativeWeightedMarks;
 
+  /// Metadata parsed from the slip header by AI — used to pre-fill the
+  /// labelling screen so the user only needs to verify, not re-enter.
+  final int? parsedAcademicYearStart;
+  final int? parsedSemesterNumber;
+  final int? parsedLevel;
+  final String? parsedProgramme;
+
   const ResultImportState({
     this.step = ResultImportStep.idle,
     this.courses = const [],
     this.selectedIndexes = const {},
+    this.semesterKey = '',
     this.semesterLabel = '',
     this.errorMessage,
     this.reportedSemesterCwa,
     this.reportedCumulativeCwa,
     this.cumulativeCreditsCalc,
     this.cumulativeWeightedMarks,
+    this.parsedAcademicYearStart,
+    this.parsedSemesterNumber,
+    this.parsedLevel,
+    this.parsedProgramme,
   });
 
   ResultImportState copyWith({
     ResultImportStep? step,
     List<PastCourseResult>? courses,
     Set<int>? selectedIndexes,
+    String? semesterKey,
     String? semesterLabel,
     String? errorMessage,
     double? reportedSemesterCwa,
     double? reportedCumulativeCwa,
     double? cumulativeCreditsCalc,
     double? cumulativeWeightedMarks,
+    int? parsedAcademicYearStart,
+    int? parsedSemesterNumber,
+    int? parsedLevel,
+    String? parsedProgramme,
   }) =>
       ResultImportState(
         step: step ?? this.step,
         courses: courses ?? this.courses,
         selectedIndexes: selectedIndexes ?? this.selectedIndexes,
+        semesterKey: semesterKey ?? this.semesterKey,
         semesterLabel: semesterLabel ?? this.semesterLabel,
         errorMessage: errorMessage,
         reportedSemesterCwa: reportedSemesterCwa ?? this.reportedSemesterCwa,
@@ -71,6 +90,12 @@ class ResultImportState {
             cumulativeCreditsCalc ?? this.cumulativeCreditsCalc,
         cumulativeWeightedMarks:
             cumulativeWeightedMarks ?? this.cumulativeWeightedMarks,
+        parsedAcademicYearStart:
+            parsedAcademicYearStart ?? this.parsedAcademicYearStart,
+        parsedSemesterNumber:
+            parsedSemesterNumber ?? this.parsedSemesterNumber,
+        parsedLevel: parsedLevel ?? this.parsedLevel,
+        parsedProgramme: parsedProgramme ?? this.parsedProgramme,
       );
 }
 
@@ -195,6 +220,10 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
         reportedCumulativeCwa: parseResult.reportedCumulativeCwa,
         cumulativeCreditsCalc: parseResult.cumulativeCreditsCalc,
         cumulativeWeightedMarks: parseResult.cumulativeWeightedMarks,
+        parsedAcademicYearStart: parseResult.academicYearStart,
+        parsedSemesterNumber: parseResult.semesterNumber,
+        parsedLevel: parseResult.level,
+        parsedProgramme: parseResult.programme,
       );
     } catch (e) {
       state = state.copyWith(
@@ -204,11 +233,15 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
     }
   }
 
-  /// Called after user types a semester label and taps Continue.
-  void confirmLabel(String label) {
+  /// Called after user confirms the academic year/semester identity.
+  void confirmSemesterIdentity({
+    required String semesterKey,
+    required String semesterLabel,
+  }) {
     state = state.copyWith(
       step: ResultImportStep.reviewing,
-      semesterLabel: label.trim(),
+      semesterKey: semesterKey.trim(),
+      semesterLabel: semesterLabel.trim(),
     );
   }
 
@@ -263,6 +296,8 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
 
       await repo.add(PastSemesterModel.create(
         semesterLabel: state.semesterLabel,
+        semesterKey:
+            state.semesterKey.trim().isEmpty ? null : state.semesterKey.trim(),
         courses: entries,
         reportedSemesterCwa: state.reportedSemesterCwa,
         reportedCumulativeCwa: state.reportedCumulativeCwa,
