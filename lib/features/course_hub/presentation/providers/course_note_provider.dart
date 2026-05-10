@@ -12,8 +12,7 @@ final courseNoteRepositoryProvider = Provider<CourseNoteRepository?>((ref) {
 });
 
 @riverpod
-Stream<List<CourseNoteModel>> courseNotes(Ref ref, String courseCode) {
-  final repo = ref.watch(courseNoteRepositoryProvider);
-  if (repo == null) return const Stream.empty();
-  return repo.watchNotes(courseCode);
+Stream<List<CourseNoteModel>> courseNotes(Ref ref, String courseCode) async* {
+  final isar = await ref.watch(isarProvider.future);
+  yield* CourseNoteRepository(isar).watchNotes(courseCode);
 }

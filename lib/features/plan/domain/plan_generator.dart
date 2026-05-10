@@ -2,24 +2,8 @@ import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/plan/domain/plan_task.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
-
-/// Represents a free gap between class slots (pure Dart, no Flutter).
-class _FreeBlock {
-  final int startMinutes;
-  final int endMinutes;
-
-  const _FreeBlock(this.startMinutes, this.endMinutes);
-
-  int get durationMinutes => endMinutes - startMinutes;
-
-  DateTime toDateTime(DateTime date) => DateTime(
-        date.year,
-        date.month,
-        date.day,
-        startMinutes ~/ 60,
-        startMinutes % 60,
-      );
-}
+import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
+import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
 /// Pure Dart class — no Flutter imports.
 /// Generates a prioritised list of [PlanTask] for a given day.
@@ -32,11 +16,6 @@ class PlanGenerator {
 
   /// Target total study minutes for the day (from user prefs, default 120).
   final int dailyStudyGoalMinutes;
-
-  // Grid boundaries (minutes from midnight)
-  static const int _gridStart = 360; // 6 AM
-  static const int _gridEnd = 1200; // 8 PM
-  static const int _minUsableBlock = 30;
 
   PlanGenerator({
     required this.todaySlots,
@@ -71,7 +50,13 @@ class PlanGenerator {
     }
 
     // ── 2. Free block detection ──────────────────────────────────────────────
-    final freeBlocks = _detectFreeBlocks(sortedSlots);
+    final dayIndex = date.weekday <= 6 ? date.weekday - 1 : 0;
+    final freeBlocks = sortedSlots.isEmpty
+        ? <FreeBlock>[]
+        : FreeTimeDetector.detect(
+            dayIndex: dayIndex,
+            slots: sortedSlots,
+          );
 
     // ── 3. Course priority scoring ───────────────────────────────────────────
     final now = date;
@@ -118,7 +103,13 @@ class PlanGenerator {
         label: 'Study ${candidate.course.name}',
         courseCode: candidate.course.code,
         durationMinutes: block.durationMinutes,
-        startTime: block.toDateTime(date),
+        startTime: DateTime(
+          date.year,
+          date.month,
+          date.day,
+          block.startMinutes ~/ 60,
+          block.startMinutes % 60,
+        ),
         isManual: false,
         sortOrder: 0,
       ));
@@ -138,39 +129,4 @@ class PlanGenerator {
     ];
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  List<_FreeBlock> _detectFreeBlocks(List<TimetableSlotModel> sorted) {
-    if (sorted.isEmpty) {
-      // Entire grid is free
-      const block = _FreeBlock(_gridStart, _gridEnd);
-      return block.durationMinutes >= _minUsableBlock ? [block] : [];
-    }
-
-    final blocks = <_FreeBlock>[];
-
-    // Gap before first class
-    if (sorted.first.startMinutes > _gridStart) {
-      final b = _FreeBlock(_gridStart, sorted.first.startMinutes);
-      if (b.durationMinutes >= _minUsableBlock) blocks.add(b);
-    }
-
-    // Gaps between classes
-    for (int i = 0; i < sorted.length - 1; i++) {
-      final gapStart = sorted[i].endMinutes;
-      final gapEnd = sorted[i + 1].startMinutes;
-      if (gapEnd > gapStart) {
-        final b = _FreeBlock(gapStart, gapEnd);
-        if (b.durationMinutes >= _minUsableBlock) blocks.add(b);
-      }
-    }
-
-    // Gap after last class
-    if (sorted.last.endMinutes < _gridEnd) {
-      final b = _FreeBlock(sorted.last.endMinutes, _gridEnd);
-      if (b.durationMinutes >= _minUsableBlock) blocks.add(b);
-    }
-
-    return blocks;
-  }
 }

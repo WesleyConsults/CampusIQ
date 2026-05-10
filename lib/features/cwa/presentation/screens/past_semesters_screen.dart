@@ -8,6 +8,7 @@ import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
+import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
 class PastSemestersScreen extends ConsumerWidget {
   const PastSemestersScreen({super.key});
@@ -23,7 +24,10 @@ class PastSemestersScreen extends ConsumerWidget {
       ),
       body: semestersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorRetryWidget(
+          message: 'We could not load your result history right now.',
+          onRetry: () => ref.invalidate(pastSemestersProvider),
+        ),
         data: (semesters) {
           if (semesters.isEmpty) {
             return _EmptyState(

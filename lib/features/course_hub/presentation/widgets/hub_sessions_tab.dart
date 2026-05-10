@@ -8,6 +8,7 @@ import 'package:campusiq/features/session/presentation/widgets/weekly_bar_chart.
 import 'package:campusiq/features/session/domain/planned_actual_analyser.dart';
 import 'package:campusiq/features/session/data/repositories/session_repository.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
+import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
 class HubSessionsTab extends ConsumerWidget {
   final String courseCode;
@@ -20,7 +21,10 @@ class HubSessionsTab extends ConsumerWidget {
 
     return sessionsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => ErrorRetryWidget(
+        message: 'We could not load your sessions right now.',
+        onRetry: () => ref.invalidate(allSessionsProvider),
+      ),
       data: (allSessions) {
         final courseSessions = allSessions
             .where((s) => s.courseCode == courseCode)

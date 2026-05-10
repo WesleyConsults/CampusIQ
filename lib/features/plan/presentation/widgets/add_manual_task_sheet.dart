@@ -7,6 +7,8 @@ import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 import 'package:campusiq/features/plan/presentation/providers/plan_provider.dart';
+import 'package:campusiq/shared/widgets/campus_modal_action_row.dart';
+import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
 
 class AddManualTaskSheet extends ConsumerStatefulWidget {
   const AddManualTaskSheet({super.key});
@@ -87,148 +89,105 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
   Widget build(BuildContext context) {
     final courses = ref.watch(coursesProvider).valueOrNull ?? [];
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(AppRadii.xxxs),
-                  ),
-                ),
-              ),
-              const Text(
-                'Add Task',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Label
-              TextFormField(
-                controller: _labelCtrl,
-                decoration: const InputDecoration(labelText: 'Task label *'),
-                textCapitalization: TextCapitalization.sentences,
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Label is required'
-                    : null,
-              ),
-              const SizedBox(height: AppSpacing.sm2),
-
-              // Task type
-              DropdownButtonFormField<String>(
+    return Form(
+      key: _formKey,
+      child: CampusModalSheet(
+        title: 'Add Task',
+        subtitle:
+            'Add something practical for today without leaving your flow.',
+        scrollable: true,
+        maxHeightFactor: 0.94,
+        bottomBar: CampusModalActionRow(
+          primaryLabel: 'Add Task',
+          onPrimaryPressed: _saving ? null : _save,
+          secondaryLabel: 'Cancel',
+          onSecondaryPressed:
+              _saving ? null : () => Navigator.of(context).pop(),
+          isPrimaryLoading: _saving,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              controller: _labelCtrl,
+              decoration: const InputDecoration(labelText: 'Task label *'),
+              textCapitalization: TextCapitalization.sentences,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Label is required' : null,
+            ),
+            const SizedBox(height: AppSpacing.sm2),
+            DropdownButtonFormField<String>(
+              // ignore: deprecated_member_use
+              value: _taskType,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Task type'),
+              items: const [
+                DropdownMenuItem(value: 'study', child: Text('Study')),
+                DropdownMenuItem(value: 'attend', child: Text('Attend class')),
+                DropdownMenuItem(value: 'personal', child: Text('Personal')),
+              ],
+              onChanged: (v) {
+                if (v != null) setState(() => _taskType = v);
+              },
+            ),
+            const SizedBox(height: AppSpacing.sm2),
+            if (courses.isNotEmpty)
+              DropdownButtonFormField<CourseModel?>(
                 // ignore: deprecated_member_use
-                value: _taskType,
-                decoration: const InputDecoration(labelText: 'Task type'),
-                items: const [
-                  DropdownMenuItem(value: 'study', child: Text('Study')),
-                  DropdownMenuItem(
-                      value: 'attend', child: Text('Attend class')),
-                  DropdownMenuItem(value: 'personal', child: Text('Personal')),
-                ],
-                onChanged: (v) {
-                  if (v != null) setState(() => _taskType = v);
-                },
-              ),
-              const SizedBox(height: AppSpacing.sm2),
-
-              // Course picker (optional)
-              if (courses.isNotEmpty)
-                DropdownButtonFormField<CourseModel?>(
-                  // ignore: deprecated_member_use
-                  value: _selectedCourse,
-                  decoration:
-                      const InputDecoration(labelText: 'Course (optional)'),
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text('None')),
-                    ...courses.map(
-                      (c) => DropdownMenuItem(
-                        value: c,
-                        child: Text('${c.code} — ${c.name}',
-                            overflow: TextOverflow.ellipsis),
+                value: _selectedCourse,
+                isExpanded: true,
+                decoration:
+                    const InputDecoration(labelText: 'Course (optional)'),
+                items: [
+                  const DropdownMenuItem(value: null, child: Text('None')),
+                  ...courses.map(
+                    (c) => DropdownMenuItem(
+                      value: c,
+                      child: Text(
+                        '${c.code} — ${c.name}',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
-                  ],
-                  onChanged: (v) => setState(() => _selectedCourse = v),
-                ),
-              if (courses.isNotEmpty) const SizedBox(height: AppSpacing.sm2),
-
-              // Duration
-              TextFormField(
-                controller: _durationCtrl,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration:
-                    const InputDecoration(labelText: 'Duration (minutes)'),
-                validator: (v) {
-                  final n = int.tryParse(v ?? '');
-                  if (n == null || n <= 0) return 'Enter a valid duration';
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppSpacing.sm2),
-
-              // Start time (optional)
-              InkWell(
-                onTap: _pickTime,
-                borderRadius: BorderRadius.circular(AppRadii.xs2),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Start time (optional)',
-                    suffixIcon: Icon(Icons.access_time),
                   ),
-                  child: Text(
-                    _startTime != null
-                        ? _startTime!.format(context)
-                        : 'Tap to set',
-                    style: TextStyle(
-                      color: _startTime != null
-                          ? AppTheme.textPrimary
-                          : AppTheme.textSecondary,
-                    ),
+                ],
+                onChanged: (v) => setState(() => _selectedCourse = v),
+              ),
+            if (courses.isNotEmpty) const SizedBox(height: AppSpacing.sm2),
+            TextFormField(
+              controller: _durationCtrl,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration:
+                  const InputDecoration(labelText: 'Duration (minutes)'),
+              validator: (v) {
+                final n = int.tryParse(v ?? '');
+                if (n == null || n <= 0) return 'Enter a valid duration';
+                return null;
+              },
+            ),
+            const SizedBox(height: AppSpacing.sm2),
+            InkWell(
+              onTap: _pickTime,
+              borderRadius: BorderRadius.circular(AppRadii.xs2),
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Start time (optional)',
+                  suffixIcon: Icon(Icons.access_time),
+                ),
+                child: Text(
+                  _startTime != null
+                      ? _startTime!.format(context)
+                      : 'Tap to set',
+                  style: TextStyle(
+                    color: _startTime != null
+                        ? AppTheme.textPrimary
+                        : AppTheme.textSecondary,
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Save button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _saving ? null : _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadii.xs2)),
-                  ),
-                  child: _saving
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('Add Task',
-                          style: TextStyle(fontWeight: FontWeight.w700)),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

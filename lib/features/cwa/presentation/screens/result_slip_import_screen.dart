@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/domain/past_course_result.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/providers/result_slip_import_provider.dart';
@@ -1216,20 +1217,13 @@ class _AddResultCourseSheetState extends State<_AddResultCourseSheet> {
         courseCode: _codeController.text.trim().toUpperCase(),
         courseName: _nameController.text.trim(),
         creditHours: double.parse(_creditsController.text.trim()),
-        grade: _gradeFromScore(mark),
+        grade: PastCourseEntry.gradeFromScore(mark),
         mark: mark,
       ),
     );
   }
 }
 
-String _gradeFromScore(double score) {
-  if (score >= 80) return 'A';
-  if (score >= 70) return 'B';
-  if (score >= 60) return 'C';
-  if (score >= 50) return 'D';
-  return 'F';
-}
 
 // ─── Done ─────────────────────────────────────────────────────────────────────
 

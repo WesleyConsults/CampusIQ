@@ -73,9 +73,34 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
 
     if (result == null || !mounted) return;
     final repo = ref.read(timetableRepositoryProvider);
-    existing == null
-        ? await repo?.addSlot(result)
-        : await repo?.updateSlot(result);
+    if (repo == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save slot. Please try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      if (existing == null) {
+        await repo.addSlot(result);
+      } else {
+        await repo.updateSlot(result);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save slot. Please try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _showClassDetail(TimetableSlotModel slot) {
@@ -87,8 +112,34 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       builder: (_) => SlotDetailSheet(
         slot: slot,
         onEdit: () => _openAddClassSheet(existing: slot),
-        onDelete: () =>
-            ref.read(timetableRepositoryProvider)?.deleteSlot(slot.id),
+        onDelete: () async {
+          final repo = ref.read(timetableRepositoryProvider);
+          if (repo == null) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content:
+                      Text('Could not delete slot. Please try again.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+            return;
+          }
+          try {
+            await repo.deleteSlot(slot.id);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content:
+                      Text('Could not delete slot. Please try again.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          }
+        },
       ),
     );
   }

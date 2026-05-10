@@ -5,6 +5,8 @@ import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dar
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/core/data/repositories/user_prefs_repository.dart';
+import 'package:campusiq/features/streak/domain/streak_calculator.dart';
+import 'package:campusiq/features/streak/domain/streak_result.dart';
 import 'prompt_templates.dart';
 
 class ContextBuilder {
@@ -44,8 +46,15 @@ class ContextBuilder {
         ? '- This week: No sessions logged this week yet'
         : '- This week: ${totalHours.toStringAsFixed(1)} hours studied';
 
-    // Build streak info — placeholder for now
-    String streakSummary = '- Study streak: No active streak';
+    // Build streak info from real session data
+    final streakResult = await _getStudyStreak(semesterKey);
+    String streakSummary = streakResult.currentStreak > 0
+        ? '- Study streak: ${streakResult.currentStreak} days'
+        : '- Study streak: No active streak';
+    if (streakResult.longestStreak > streakResult.currentStreak) {
+      streakSummary +=
+          ' (longest: ${streakResult.longestStreak} days)';
+    }
 
     // Build today's timetable summary
     String timetableSummary = '';
@@ -264,7 +273,8 @@ Do not use markdown. Plain sentences only.''';
     try {
       // Using Future to match the stream API
       final stream = cwaRepository.watchCourses(semesterKey);
-      final courses = await stream.first;
+      final courses =
+          await stream.first.timeout(const Duration(seconds: 5));
       return courses;
     } catch (_) {
       return [];
@@ -290,10 +300,25 @@ Do not use markdown. Plain sentences only.''';
       final dayIndex = now.weekday - 1; // Isar uses 0-6
       final stream =
           timetableRepository.watchSlotsForDay(semesterKey, dayIndex);
-      final slots = await stream.first;
+      final slots =
+          await stream.first.timeout(const Duration(seconds: 5));
       return slots;
     } catch (_) {
       return [];
+    }
+  }
+
+  Future<StreakResult> _getStudyStreak(String semesterKey) async {
+    try {
+      final now = DateTime.now();
+      final twoYearsAgo = now.subtract(const Duration(days: 730));
+      final sessions =
+          await sessionRepository.getSessionsForRange(
+              semesterKey, twoYearsAgo, now);
+      final dates = sessions.map((s) => s.startTime).toList();
+      return StreakCalculator.calculate(activeDates: dates);
+    } catch (_) {
+      return StreakCalculator.calculate(activeDates: []);
     }
   }
 }

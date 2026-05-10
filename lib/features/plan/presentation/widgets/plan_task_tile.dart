@@ -54,16 +54,7 @@ class PlanTaskTile extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Left colour accent strip
-            Container(
-              width: 4,
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              decoration: BoxDecoration(
-                color: accent,
-                borderRadius: BorderRadius.circular(AppRadii.xs),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: AppSpacing.md),
             // Check icon
             GestureDetector(
               onTap: () => repo?.markComplete(task.id, !done),

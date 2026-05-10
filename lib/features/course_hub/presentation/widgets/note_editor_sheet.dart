@@ -52,6 +52,14 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
     final repo = ref.read(courseNoteRepositoryProvider);
     if (repo == null) {
       setState(() => _isSaving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save note. Please try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
       return;
     }
 
@@ -67,8 +75,20 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
       note.createdAt = now;
     }
 
-    await repo.saveNote(note);
-    if (mounted) Navigator.of(context).pop();
+    try {
+      await repo.saveNote(note);
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      setState(() => _isSaving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save note. Please try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override

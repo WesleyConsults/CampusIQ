@@ -20,7 +20,9 @@ import 'package:campusiq/features/cwa/presentation/screens/cwa_manual_entry_scre
 import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
+import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/shared/widgets/offline_banner.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 
 final appRouter = GoRouter(
@@ -148,7 +150,7 @@ class _AppShell extends ConsumerWidget {
 
   int? _locationToIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith('/plan') || location.startsWith('/today')) return 0;
+    if (location.startsWith('/plan')) return 0;
     if (location.startsWith('/cwa')) return 1;
     if (location.startsWith('/timetable')) return 2;
     if (location.startsWith('/sessions')) return 3;
@@ -158,9 +160,11 @@ class _AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSessionActive = ref.watch(activeSessionProvider) != null;
+    final isOnline = ref.watch(isOnlineProvider).valueOrNull ?? true;
     final selectedIndex = _locationToIndex(context);
     final usesShellNav = selectedIndex != null;
     final mediaQuery = MediaQuery.of(context);
+    final bannerHeight = !isOnline ? AppSpacing.xxl + 4 : 0.0;
     final navBottomOffset = mediaQuery.padding.bottom + _navBottomMargin;
     final shellBottomInset = mediaQuery.padding.bottom +
         _navBottomMargin +
@@ -178,9 +182,16 @@ class _AppShell extends ConsumerWidget {
       backgroundColor: AppTheme.surface,
       body: Stack(
         children: [
+          if (!isOnline)
+            const Positioned(
+              left: 0,
+              top: 0,
+              right: 0,
+              child: OfflineBanner(),
+            ),
           Positioned(
             left: 0,
-            top: 0,
+            top: bannerHeight,
             right: 0,
             bottom: childBottomInset,
             child: MediaQuery(

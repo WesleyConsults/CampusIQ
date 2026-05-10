@@ -303,10 +303,16 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       final remaining = (3 - used).clamp(0, 3);
                       return UsageCounterChip(remaining: remaining, limit: 3);
                     },
-                    loading: () => const SizedBox.shrink(),
+                    loading: () => const SizedBox(
+                      height: 4,
+                      child: LinearProgressIndicator(),
+                    ),
                     error: (_, __) => const SizedBox.shrink(),
                   ),
-                  loading: () => const SizedBox.shrink(),
+                  loading: () => const SizedBox(
+                    height: 4,
+                    child: LinearProgressIndicator(),
+                  ),
                   error: (_, __) => const SizedBox.shrink(),
                 ),
                 SafeArea(

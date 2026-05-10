@@ -18,11 +18,10 @@ final timetableRepositoryProvider = Provider<TimetableRepository?>((ref) {
 });
 
 /// Live stream of ALL slots for the active semester.
-final allSlotsProvider = StreamProvider<List<TimetableSlotModel>>((ref) {
-  final repo = ref.watch(timetableRepositoryProvider);
+final allSlotsProvider = StreamProvider<List<TimetableSlotModel>>((ref) async* {
   final semester = ref.watch(activeSemesterProvider);
-  if (repo == null) return const Stream.empty();
-  return repo.watchAllSlots(semester);
+  final isar = await ref.watch(isarProvider.future);
+  yield* TimetableRepository(isar).watchAllSlots(semester);
 });
 
 /// Slots filtered to the active day — what the grid renders.

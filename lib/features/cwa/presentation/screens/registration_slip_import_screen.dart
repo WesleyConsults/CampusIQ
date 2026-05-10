@@ -75,7 +75,9 @@ class _RegistrationSlipImportScreenState
           _ReviewView(state: state, notifier: notifier),
         SlipImportStep.saving => const _LoadingView('Saving courses…'),
         SlipImportStep.done => _DoneView(
-            count: state.selectedIndexes.length,
+            count: state.selectedIndexes.length -
+                state.duplicateCourseCount,
+            duplicateCount: state.duplicateCourseCount,
             onFinish: () {
               notifier.reset();
               Navigator.of(context).pop();
@@ -741,9 +743,14 @@ class _AddRegistrationCourseSheetState
 
 class _DoneView extends StatelessWidget {
   final int count;
+  final int duplicateCount;
   final VoidCallback onFinish;
 
-  const _DoneView({required this.count, required this.onFinish});
+  const _DoneView({
+    required this.count,
+    required this.duplicateCount,
+    required this.onFinish,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -772,6 +779,16 @@ class _DoneView extends StatelessWidget {
                 color: AppTheme.textPrimary,
               ),
             ),
+            if (duplicateCount > 0) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                '$duplicateCount already existed and w'
+                '${duplicateCount == 1 ? 'as' : 'ere'} skipped.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 13, color: AppTheme.textSecondary),
+              ),
+            ],
             const SizedBox(height: AppSpacing.xs),
             const Text(
               'You can update expected scores and credit hours from the CWA screen.',

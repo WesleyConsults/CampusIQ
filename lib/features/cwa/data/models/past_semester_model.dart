@@ -79,6 +79,15 @@ class PastCourseEntry {
     this.isProjectedMark = false,
   });
 
+  /// KNUST numeric score → letter grade.
+  static String gradeFromScore(double score) {
+    if (score >= 80) return 'A';
+    if (score >= 70) return 'B';
+    if (score >= 60) return 'C';
+    if (score >= 50) return 'D';
+    return 'F';
+  }
+
   /// KNUST letter-grade → numeric score used in CWA calculation.
   /// If mark is available, use it directly (as KNUST CWA uses actual marks).
   double get score {

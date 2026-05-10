@@ -12,11 +12,11 @@ final sessionRepositoryProvider = Provider<SessionRepository?>((ref) {
 });
 
 /// Live stream of all sessions newest first
-final allSessionsProvider = StreamProvider<List<StudySessionModel>>((ref) {
-  final repo = ref.watch(sessionRepositoryProvider);
+final allSessionsProvider =
+    StreamProvider<List<StudySessionModel>>((ref) async* {
   final semester = ref.watch(activeSemesterProvider);
-  if (repo == null) return const Stream.empty();
-  return repo.watchAllSessions(semester);
+  final isar = await ref.watch(isarProvider.future);
+  yield* SessionRepository(isar).watchAllSessions(semester);
 });
 
 /// Today's analytics — recomputed whenever sessions or timetable changes

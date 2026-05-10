@@ -30,10 +30,27 @@ class _CompleteSemesterScreenState
     extends ConsumerState<CompleteSemesterScreen> {
   late final List<_CompletedCourseDraft> _courses;
   bool _isSaving = false;
+  late int _nextStartYear;
+  late int _nextSemesterNumber;
 
   ActiveSemesterSelection get _currentSemester =>
       ActiveSemesterSelection.fromKey(widget.currentSemesterKey);
-  ActiveSemesterSelection get _nextSemester => _currentSemester.next;
+
+  ActiveSemesterSelection get _nextSemester => ActiveSemesterSelection(
+        startYear: _nextStartYear,
+        semesterNumber: _nextSemesterNumber,
+      );
+
+  List<int> get _yearOptions {
+    final now = DateTime.now();
+    final currentAcademicYear = now.month >= 8 ? now.year : now.year - 1;
+    final options = {_nextStartYear, currentAcademicYear};
+    for (var y = currentAcademicYear - 4; y <= currentAcademicYear + 4; y++) {
+      options.add(y);
+    }
+    final sorted = options.toList()..sort();
+    return sorted;
+  }
 
   double get _previewCwa {
     final pairs = _courses
@@ -48,6 +65,11 @@ class _CompleteSemesterScreenState
   @override
   void initState() {
     super.initState();
+    final autoNext =
+        ActiveSemesterSelection.fromKey(widget.currentSemesterKey).next;
+    _nextStartYear = autoNext.startYear;
+    _nextSemesterNumber = autoNext.semesterNumber;
+
     final sortedCourses = [...widget.courses]
       ..sort((a, b) => a.code.compareTo(b.code));
     _courses = sortedCourses.map(_CompletedCourseDraft.fromCourse).toList();
@@ -93,7 +115,7 @@ class _CompleteSemesterScreenState
                 courseCode: course.code,
                 courseName: course.name,
                 creditHours: course.creditHours,
-                grade: _gradeFromScore(course.mark!),
+                grade: PastCourseEntry.gradeFromScore(course.mark!),
                 mark: course.mark!,
               ),
             )
@@ -164,7 +186,7 @@ class _CompleteSemesterScreenState
                 courseCode: course.code,
                 courseName: course.name,
                 creditHours: course.creditHours,
-                grade: _gradeFromScore(course.projectedScore),
+                grade: PastCourseEntry.gradeFromScore(course.projectedScore),
                 mark: course.projectedScore,
                 isProjectedMark: true,
               ),
@@ -253,7 +275,106 @@ class _CompleteSemesterScreenState
                 children: [
                   _SummaryCard(
                     currentSemesterLabel: _currentSemester.displayLabel,
-                    nextSemesterLabel: _nextSemester.displayLabel,
+                    nextSemesterRow: Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.xxs),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(
+                                LucideIcons.arrowRight,
+                                size: AppIconSizes.md,
+                                color: AppTheme.primary,
+                              ),
+                              SizedBox(width: AppSpacing.xs),
+                              Text(
+                                'Move to',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<int>(
+                                  initialValue: _nextStartYear,
+                                  isDense: true,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Year',
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 10,
+                                    ),
+                                  ),
+                                  items: _yearOptions
+                                      .map((y) => DropdownMenuItem<int>(
+                                            value: y,
+                                            child: Text(
+                                              '$y/${y + 1}',
+                                              overflow: TextOverflow.ellipsis,
+                                              style:
+                                                  const TextStyle(fontSize: 13),
+                                            ),
+                                          ))
+                                      .toList(),
+                                  onChanged: (v) {
+                                    if (v != null) {
+                                      setState(() => _nextStartYear = v);
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              Expanded(
+                                child: DropdownButtonFormField<int>(
+                                  initialValue: _nextSemesterNumber,
+                                  isDense: true,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Sem',
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 10,
+                                    ),
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 1,
+                                      child: Text(
+                                        'First',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 2,
+                                      child: Text(
+                                        'Second',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (v) {
+                                    if (v != null) {
+                                      setState(() => _nextSemesterNumber = v);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                     courseCount: _courses.length,
                     totalCredits: _totalCredits,
                     previewCwa: _previewCwa,
@@ -372,14 +493,14 @@ class _CompleteSemesterScreenState
 
 class _SummaryCard extends StatelessWidget {
   final String currentSemesterLabel;
-  final String nextSemesterLabel;
+  final Widget nextSemesterRow;
   final int courseCount;
   final double totalCredits;
   final double previewCwa;
 
   const _SummaryCard({
     required this.currentSemesterLabel,
-    required this.nextSemesterLabel,
+    required this.nextSemesterRow,
     required this.courseCount,
     required this.totalCredits,
     required this.previewCwa,
@@ -412,11 +533,7 @@ class _SummaryCard extends StatelessWidget {
             value: currentSemesterLabel,
           ),
           const SizedBox(height: AppSpacing.xs),
-          _InfoRow(
-            icon: LucideIcons.arrowRight,
-            label: 'Next semester',
-            value: nextSemesterLabel,
-          ),
+          nextSemesterRow,
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
@@ -460,6 +577,7 @@ class _MiniStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 96,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.sm,
@@ -470,9 +588,12 @@ class _MiniStat extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 12,
               color: AppTheme.textSecondary,
@@ -740,17 +861,10 @@ class _CompletedCourseDraft {
     );
   }
 
-  String get derivedGrade => _gradeFromScore(mark ?? projectedScore);
+  String get derivedGrade =>
+      PastCourseEntry.gradeFromScore(mark ?? projectedScore);
 
   double get score {
     return mark ?? projectedScore;
   }
-}
-
-String _gradeFromScore(double score) {
-  if (score >= 80) return 'A';
-  if (score >= 70) return 'B';
-  if (score >= 60) return 'C';
-  if (score >= 50) return 'D';
-  return 'F';
 }

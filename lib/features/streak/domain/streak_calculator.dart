@@ -67,7 +67,7 @@ class StreakCalculator {
     final isAlive = current > 0;
     final unlocked = Milestone.all.where((m) => longest >= m.days).toList();
     final next = Milestone.nextAfter(longest);
-    final daysToNext = next == null ? 0 : next.days - current;
+    final daysToNext = next == null ? 0 : next.days - longest;
 
     return StreakResult(
       currentStreak: current,

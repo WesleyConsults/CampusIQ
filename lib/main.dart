@@ -2,28 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:workmanager/workmanager.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:isar/isar.dart';
+import 'package:workmanager/workmanager.dart';
 import 'package:campusiq/app.dart';
+import 'package:campusiq/core/data/isar_database.dart';
 import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/features/ai/domain/notification_scheduler.dart';
 import 'package:campusiq/features/ai/domain/deepseek_client.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
 import 'package:campusiq/features/streak/domain/streak_calculator.dart';
-import 'package:campusiq/core/data/models/user_prefs_model.dart';
-import 'package:campusiq/core/data/models/subscription_model.dart';
-import 'package:campusiq/features/cwa/data/models/course_model.dart';
-import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
-
-import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
-
-import 'package:campusiq/features/ai/data/models/ai_message_model.dart';
-import 'package:campusiq/features/ai/data/models/ai_chat_session_model.dart';
-import 'package:campusiq/features/ai/data/models/ai_usage_model.dart';
-import 'package:campusiq/features/ai/data/models/study_plan_model.dart';
-import 'package:campusiq/features/ai/data/models/study_plan_slot_model.dart';
-import 'package:campusiq/features/ai/data/models/weekly_review_model.dart';
 
 // ── Background task entry point ──────────────────────────────────────────────
 // Must be a top-level function so Workmanager can call it in a separate isolate.
@@ -47,24 +34,7 @@ Future<void> _handleStreakRiskCheck() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
 
-  final dir = await getApplicationDocumentsDirectory();
-  final isar = await Isar.open(
-    [
-      CourseModelSchema,
-      TimetableSlotModelSchema,
-      StudySessionModelSchema,
-      UserPrefsModelSchema,
-      DailyPlanTaskModelSchema,
-      SubscriptionModelSchema,
-      AiChatSessionModelSchema,
-      AiMessageModelSchema,
-      AiUsageModelSchema,
-      StudyPlanModelSchema,
-      StudyPlanSlotModelSchema,
-      WeeklyReviewModelSchema,
-    ],
-    directory: dir.path,
-  );
+  final isar = await openCampusIqIsar();
 
   try {
     final now = DateTime.now();

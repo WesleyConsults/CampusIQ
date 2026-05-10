@@ -8,6 +8,7 @@ import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
 import 'package:campusiq/features/session/presentation/providers/session_provider.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
+import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
 class HubOverviewTab extends ConsumerWidget {
   final CourseModel course;
@@ -20,6 +21,25 @@ class HubOverviewTab extends ConsumerWidget {
     final coursesAsync = ref.watch(coursesProvider);
     final perCourseStreak = ref.watch(perCourseStreakProvider);
     final courseStreak = perCourseStreak[course.code];
+
+    // Loading state
+    final isLoading = (sessionsAsync.isLoading && !sessionsAsync.hasValue) ||
+        (coursesAsync.isLoading && !coursesAsync.hasValue);
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Error state
+    final hasError = sessionsAsync.hasError || coursesAsync.hasError;
+    if (hasError) {
+      return ErrorRetryWidget(
+        message: 'We could not load this course overview right now.',
+        onRetry: () {
+          ref.invalidate(allSessionsProvider);
+          ref.invalidate(coursesProvider);
+        },
+      );
+    }
 
     final sessions = sessionsAsync.valueOrNull ?? [];
     final courseSessions =

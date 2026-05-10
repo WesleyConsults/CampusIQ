@@ -15,6 +15,7 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
     Duration focusDuration = const Duration(minutes: 25),
     Duration shortBreakDuration = const Duration(minutes: 5),
     Duration longBreakDuration = const Duration(minutes: 15),
+    int totalRounds = 4,
   }) {
     final now = DateTime.now();
     final s = ActiveSessionState(
@@ -26,6 +27,7 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
       focusDuration: focusDuration,
       shortBreakDuration: shortBreakDuration,
       longBreakDuration: longBreakDuration,
+      totalRounds: totalRounds,
       phaseEndsAt: isPomodoroMode ? now.add(focusDuration) : null,
       phaseStartedAt: isPomodoroMode ? now : null,
     );

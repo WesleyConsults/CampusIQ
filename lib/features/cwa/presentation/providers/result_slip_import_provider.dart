@@ -201,6 +201,14 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
     state = state.copyWith(step: ResultImportStep.parsing);
     try {
       final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
+      if (apiKey.isEmpty) {
+        state = state.copyWith(
+          step: ResultImportStep.error,
+          errorMessage:
+              'OpenAI API key not configured. Check your .env file.',
+        );
+        return;
+      }
       final model = dotenv.env['OPENAI_MODEL'] ?? 'gpt-4o';
       final parser = ResultSlipParser(apiKey: apiKey, model: model);
       final parseResult = await parser.parse(bytes, mimeType);

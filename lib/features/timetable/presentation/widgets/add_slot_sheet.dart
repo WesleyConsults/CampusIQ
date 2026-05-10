@@ -214,8 +214,6 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                 labelText: 'Venue',
                 hintText: 'Hall 3',
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(

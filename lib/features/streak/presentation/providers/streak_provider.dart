@@ -14,9 +14,8 @@ final userPrefsRepositoryProvider = Provider<UserPrefsRepository?>((ref) {
 
 /// Live stream of attended dates from UserPrefs
 final attendedDatesProvider = StreamProvider<List<DateTime>>((ref) async* {
-  final repo = ref.watch(userPrefsRepositoryProvider);
-  if (repo == null) return;
-
+  final isar = await ref.watch(isarProvider.future);
+  final repo = UserPrefsRepository(isar);
   await for (final _ in repo.watchPrefs()) {
     final dates = await repo.getAttendedDates();
     yield dates;

@@ -128,11 +128,12 @@ class WeeklyReviewScreen extends ConsumerWidget {
 
     final review = reviewState.review!;
 
-    return isPremiumAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (isPremium) {
-        return CustomScrollView(
+    if (isPremiumAsync.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final isPremium = isPremiumAsync.valueOrNull ?? false;
+
+    return CustomScrollView(
           slivers: [
             // Summary — always visible
             SliverToBoxAdapter(
@@ -183,7 +184,5 @@ class WeeklyReviewScreen extends ConsumerWidget {
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
           ],
         );
-      },
-    );
   }
 }

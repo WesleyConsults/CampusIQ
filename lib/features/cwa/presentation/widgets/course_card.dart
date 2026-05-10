@@ -12,6 +12,7 @@ class CourseCard extends StatefulWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final ValueChanged<double> onScoreChanged;
+  final ValueChanged<double>? onDragEnd;
 
   const CourseCard({
     super.key,
@@ -20,6 +21,7 @@ class CourseCard extends StatefulWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onScoreChanged,
+    this.onDragEnd,
   });
 
   @override
@@ -239,6 +241,9 @@ class _CourseCardState extends State<CourseCard> {
                       onChanged: (value) {
                         setState(() => _sliderValue = value);
                         widget.onScoreChanged(value);
+                      },
+                      onChangeEnd: (value) {
+                        widget.onDragEnd?.call(value);
                       },
                     ),
                   ],

@@ -23,6 +23,7 @@ import 'package:campusiq/shared/widgets/campus_button.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_chip.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
+import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,6 +61,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     Duration focusDuration = const Duration(minutes: 25),
     Duration shortBreakDuration = const Duration(minutes: 5),
     Duration longBreakDuration = const Duration(minutes: 15),
+    int totalRounds = 4,
   }) async {
     if (isPomodoroMode) {
       await NotificationService.instance.requestPermission();
@@ -84,6 +86,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           focusDuration: focusDuration,
           shortBreakDuration: shortBreakDuration,
           longBreakDuration: longBreakDuration,
+          totalRounds: totalRounds,
         );
   }
 
@@ -93,7 +96,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     if (completed == null) return;
 
     final durationMins = completed.elapsedMinutes;
-    if (durationMins < 1) return;
+    if (durationMins < 1) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Session too short to save (under 1 minute).'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
 
     final existingSessions = ref.read(allSessionsProvider).valueOrNull ?? [];
     final today = DateTime.now();
@@ -122,7 +135,31 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           completed.isPomodoroMode ? completed.pomodoroRoundsCompleted : null;
 
     final repo = ref.read(sessionRepositoryProvider);
-    await repo?.saveSession(session);
+    if (repo == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save session. Please try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      await repo.saveSession(session);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save session. Please try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
 
     await NotificationService.instance.cancelStudiedTodayAlerts();
 
@@ -189,13 +226,15 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                 _HistoryTab(
                   activeSession: activeSession,
                   bottomContentPadding: bottomContentPadding,
-                  onStart: (isPomodoroMode, focus, shortBreak, longBreak) =>
+                  onStart: (isPomodoroMode, focus, shortBreak,
+                          longBreak, totalRounds) =>
                       _startSession(
                     context,
                     isPomodoroMode: isPomodoroMode,
                     focusDuration: focus,
                     shortBreakDuration: shortBreak,
                     longBreakDuration: longBreak,
+                    totalRounds: totalRounds,
                   ),
                   onPause: () =>
                       ref.read(activeSessionProvider.notifier).pauseSession(),
@@ -225,6 +264,7 @@ class _HistoryTab extends ConsumerWidget {
     Duration focus,
     Duration shortBreak,
     Duration longBreak,
+    int totalRounds,
   ) onStart;
   final VoidCallback onPause;
   final VoidCallback onResume;
@@ -374,9 +414,32 @@ class _HistoryTab extends ConsumerWidget {
                   final session = sessions[index];
                   return SessionTile(
                     session: session,
-                    onDelete: () => ref
-                        .read(sessionRepositoryProvider)
-                        ?.deleteSession(session.id),
+                    onDelete: () async {
+                      final confirm = await showCampusConfirmDialog(
+                        context: context,
+                        title: 'Delete session?',
+                        message:
+                            'Remove this ${session.courseCode} study session? This cannot be undone.',
+                        confirmLabel: 'Delete',
+                        destructive: true,
+                      );
+                      if (confirm != true) return;
+                      final repo = ref.read(sessionRepositoryProvider);
+                      if (repo == null) return;
+                      try {
+                        await repo.deleteSession(session.id);
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Could not delete session. Please try again.'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      }
+                    },
                   );
                 },
                 separatorBuilder: (_, __) =>
@@ -433,6 +496,7 @@ class _StartCard extends StatefulWidget {
     Duration focus,
     Duration shortBreak,
     Duration longBreak,
+    int totalRounds,
   ) onStart;
 
   const _StartCard({required this.onStart});
@@ -444,6 +508,7 @@ class _StartCard extends StatefulWidget {
 class _StartCardState extends State<_StartCard> {
   bool _isPomodoroMode = false;
   bool _showPomodoroCustomizer = false;
+  int _totalRounds = 4;
   int _focusMinutes = 25;
   int _shortBreakMinutes = 5;
   int _longBreakMinutes = 15;
@@ -514,9 +579,14 @@ class _StartCardState extends State<_StartCard> {
             children: _isPomodoroMode
                 ? [
                     CampusChip(
+                      label: '$_totalRounds rounds',
+                      icon: LucideIcons.repeat,
+                      backgroundColor: AppColors.goldSoft,
+                    ),
+                    CampusChip(
                       label: '$_focusMinutes min focus',
                       icon: LucideIcons.timer,
-                      backgroundColor: AppColors.goldSoft,
+                      backgroundColor: AppColors.surfaceMuted,
                     ),
                     CampusChip(
                       label: '$_shortBreakMinutes min break',
@@ -571,6 +641,24 @@ class _StartCardState extends State<_StartCard> {
                 padding: const EdgeInsets.only(top: AppSpacing.xxs2),
                 child: Column(
                   children: [
+                    _RoundsStepper(
+                      rounds: _totalRounds,
+                      onDecrement: () => _adjust(
+                        _totalRounds,
+                        -1,
+                        2,
+                        10,
+                        (value) => _totalRounds = value,
+                      ),
+                      onIncrement: () => _adjust(
+                        _totalRounds,
+                        1,
+                        2,
+                        10,
+                        (value) => _totalRounds = value,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs2),
                     _DurationStepper(
                       label: 'Focus',
                       minutes: _focusMinutes,
@@ -645,6 +733,7 @@ class _StartCardState extends State<_StartCard> {
                 Duration(minutes: _focusMinutes),
                 Duration(minutes: _shortBreakMinutes),
                 Duration(minutes: _longBreakMinutes),
+                _totalRounds,
               ),
               icon: Icon(
                 _isPomodoroMode ? LucideIcons.timerReset : LucideIcons.play,
@@ -798,6 +887,61 @@ class _DurationStepper extends StatelessWidget {
             width: _durationDisplayWidth,
             child: Text(
               '$minutes min',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+          _StepperButton(
+            icon: LucideIcons.plus,
+            onPressed: onIncrement,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoundsStepper extends StatelessWidget {
+  final int rounds;
+  final VoidCallback onDecrement;
+  final VoidCallback onIncrement;
+
+  const _RoundsStepper({
+    required this.rounds,
+    required this.onDecrement,
+    required this.onIncrement,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CampusCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm2,
+        vertical: AppSpacing.xs2,
+      ),
+      color: AppColors.surfaceMuted,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Rounds',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          _StepperButton(
+            icon: LucideIcons.minus,
+            onPressed: onDecrement,
+          ),
+          SizedBox(
+            width: 82,
+            child: Text(
+              '$rounds rounds',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontSize: 14,

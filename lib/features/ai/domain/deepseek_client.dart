@@ -8,7 +8,7 @@ class DeepSeekClient {
   final String apiKey;
   final String model;
   static const _baseUrl = 'https://api.deepseek.com/v1/chat/completions';
-  static const _timeout = Duration(seconds: 10);
+  static const _timeout = Duration(seconds: 60);
 
   const DeepSeekClient({required this.apiKey, required this.model});
 

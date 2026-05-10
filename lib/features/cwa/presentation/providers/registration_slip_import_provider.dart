@@ -21,6 +21,7 @@ class SlipImportState {
   final Set<int> selectedIndexes;
   final String? errorMessage;
   final int skippedCourseCount;
+  final int duplicateCourseCount;
 
   const SlipImportState({
     this.step = SlipImportStep.idle,
@@ -28,6 +29,7 @@ class SlipImportState {
     this.selectedIndexes = const {},
     this.errorMessage,
     this.skippedCourseCount = 0,
+    this.duplicateCourseCount = 0,
   });
 
   SlipImportState copyWith({
@@ -36,6 +38,7 @@ class SlipImportState {
     Set<int>? selectedIndexes,
     String? errorMessage,
     int? skippedCourseCount,
+    int? duplicateCourseCount,
   }) =>
       SlipImportState(
         step: step ?? this.step,
@@ -43,6 +46,8 @@ class SlipImportState {
         selectedIndexes: selectedIndexes ?? this.selectedIndexes,
         errorMessage: errorMessage,
         skippedCourseCount: skippedCourseCount ?? this.skippedCourseCount,
+        duplicateCourseCount:
+            duplicateCourseCount ?? this.duplicateCourseCount,
       );
 }
 
@@ -145,6 +150,14 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
     state = state.copyWith(step: SlipImportStep.parsing);
     try {
       final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
+      if (apiKey.isEmpty) {
+        state = state.copyWith(
+          step: SlipImportStep.error,
+          errorMessage:
+              'OpenAI API key not configured. Check your .env file.',
+        );
+        return;
+      }
       final model = dotenv.env['OPENAI_MODEL'] ?? 'gpt-4o';
       final parser = RegistrationSlipParser(apiKey: apiKey, model: model);
       final parseResult = await parser.parse(bytes, mimeType);
@@ -219,6 +232,7 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
 
     try {
       final ordered = state.selectedIndexes.toList()..sort();
+      int duplicateCount = 0;
       for (final i in ordered) {
         final course = state.courses[i];
         final code = course.courseCode.trim().toUpperCase();
@@ -234,9 +248,14 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
               semesterKey: semesterKey,
             ),
           );
+        } else {
+          duplicateCount++;
         }
       }
-      state = state.copyWith(step: SlipImportStep.done);
+      state = state.copyWith(
+        step: SlipImportStep.done,
+        duplicateCourseCount: duplicateCount,
+      );
     } catch (e) {
       state = state.copyWith(
         step: SlipImportStep.error,

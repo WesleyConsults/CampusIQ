@@ -6,6 +6,7 @@ import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/course_hub/data/models/course_note_model.dart';
 import 'package:campusiq/features/course_hub/presentation/providers/course_note_provider.dart';
 import 'package:campusiq/features/course_hub/presentation/widgets/note_editor_sheet.dart';
+import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 import 'package:intl/intl.dart';
 
 class HubNotesTab extends ConsumerWidget {
@@ -36,7 +37,11 @@ class HubNotesTab extends ConsumerWidget {
 
     return notesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => ErrorRetryWidget(
+        message: 'We could not load your notes right now.',
+        onRetry: () =>
+            ref.invalidate(courseNotesProvider(courseCode)),
+      ),
       data: (notes) {
         return Scaffold(
           backgroundColor: Colors.transparent,

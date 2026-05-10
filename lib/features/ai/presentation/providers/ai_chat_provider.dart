@@ -3,6 +3,7 @@ import 'package:campusiq/features/ai/data/models/ai_message_model.dart';
 import 'package:campusiq/features/ai/data/models/ai_chat_session_model.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
+import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'ai_providers.dart';
 
 class AiChatState {
@@ -60,13 +61,24 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
 
   AiChatNotifier(this.ref) : super(const AiChatState());
 
+  List<AiMessageModel> _replaceMessage(int messageId, AiMessageModel next) {
+    return [
+      for (final message in state.messages)
+        if (message.id == messageId) next else message,
+    ];
+  }
+
+  List<AiMessageModel> _removeMessage(int messageId) {
+    return state.messages.where((message) => message.id != messageId).toList();
+  }
+
   Future<void> loadSessions() async {
     try {
       final chatRepo = await ref.read(aiChatRepositoryProvider.future);
       final sessions = await chatRepo.getSessions(_feature);
       state = state.copyWith(sessions: sessions);
     } catch (e) {
-      // Silent fail
+      state = state.copyWith(error: 'Could not load chat sessions.');
     }
   }
 
@@ -81,7 +93,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
         currentSessionId: sessionId,
       );
     } catch (e) {
-      // Silent fail
+      state = state.copyWith(error: 'Could not switch chat session.');
     }
   }
 
@@ -104,61 +116,78 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
   }
 
   Future<void> sendMessage(String userText) async {
-    final isOnline = await ref.read(isOnlineProvider.future);
-    if (!isOnline) {
-      state = state.copyWith(
-        error: 'You are offline. AI features require a connection.',
-      );
-      return;
-    }
-
-    final isPremium = await ref.read(isPremiumProvider.future);
-
-    if (!isPremium) {
-      final usageRepo = await ref.read(aiUsageRepositoryProvider.future);
-      final isUnder = await usageRepo.isUnderLimit(_feature, _freeLimitPerDay);
-      if (!isUnder) {
-        state = state.copyWith(isAtLimit: true);
-        return;
-      }
-    }
-
-    // 1. Assign session or create if new
-    final chatRepo = await ref.read(aiChatRepositoryProvider.future);
-    int? sessionId = state.currentSessionId;
-
-    if (sessionId == null) {
-      // Create short title from user input
-      String title = userText;
-      if (title.length > 30) {
-        title = '${title.substring(0, 27)}...';
-      }
-      sessionId = await chatRepo.createSession(_feature, title);
-      state = state.copyWith(currentSessionId: sessionId);
-
-      // reload sessions list to show it cleanly
-      final sessions = await chatRepo.getSessions(_feature);
-      state = state.copyWith(sessions: sessions);
-    }
-
-    final userMsg = AiMessageModel()
+    final tempMessageId = -DateTime.now().microsecondsSinceEpoch;
+    final optimisticUserMsg = AiMessageModel()
+      ..id = tempMessageId
       ..feature = _feature
-      ..sessionId = sessionId
+      ..sessionId = state.currentSessionId
       ..role = 'user'
       ..content = userText
       ..createdAt = DateTime.now();
 
     state = state.copyWith(
-      messages: [...state.messages, userMsg],
+      messages: [...state.messages, optimisticUserMsg],
       isLoading: true,
       error: null,
+      isAtLimit: false,
     );
 
     try {
+      final isOnline = await ref.read(isOnlineProvider.future);
+      if (!isOnline) {
+        state = state.copyWith(
+          messages: _removeMessage(tempMessageId),
+          isLoading: false,
+          error: 'You are offline. AI features require a connection.',
+        );
+        return;
+      }
+
+      final isPremium = await ref.read(isPremiumProvider.future);
+
+      if (!isPremium) {
+        final usageRepo = await ref.read(aiUsageRepositoryProvider.future);
+        final isUnder =
+            await usageRepo.isUnderLimit(_feature, _freeLimitPerDay);
+        if (!isUnder) {
+          state = state.copyWith(
+            messages: _removeMessage(tempMessageId),
+            isLoading: false,
+            isAtLimit: true,
+          );
+          return;
+        }
+      }
+
+      final chatRepo = await ref.read(aiChatRepositoryProvider.future);
+      int? sessionId = state.currentSessionId;
+      List<AiChatSessionModel>? sessions;
+
+      if (sessionId == null) {
+        String title = userText;
+        if (title.length > 30) {
+          title = '${title.substring(0, 27)}...';
+        }
+        sessionId = await chatRepo.createSession(_feature, title);
+        sessions = await chatRepo.getSessions(_feature);
+      }
+
+      final userMsg = AiMessageModel()
+        ..feature = _feature
+        ..sessionId = sessionId
+        ..role = 'user'
+        ..content = userText
+        ..createdAt = optimisticUserMsg.createdAt;
+
       await chatRepo.saveMessage(userMsg);
+      state = state.copyWith(
+        currentSessionId: sessionId,
+        sessions: sessions ?? state.sessions,
+        messages: _replaceMessage(tempMessageId, userMsg),
+      );
 
       final contextBuilder = await ref.read(contextBuilderProvider.future);
-      const semesterKey = 'current';
+      final semesterKey = ref.read(activeSemesterProvider);
       final academicContext =
           await contextBuilder.buildAcademicContext(semesterKey);
 
@@ -196,8 +225,11 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       // refresh sessions to update list timing
       loadSessions();
     } catch (e) {
-      state =
-          state.copyWith(isLoading: false, error: 'Failed to send message: $e');
+      state = state.copyWith(
+        messages: _removeMessage(tempMessageId),
+        isLoading: false,
+        error: 'Failed to send message: $e',
+      );
     }
   }
 

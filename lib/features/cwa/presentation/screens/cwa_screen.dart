@@ -1058,7 +1058,19 @@ class _SemesterView extends ConsumerWidget {
                           }
                         }
                       },
-                      onScoreChanged: (newScore) async {
+                      onScoreChanged: (newScore) {
+                        ref
+                            .read(inFlightScoreAdjustmentsProvider.notifier)
+                            .update((state) => {...state, course.id: newScore});
+                      },
+                      onDragEnd: (newScore) async {
+                        ref
+                            .read(inFlightScoreAdjustmentsProvider.notifier)
+                            .update((state) {
+                          final copy = Map<int, double>.from(state);
+                          copy.remove(course.id);
+                          return copy;
+                        });
                         course.expectedScore = newScore;
                         await repo?.updateCourse(course);
                       },

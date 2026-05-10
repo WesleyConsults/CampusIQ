@@ -5,12 +5,12 @@ import 'package:campusiq/features/streak/domain/milestone.dart';
 
 class MilestoneGrid extends StatelessWidget {
   final List<Milestone> unlocked;
-  final int currentStreak;
+  final int longestStreak;
 
   const MilestoneGrid({
     super.key,
     required this.unlocked,
-    required this.currentStreak,
+    required this.longestStreak,
   });
 
   @override
@@ -55,7 +55,7 @@ class MilestoneGrid extends StatelessWidget {
                   milestone: milestone,
                   isUnlocked: isUnlocked,
                   isNext: isNext,
-                  currentStreak: currentStreak,
+                  longestStreak: longestStreak,
                 );
               },
             ),
@@ -70,13 +70,13 @@ class _BadgeTile extends StatelessWidget {
   final Milestone milestone;
   final bool isUnlocked;
   final bool isNext;
-  final int currentStreak;
+  final int longestStreak;
 
   const _BadgeTile({
     required this.milestone,
     required this.isUnlocked,
     required this.isNext,
-    required this.currentStreak,
+    required this.longestStreak,
   });
 
   @override
@@ -117,7 +117,7 @@ class _BadgeTile extends StatelessWidget {
             if (isNext) ...[
               const SizedBox(height: AppSpacing.xxxs),
               Text(
-                '${milestone.days - currentStreak} left',
+                '${milestone.days - longestStreak} left',
                 style:
                     const TextStyle(fontSize: 9, color: AppTheme.textSecondary),
               ),

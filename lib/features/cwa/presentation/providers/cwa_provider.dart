@@ -69,12 +69,21 @@ final targetCwaProvider = Provider<double>((ref) {
   return target;
 });
 
-/// Computed projected CWA from current courses.
+/// In-flight score adjustments during slider drag (course id → score).
+/// Applied on top of persisted scores so the hero bar updates live during a
+/// drag without writing to Isar on every frame.
+final inFlightScoreAdjustmentsProvider =
+    StateProvider<Map<int, double>>((ref) => {});
+
+/// Computed projected CWA from current courses, factoring in any in-flight
+/// slider adjustments for instant UI feedback.
 final projectedCwaProvider = Provider<double>((ref) {
   final courses = ref.watch(coursesProvider).valueOrNull ?? [];
-  final pairs = courses
-      .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
-      .toList();
+  final adjustments = ref.watch(inFlightScoreAdjustmentsProvider);
+  final pairs = courses.map((c) {
+    final score = adjustments[c.id] ?? c.expectedScore;
+    return (creditHours: c.creditHours, score: score);
+  }).toList();
   return CwaCalculator.calculate(pairs);
 });
 

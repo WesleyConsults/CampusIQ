@@ -24,8 +24,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-enum _PlanOverflowAction { regenerate }
-
 class PlanScreen extends ConsumerStatefulWidget {
   const PlanScreen({super.key});
 
@@ -56,6 +54,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
   Future<void> _showAddSheet() async {
     await showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
@@ -196,17 +195,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           'Today',
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
         ),
-        actions: [
-          const StreakActionButton(),
-          IconButton(
-            icon: const Icon(
-              LucideIcons.bell,
-              color: AppTheme.textPrimary,
-              size: AppIconSizes.xl,
-            ),
-            tooltip: 'Notification settings',
-            onPressed: () => context.push('/settings'),
-          ),
+        actions: const [
+          StreakActionButton(),
         ],
       ),
       body: tasksAsync.when(
@@ -260,7 +250,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     final personalTasks = tasks.where((t) => t.taskType == 'personal').toList();
     final pendingStudyTasks =
         studyTasks.where((task) => !task.isCompleted).toList();
-    final pendingTasks = tasks.where((task) => !task.isCompleted).length;
     final now = DateTime.now();
     final nowMinutes = now.hour * 60 + now.minute;
     final currentClass = todaySlots
@@ -303,8 +292,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 const SizedBox(height: _homeCompactSectionGap),
                 const CampusSectionHeader(
                   title: 'Today at a glance',
-                  subtitle:
-                      'See your classes, focus load, and progress in one pass.',
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _TodayAtGlanceCard(
@@ -326,14 +313,17 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 const SizedBox(height: AppSpacing.xl),
                 CampusSectionHeader(
                   title: 'Today\'s plan',
-                  subtitle: pendingTasks == 0
-                      ? 'Everything here is either complete or ready when you are.'
-                      : '$pendingTasks task${pendingTasks == 1 ? '' : 's'} still need attention.',
                   trailing: tasks.isEmpty
                       ? null
                       : Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            IconButton(
+                              onPressed: _isGenerating ? null : _generatePlan,
+                              icon: const Icon(LucideIcons.refreshCw,
+                                  size: AppIconSizes.md),
+                              tooltip: 'Regenerate plan',
+                            ),
                             OutlinedButton.icon(
                               onPressed: _showAddSheet,
                               icon: const Icon(
@@ -349,42 +339,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: AppSpacing.xs),
-                            _isGenerating
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppTheme.primary,
-                                    ),
-                                  )
-                                : PopupMenuButton<_PlanOverflowAction>(
-                                    tooltip: 'More plan actions',
-                                    icon: const Icon(LucideIcons.ellipsis),
-                                    onSelected: (action) {
-                                      if (action ==
-                                          _PlanOverflowAction.regenerate) {
-                                        _generatePlan();
-                                      }
-                                    },
-                                    itemBuilder: (context) => const [
-                                      PopupMenuItem(
-                                        value: _PlanOverflowAction.regenerate,
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              LucideIcons.sparkles,
-                                              size: AppIconSizes.md,
-                                              color: AppTheme.primary,
-                                            ),
-                                            SizedBox(width: AppSpacing.sm),
-                                            Text('Regenerate plan'),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                           ],
                         ),
                 ),
@@ -732,20 +686,12 @@ class _AcademicPulseSection extends StatelessWidget {
       children: [
         const CampusSectionHeader(
           title: 'Academic pulse',
-          subtitle: 'A compact look at where your momentum stands.',
           titleStyle: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,
             height: 1.2,
           ),
-          subtitleStyle: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: AppTheme.textSecondary,
-            height: 1.35,
-          ),
-          subtitleSpacing: AppSpacing.xxs2,
         ),
         const SizedBox(height: _PlanScreenState._homeCompactHeaderGap),
         _AcademicPulseCard(

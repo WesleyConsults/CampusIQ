@@ -30,11 +30,12 @@ final dailyStudyGoalMinutesProvider =
 
 // ── Today's task stream ─────────────────────────────────────────────────────
 
-final todayPlanProvider = StreamProvider<List<DailyPlanTaskModel>>((ref) {
-  final repo = ref.watch(planRepositoryProvider);
-  if (repo == null) return const Stream.empty();
+final todayPlanProvider =
+    StreamProvider<List<DailyPlanTaskModel>>((ref) async* {
   final now = DateTime.now();
-  return repo.watchTasksForDate(DateTime(now.year, now.month, now.day));
+  final isar = await ref.watch(isarProvider.future);
+  final repo = DailyPlanRepository(isar);
+  yield* repo.watchTasksForDate(DateTime(now.year, now.month, now.day));
 });
 
 // ── Progress: (completed, total) ────────────────────────────────────────────
@@ -52,14 +53,23 @@ final generatePlanProvider =
   List<PlanTask> tasks = _generateNormalPlan(ref, date);
 
   final repo = ref.read(planRepositoryProvider);
-  if (repo == null) return;
+  if (repo == null) throw Exception('Could not access local storage.');
 
-  await repo.deleteAllTasksForDate(date);
-  final models = tasks.map((t) => t.toDailyPlanTaskModel(date)).toList();
-  await repo.saveTasks(models);
+  try {
+    await repo.deleteAllTasksForDate(date);
+    final models = tasks.map((t) => t.toDailyPlanTaskModel(date)).toList();
+    await repo.saveTasks(models);
+  } catch (e) {
+    throw Exception('Could not save study plan. Please try again.');
+  }
 
-  for (final model in models) {
-    await NotificationService.instance.schedulePlannedSessionReminder(model);
+  for (final model in tasks.map((t) => t.toDailyPlanTaskModel(date))) {
+    try {
+      await NotificationService.instance
+          .schedulePlannedSessionReminder(model);
+    } catch (_) {
+      // Notification scheduling is best-effort — plan is already saved
+    }
   }
 });
 

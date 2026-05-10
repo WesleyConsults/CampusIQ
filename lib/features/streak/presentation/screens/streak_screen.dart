@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
 import 'package:campusiq/features/session/presentation/providers/session_provider.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
@@ -12,6 +13,7 @@ import 'package:campusiq/features/streak/presentation/widgets/milestone_grid.dar
 import 'package:campusiq/features/streak/presentation/widgets/next_milestone_card.dart';
 import 'package:campusiq/features/streak/presentation/widgets/streak_hero_card.dart';
 import 'package:campusiq/features/streak/presentation/widgets/streak_summary_mini.dart';
+import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
 class StreakScreen extends ConsumerWidget {
   const StreakScreen({super.key});
@@ -29,12 +31,53 @@ class StreakScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final sessionsAsync = ref.watch(allSessionsProvider);
+    final coursesAsync = ref.watch(coursesProvider);
+    final datesAsync = ref.watch(attendedDatesProvider);
+    final prefsRepo = ref.watch(userPrefsRepositoryProvider);
+
+    // Loading state — first load, no cached data yet
+    final isLoading = (sessionsAsync.isLoading && !sessionsAsync.hasValue) ||
+        (coursesAsync.isLoading && !coursesAsync.hasValue) ||
+        (datesAsync.isLoading && !datesAsync.hasValue);
+    final hasError = sessionsAsync.hasError ||
+        coursesAsync.hasError ||
+        datesAsync.hasError;
+
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: AppTheme.surface,
+        appBar: AppBar(
+          title: const Text('Streaks',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (hasError) {
+      return Scaffold(
+        backgroundColor: AppTheme.surface,
+        appBar: AppBar(
+          title: const Text('Streaks',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+        ),
+        body: ErrorRetryWidget(
+          message: 'We could not load your streaks right now.',
+          onRetry: () {
+            ref.invalidate(allSessionsProvider);
+            ref.invalidate(coursesProvider);
+            ref.invalidate(attendedDatesProvider);
+          },
+        ),
+      );
+    }
+
     final studyStreak = ref.watch(studyStreakProvider);
     final attendanceStreak = ref.watch(attendanceStreakProvider);
     final perCourseStreaks = ref.watch(perCourseStreakProvider);
     final attendedDates = ref.watch(attendedDatesProvider).valueOrNull ?? [];
     final sessions = ref.watch(allSessionsProvider).valueOrNull ?? [];
-    final prefsRepo = ref.watch(userPrefsRepositoryProvider);
 
     final activityMap = _buildActivityMap(sessions);
     final activeCourseStreaks =
@@ -85,7 +128,7 @@ class StreakScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
               child: MilestoneGrid(
                 unlocked: studyStreak.unlockedMilestones,
-                currentStreak: studyStreak.currentStreak,
+                longestStreak: studyStreak.longestStreak,
               ),
             ),
           ),
