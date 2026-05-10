@@ -38,7 +38,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
   late String _initialLevel;
   String _academicYear = _academicYears.first;
   String _semesterLabel = _semesters.first;
-  String _programme = _programmes.first;
+  String _programme = '';
   String _level = _levels.last;
   bool _isSaving = false;
   bool _isDraftRestored = false;
@@ -54,14 +54,6 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
   static const _semesters = [
     'First Semester',
     'Second Semester',
-  ];
-
-  static const _programmes = [
-    'Computer Engineering',
-    'Electrical Engineering',
-    'Mechanical Engineering',
-    'Computer Science',
-    'Information Technology',
   ];
 
   static const _levels = ['100', '200', '300', '400', '500'];
@@ -220,7 +212,8 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
         _academicYear =
             _validOrDefault(decoded['academicYear'], _academicYears);
         _semesterLabel = _validOrDefault(decoded['semesterLabel'], _semesters);
-        _programme = _validOrDefault(decoded['programme'], _programmes);
+        final p = decoded['programme'];
+        _programme = p is String ? p.trim() : '';
         _level = _validOrDefault(decoded['level'], _levels);
         _showDuplicateWarning = _hasDuplicateCodes;
       });
@@ -362,7 +355,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
         courseCode: course.codeController.text.trim().toUpperCase(),
         courseName: course.titleController.text.trim(),
         creditHours: credits,
-        grade: _gradeFromScore(score),
+        grade: PastCourseEntry.gradeFromScore(score),
         mark: score,
       );
     }).toList();
@@ -403,14 +396,6 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
 
   String _buildSemesterLabel() {
     return '$_academicYear • $_semesterLabel • L$_level • $_programme';
-  }
-
-  String _gradeFromScore(double score) {
-    if (score >= 80) return 'A';
-    if (score >= 70) return 'B';
-    if (score >= 60) return 'C';
-    if (score >= 50) return 'D';
-    return 'F';
   }
 
   Future<void> _saveDraft() async {
@@ -586,12 +571,15 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                                         setState(() => _semesterLabel = value),
                                   ),
                                   const SizedBox(height: AppSpacing.sm),
-                                  _DropdownField(
-                                    label: 'Programme',
-                                    value: _programme,
-                                    items: _programmes,
+                                  TextFormField(
+                                    initialValue: _programme,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Programme',
+                                      hintText: 'e.g. Civil Engineering',
+                                    ),
+                                    textCapitalization: TextCapitalization.words,
                                     onChanged: (value) =>
-                                        setState(() => _programme = value),
+                                        setState(() => _programme = value.trim()),
                                   ),
                                   const SizedBox(height: AppSpacing.sm),
                                   _DropdownField(

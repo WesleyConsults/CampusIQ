@@ -107,18 +107,7 @@ class PastSemestersScreen extends ConsumerWidget {
             model.courses.any((course) => course.mark == null);
         final hasProjectedMarks =
             model.courses.any((course) => course.isProjectedMark);
-        if (hasMissingMarks || hasProjectedMarks) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Replace every projected placeholder with an official mark before finalizing.',
-                ),
-              ),
-            );
-          }
-          return;
-        }
+        if (hasMissingMarks || hasProjectedMarks) return;
         model.isPendingResults = false;
         await repo.update(model);
       } catch (e) {
@@ -154,6 +143,21 @@ class _SemesterCard extends StatefulWidget {
 
 class _SemesterCardState extends State<_SemesterCard> {
   bool _expanded = false;
+  bool _showFinalizeBlocked = false;
+
+  List<PastCourseEntry> get _blockingCourses => widget.semester.courses
+      .where((c) => c.mark == null || c.isProjectedMark)
+      .toList();
+
+  bool get _hasBlockingIssues => _blockingCourses.isNotEmpty;
+
+  @override
+  void didUpdateWidget(_SemesterCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_showFinalizeBlocked && !_hasBlockingIssues) {
+      setState(() => _showFinalizeBlocked = false);
+    }
+  }
 
   double get _semCwa {
     if (widget.semester.courses.isEmpty) return 0;
@@ -284,11 +288,29 @@ class _SemesterCardState extends State<_SemesterCard> {
                           ),
                         if (widget.onFinalize != null)
                           TextButton(
-                            onPressed: widget.onFinalize,
-                            child: const Text('Update Results'),
+                            onPressed: _hasBlockingIssues
+                                ? () {
+                                    setState(() {
+                                      _expanded = true;
+                                      _showFinalizeBlocked = true;
+                                    });
+                                  }
+                                : widget.onFinalize,
+                            child: Text(
+                              _hasBlockingIssues
+                                  ? 'Update Results (${_blockingCourses.length})'
+                                  : 'Update Results',
+                              style: TextStyle(
+                                color: _hasBlockingIssues
+                                    ? AppTheme.textSecondary
+                                    : null,
+                              ),
+                            ),
                           ),
                       ],
                     ),
+                    if (_showFinalizeBlocked && _hasBlockingIssues)
+                      _FinalizeBlockedBanner(blockingCourses: _blockingCourses),
                   ],
                 ],
               ),
@@ -379,7 +401,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
             courseCode: c.courseCode,
             courseName: c.courseName,
             creditHours: _credits,
-            grade: _mark != null ? _gradeFromScore(_mark!) : _grade,
+            grade: _mark != null ? PastCourseEntry.gradeFromScore(_mark!) : _grade,
             mark: _mark,
             isProjectedMark: _isProjectedMark,
           );
@@ -442,7 +464,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
                 _mark = val;
                 _isProjectedMark = false;
                 if (val != null) {
-                  _grade = _gradeFromScore(val);
+                  _grade = PastCourseEntry.gradeFromScore(val);
                 }
               });
               _save();
@@ -652,12 +674,53 @@ class _MarkInputState extends State<_MarkInput> {
   }
 }
 
-String _gradeFromScore(double score) {
-  if (score >= 80) return 'A';
-  if (score >= 70) return 'B';
-  if (score >= 60) return 'C';
-  if (score >= 50) return 'D';
-  return 'F';
+
+// ─── Finalize blocked banner ──────────────────────────────────────────────────
+
+class _FinalizeBlockedBanner extends StatelessWidget {
+  final List<PastCourseEntry> blockingCourses;
+
+  const _FinalizeBlockedBanner({required this.blockingCourses});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: AppSpacing.xs),
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(AppRadii.xs2),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Cannot finalize — ${blockingCourses.length} course${blockingCourses.length == 1 ? '' : 's'} need${blockingCourses.length == 1 ? 's' : ''} attention:',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 4),
+          ...blockingCourses.map(
+            (c) => Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                '• ${c.courseCode}: ${c.mark == null ? "missing mark" : "projected mark placeholder"}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.red,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ─── Empty state ──────────────────────────────────────────────────────────────

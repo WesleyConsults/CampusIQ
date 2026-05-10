@@ -8,6 +8,6 @@ class AiUsageModel {
   @Index(composite: [CompositeIndex('feature')])
   late String date; // 'yyyy-MM-dd' format
 
-  late String feature; // 'chat' | 'whatif' | 'insight'
+  late String feature; // 'chat' | 'insight'
   late int count;
 }

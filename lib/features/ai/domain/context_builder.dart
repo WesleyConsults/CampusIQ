@@ -5,30 +5,7 @@ import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dar
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/core/data/repositories/user_prefs_repository.dart';
-import 'package:campusiq/core/constants/app_constants.dart';
 import 'prompt_templates.dart';
-
-class WhatIfInput {
-  final String courseCode;
-  final String courseName;
-  final int creditHours;
-  final double originalScore;
-  final double newScore;
-  final double originalCwa;
-  final double newCwa;
-  final double targetCwa;
-
-  const WhatIfInput({
-    required this.courseCode,
-    required this.courseName,
-    required this.creditHours,
-    required this.originalScore,
-    required this.newScore,
-    required this.originalCwa,
-    required this.newCwa,
-    required this.targetCwa,
-  });
-}
 
 class ContextBuilder {
   final CwaRepository cwaRepository;
@@ -109,19 +86,8 @@ Rules:
 - Maximum 4 sentences total''';
   }
 
-  Future<String> buildWhatIfPrompt(WhatIfInput input) async {
-    return '''${PromptTemplates.basePersona}
-
-The student changed their expected score for ${input.courseName} (${input.creditHours} credit hours) from ${input.originalScore.toInt()} to ${input.newScore.toInt()}.
-This changes their projected CWA from ${input.originalCwa.toStringAsFixed(1)} to ${input.newCwa.toStringAsFixed(1)}. Their target is ${input.targetCwa.toStringAsFixed(1)}.
-
-Explain the impact in exactly 1–2 sentences.
-Focus on: does this help reach the target? Is this course high or low leverage?
-Plain English only. No markdown.''';
-  }
-
   Future<String> buildStudyPlanPrompt() async {
-    final semesterKey = AppConstants.defaultSemesterKey;
+    final semesterKey = await userPrefsRepository.getActiveSemesterKey();
 
     // 1. Courses sorted by (creditHours * gap) desc — proxy for CWA leverage
     final allCourses = await _getCourses(semesterKey);
@@ -136,7 +102,7 @@ Plain English only. No markdown.''';
     }).join('\n');
 
     // 2. Free blocks per day Mon–Sat (KNUST grid)
-    final dayNames = TimetableConstants.dayFullLabels; // Mon–Sat
+    const dayNames = TimetableConstants.dayFullLabels; // Mon–Sat
     final freeBlockLines = <String>[];
     for (int i = 0; i < dayNames.length; i++) {
       final slots = await _getSlotsForDay(semesterKey, i);
@@ -212,7 +178,7 @@ Each item must have exactly these fields:
   }
 
   Future<String> buildWeeklyReviewPrompt() async {
-    final semesterKey = AppConstants.defaultSemesterKey;
+    final semesterKey = await userPrefsRepository.getActiveSemesterKey();
     final now = DateTime.now();
     final monday = now.subtract(Duration(days: now.weekday - 1));
     final weekStart = DateTime(monday.year, monday.month, monday.day);
