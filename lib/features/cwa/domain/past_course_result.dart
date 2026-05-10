@@ -45,7 +45,7 @@ class PastCourseResult {
       courseCode: (json['course_code'] as String? ?? '').trim(),
       courseName: (json['course_name'] as String? ?? '').trim(),
       creditHours:
-          ((json['credit_hours'] as num?) ?? 3).toDouble().clamp(1.0, 6.0),
+          ((json['credit_hours'] as num?) ?? 3).toDouble().clamp(1.0, 12.0),
       grade: (json['grade'] as String? ?? 'F').trim().toUpperCase(),
       mark: (json['mark'] as num?)?.toDouble(),
     );

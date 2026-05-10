@@ -20,12 +20,14 @@ class SlipImportState {
   final List<RegistrationCourseImport> courses;
   final Set<int> selectedIndexes;
   final String? errorMessage;
+  final int skippedCourseCount;
 
   const SlipImportState({
     this.step = SlipImportStep.idle,
     this.courses = const [],
     this.selectedIndexes = const {},
     this.errorMessage,
+    this.skippedCourseCount = 0,
   });
 
   SlipImportState copyWith({
@@ -33,12 +35,14 @@ class SlipImportState {
     List<RegistrationCourseImport>? courses,
     Set<int>? selectedIndexes,
     String? errorMessage,
+    int? skippedCourseCount,
   }) =>
       SlipImportState(
         step: step ?? this.step,
         courses: courses ?? this.courses,
         selectedIndexes: selectedIndexes ?? this.selectedIndexes,
         errorMessage: errorMessage,
+        skippedCourseCount: skippedCourseCount ?? this.skippedCourseCount,
       );
 }
 
@@ -143,7 +147,8 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
       final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
       final model = dotenv.env['OPENAI_MODEL'] ?? 'gpt-4o';
       final parser = RegistrationSlipParser(apiKey: apiKey, model: model);
-      final courses = await parser.parse(bytes, mimeType);
+      final parseResult = await parser.parse(bytes, mimeType);
+      final courses = parseResult.courses;
 
       if (courses.isEmpty) {
         state = state.copyWith(
@@ -158,6 +163,7 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
         step: SlipImportStep.reviewing,
         courses: courses,
         selectedIndexes: Set.from(List.generate(courses.length, (i) => i)),
+        skippedCourseCount: parseResult.skippedCourseCount,
       );
     } catch (e) {
       state = state.copyWith(
@@ -183,8 +189,25 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
   /// Update credit hours for a single course during review.
   void setCreditHours(int index, double hours) {
     final updated = List<RegistrationCourseImport>.from(state.courses);
-    updated[index] = updated[index].copyWith(creditHours: hours.clamp(1, 6));
+    updated[index] = updated[index].copyWith(creditHours: hours.clamp(1, 12));
     state = state.copyWith(courses: updated);
+  }
+
+  /// Update expected score for a single course during review.
+  void setExpectedScore(int index, double score) {
+    final updated = List<RegistrationCourseImport>.from(state.courses);
+    updated[index] = updated[index].copyWith(
+      expectedScore: score.clamp(0, 100),
+    );
+    state = state.copyWith(courses: updated);
+  }
+
+  void addManualCourse(RegistrationCourseImport course) {
+    final updated = List<RegistrationCourseImport>.from(state.courses)
+      ..add(course);
+    final selected = Set<int>.from(state.selectedIndexes)
+      ..add(updated.length - 1);
+    state = state.copyWith(courses: updated, selectedIndexes: selected);
   }
 
   Future<void> confirmImport() async {
@@ -207,7 +230,7 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
               name: course.courseName,
               code: code,
               creditHours: course.creditHours,
-              expectedScore: 70.0,
+              expectedScore: course.expectedScore,
               semesterKey: semesterKey,
             ),
           );

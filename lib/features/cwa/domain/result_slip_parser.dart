@@ -28,6 +28,8 @@ class ResultSlipParseResult {
   /// e.g. "Computer Engineering", parsed from the slip header.
   final String? programme;
 
+  final int skippedCourseCount;
+
   const ResultSlipParseResult({
     required this.courses,
     this.reportedSemesterCwa,
@@ -38,6 +40,7 @@ class ResultSlipParseResult {
     this.semesterNumber,
     this.level,
     this.programme,
+    this.skippedCourseCount = 0,
   });
 }
 
@@ -167,13 +170,24 @@ class ResultSlipParser {
           (parsedObj['courses'] as List<dynamic>?) ?? [];
 
       final courses = <PastCourseResult>[];
+      var skippedCourseCount = 0;
       for (final item in jsonList) {
         try {
-          courses.add(
-            PastCourseResult.fromJson(item as Map<String, dynamic>),
+          if (item is! Map) {
+            skippedCourseCount++;
+            continue;
+          }
+          final course = PastCourseResult.fromJson(
+            Map<String, dynamic>.from(item),
           );
+          if (course.courseCode.trim().isEmpty ||
+              course.courseName.trim().isEmpty) {
+            skippedCourseCount++;
+            continue;
+          }
+          courses.add(course);
         } catch (_) {
-          // Skip malformed entries.
+          skippedCourseCount++;
         }
       }
 
@@ -186,11 +200,11 @@ class ResultSlipParser {
             (parsedObj['cumulative_credits_calc'] as num?)?.toDouble(),
         cumulativeWeightedMarks:
             (parsedObj['cumulative_weighted_marks'] as num?)?.toDouble(),
-        academicYearStart:
-            (parsedObj['academic_year_start'] as num?)?.toInt(),
+        academicYearStart: (parsedObj['academic_year_start'] as num?)?.toInt(),
         semesterNumber: (parsedObj['semester_number'] as num?)?.toInt(),
         level: (parsedObj['level'] as num?)?.toInt(),
         programme: parsedObj['programme'] as String?,
+        skippedCourseCount: skippedCourseCount,
       );
     } on TimeoutException {
       throw Exception(

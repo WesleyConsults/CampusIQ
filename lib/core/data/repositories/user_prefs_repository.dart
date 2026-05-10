@@ -174,6 +174,24 @@ class UserPrefsRepository {
     }
   }
 
+  Future<String> getManualCwaDraftJson() async {
+    final prefs = await _getOrCreate();
+    return prefs.manualCwaDraftJson;
+  }
+
+  Future<void> setManualCwaDraftJson(String value) async {
+    final prefs = await _getOrCreate();
+    prefs.manualCwaDraftJson = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> clearManualCwaDraft() => setManualCwaDraftJson('');
+
   // ── Weekly Review helpers ─────────────────────────────────────────────────
 
   Future<String?> getWeeklyNote(String weekKey) async {

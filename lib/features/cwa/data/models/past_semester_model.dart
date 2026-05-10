@@ -10,6 +10,10 @@ class PastSemesterModel {
   /// Human-readable label the student assigns e.g. "Year 1 Sem 1".
   late String semesterLabel;
 
+  /// Stable identifier shared with current courses e.g. "2024-Sem2".
+  @Name('zzSemesterKey')
+  String? semesterKey;
+
   /// Ordered list of courses from that semester.
   late List<PastCourseEntry> courses;
 
@@ -38,6 +42,7 @@ class PastSemesterModel {
   PastSemesterModel.create({
     required this.semesterLabel,
     required this.courses,
+    this.semesterKey,
     this.reportedSemesterCwa,
     this.reportedCumulativeCwa,
     this.isPendingResults = false,

@@ -15,9 +15,6 @@ import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/cwa_coach_sheet.dart';
 import 'package:campusiq/features/cwa/presentation/screens/complete_semester_screen.dart';
-import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
-import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
-import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
 import 'package:campusiq/shared/widgets/campus_button.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
@@ -66,11 +63,7 @@ class CwaScreen extends ConsumerWidget {
   }
 
   void _openHistory(BuildContext context) {
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => const PastSemestersScreen(),
-      ),
-    );
+    context.pushNamed('cwa-history');
   }
 
   Future<void> _openCompleteSemester(
@@ -365,13 +358,10 @@ class CwaScreen extends ConsumerWidget {
     CwaViewMode viewMode, {
     required String initialSource,
   }) {
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => viewMode == CwaViewMode.semester
-            ? RegistrationSlipImportScreen(initialSource: initialSource)
-            : ResultSlipImportScreen(initialSource: initialSource),
-      ),
-    );
+    final path = viewMode == CwaViewMode.semester
+        ? 'cwa-import-registration'
+        : 'cwa-import-results';
+    context.pushNamed(path, queryParameters: {'source': initialSource});
   }
 }
 
@@ -1147,6 +1137,8 @@ class _CumulativeView extends ConsumerWidget {
     final totalCredits = ref.watch(totalCreditsProvider);
     final target = ref.watch(targetCwaProvider);
     final gap = ref.watch(cumulativeGapProvider);
+    final activeSemesterKey = ref.watch(activeSemesterProvider);
+    final progression = ref.watch(semesterProgressionProvider);
 
     return semestersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -1163,7 +1155,11 @@ class _CumulativeView extends ConsumerWidget {
 
         final hasPast = semesters.isNotEmpty;
         final hasCurrent = currentCourses.isNotEmpty;
-        final hasAnyData = hasPast || hasCurrent;
+        final activeSemesterAlreadyRecorded = semesters
+            .any((semester) => semester.semesterKey == activeSemesterKey);
+        final currentCoursesCounted =
+            hasCurrent && !activeSemesterAlreadyRecorded;
+        final hasAnyData = hasPast || currentCoursesCounted;
         final hasPending = pendingCount > 0;
 
         return CustomScrollView(
@@ -1181,7 +1177,7 @@ class _CumulativeView extends ConsumerWidget {
                   target: target,
                   gap: gap,
                   label: 'Cumulative CWA',
-                  eyebrow: hasCurrent || hasPending
+                  eyebrow: currentCoursesCounted || hasPending
                       ? 'Estimated with current + pending data'
                       : 'From recorded semesters',
                   hasData: hasAnyData,
@@ -1220,6 +1216,18 @@ class _CumulativeView extends ConsumerWidget {
                 ),
               ),
             ),
+            if (progression.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    CwaScreen._compactSectionGap,
+                    AppSpacing.xl,
+                    0,
+                  ),
+                  child: _SemesterProgressionCard(entries: progression),
+                ),
+              ),
             if (hasPending)
               SliverToBoxAdapter(
                 child: Padding(
@@ -1268,12 +1276,7 @@ class _CumulativeView extends ConsumerWidget {
                     _InlineActionButton(
                       label: 'Import',
                       icon: LucideIcons.fileUp,
-                      onPressed: () =>
-                          Navigator.of(context, rootNavigator: true).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ResultSlipImportScreen(),
-                        ),
-                      ),
+                      onPressed: () => context.pushNamed('cwa-import-results'),
                     ),
                   ],
                 ),
@@ -1296,12 +1299,7 @@ class _CumulativeView extends ConsumerWidget {
                     action: _InlineActionButton(
                       label: 'Import Results',
                       icon: LucideIcons.fileUp,
-                      onPressed: () =>
-                          Navigator.of(context, rootNavigator: true).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ResultSlipImportScreen(),
-                        ),
-                      ),
+                      onPressed: () => context.pushNamed('cwa-import-results'),
                     ),
                   ),
                 ),
@@ -1418,6 +1416,262 @@ class _CumulativeView extends ConsumerWidget {
       },
     );
   }
+}
+
+// ─── Semester progression ────────────────────────────────────────────────────
+
+class _SemesterProgressionCard extends StatelessWidget {
+  final List<SemesterProgressionEntry> entries;
+
+  const _SemesterProgressionCard({required this.entries});
+
+  @override
+  Widget build(BuildContext context) {
+    final latest = entries.last;
+    final latestDelta = latest.cumulativeDelta;
+
+    return CampusCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                ),
+                child: const Icon(
+                  LucideIcons.trendingUp,
+                  color: AppTheme.primary,
+                  size: AppIconSizes.xl,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Semester progression',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxxs),
+                    Text(
+                      latestDelta == null
+                          ? 'Your first recorded semester is now on the timeline.'
+                          : 'Latest cumulative move: ${_signed(latestDelta)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _DeltaPill(delta: latestDelta),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _ProgressionSparkBars(entries: entries),
+          const SizedBox(height: AppSpacing.md),
+          const Divider(height: 1),
+          const SizedBox(height: AppSpacing.xs),
+          ...entries.map(
+            (entry) => _ProgressionRow(entry: entry),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressionSparkBars extends StatelessWidget {
+  final List<SemesterProgressionEntry> entries;
+
+  const _ProgressionSparkBars({required this.entries});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 74,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: entries.map((entry) {
+            final normalized =
+                entry.semesterCwa.clamp(0.0, 100.0).toDouble() / 100;
+            final height = 18 + (normalized * 48);
+            final color = _deltaColor(entry.semesterDelta);
+
+            return Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.xs),
+              child: Tooltip(
+                message:
+                    '${entry.semester.semesterLabel}: ${entry.semesterCwa.toStringAsFixed(1)}',
+                child: Container(
+                  width: 28,
+                  height: height,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.86),
+                    borderRadius: BorderRadius.circular(AppRadii.xxs),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProgressionRow extends StatelessWidget {
+  final SemesterProgressionEntry entry;
+
+  const _ProgressionRow({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = entry.semester.isPendingResults;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Container(
+              width: 9,
+              height: 9,
+              decoration: BoxDecoration(
+                color: pending
+                    ? AppTheme.warning
+                    : _deltaColor(entry.semesterDelta),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.semester.semesterLabel,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxxs),
+                Text(
+                  '${entry.semester.courses.length} courses'
+                  '${pending ? ' • Pending official marks' : ''}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'Sem ${entry.semesterCwa.toStringAsFixed(1)}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxxs),
+              Text(
+                'Cum ${entry.cumulativeCwa.toStringAsFixed(1)}',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          _DeltaPill(delta: entry.semesterDelta),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeltaPill extends StatelessWidget {
+  final double? delta;
+
+  const _DeltaPill({required this.delta});
+
+  @override
+  Widget build(BuildContext context) {
+    final value = delta;
+    final color = _deltaColor(value);
+    final icon = value == null
+        ? LucideIcons.minus
+        : value > 0
+            ? LucideIcons.trendingUp
+            : value < 0
+                ? LucideIcons.trendingDown
+                : LucideIcons.minus;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: 4,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: AppIconSizes.xs, color: color),
+          const SizedBox(width: 3),
+          Text(
+            value == null ? 'Start' : _signed(value),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Color _deltaColor(double? delta) {
+  if (delta == null || delta.abs() < 0.05) return AppTheme.textSecondary;
+  if (delta > 0) return AppTheme.success;
+  return AppTheme.warning;
+}
+
+String _signed(double value) {
+  final prefix = value > 0 ? '+' : '';
+  return '$prefix${value.toStringAsFixed(1)}';
 }
 
 // ─── Past semester summary card (read-only, collapsible) ─────────────────────

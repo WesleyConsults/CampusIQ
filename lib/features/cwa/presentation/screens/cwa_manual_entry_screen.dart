@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -39,6 +41,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
   String _programme = _programmes.first;
   String _level = _levels.last;
   bool _isSaving = false;
+  bool _isDraftRestored = false;
   bool _showDuplicateWarning = false;
 
   static const _academicYears = [
@@ -76,6 +79,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     _initialProgramme = _programme;
     _initialLevel = _level;
     _courses.add(_CourseDraft()..addListener(_refreshDerivedState));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restoreDraft());
   }
 
   @override
@@ -176,6 +180,73 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     ref.read(cwaViewModeProvider.notifier).state = _mode;
   }
 
+  Future<void> _restoreDraft() async {
+    if (_isDraftRestored || !mounted) return;
+    _isDraftRestored = true;
+
+    final repo = ref.read(cwaPrefsRepositoryProvider);
+    if (repo == null) return;
+
+    try {
+      final raw = await repo.getManualCwaDraftJson();
+      if (raw.trim().isEmpty || !mounted) return;
+
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return;
+
+      final courses = (decoded['courses'] as List?)
+          ?.whereType<Map>()
+          .map((entry) => Map<String, dynamic>.from(entry))
+          .toList();
+      if (courses == null || courses.isEmpty) return;
+
+      final restoredMode = decoded['mode'] == CwaViewMode.cumulative.name
+          ? CwaViewMode.cumulative
+          : CwaViewMode.semester;
+      final restoredCourses = courses.map(_CourseDraft.fromJson).toList();
+
+      setState(() {
+        for (final course in _courses) {
+          course.dispose();
+        }
+        _courses
+          ..clear()
+          ..addAll(
+            restoredCourses.map(
+              (course) => course..addListener(_refreshDerivedState),
+            ),
+          );
+        _mode = restoredMode;
+        _academicYear =
+            _validOrDefault(decoded['academicYear'], _academicYears);
+        _semesterLabel = _validOrDefault(decoded['semesterLabel'], _semesters);
+        _programme = _validOrDefault(decoded['programme'], _programmes);
+        _level = _validOrDefault(decoded['level'], _levels);
+        _showDuplicateWarning = _hasDuplicateCodes;
+      });
+      _showMessage('Draft restored.');
+    } catch (e) {
+      debugPrint('🔴 CwaManualEntryScreen _restoreDraft failed: $e');
+    }
+  }
+
+  String _validOrDefault(Object? value, List<String> options) {
+    final text = value is String ? value : '';
+    return options.contains(text) ? text : options.first;
+  }
+
+  Map<String, dynamic> _draftJson() {
+    return {
+      'mode': _mode.name,
+      'academicYear': _academicYear,
+      'semesterLabel': _semesterLabel,
+      'programme': _programme,
+      'level': _level,
+      'courses': _courses.map((course) => course.toJson()).toList(),
+      'savedAt': DateTime.now().toIso8601String(),
+    };
+  }
+
   void _syncSemesterMetadataFromActiveKey(String semesterKey) {
     final match = RegExp(r'^(\d{4})-Sem([12])$').firstMatch(semesterKey.trim());
     if (match == null) return;
@@ -214,12 +285,14 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
 
     setState(() => _isSaving = true);
     try {
+      final bool saved;
       if (_mode == CwaViewMode.semester) {
-        await _saveSemesterCourses();
+        saved = await _saveSemesterCourses();
       } else {
-        await _saveCumulativeRecord();
+        saved = await _saveCumulativeRecord();
       }
 
+      if (!saved) return;
       if (!mounted) return;
       _syncCwaMode();
       ref.invalidate(coursesProvider);
@@ -229,6 +302,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
       ref.invalidate(cumulativeCwaProvider);
       ref.invalidate(totalCreditsProvider);
       ref.invalidate(cumulativeGapProvider);
+      await ref.read(cwaPrefsRepositoryProvider)?.clearManualCwaDraft();
       _showMessage('Courses saved successfully.');
       _closeToCwa();
     } on StateError catch (e) {
@@ -242,7 +316,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     }
   }
 
-  Future<void> _saveSemesterCourses() async {
+  Future<bool> _saveSemesterCourses() async {
     final repo = ref.read(cwaRepositoryProvider);
     if (repo == null) throw Exception('CWA repository unavailable');
 
@@ -273,11 +347,13 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
         ),
       );
     }
+    return true;
   }
 
-  Future<void> _saveCumulativeRecord() async {
+  Future<bool> _saveCumulativeRecord() async {
     final repo = ref.read(pastResultRepositoryProvider);
     if (repo == null) throw Exception('Past result repository unavailable');
+    final semesterKey = _buildSemesterKey();
 
     final entries = _courses.map((course) {
       final credits = double.parse(course.creditsController.text.trim());
@@ -291,12 +367,38 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
       );
     }).toList();
 
-    await repo.add(
-      PastSemesterModel.create(
-        semesterLabel: _buildSemesterLabel(),
-        courses: entries,
-      ),
+    final record = PastSemesterModel.create(
+      semesterLabel: _buildSemesterLabel(),
+      semesterKey: semesterKey,
+      courses: entries,
     );
+
+    final existing = await repo.findBySemesterKey(semesterKey);
+    if (existing != null) {
+      if (!mounted) return false;
+      final shouldReplace = await showCampusConfirmDialog(
+            context: context,
+            title: 'Replace existing semester?',
+            message:
+                'You already have results for "${existing.semesterLabel}". Replacing it prevents this semester from being counted twice.',
+            confirmLabel: 'Replace',
+            cancelLabel: 'Cancel',
+            destructive: true,
+          ) ??
+          false;
+      if (!shouldReplace) return false;
+      await repo.replaceForSemesterKey(semesterKey, record);
+      return true;
+    }
+
+    await repo.add(record);
+    return true;
+  }
+
+  String _buildSemesterKey() {
+    final year = int.parse(_academicYear.split('/').first);
+    final semesterNumber = _semesterLabel == _semesters.first ? 1 : 2;
+    return '$year-Sem$semesterNumber';
   }
 
   String _buildSemesterLabel() {
@@ -311,8 +413,21 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     return 'F';
   }
 
-  void _saveDraft() {
-    _showMessage('Draft saving is coming in a later phase.');
+  Future<void> _saveDraft() async {
+    final repo = ref.read(cwaPrefsRepositoryProvider);
+    if (repo == null) {
+      _showMessage('Draft storage is not ready yet. Please try again.');
+      return;
+    }
+
+    try {
+      await repo.setManualCwaDraftJson(jsonEncode(_draftJson()));
+      if (!mounted) return;
+      _showMessage('Draft saved.');
+    } catch (e) {
+      debugPrint('🔴 CwaManualEntryScreen _saveDraft failed: $e');
+      _showMessage('Could not save draft. Please try again.');
+    }
   }
 
   Future<void> _cancel() async {
@@ -355,7 +470,6 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final activeSemesterKey = ref.watch(activeSemesterProvider);
     final activeSemesterDisplay = _formatSemesterKey(activeSemesterKey);
     final helperText = _mode == CwaViewMode.semester
@@ -403,11 +517,11 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                     controller: _scrollController,
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: EdgeInsets.fromLTRB(
+                    padding: const EdgeInsets.fromLTRB(
                       AppSpacing.md,
                       AppSpacing.md,
                       AppSpacing.md,
-                      bottomInset > 0 ? AppSpacing.xl : 120,
+                      120,
                     ),
                     children: [
                       _ModeSwitcher(
@@ -567,67 +681,62 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                     ],
                   ),
                 ),
-                AnimatedPadding(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  padding: EdgeInsets.only(bottom: bottomInset),
-                  child: SafeArea(
-                    top: false,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.md,
-                        AppSpacing.sm,
-                        AppSpacing.md,
-                        AppSpacing.md,
+                SafeArea(
+                  top: false,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.sm,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      border: Border(
+                        top: BorderSide(color: colorScheme.outlineVariant),
                       ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        border: Border(
-                          top: BorderSide(color: colorScheme.outlineVariant),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Semantics(
+                            button: true,
+                            label: 'Cancel manual course entry',
+                            child: OutlinedButton(
+                              onPressed: _isSaving ? null : _cancel,
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(48),
+                              ),
+                              child: const Text('Cancel'),
+                            ),
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Semantics(
-                              button: true,
-                              label: 'Cancel manual course entry',
-                              child: OutlinedButton(
-                                onPressed: _isSaving ? null : _cancel,
-                                style: OutlinedButton.styleFrom(
-                                  minimumSize: const Size.fromHeight(48),
-                                ),
-                                child: const Text('Cancel'),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Semantics(
+                            button: true,
+                            label: 'Save courses',
+                            child: ElevatedButton(
+                              onPressed: _isSaving ? null : _saveCourses,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primary,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size.fromHeight(48),
                               ),
+                              child: _isSaving
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text('Save Courses'),
                             ),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Semantics(
-                              button: true,
-                              label: 'Save courses',
-                              child: ElevatedButton(
-                                onPressed: _isSaving ? null : _saveCourses,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primary,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size.fromHeight(48),
-                                ),
-                                child: _isSaving
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text('Save Courses'),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -987,6 +1096,26 @@ class _CourseDraft {
     scoreController.addListener(_notify);
   }
 
+  _CourseDraft.fromJson(Map<String, dynamic> json)
+      : id = UniqueKey().toString(),
+        codeController = TextEditingController(
+          text: json['code'] is String ? json['code'] as String : '',
+        ),
+        titleController = TextEditingController(
+          text: json['title'] is String ? json['title'] as String : '',
+        ),
+        creditsController = TextEditingController(
+          text: json['credits'] is String ? json['credits'] as String : '',
+        ),
+        scoreController = TextEditingController(
+          text: json['score'] is String ? json['score'] as String : '70',
+        ) {
+    codeController.addListener(_notify);
+    titleController.addListener(_notify);
+    creditsController.addListener(_notify);
+    scoreController.addListener(_notify);
+  }
+
   final String id;
   final TextEditingController codeController;
   final TextEditingController titleController;
@@ -995,6 +1124,15 @@ class _CourseDraft {
   final List<VoidCallback> _listeners = [];
 
   String get normalizedCode => codeController.text.trim().toUpperCase();
+
+  Map<String, dynamic> toJson() {
+    return {
+      'code': codeController.text,
+      'title': titleController.text,
+      'credits': creditsController.text,
+      'score': scoreController.text,
+    };
+  }
 
   void addListener(VoidCallback listener) {
     _listeners.add(listener);

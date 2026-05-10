@@ -35,6 +35,7 @@ class ResultImportState {
   final double? reportedCumulativeCwa;
   final double? cumulativeCreditsCalc;
   final double? cumulativeWeightedMarks;
+  final int skippedCourseCount;
 
   /// Metadata parsed from the slip header by AI — used to pre-fill the
   /// labelling screen so the user only needs to verify, not re-enter.
@@ -54,6 +55,7 @@ class ResultImportState {
     this.reportedCumulativeCwa,
     this.cumulativeCreditsCalc,
     this.cumulativeWeightedMarks,
+    this.skippedCourseCount = 0,
     this.parsedAcademicYearStart,
     this.parsedSemesterNumber,
     this.parsedLevel,
@@ -71,6 +73,7 @@ class ResultImportState {
     double? reportedCumulativeCwa,
     double? cumulativeCreditsCalc,
     double? cumulativeWeightedMarks,
+    int? skippedCourseCount,
     int? parsedAcademicYearStart,
     int? parsedSemesterNumber,
     int? parsedLevel,
@@ -90,10 +93,10 @@ class ResultImportState {
             cumulativeCreditsCalc ?? this.cumulativeCreditsCalc,
         cumulativeWeightedMarks:
             cumulativeWeightedMarks ?? this.cumulativeWeightedMarks,
+        skippedCourseCount: skippedCourseCount ?? this.skippedCourseCount,
         parsedAcademicYearStart:
             parsedAcademicYearStart ?? this.parsedAcademicYearStart,
-        parsedSemesterNumber:
-            parsedSemesterNumber ?? this.parsedSemesterNumber,
+        parsedSemesterNumber: parsedSemesterNumber ?? this.parsedSemesterNumber,
         parsedLevel: parsedLevel ?? this.parsedLevel,
         parsedProgramme: parsedProgramme ?? this.parsedProgramme,
       );
@@ -220,6 +223,7 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
         reportedCumulativeCwa: parseResult.reportedCumulativeCwa,
         cumulativeCreditsCalc: parseResult.cumulativeCreditsCalc,
         cumulativeWeightedMarks: parseResult.cumulativeWeightedMarks,
+        skippedCourseCount: parseResult.skippedCourseCount,
         parsedAcademicYearStart: parseResult.academicYearStart,
         parsedSemesterNumber: parseResult.semesterNumber,
         parsedLevel: parseResult.level,
@@ -260,7 +264,7 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
 
   void setCreditHours(int index, double hours) {
     final updated = List<PastCourseResult>.from(state.courses);
-    updated[index] = updated[index].copyWith(creditHours: hours.clamp(1, 6));
+    updated[index] = updated[index].copyWith(creditHours: hours.clamp(1, 12));
     state = state.copyWith(courses: updated);
   }
 
@@ -276,7 +280,21 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
     state = state.copyWith(courses: updated);
   }
 
-  Future<void> confirmImport() async {
+  void addManualCourse(PastCourseResult course) {
+    final updated = List<PastCourseResult>.from(state.courses)..add(course);
+    final selected = Set<int>.from(state.selectedIndexes)
+      ..add(updated.length - 1);
+    state = state.copyWith(courses: updated, selectedIndexes: selected);
+  }
+
+  Future<PastSemesterModel?> findDuplicateSemester() async {
+    final repo = ref.read(pastResultRepositoryProvider);
+    final semesterKey = state.semesterKey.trim();
+    if (repo == null || semesterKey.isEmpty) return null;
+    return repo.findBySemesterKey(semesterKey);
+  }
+
+  Future<void> confirmImport({bool replaceExisting = false}) async {
     final repo = ref.read(pastResultRepositoryProvider);
     if (repo == null) return;
 
@@ -294,16 +312,23 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
         );
       }).toList();
 
-      await repo.add(PastSemesterModel.create(
+      final semesterKey =
+          state.semesterKey.trim().isEmpty ? null : state.semesterKey.trim();
+      final model = PastSemesterModel.create(
         semesterLabel: state.semesterLabel,
-        semesterKey:
-            state.semesterKey.trim().isEmpty ? null : state.semesterKey.trim(),
+        semesterKey: semesterKey,
         courses: entries,
         reportedSemesterCwa: state.reportedSemesterCwa,
         reportedCumulativeCwa: state.reportedCumulativeCwa,
         cumulativeCreditsCalc: state.cumulativeCreditsCalc,
         cumulativeWeightedMarks: state.cumulativeWeightedMarks,
-      ));
+      );
+
+      if (replaceExisting && semesterKey != null) {
+        await repo.replaceForSemesterKey(semesterKey, model);
+      } else {
+        await repo.add(model);
+      }
 
       state = state.copyWith(step: ResultImportStep.done);
     } catch (e) {

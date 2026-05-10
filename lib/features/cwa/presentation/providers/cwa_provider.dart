@@ -110,6 +110,29 @@ final officialPastSemestersProvider = Provider<List<PastSemesterModel>>((ref) {
   return all.where((semester) => !semester.isPendingResults).toList();
 });
 
+class SemesterProgressionEntry {
+  final PastSemesterModel semester;
+  final double semesterCwa;
+  final double cumulativeCwa;
+  final double? semesterDelta;
+  final double? cumulativeDelta;
+
+  const SemesterProgressionEntry({
+    required this.semester,
+    required this.semesterCwa,
+    required this.cumulativeCwa,
+    this.semesterDelta,
+    this.cumulativeDelta,
+  });
+}
+
+bool _hasPastSemesterForKey(
+  List<PastSemesterModel> pastSemesters,
+  String semesterKey,
+) {
+  return pastSemesters.any((semester) => semester.semesterKey == semesterKey);
+}
+
 // ─── View mode toggle (per-session, not persisted) ────────────────────────────
 
 final cwaViewModeProvider =
@@ -128,10 +151,15 @@ final cwaViewModeProvider =
 final cumulativeCwaProvider = Provider<double>((ref) {
   final pastSemesters = ref.watch(pastSemestersProvider).valueOrNull ?? [];
   final currentCourses = ref.watch(coursesProvider).valueOrNull ?? [];
+  final activeSemesterKey = ref.watch(activeSemesterProvider);
+  final shouldIncludeCurrentCourses =
+      !_hasPastSemesterForKey(pastSemesters, activeSemesterKey);
 
-  final currentPairs = currentCourses
-      .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
-      .toList();
+  final currentPairs = shouldIncludeCurrentCourses
+      ? currentCourses
+          .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
+          .toList()
+      : <({double creditHours, double score})>[];
 
   // Find the most recently imported semester that has slip cumulative totals.
   // pastSemestersProvider is ordered by createdAt asc, so last = most recent.
@@ -214,6 +242,9 @@ final officialRecordedCwaProvider = Provider<double>((ref) {
 final totalCreditsProvider = Provider<double>((ref) {
   final pastSemesters = ref.watch(pastSemestersProvider).valueOrNull ?? [];
   final currentCourses = ref.watch(coursesProvider).valueOrNull ?? [];
+  final activeSemesterKey = ref.watch(activeSemesterProvider);
+  final shouldIncludeCurrentCourses =
+      !_hasPastSemesterForKey(pastSemesters, activeSemesterKey);
 
   PastSemesterModel? anchor;
   if (pastSemesters.isNotEmpty) {
@@ -224,8 +255,9 @@ final totalCreditsProvider = Provider<double>((ref) {
     }
   }
 
-  final double currentCredits =
-      currentCourses.fold(0.0, (sum, c) => sum + c.creditHours);
+  final double currentCredits = shouldIncludeCurrentCourses
+      ? currentCourses.fold(0.0, (sum, c) => sum + c.creditHours)
+      : 0.0;
 
   if (anchor != null) {
     return anchor.cumulativeCreditsCalc! + currentCredits;
@@ -240,9 +272,11 @@ final totalCreditsProvider = Provider<double>((ref) {
 
   return CwaCalculator.totalCredits(
     pastSemesters: pastPairs,
-    currentCourses: currentCourses
-        .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
-        .toList(),
+    currentCourses: shouldIncludeCurrentCourses
+        ? currentCourses
+            .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
+            .toList()
+        : const [],
   );
 });
 
@@ -252,3 +286,86 @@ final cumulativeGapProvider = Provider<double>((ref) {
   final target = ref.watch(targetCwaProvider);
   return CwaCalculator.gap(cumulative, target);
 });
+
+final semesterProgressionProvider =
+    Provider<List<SemesterProgressionEntry>>((ref) {
+  final semesters = <PastSemesterModel>[
+    ...(ref.watch(pastSemestersProvider).valueOrNull ??
+        const <PastSemesterModel>[]),
+  ];
+  semesters.sort(_compareSemestersChronologically);
+
+  final entries = <SemesterProgressionEntry>[];
+  double runningWeighted = 0;
+  double runningCredits = 0;
+
+  for (final semester in semesters) {
+    final semesterWeighted = semester.courses.fold<double>(
+      0,
+      (sum, course) => sum + (course.creditHours * course.score),
+    );
+    final semesterCredits = semester.courses.fold<double>(
+      0,
+      (sum, course) => sum + course.creditHours,
+    );
+    final semesterCwa = semester.reportedSemesterCwa ??
+        (semesterCredits == 0 ? 0.0 : semesterWeighted / semesterCredits);
+
+    if (semester.cumulativeWeightedMarks != null &&
+        semester.cumulativeCreditsCalc != null &&
+        semester.cumulativeCreditsCalc! > 0) {
+      runningWeighted = semester.cumulativeWeightedMarks!;
+      runningCredits = semester.cumulativeCreditsCalc!;
+    } else {
+      runningWeighted += semesterWeighted;
+      runningCredits += semesterCredits;
+    }
+
+    final cumulativeCwa = semester.reportedCumulativeCwa ??
+        (runningCredits == 0 ? 0.0 : runningWeighted / runningCredits);
+    final previous = entries.isEmpty ? null : entries.last;
+
+    entries.add(
+      SemesterProgressionEntry(
+        semester: semester,
+        semesterCwa: semesterCwa,
+        cumulativeCwa: cumulativeCwa,
+        semesterDelta:
+            previous == null ? null : semesterCwa - previous.semesterCwa,
+        cumulativeDelta:
+            previous == null ? null : cumulativeCwa - previous.cumulativeCwa,
+      ),
+    );
+  }
+
+  return entries;
+});
+
+int _compareSemestersChronologically(
+  PastSemesterModel a,
+  PastSemesterModel b,
+) {
+  final aKey = _semesterSortValue(a);
+  final bKey = _semesterSortValue(b);
+  final keyCompare = aKey.compareTo(bKey);
+  if (keyCompare != 0) return keyCompare;
+  return a.createdAt.compareTo(b.createdAt);
+}
+
+int _semesterSortValue(PastSemesterModel semester) {
+  final key = semester.semesterKey ?? '';
+  final keyMatch = RegExp(r'(\d{4})-Sem([12])').firstMatch(key);
+  if (keyMatch != null) {
+    final year = int.tryParse(keyMatch.group(1) ?? '') ?? 0;
+    final sem = int.tryParse(keyMatch.group(2) ?? '') ?? 0;
+    return (year * 10) + sem;
+  }
+
+  final label = semester.semesterLabel;
+  final yearMatch = RegExp(r'(\d{4})').firstMatch(label);
+  final year = int.tryParse(yearMatch?.group(1) ?? '') ?? 0;
+  final sem = label.toLowerCase().contains('second') ? 2 : 1;
+  if (year > 0) return (year * 10) + sem;
+
+  return semester.createdAt.millisecondsSinceEpoch;
+}

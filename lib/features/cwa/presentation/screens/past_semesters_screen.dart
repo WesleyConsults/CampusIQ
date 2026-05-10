@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,7 +7,6 @@ import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
-import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 
 class PastSemestersScreen extends ConsumerWidget {
@@ -55,9 +55,7 @@ class PastSemestersScreen extends ConsumerWidget {
   }
 
   void _openImport(BuildContext context) {
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(builder: (_) => const ResultSlipImportScreen()),
-    );
+    context.pushNamed('cwa-import-results');
   }
 
   void _confirmDelete(
@@ -185,35 +183,91 @@ class _SemesterCardState extends State<_SemesterCard> {
             onTap: () => setState(() => _expanded = !_expanded),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.semester.semesterLabel,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.semester.semesterLabel,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xxxs),
+                            Text(
+                              '$courseCount course${courseCount == 1 ? '' : 's'}'
+                              '${widget.semester.reportedSemesterCwa != null ? ' • Reported CWA: ${widget.semester.reportedSemesterCwa?.toStringAsFixed(2)}' : ''}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(AppRadii.md2),
+                        ),
+                        child: Text(
+                          cwa.toStringAsFixed(1),
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                            color: AppTheme.textPrimary,
+                            fontSize: 13,
+                            color: AppTheme.primary,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xxxs),
-                        Text(
-                          '$courseCount course${courseCount == 1 ? '' : 's'}'
-                          '${widget.semester.reportedSemesterCwa != null ? ' • Reported CWA: ${widget.semester.reportedSemesterCwa?.toStringAsFixed(2)}' : ''}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
+                      ),
+                      const SizedBox(width: AppSpacing.xxs),
+                      IconButton(
+                        icon: const Icon(
+                          LucideIcons.trash2,
+                          size: AppIconSizes.xl,
+                          color: AppTheme.textSecondary,
                         ),
-                        if (widget.semester.isPendingResults) ...[
-                          const SizedBox(height: AppSpacing.xxs),
+                        onPressed: widget.onDelete,
+                        tooltip: 'Remove',
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Icon(
+                          _expanded
+                              ? LucideIcons.chevronUp
+                              : LucideIcons.chevronDown,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (widget.semester.isPendingResults ||
+                      widget.onFinalize != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Wrap(
+                      spacing: AppSpacing.xs,
+                      runSpacing: AppSpacing.xs,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (widget.semester.isPendingResults)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 10,
+                              vertical: 5,
                             ),
                             decoration: BoxDecoration(
                               color: Colors.orange.withValues(alpha: 0.12),
@@ -228,42 +282,14 @@ class _SemesterCardState extends State<_SemesterCard> {
                               ),
                             ),
                           ),
-                        ],
+                        if (widget.onFinalize != null)
+                          TextButton(
+                            onPressed: widget.onFinalize,
+                            child: const Text('Update Results'),
+                          ),
                       ],
                     ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppRadii.md2),
-                    ),
-                    child: Text(
-                      cwa.toStringAsFixed(1),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: AppTheme.primary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xxs),
-                  IconButton(
-                    icon: const Icon(LucideIcons.trash2,
-                        size: AppIconSizes.xl, color: AppTheme.textSecondary),
-                    onPressed: widget.onDelete,
-                    tooltip: 'Remove',
-                  ),
-                  if (widget.onFinalize != null)
-                    TextButton(
-                      onPressed: widget.onFinalize,
-                      child: const Text('Update Results'),
-                    ),
-                  Icon(
-                    _expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
-                    color: AppTheme.textSecondary,
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -429,7 +455,7 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
               GestureDetector(
                 onTap: _credits > 1
                     ? () {
-                        setState(() => _credits = (_credits - 1).clamp(1, 6));
+                        setState(() => _credits = (_credits - 1).clamp(1, 12));
                         _save();
                       }
                     : null,
@@ -449,15 +475,15 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
                 ),
               ),
               GestureDetector(
-                onTap: _credits < 6
+                onTap: _credits < 12
                     ? () {
-                        setState(() => _credits = (_credits + 1).clamp(1, 6));
+                        setState(() => _credits = (_credits + 1).clamp(1, 12));
                         _save();
                       }
                     : null,
                 child: _MiniButton(
                   icon: Icons.add,
-                  enabled: _credits < 6,
+                  enabled: _credits < 12,
                 ),
               ),
             ],

@@ -96,6 +96,11 @@ If a user imports the same result slip twice, those courses are double-counted.
 - A uniqueness check when importing (same semester label + same course codes = likely duplicate)
 - Or a warning in the cumulative view when duplicate-like semesters are detected
 
+**Decision**:
+- Use `semesterKey` as the primary duplicate check
+- If the same semester already exists, ask the user to replace it or cancel
+- Do not silently keep both, because that can double-count CWA
+
 ---
 
 ## Gap 7 — Draft saving is a stub
@@ -110,6 +115,11 @@ If the user navigates away mid-entry, all work is lost.
 - Restore it when the user returns
 - Clear the draft on successful save
 
+**Decision**:
+- Store the manual CWA draft as lightweight JSON in `UserPrefsModel`
+- Restore it automatically when the manual entry screen opens
+- Clear it after successful save
+
 ---
 
 ## Gap 8 — Import screens bypass go_router
@@ -121,6 +131,11 @@ If the user navigates away mid-entry, all work is lost.
 **What's needed**:
 - Register these screens as go_router routes
 - Use `context.push()` consistently
+
+**Decision**:
+- Register CWA history and import screens as named go_router routes
+- Use `context.pushNamed()` for CWA history/result import/registration import navigation
+- Keep flows that require in-memory objects, like completing a live semester, on direct navigation for now
 
 ---
 
@@ -136,6 +151,10 @@ The user must manually adjust each slider individually.
 - Or allow bulk-setting a default expected score during import
 - Or use a smarter default based on the course level/type
 
+**Decision**:
+- Keep 70 as the initial default, but expose expected score on the import review screen
+- Save each imported course with the reviewed expected score instead of hardcoding 70 at save time
+
 ---
 
 ## Gap 10 — Credit hours clamped to 1-6
@@ -147,6 +166,10 @@ Credit hour inputs are universally clamped to 1-6. Some programmes have courses 
 **What's needed**:
 - Raise or remove the credit hour cap, or make it configurable
 - At minimum, raise it to 12
+
+**Decision**:
+- Raise the shared credit-hour cap from 6 to 12 across course entry, import review, and result-history edits
+- Keep the minimum at 1 so blank/zero-credit courses still do not affect CWA calculations accidentally
 
 ---
 
@@ -161,6 +184,11 @@ A course missing from the parsed result is invisible to the user during review.
 - Show a warning count: "X courses could not be parsed"
 - Let the user manually add any skipped courses during the review step
 
+**Decision**:
+- Count malformed/blank AI course rows instead of silently dropping them
+- Show a warning on the import review screen when rows were skipped
+- Let the user add missing courses manually before saving the import
+
 ---
 
 ## Gap 12 — No semester overview or progression
@@ -172,3 +200,8 @@ The cumulative view lists past semesters but doesn't show a timeline, a trend li
 - A semester timeline in the cumulative view showing CWA progression
 - Delta indicators (↑/↓ from previous semester)
 - A visual trend (sparkline or small chart)
+
+**Decision**:
+- Add a semester progression card to the cumulative CWA view
+- Show semester CWA, cumulative CWA after each semester, and change from the previous semester
+- Use a lightweight in-app bar trend instead of adding a chart dependency

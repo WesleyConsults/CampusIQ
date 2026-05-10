@@ -43,6 +43,10 @@ class UserPrefsModel {
   @Name('zzTargetCwa')
   double targetCwa = AppConstants.distinctionThreshold;
 
+  /// JSON snapshot of the in-progress CWA manual entry form.
+  @Name('zzManualCwaDraftJson')
+  String manualCwaDraftJson = '';
+
   // ── Weekly Review ─────────────────────────────────────────────────────────
 
   /// JSON map of week key → reflection note. e.g. {"2026_W14": "focus more on maths"}

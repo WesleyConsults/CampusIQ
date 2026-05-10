@@ -57,6 +57,11 @@ const PastSemesterModelSchema = CollectionSchema(
       id: 7,
       name: r'zzPendingResults',
       type: IsarType.bool,
+    ),
+    r'zzSemesterKey': PropertySchema(
+      id: 8,
+      name: r'zzSemesterKey',
+      type: IsarType.string,
     )
   },
   estimateSize: _pastSemesterModelEstimateSize,
@@ -89,6 +94,12 @@ int _pastSemesterModelEstimateSize(
     }
   }
   bytesCount += 3 + object.semesterLabel.length * 3;
+  {
+    final value = object.semesterKey;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -111,6 +122,7 @@ void _pastSemesterModelSerialize(
   writer.writeDouble(offsets[5], object.reportedSemesterCwa);
   writer.writeString(offsets[6], object.semesterLabel);
   writer.writeBool(offsets[7], object.isPendingResults);
+  writer.writeString(offsets[8], object.semesterKey);
 }
 
 PastSemesterModel _pastSemesterModelDeserialize(
@@ -135,6 +147,7 @@ PastSemesterModel _pastSemesterModelDeserialize(
   object.reportedSemesterCwa = reader.readDoubleOrNull(offsets[5]);
   object.semesterLabel = reader.readString(offsets[6]);
   object.isPendingResults = reader.readBool(offsets[7]);
+  object.semesterKey = reader.readStringOrNull(offsets[8]);
   return object;
 }
 
@@ -167,6 +180,8 @@ P _pastSemesterModelDeserializeProp<P>(
       return (reader.readString(offset)) as P;
     case 7:
       return (reader.readBool(offset)) as P;
+    case 8:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -950,6 +965,160 @@ extension PastSemesterModelQueryFilter
       ));
     });
   }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'zzSemesterKey',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'zzSemesterKey',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzSemesterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzSemesterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzSemesterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzSemesterKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'zzSemesterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'zzSemesterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'zzSemesterKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'zzSemesterKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzSemesterKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      semesterKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'zzSemesterKey',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension PastSemesterModelQueryObject
@@ -1062,6 +1231,20 @@ extension PastSemesterModelQuerySortBy
       sortByIsPendingResultsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzPendingResults', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortBySemesterKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzSemesterKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortBySemesterKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzSemesterKey', Sort.desc);
     });
   }
 }
@@ -1178,6 +1361,20 @@ extension PastSemesterModelQuerySortThenBy
       return query.addSortBy(r'zzPendingResults', Sort.desc);
     });
   }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenBySemesterKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzSemesterKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenBySemesterKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzSemesterKey', Sort.desc);
+    });
+  }
 }
 
 extension PastSemesterModelQueryWhereDistinct
@@ -1229,6 +1426,14 @@ extension PastSemesterModelQueryWhereDistinct
       distinctByIsPendingResults() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'zzPendingResults');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QDistinct>
+      distinctBySemesterKey({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzSemesterKey',
+          caseSensitive: caseSensitive);
     });
   }
 }
@@ -1294,6 +1499,13 @@ extension PastSemesterModelQueryProperty
       isPendingResultsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'zzPendingResults');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, String?, QQueryOperations>
+      semesterKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzSemesterKey');
     });
   }
 }

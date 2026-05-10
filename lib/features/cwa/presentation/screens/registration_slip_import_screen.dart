@@ -183,7 +183,8 @@ class _OptionTile extends StatelessWidget {
                   color: AppTheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
-                child: Icon(icon, color: AppTheme.primary, size: AppIconSizes.xxxl),
+                child: Icon(icon,
+                    color: AppTheme.primary, size: AppIconSizes.xxxl),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -288,8 +289,23 @@ class _ReviewView extends StatelessWidget {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Adjust credit hours if needed, then tap Import.',
+            'Adjust expected scores and credit hours if needed, then tap Import.',
             style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          ),
+        ),
+        if (state.skippedCourseCount > 0) ...[
+          const SizedBox(height: AppSpacing.xs),
+          _ParseWarningCard(skippedCount: state.skippedCourseCount),
+        ],
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () => _showAddCourseSheet(context, notifier),
+              icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
+              label: const Text('Add missing course'),
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -309,6 +325,7 @@ class _ReviewView extends StatelessWidget {
                 isSelected: isSelected,
                 onToggle: () => notifier.toggleCourse(i),
                 onCreditChanged: (v) => notifier.setCreditHours(i, v),
+                onExpectedScoreChanged: (v) => notifier.setExpectedScore(i, v),
               );
             },
           ),
@@ -344,6 +361,64 @@ class _ReviewView extends StatelessWidget {
       ],
     );
   }
+
+  Future<void> _showAddCourseSheet(
+    BuildContext context,
+    RegistrationSlipImportNotifier notifier,
+  ) async {
+    final course = await showModalBottomSheet<RegistrationCourseImport>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => const _AddRegistrationCourseSheet(),
+    );
+    if (course != null) {
+      notifier.addManualCourse(course);
+    }
+  }
+}
+
+class _ParseWarningCard extends StatelessWidget {
+  final int skippedCount;
+
+  const _ParseWarningCard({required this.skippedCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.warning.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        border: Border.all(color: AppTheme.warning.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            LucideIcons.triangleAlert,
+            color: AppTheme.warning,
+            size: AppIconSizes.lg,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(
+              '$skippedCount course row${skippedCount == 1 ? '' : 's'} could not be read cleanly. Compare this list with your slip and add any missing course before saving.',
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.35,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ReviewCourseCard extends StatelessWidget {
@@ -351,12 +426,14 @@ class _ReviewCourseCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onToggle;
   final ValueChanged<double> onCreditChanged;
+  final ValueChanged<double> onExpectedScoreChanged;
 
   const _ReviewCourseCard({
     required this.course,
     required this.isSelected,
     required this.onToggle,
     required this.onCreditChanged,
+    required this.onExpectedScoreChanged,
   });
 
   @override
@@ -421,6 +498,35 @@ class _ReviewCourseCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                      const SizedBox(height: AppSpacing.xs2),
+                      Row(
+                        children: [
+                          const Text(
+                            'Expected score',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${course.expectedScore.toInt()}%',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Slider(
+                        value: course.expectedScore,
+                        min: 0,
+                        max: 100,
+                        divisions: 100,
+                        label: '${course.expectedScore.toInt()}%',
+                        onChanged: onExpectedScoreChanged,
+                      ),
                     ],
                   ],
                 ),
@@ -460,7 +566,7 @@ class _CreditStepper extends StatelessWidget {
         ),
         _StepButton(
           icon: LucideIcons.plus,
-          onTap: value < 6 ? () => onChanged(value + 1) : null,
+          onTap: value < 12 ? () => onChanged(value + 1) : null,
         ),
       ],
     );
@@ -496,6 +602,141 @@ class _StepButton extends StatelessWidget {
   }
 }
 
+class _AddRegistrationCourseSheet extends StatefulWidget {
+  const _AddRegistrationCourseSheet();
+
+  @override
+  State<_AddRegistrationCourseSheet> createState() =>
+      _AddRegistrationCourseSheetState();
+}
+
+class _AddRegistrationCourseSheetState
+    extends State<_AddRegistrationCourseSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _codeController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _creditsController = TextEditingController(text: '3');
+  final _scoreController = TextEditingController(text: '70');
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    _nameController.dispose();
+    _creditsController.dispose();
+    _scoreController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + 20,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Add missing course',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextFormField(
+              controller: _codeController,
+              decoration: const InputDecoration(
+                labelText: 'Course code',
+                hintText: 'COE 454',
+              ),
+              textCapitalization: TextCapitalization.characters,
+              validator: (value) =>
+                  value == null || value.trim().isEmpty ? 'Required' : null,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Course name',
+                hintText: 'Software Engineering',
+              ),
+              validator: (value) =>
+                  value == null || value.trim().isEmpty ? 'Required' : null,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _creditsController,
+                    decoration: const InputDecoration(labelText: 'Credits'),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    validator: _validateCredits,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: TextFormField(
+                    controller: _scoreController,
+                    decoration:
+                        const InputDecoration(labelText: 'Expected score'),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    validator: _validateScore,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submit,
+                child: const Text('Add course'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String? _validateCredits(String? value) {
+    final credits = double.tryParse((value ?? '').trim());
+    if (credits == null) return 'Required';
+    if (credits < 1 || credits > 12) return 'Use 1-12';
+    return null;
+  }
+
+  String? _validateScore(String? value) {
+    final score = double.tryParse((value ?? '').trim());
+    if (score == null) return 'Required';
+    if (score < 0 || score > 100) return 'Use 0-100';
+    return null;
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.of(context).pop(
+      RegistrationCourseImport(
+        courseCode: _codeController.text.trim().toUpperCase(),
+        courseName: _nameController.text.trim(),
+        creditHours: double.parse(_creditsController.text.trim()),
+        expectedScore: double.parse(_scoreController.text.trim()),
+      ),
+    );
+  }
+}
+
 // ─── Done ─────────────────────────────────────────────────────────────────────
 
 class _DoneView extends StatelessWidget {
@@ -519,7 +760,8 @@ class _DoneView extends StatelessWidget {
                 color: AppTheme.success,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(LucideIcons.check, color: Colors.white, size: AppIconSizes.status),
+              child: const Icon(LucideIcons.check,
+                  color: Colors.white, size: AppIconSizes.status),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -574,7 +816,8 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(LucideIcons.circleAlert, size: 56, color: AppTheme.warning),
+          const Icon(LucideIcons.circleAlert,
+              size: 56, color: AppTheme.warning),
           const SizedBox(height: AppSpacing.md),
           const Text(
             'Something went wrong',

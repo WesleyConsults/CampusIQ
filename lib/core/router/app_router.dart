@@ -17,6 +17,9 @@ import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.d
 import 'package:campusiq/features/course_hub/presentation/screens/course_hub_screen.dart';
 import 'package:campusiq/features/timetable/presentation/screens/timetable_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/cwa_manual_entry_screen.dart';
+import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
+import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
+import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 
@@ -106,6 +109,27 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final mode = state.uri.queryParameters['mode'] ?? 'semester';
         return CwaManualEntryScreen(mode: mode);
+      },
+    ),
+    GoRoute(
+      path: '/cwa/history',
+      name: 'cwa-history',
+      builder: (context, state) => const PastSemestersScreen(),
+    ),
+    GoRoute(
+      path: '/cwa/import/registration',
+      name: 'cwa-import-registration',
+      builder: (context, state) {
+        final source = state.uri.queryParameters['source'];
+        return RegistrationSlipImportScreen(initialSource: source);
+      },
+    ),
+    GoRoute(
+      path: '/cwa/import/results',
+      name: 'cwa-import-results',
+      builder: (context, state) {
+        final source = state.uri.queryParameters['source'];
+        return ResultSlipImportScreen(initialSource: source);
       },
     ),
   ],

@@ -77,8 +77,13 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'zzActiveSemesterKey',
       type: IsarType.string,
     ),
-    r'zzTargetCwa': PropertySchema(
+    r'zzManualCwaDraftJson': PropertySchema(
       id: 12,
+      name: r'zzManualCwaDraftJson',
+      type: IsarType.string,
+    ),
+    r'zzTargetCwa': PropertySchema(
+      id: 13,
       name: r'zzTargetCwa',
       type: IsarType.double,
     )
@@ -107,6 +112,7 @@ int _userPrefsModelEstimateSize(
   bytesCount += 3 + object.lastReviewShownWeek.length * 3;
   bytesCount += 3 + object.weeklyNotesJson.length * 3;
   bytesCount += 3 + object.activeSemesterKey.length * 3;
+  bytesCount += 3 + object.manualCwaDraftJson.length * 3;
   return bytesCount;
 }
 
@@ -128,7 +134,8 @@ void _userPrefsModelSerialize(
   writer.writeBool(offsets[9], object.notifyWeeklyReview);
   writer.writeString(offsets[10], object.weeklyNotesJson);
   writer.writeString(offsets[11], object.activeSemesterKey);
-  writer.writeDouble(offsets[12], object.targetCwa);
+  writer.writeString(offsets[12], object.manualCwaDraftJson);
+  writer.writeDouble(offsets[13], object.targetCwa);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -151,7 +158,8 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.notifyWeeklyReview = reader.readBool(offsets[9]);
   object.weeklyNotesJson = reader.readString(offsets[10]);
   object.activeSemesterKey = reader.readString(offsets[11]);
-  object.targetCwa = reader.readDouble(offsets[12]);
+  object.manualCwaDraftJson = reader.readString(offsets[12]);
+  object.targetCwa = reader.readDouble(offsets[13]);
   return object;
 }
 
@@ -187,6 +195,8 @@ P _userPrefsModelDeserializeProp<P>(
     case 11:
       return (reader.readString(offset)) as P;
     case 12:
+      return (reader.readString(offset)) as P;
+    case 13:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1125,6 +1135,142 @@ extension UserPrefsModelQueryFilter
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualCwaDraftJsonEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzManualCwaDraftJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualCwaDraftJsonGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzManualCwaDraftJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualCwaDraftJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzManualCwaDraftJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualCwaDraftJsonBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzManualCwaDraftJson',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualCwaDraftJsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'zzManualCwaDraftJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualCwaDraftJsonEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'zzManualCwaDraftJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualCwaDraftJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'zzManualCwaDraftJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualCwaDraftJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'zzManualCwaDraftJson',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualCwaDraftJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzManualCwaDraftJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualCwaDraftJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'zzManualCwaDraftJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
       targetCwaEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -1367,6 +1513,20 @@ extension UserPrefsModelQuerySortBy
     });
   }
 
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByManualCwaDraftJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzManualCwaDraftJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByManualCwaDraftJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzManualCwaDraftJson', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy> sortByTargetCwa() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzTargetCwa', Sort.asc);
@@ -1563,6 +1723,20 @@ extension UserPrefsModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByManualCwaDraftJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzManualCwaDraftJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByManualCwaDraftJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzManualCwaDraftJson', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy> thenByTargetCwa() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzTargetCwa', Sort.asc);
@@ -1668,6 +1842,14 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByManualCwaDraftJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzManualCwaDraftJson',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByTargetCwa() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'zzTargetCwa');
@@ -1764,6 +1946,13 @@ extension UserPrefsModelQueryProperty
       activeSemesterKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'zzActiveSemesterKey');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, String, QQueryOperations>
+      manualCwaDraftJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzManualCwaDraftJson');
     });
   }
 

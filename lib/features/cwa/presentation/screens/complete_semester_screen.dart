@@ -5,6 +5,7 @@ import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
+import 'package:campusiq/features/cwa/data/repositories/past_result_repository.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
@@ -78,11 +79,14 @@ class _CompleteSemesterScreenState
       _showMessage('Your semester history is not ready yet. Please try again.');
       return;
     }
+    final replaceExisting = await _confirmReplaceExistingSemester(repo);
+    if (replaceExisting == null) return;
 
     setState(() => _isSaving = true);
     try {
       final completedSemester = PastSemesterModel.create(
         semesterLabel: formatActiveSemesterLabel(widget.currentSemesterKey),
+        semesterKey: widget.currentSemesterKey,
         courses: _courses
             .map(
               (course) => PastCourseEntry.create(
@@ -100,6 +104,7 @@ class _CompleteSemesterScreenState
         currentSemesterKey: widget.currentSemesterKey,
         nextSemesterKey: _nextSemester.key,
         archivedSemester: completedSemester,
+        replaceExistingSemester: replaceExisting,
       );
 
       if (!mounted) return;
@@ -144,11 +149,14 @@ class _CompleteSemesterScreenState
       _showMessage('Your semester history is not ready yet. Please try again.');
       return;
     }
+    final replaceExisting = await _confirmReplaceExistingSemester(repo);
+    if (replaceExisting == null) return;
 
     setState(() => _isSaving = true);
     try {
       final pendingSemester = PastSemesterModel.create(
         semesterLabel: formatActiveSemesterLabel(widget.currentSemesterKey),
+        semesterKey: widget.currentSemesterKey,
         isPendingResults: true,
         courses: _courses
             .map(
@@ -168,6 +176,7 @@ class _CompleteSemesterScreenState
         currentSemesterKey: widget.currentSemesterKey,
         nextSemesterKey: _nextSemester.key,
         archivedSemester: pendingSemester,
+        replaceExistingSemester: replaceExisting,
       );
 
       if (!mounted) return;
@@ -190,6 +199,26 @@ class _CompleteSemesterScreenState
         setState(() => _isSaving = false);
       }
     }
+  }
+
+  Future<bool?> _confirmReplaceExistingSemester(
+    PastResultRepository repo,
+  ) async {
+    final existing = await repo.findBySemesterKey(widget.currentSemesterKey);
+    if (existing == null) return false;
+    if (!mounted) return null;
+
+    final shouldReplace = await showCampusConfirmDialog(
+          context: context,
+          title: 'Replace existing semester?',
+          message:
+              'You already have results for "${existing.semesterLabel}". Replacing it prevents this semester from being counted twice.',
+          confirmLabel: 'Replace',
+          cancelLabel: 'Cancel',
+          destructive: true,
+        ) ??
+        false;
+    return shouldReplace ? true : null;
   }
 
   void _showMessage(String message) {

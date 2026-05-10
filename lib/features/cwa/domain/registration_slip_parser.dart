@@ -5,6 +5,16 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:campusiq/features/cwa/domain/registration_course_import.dart';
 
+class RegistrationSlipParseResult {
+  final List<RegistrationCourseImport> courses;
+  final int skippedCourseCount;
+
+  const RegistrationSlipParseResult({
+    required this.courses,
+    this.skippedCourseCount = 0,
+  });
+}
+
 /// Calls the OpenAI API with an image or PDF registration slip and returns
 /// the list of courses extracted from it.
 /// Pure Dart — no Flutter dependencies.
@@ -27,7 +37,7 @@ class RegistrationSlipParser {
   const RegistrationSlipParser({required this.apiKey, required this.model});
 
   /// [bytes] — raw file bytes. [mimeType] — "image/jpeg", "image/png", or "application/pdf".
-  Future<List<RegistrationCourseImport>> parse(
+  Future<RegistrationSlipParseResult> parse(
     Uint8List bytes,
     String mimeType,
   ) async {
@@ -106,16 +116,30 @@ class RegistrationSlipParser {
       final List<dynamic> jsonList = jsonDecode(cleaned) as List<dynamic>;
 
       final courses = <RegistrationCourseImport>[];
+      var skippedCourseCount = 0;
       for (final item in jsonList) {
         try {
-          courses.add(
-            RegistrationCourseImport.fromJson(item as Map<String, dynamic>),
+          if (item is! Map) {
+            skippedCourseCount++;
+            continue;
+          }
+          final course = RegistrationCourseImport.fromJson(
+            Map<String, dynamic>.from(item),
           );
+          if (course.courseCode.trim().isEmpty ||
+              course.courseName.trim().isEmpty) {
+            skippedCourseCount++;
+            continue;
+          }
+          courses.add(course);
         } catch (_) {
-          // Skip malformed entries.
+          skippedCourseCount++;
         }
       }
-      return courses;
+      return RegistrationSlipParseResult(
+        courses: courses,
+        skippedCourseCount: skippedCourseCount,
+      );
     } on TimeoutException {
       throw Exception(
         'Request timed out. Check your connection and try again.',
