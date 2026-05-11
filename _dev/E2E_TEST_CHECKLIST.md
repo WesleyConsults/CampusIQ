@@ -2,7 +2,7 @@
 
 Use this document to manually test the app as a real user would, from first launch through every major feature. Work through each section in order.
 
-**This checklist has been updated for the redesigned premium UI.** The app now uses a floating pill-shaped bottom nav (Home | CWA | Table | Sessions), a gold AI sparkles FAB, and a calm premium design system (deep navy, muted gold, soft off-white, Inter font, Lucide icons).
+**This checklist has been updated for the redesigned premium UI and CWA flow gap fixes (Phases 15.6–15.8).** The app now uses a floating pill-shaped bottom nav (Home | CWA | Table | Sessions), a gold AI sparkles FAB, a calm premium design system (deep navy, muted gold, soft off-white, Inter font, Lucide icons), and includes: Complete Semester flow, active semester picker, persisted target CWA, grade-first cumulative entry, GoRouter-based CWA import routes, duplicate semester detection, draft auto-save, an offline banner in the shell, and the what-if AI feature has been removed.
 
 Mark each item `[x]` as you confirm it works.
 
@@ -72,7 +72,13 @@ Mark each item `[x]` as you confirm it works.
 - [ ] From any bottom nav tab (Home, CWA, Table, Sessions), press system back — exits to phone launcher (expected)
 - [ ] No "back press" results in a blank screen
 
-### 2.5 Bottom nav content clearance
+### 2.5 Offline banner in shell
+- [ ] Turn on airplane mode → a grey "You are offline" banner appears at the top of every shell tab (Home, CWA, Table, Sessions)
+- [ ] Banner pushes shell content down cleanly — no overlap with AppBar
+- [ ] Turn off airplane mode → banner disappears, content returns to normal position
+- [ ] Banner does NOT appear on full-screen routes outside the shell (AI Chat, Course Hub, etc.)
+
+### 2.6 Bottom nav content clearance
 - [ ] Shell tabs render full height
 - [ ] Content on each tab scrolls fully above the floating bottom nav, AI FAB, and mini timer (when active)
 - [ ] No content permanently hidden behind the nav bar
@@ -182,6 +188,12 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Advice is relevant to your current courses and gap
 - [ ] Sheet dismisses on back/swipe
 
+### 4.8b What-If feature removal verification
+- [ ] Drag a course score slider away from its saved value → no "Explain" chip appears (what-if feature is removed)
+- [ ] The CWA recalculation still happens live as the slider moves
+- [ ] No what-if related UI elements visible anywhere on the CWA screen
+- [ ] AI Chat `/ai` still works normally (only `chat` quota, no `whatif` quota)
+
 ### 4.9 Cumulative mode
 - [ ] Switch to **Cumulative** mode
 - [ ] Cumulative CWA summary displayed
@@ -189,7 +201,39 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Total credits or history/trend context shown
 - [ ] Existing cumulative actions still work
 
-### 4.10 Bottom-nav / overflow
+### 4.10 Active semester picker
+- [ ] Tap the semester picker in the CWA AppBar — a sheet or dropdown opens showing academic year + semester options
+- [ ] Select a different semester — the course list rescopes to that semester
+- [ ] Newly selected semester persists across hot restart
+- [ ] Courses from semester A do not appear when semester B is selected
+- [ ] Default semester matches `UserPrefsModel.activeSemesterKey`
+
+### 4.11 Target CWA persistence
+- [ ] Set a target CWA (e.g. 75) via the target dialog
+- [ ] Kill the app and relaunch → target CWA is still 75 (not reset to 70)
+- [ ] Change target CWA → hero card gap indicator updates live
+
+### 4.12 Complete Semester flow
+- [ ] In Semester mode with courses present, a "Complete Semester" action is visible (AppBar or section action)
+- [ ] Tap "Complete Semester" → `CompleteSemesterScreen` opens (no bottom nav, no AI FAB)
+- [ ] All current courses are pre-filled in the grade-entry form (course code, name, credit hours carry forward)
+- [ ] Each course row shows a **grade dropdown** (A–F, colour-coded) — primary field
+- [ ] Each course row shows an optional **mark/score** input — secondary field
+- [ ] "Next Semester" preview shows the calculated next semester (e.g. "2025-Sem1" after "2024-Sem2")
+- [ ] Tap "Complete & Save" → confirmation dialog appears showing the target semester
+- [ ] Confirm → courses are saved as a `PastSemesterModel`, old `CourseModel` entries are cleared, `activeSemesterKey` advances
+- [ ] Cancel on confirmation dialog → no data changed, user stays on the Complete Semester screen
+- [ ] Back button on Complete Semester screen → returns to CWA without changes
+- [ ] After completing a semester, switch to Cumulative mode → the completed semester appears in history
+
+### 4.13 Semester progression card (Cumulative mode)
+- [ ] Switch to Cumulative mode with at least 2 past semesters
+- [ ] A semester progression card is visible showing chronological semester list
+- [ ] Each semester row shows: label, semester CWA, cumulative CWA after that semester
+- [ ] Delta indicators (↑/↓) show change from the previous semester
+- [ ] With only 1 past semester, no delta is shown (nothing to compare)
+
+### 4.14 Bottom-nav / overflow
 - [ ] Add Course not hidden behind nav
 - [ ] Lower CWA content scrolls fully above the floating bottom nav
 - [ ] No overflow on hero card or stats cards
@@ -208,60 +252,89 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Each row shows a clear icon
 - [ ] Swiping down or tapping outside dismisses the sheet safely
 
-### 5.2 Registration Slip Import (Semester mode)
+### 5.2 GoRouter-based import navigation
+- [ ] From CWA Semester mode, tap Import → Take Photo → navigates to `/cwa/import/registration?source=camera`
+- [ ] From CWA Cumulative mode, tap Import → Upload Image → navigates to `/cwa/import/results?source=gallery`
+- [ ] Press system back from any import screen → returns to CWA (not phone launcher)
+- [ ] From CWA, tap the history icon → navigates to `/cwa/history`
+- [ ] Press system back from Past Semesters History → returns to CWA
+- [ ] All three CWA routes (`/cwa/history`, `/cwa/import/registration`, `/cwa/import/results`) have no bottom nav and no AI FAB
+
+### 5.3 Registration Slip Import (Semester mode)
 - [ ] In **Semester** mode, tap **Import**
 - [ ] Tap **Take Photo**, **Upload Image**, or **Choose PDF**
 - [ ] `RegistrationSlipImportScreen` opens (no bottom nav, no AI FAB)
 - [ ] Cancel without selecting — returns to idle screen (no crash)
 - [ ] Select a valid registration slip image → loading state shows "AI is reading your slip…"
 - [ ] Review screen appears listing all extracted courses with checkboxes
-- [ ] Each course shows: course code, course name, credit hours (stepper, 1–6)
+- [ ] Each course shows: course code, course name, credit hours (stepper, 1–**12**)
+- [ ] **Expected score slider** is visible on each course row (default ~70, adjustable)
+- [ ] Adjust expected score on one course using the slider — value updates
 - [ ] Adjust credit hours on one course using the stepper — value updates
 - [ ] Deselect one course — it greys out
 - [ ] Tap **"Select all"** — all checkboxes re-tick
+- [ ] If AI skipped any malformed rows, a warning chip shows "N courses could not be parsed" with an "Add Manually" button
+- [ ] Tap "Add Manually" → a blank course row appears for manual fill-in
 - [ ] Tap **"Import N courses"** → saving overlay → Done screen
 - [ ] Done screen confirms count of courses added
 - [ ] Tap **Done** → returns to CWA screen
-- [ ] Imported courses are now visible in the CWA course list
+- [ ] Imported courses are now visible in the CWA course list with their reviewed expected scores
 - [ ] Back button at any step resets the flow and returns to CWA without crash
 
-### 5.3 Result Slip Import (Cumulative mode)
+### 5.4 Result Slip Import (Cumulative mode)
 - [ ] Switch to **Cumulative** mode
 - [ ] Tap **Import** → **Take Photo**, **Upload Image**, or **Choose PDF**
 - [ ] `ResultSlipImportScreen` opens
 - [ ] Select a valid result slip image → loading state
-- [ ] **Label step** appears — text field with placeholder "e.g. Year 1 Sem 1"
+- [ ] **Label step** appears — **semester name is auto-populated** from AI-parsed metadata if the slip had `reportedSemesterCwa`
 - [ ] Quick-pick chips shown (Year 1 Sem 1 … Year 4 Sem 2)
 - [ ] Tap **Continue to Review** → Review screen appears
 - [ ] Review screen shows: semester label, courses found count, CWA chips
-- [ ] Each course shows: code, name, mark input, grade dropdown, credit stepper
+- [ ] Each course shows: code, name, mark input, **grade dropdown** (A–F, colour-coded), credit stepper (1–12)
 - [ ] Grades are colour-coded (A=green, F=red, etc.)
+- [ ] If AI skipped any malformed rows, a warning chip shows "N courses could not be parsed"
 - [ ] Tap **"Import N courses"** → saving → Done screen
 - [ ] Tap Done → returns to CWA or PastSemestersScreen
 - [ ] Cumulative CWA on main CWA screen reflects the imported semester
 
-### 5.4 Manual Entry screen
+### 5.5 Duplicate semester detection
+- [ ] Import a result slip for a semester that already exists (same `semesterKey`)
+- [ ] A dialog appears: "This semester already exists. Replace it?"
+- [ ] Tap **Replace** → old record is overwritten, new data saved
+- [ ] Tap **Cancel** → import is cancelled, no duplicate created
+- [ ] Verify cumulative CWA does NOT double-count courses from the duplicate
+
+### 5.6 Manual Entry screen
 - [ ] From **Semester** mode, tap **Import** → **Enter Manually**
 - [ ] Full-screen `Enter Courses Manually` page opens
 - [ ] Bottom navigation is **not** visible
 - [ ] AI FAB is **not** visible
 - [ ] Segmented switcher shows **Semester** and **Cumulative**
 - [ ] Default mode matches the CWA mode before opening
+- [ ] In **Cumulative** mode, course rows show **grade dropdown** (A–F) as the primary field, with an optional mark input
 - [ ] Semester information card is visible
 - [ ] At least one course card is visible by default
 - [ ] Tap **Add Another Course** — a new course card appears
 - [ ] Tap **Remove Course** — that card disappears
 - [ ] Live Summary updates when course fields change
 
-### 5.5 Manual Entry validation
+### 5.7 Manual Entry — draft auto-save
+- [ ] Enter partial data (e.g. one course filled, one empty)
+- [ ] Kill the app (swipe away from recents) without saving
+- [ ] Reopen app → navigate to Manual Entry → the partial form is restored
+- [ ] Fill all fields and save → reopen Manual Entry → form is blank (draft was cleared on save)
+- [ ] The old "Draft saving is coming in a later phase" placeholder is no longer visible
+
+### 5.8 Manual Entry validation
 - [ ] Empty course code shows validation
 - [ ] Empty course title shows validation
 - [ ] Non-numeric or zero credits show validation
+- [ ] Credit hours above **12** show validation (cap raised from 6)
 - [ ] Non-numeric or out-of-range score shows validation
 - [ ] Duplicate course code shows a warning
 - [ ] Duplicate course code does not silently save duplicate data
 
-### 5.6 Manual Entry save / cancel
+### 5.9 Manual Entry save / cancel
 - [ ] Tap **Cancel** — returns safely to CWA
 - [ ] Tap **Back** with unsaved changes — discard confirmation appears
 - [ ] Discard confirmation behaves safely (cancel keeps editing, discard returns to CWA)
@@ -270,19 +343,20 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Newly saved courses appear in CWA course list
 - [ ] CWA refreshes immediately after save
 
-### 5.7 Manual Entry keyboard and scroll
+### 5.10 Manual Entry keyboard and scroll
 - [ ] Screen scrolls correctly on a small device
 - [ ] Opening the keyboard does not cover the active field or the bottom action area
 - [ ] Sticky `Cancel` and `Save Courses` actions remain usable on a small screen
 - [ ] No RenderFlex overflow while entering data
 
-### 5.8 Past Semesters management
+### 5.11 Past Semesters management
 - [ ] Semester card is collapsed by default — tap to expand
-- [ ] Each course row shows: code, name, mark field, credit stepper, grade dropdown — all editable inline
-- [ ] Edit a grade inline → CWA badge recalculates immediately
+- [ ] Each course row shows: code, name, mark field, credit stepper (1–12), grade dropdown — all editable inline
+- [ ] Edit a grade inline → CWA badge recalculates immediately (no need to leave the card)
 - [ ] Tap **delete icon** on semester card → confirmation dialog appears
 - [ ] Confirm delete → semester card disappears; cumulative CWA updates
 - [ ] Import a second past semester — both cards appear; cumulative CWA includes both
+- [ ] Past Semesters screen now opens via GoRouter (`/cwa/history`) — press back returns to CWA
 
 ---
 
@@ -712,10 +786,10 @@ Mark each item `[x]` as you confirm it works.
 | Section | Status | Notes |
 |---|---|---|
 | 1. Fresh Install / Launch | | |
-| 2. App Shell / Navigation | | |
+| 2. App Shell / Navigation (incl. offline banner) | | |
 | 3. Home Screen (Today) | | |
-| 4. CWA Screen | | |
-| 5. CWA Import / Manual Entry | | |
+| 4. CWA Screen (incl. Complete Semester, active semester picker, target persistence, progression card, what-if removal) | | |
+| 5. CWA Import / Manual Entry (incl. GoRouter routes, duplicate detection, draft saving, credit cap 12, parse warnings, auto-label, grade-first entry) | | |
 | 6. Table / Timetable | | |
 | 7. Sessions (Normal + Pomodoro) | | |
 | 8. AI Chat | | |

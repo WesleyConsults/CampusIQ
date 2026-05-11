@@ -1,14 +1,14 @@
 # CampusIQ — MVP Completion Report
 
-**Date:** 2026-05-05
+**Date:** 2026-05-10
 **Package:** com.wesleyconsults.campusiq
-**Status:** v1.0 Lean Build — UI Redesign & Release Polish Complete (Phases 1–8). Runtime device testing required before beta release.
+**Status:** v1.0 Lean Build — UI Redesign, CWA Flow Gap Fixes, Feature Cleanup & Pre-Release Audit Complete (Phases 1–8 + 15.6–15.8). Runtime device testing required before beta release.
 
 ---
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The v1.0 build covers: CWA Target Planner, Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes), Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, and Cumulative CWA with Past Result Slip Import. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the Course Hub Flashcards tab, the Course Hub Files tab, and the Course Hub per-course AI chat — all cut to reduce complexity and improve stability for launch.
+CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The v1.0 build covers: CWA Target Planner (semester + cumulative with complete-semester flow), Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes), Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, and Cumulative CWA with Past Result Slip Import. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the Course Hub Flashcards tab, the Course Hub Files tab, the Course Hub per-course AI chat, and the What-If AI feature — all cut to reduce complexity and improve stability for launch.
 
 ---
 
@@ -288,9 +288,10 @@ lib/
 │   ├── data/
 │   │   ├── models/user_prefs_model.dart          — single-row key/value Isar store
 │   │   ├── models/subscription_model.dart        — premium status + subscription details
+│   │   ├── isar_database.dart                    — Phase 15.8: centralised schema list + openCampusIqIsar()
 │   │   ├── repositories/user_prefs_repository.dart
 │   │   └── repositories/subscription_repository.dart
-│   ├── providers/isar_provider.dart               — singleton FutureProvider<Isar>
+│   ├── providers/isar_provider.dart               — singleton FutureProvider<Isar>; 15.8: delegates to isar_database.dart
 │   ├── providers/connectivity_provider.dart       — Phase 15.5: isOnlineProvider (FutureProvider<bool>)
 │   ├── providers/subscription_provider.dart       — isPremiumProvider
 │   ├── router/app_router.dart                     — GoRouter + ShellRoute; null-safe /course/:courseCode (15.5)
@@ -298,32 +299,32 @@ lib/
 │   ├── services/notification_service.dart         — centralized local notifications singleton
 │   └── theme/app_theme.dart                       — Material 3 + Inter
 ├── features/
-│   ├── cwa/                                       — Phase 1 + Phase 13 + Phase 15.3
+│   ├── cwa/                                       — Phase 1 + Phase 13 + Phase 15.3 + 15.6
 │   │   ├── data/models/course_model.dart
-│   │   ├── data/models/past_semester_model.dart   — Phase 15.3: @collection + embedded PastCourseEntry
+│   │   ├── data/models/past_semester_model.dart   — Phase 15.3: @collection + embedded PastCourseEntry; 15.6: +semesterKey
 │   │   ├── data/repositories/cwa_repository.dart
-│   │   ├── data/repositories/past_result_repository.dart — Phase 15.3: CRUD for past semesters
+│   │   ├── data/repositories/past_result_repository.dart — Phase 15.3: CRUD for past semesters; 15.6: duplicate detection
 │   │   ├── domain/cwa_calculator.dart             — Phase 15.3: +calculateCumulative(), +totalCredits()
 │   │   ├── domain/past_course_result.dart         — Phase 15.3: PastCourseResult value object
 │   │   ├── domain/registration_course_import.dart — Phase 15.3: RegistrationCourseImport value object
-│   │   ├── domain/registration_slip_parser.dart   — Phase 15.3: OpenAI vision → courses
-│   │   ├── domain/result_slip_parser.dart         — Phase 15.3: OpenAI vision → grades
+│   │   ├── domain/registration_slip_parser.dart   — Phase 15.3: OpenAI vision → courses; 15.6: +skipped-row counting
+│   │   ├── domain/result_slip_parser.dart         — Phase 15.3: OpenAI vision → grades; 15.6: +skipped-row counting
 │   │   └── presentation/
-│   │       ├── providers/cwa_provider.dart        — Phase 15.3: +cwaViewModeProvider, +pastSemestersProvider
-│   │       ├── providers/whatif_provider.dart     — Phase 13: WhatIfState + WhatIfNotifier
-│   │       ├── providers/registration_slip_import_provider.dart — Phase 15.3: slip import state machine
-│   │       ├── providers/result_slip_import_provider.dart       — Phase 15.3: result slip state machine
-│   │       ├── screens/cwa_screen.dart            — Phase 15.3: view mode toggle, scan icon
-│   │       ├── screens/registration_slip_import_screen.dart     — Phase 15.3: AI course import flow
-│   │       ├── screens/result_slip_import_screen.dart           — Phase 15.3: AI result import flow
-│   │       ├── screens/past_semesters_screen.dart               — Phase 15.3: result history list
+│   │       ├── providers/cwa_provider.dart        — Phase 15.3: +cwaViewModeProvider, +pastSemestersProvider; 15.6: +activeSemester persistence, +targetCwa persistence
+│   │       ├── providers/registration_slip_import_provider.dart — Phase 15.3: slip import state machine; 15.6: +editable scores
+│   │       ├── providers/result_slip_import_provider.dart       — Phase 15.3: result slip state machine; 15.6: +dedup, +auto-label
+│   │       ├── screens/cwa_screen.dart            — Phase 15.3: view mode toggle, scan icon; 15.6: +Complete Semester, +semester picker, +progression card, GoRouter nav
+│   │       ├── screens/complete_semester_screen.dart — Phase 15.6: projected courses → real results flow
+│   │       ├── screens/registration_slip_import_screen.dart     — Phase 15.3: AI course import flow; 15.6: +score sliders in review, +parse warnings
+│   │       ├── screens/result_slip_import_screen.dart           — Phase 15.3: AI result import flow; 15.6: +auto-label, +dedup prompt, +parse warnings
+│   │       ├── screens/cwa_manual_entry_screen.dart — Phase 15.6: +grade-first cumulative mode, +draft auto-save, +credit cap 12
+│   │       ├── screens/past_semesters_screen.dart               — Phase 15.3: result history list; 15.6: +inline grade editing, +immediate CWA recalc
 │   │       └── widgets/
-│   │           ├── add_course_sheet.dart
-│   │           ├── course_card.dart
+│   │           ├── active_semester_picker.dart    — Phase 15.6: configurable semester selector
+│   │           ├── add_course_sheet.dart          — 15.6: credit cap raised to 12
+│   │           ├── course_card.dart               — 15.7: what-if explain chip removed
 │   │           ├── cwa_coach_sheet.dart           — Phase 13: AI CWA coach bottom sheet
-│   │           ├── cwa_summary_bar.dart           — hero CWA display (semester + cumulative)
-│   │           ├── whatif_explain_chip.dart       — Phase 13: AI explanation chip
-│   │           └── whatif_result_card.dart        — Phase 13: what-if result display
+│   │           └── cwa_summary_bar.dart           — hero CWA display (semester + cumulative); 15.6: +cumulative progression
 │   ├── timetable/                                 — Phase 2 + redesign
 │   │   ├── data/models/timetable_slot_model.dart
 │   │   ├── data/repositories/timetable_repository.dart
@@ -429,7 +430,6 @@ lib/
 │       │   ├── deepseek_client.dart
 │       │   ├── deepseek_exception.dart
 │       │   ├── exam_prep_models.dart              — Phase 14: MCQ/ShortAnswer/Flashcard types
-│       │   ├── latex_sanitizer.dart               — strips LaTeX from plain-text AI surfaces (CWA coach)
 │       │   ├── notification_scheduler.dart        — Phase 14: schedules smart alerts
 │       │   └── prompt_templates.dart              — AI rendering fix: updated system prompt with markdown + $...$ math rules
 │       └── presentation/
@@ -462,12 +462,10 @@ lib/
 │               ├── study_plan_tab.dart            — Phase 15
 │               ├── usage_counter_chip.dart
 │               └── weekly_review_banner.dart      — Phase 15: banner in AI tab
-│   └── course_hub/                                — Phase 15.1 + 15.4
+│   └── course_hub/                                — Phase 15.1 + 15.4 + 15.7
 │       ├── data/
 │       │   ├── models/course_note_model.dart      — Isar @collection: notes per course
 │       │   └── repositories/course_note_repository.dart
-│       ├── domain/
-│       │   └── course_hub_context_builder.dart    — pure Dart context summary builder for course-scoped stats
 │       └── presentation/
 │           ├── providers/
 │           │   └── course_note_provider.dart      — @riverpod Stream family per courseCode
@@ -503,6 +501,9 @@ lib/
 | `/course/:courseCode` | Course Hub Workspace (3-tab: Overview, Sessions, Notes) | 15.1 + redesign |
 | `/timetable/import` | Timetable Image Import (full-screen, no bottom nav) | 15.2 |
 | `/cwa/manual-entry` | Manual Course Entry (full-screen, no bottom nav) | redesign |
+| `/cwa/history` | Past Semesters History (full-screen, no bottom nav) | 15.6 |
+| `/cwa/import/registration` | Registration Slip Import (full-screen, no bottom nav) | 15.6 |
+| `/cwa/import/results` | Result Slip Import (full-screen, no bottom nav) | 15.6 |
 
 Navigation uses a `ShellRoute` with a 4-destination floating pill-shaped bottom nav bar: Home, CWA, Table, Sessions. Tab switches use `context.go()`; drill-down screens (AI Chat, Streak, Insights, Settings, Course Hub, etc.) use `context.push()` for proper back-button behaviour. The floating mini-timer and gold AI Assistant FAB are rendered inside `_AppShell` and persist across all tab switches. Shell tabs render at full height and use in-page trailing overlay clearance so content scrolls above the nav/FAB/timer stack cleanly. Full-screen routes intentionally do not show the bottom nav or AI FAB.
 
@@ -892,6 +893,188 @@ Navigation uses a `ShellRoute` with a 4-destination floating pill-shaped bottom 
 
 ---
 
+### Phase 15.6 — CWA Flow Gap Fixes
+
+**No new Isar collections. No new routes beyond gap remediation.** All changes address real CWA feature gaps discovered during flow-through testing. Twelve gaps were identified, documented in `_dev/CWA_FLOW_GAPS.md`, and systematically fixed.
+
+#### Gap 1 — Active semester is no longer hardcoded
+
+`activeSemesterProvider` previously returned the hardcoded string `"2024-Sem2"`. The current semester is now persisted in `UserPrefsModel.activeSemesterKey` and surfaced through an `ActiveSemesterPicker` widget accessible from the CWA screen. Changing the active semester instantly rescopes the course list, timetable, and semester-mode CWA display.
+
+**New files:** `presentation/widgets/active_semester_picker.dart`
+
+**Modified files:** `cwa_provider.dart` (reads `userPrefs.activeSemesterKey`), `cwa_screen.dart` (picker UI in AppBar), `user_prefs_model.dart` (new `activeSemesterKey` field), `user_prefs_repository.dart` (persist/read)
+
+#### Gap 2 — Target CWA persisted across launches
+
+`targetCwaProvider` previously defaulted to `70.0` in memory only. It now reads from and writes to `UserPrefsModel.targetCwa`. The user's target survives app restarts.
+
+**Modified files:** `cwa_provider.dart` (reads/writes `userPrefs.targetCwa`), `user_prefs_model.dart` (new `targetCwa` field)
+
+#### Gap 3 — Complete Semester flow
+
+A new `CompleteSemesterScreen` bridges the gap between projected courses and real results. When a semester ends, the student taps "Complete Semester" from the CWA screen. All current `CourseModel` entries are pre-filled into a grade-entry form — course codes, names, and credit hours carry forward automatically. The student enters real grades (dropdown: A–F) and optional exact marks. On save, a `PastSemesterModel` is created, the old course entries are deleted, and `activeSemesterKey` advances to the next semester. A confirmation dialog with a semester-picker guards the irreversible clear action.
+
+**New files:** `presentation/screens/complete_semester_screen.dart` (~870 lines)
+
+**Modified files:** `cwa_screen.dart` (Complete Semester action), `cwa_provider.dart` (clearAndAdvance logic), `past_result_repository.dart` (save from completion flow)
+
+#### Gap 4 — Consistent semester identification
+
+`PastSemesterModel` gained a `semesterKey` field (e.g. `"2024-Sem2"`) that matches `CourseModel.semesterKey`. This enables cross-referencing between active and past semesters — the cumulative view can now identify when a past record corresponds to the current working semester, preventing double-counting.
+
+**Modified files:** `past_semester_model.dart` (new `semesterKey` field), `result_slip_import_provider.dart` (auto-sets `semesterKey`), `past_result_repository.dart` (duplicate detection by key)
+
+#### Gap 5 — Grade-first entry in cumulative mode
+
+Manual entry in cumulative mode now presents a **grade dropdown** (A–F, colour-coded) as the primary field. The exact mark/score is an optional secondary field. This matches the real-world scenario: students know their letter grade from a result slip, not necessarily the exact percentage.
+
+**Modified files:** `cwa_manual_entry_screen.dart` (grade dropdown + optional mark in cumulative mode)
+
+#### Gap 6 — Duplicate semester detection
+
+The cumulative result-slip import flow now checks for an existing `PastSemesterModel` with the same `semesterKey`. If found, the user is prompted to replace the existing record or cancel — they cannot silently create a duplicate that would double-count courses in the cumulative CWA.
+
+**Modified files:** `past_result_repository.dart` (semesterKey dedup check), `result_slip_import_provider.dart` (replace-or-cancel UI)
+
+#### Gap 7 — Draft saving for manual entry
+
+The manual entry screen now auto-saves form state as JSON to `UserPrefsModel.manualCwaDraftJson` whenever the user makes a change. On next open, the draft is automatically restored. The draft is cleared on successful save. The stub "Draft saving is coming in a later phase" placeholder is removed.
+
+**Modified files:** `cwa_manual_entry_screen.dart` (auto-save/restore draft), `user_prefs_model.dart` (new `manualCwaDraftJson` field), `user_prefs_repository.dart` (draft helpers)
+
+#### Gap 8 — Import screens registered as GoRouter routes
+
+`PastSemestersScreen`, `RegistrationSlipImportScreen`, and `ResultSlipImportScreen` were previously pushed via raw `Navigator.push(MaterialPageRoute(...))`. They are now registered as named GoRouter routes — `/cwa/history`, `/cwa/import/registration`, and `/cwa/import/results` — and navigated with `context.pushNamed()`. This enables deep linking and consistent back-button behaviour.
+
+**Modified files:** `app_router.dart` (3 new named routes), `cwa_screen.dart` (uses `context.pushNamed()`), `past_semesters_screen.dart` (removed raw Navigator references)
+
+#### Gap 9 — Editable expected scores on import review
+
+The registration slip import review screen now exposes an **expected score slider** on each course row before saving. Imported courses no longer all default to 70 — the student can set each course's expected score during review. The hardcoded `70.0` at save time is replaced with the reviewed value.
+
+**Modified files:** `registration_slip_import_provider.dart` (editable expected scores), `registration_slip_import_screen.dart` (score slider in review)
+
+#### Gap 10 — Credit hour cap raised from 6 to 12
+
+The universal credit-hour clamp of 1–6 was raised to 1–12 across all entry points: `AddCourseSheet`, `CwaManualEntryScreen`, `PastSemestersScreen` inline editing, and both import review screens. This accommodates project work, industrial attachment, and other high-credit courses.
+
+**Modified files:** `add_course_sheet.dart`, `cwa_manual_entry_screen.dart`, `past_semesters_screen.dart`, `registration_slip_import_screen.dart`, `result_slip_import_screen.dart`
+
+#### Gap 11 — Visible parse-failure warnings
+
+Malformed entries from AI vision parsing are no longer silently dropped. Both `RegistrationSlipParser` and `ResultSlipParser` now count skipped rows. The import review screen shows a warning chip — "N courses could not be parsed" — and offers an "Add Manually" button so the student can enter missing courses before saving.
+
+**Modified files:** `registration_slip_parser.dart` (counts skipped rows), `result_slip_parser.dart` (counts skipped rows), `registration_slip_import_screen.dart` (warning chip + add-manually), `result_slip_import_screen.dart` (warning chip + add-manually)
+
+#### Gap 12 — Semester progression card in cumulative view
+
+The cumulative CWA view now includes a semester progression card. It lists all past semesters in chronological order with: semester CWA, cumulative CWA after that semester, and a delta indicator (↑/↓) showing change from the previous semester. This gives students a clear academic trend line without adding a chart dependency.
+
+**Modified files:** `cwa_screen.dart` (progression card in cumulative mode), `cwa_summary_bar.dart` (extended cumulative display)
+
+#### Additional CWA improvements
+
+| Change | Description |
+|---|---|
+| Result slip labelling auto-populated | The label step in result slip import now pre-fills the semester name from AI-parsed metadata (`reportedSemesterCwa` / `reportedCumulativeCwa` from the slip image), reducing manual typing |
+| "Update Results" UX improved | The `PastSemestersScreen` inline editing is now more responsive — grade/mark changes show an immediate CWA recalc badge without needing to leave the card |
+| Hardcoded programme list fixed | Programme pickers now load from a data list rather than a hardcoded inline set; new programmes can be added by updating one source |
+
+**New files (Phase 15.6):** `presentation/screens/complete_semester_screen.dart`, `presentation/widgets/active_semester_picker.dart`
+
+**Modified files (Phase 15.6):** `cwa_provider.dart`, `cwa_screen.dart`, `cwa_summary_bar.dart`, `cwa_manual_entry_screen.dart`, `past_semesters_screen.dart`, `registration_slip_import_screen.dart`, `result_slip_import_screen.dart`, `registration_slip_import_provider.dart`, `result_slip_import_provider.dart`, `registration_slip_parser.dart`, `result_slip_parser.dart`, `add_course_sheet.dart`, `app_router.dart`, `user_prefs_model.dart`, `user_prefs_repository.dart`, `past_semester_model.dart`, `past_result_repository.dart`
+
+---
+
+### Phase 15.7 — Dead Feature Removal & Code Cleanup
+
+**Three feature areas removed** to reduce binary size, eliminate unused code paths, and simplify the pre-release audit surface.
+
+#### What-If AI feature removed
+
+The What-If explainer (Phase 13) was a bottom-sheet AI feature that explained how adjusting a single course score would affect the student's CWA. It was rarely discoverable, added complexity to the course card UI (explain chip that appeared on slider drag), and carried its own AI usage quota key (`whatif`). All related files deleted:
+
+| File | Lines |
+|---|---|
+| `presentation/providers/whatif_provider.dart` | 141 |
+| `presentation/widgets/whatif_explain_chip.dart` | 64 |
+| `presentation/widgets/whatif_result_card.dart` | 59 |
+
+The `whatif` quota key was removed from `AiUsageModel`. The "Explain" chip on course cards was removed — dragging the score slider now simply shows the live CWA recalculation without an AI call.
+
+#### LaTeX sanitizer removed
+
+`latex_sanitizer.dart` (307 lines) was a utility that stripped LaTeX markup from AI responses before display in non-math surfaces (e.g., CWA coach sheet). It is no longer needed — the AI system prompt already instructs the model to use `$...$` / `$$...$$` exclusively, and the chat bubble renders these natively via `Math.tex()`. Coach sheet text is now shown through the same markdown pipeline, which handles math correctly.
+
+#### Course Hub context builder removed
+
+`course_hub_context_builder.dart` (59 lines) was a pure Dart context summary builder for course-scoped AI. With the per-course AI chat tab removed in Phase 15.4, this utility was orphaned — nothing called it.
+
+#### AI usage model cleanup
+
+`AiUsageModel` quota keys simplified from `[chat, whatif]` to `[chat]` only. The `whatif` quota tracking fields and methods removed.
+
+**Deleted files (Phase 15.7):**
+- `lib/features/cwa/presentation/providers/whatif_provider.dart`
+- `lib/features/cwa/presentation/widgets/whatif_explain_chip.dart`
+- `lib/features/cwa/presentation/widgets/whatif_result_card.dart`
+- `lib/features/ai/domain/latex_sanitizer.dart`
+- `lib/features/course_hub/domain/course_hub_context_builder.dart`
+
+**Modified files (Phase 15.7):** `course_card.dart` (removed explain chip), `ai_usage_model.dart` (removed whatif quota), `context_builder.dart` (removed whatif references)
+
+---
+
+### Phase 15.8 — Pre-Release Audit & Production Polish
+
+**28 audit items fixed.** No new features. All changes harden existing code against data loss, silent failures, and poor UX states.
+
+#### Architecture improvements
+
+| Change | Description |
+|---|---|
+| `isar_database.dart` extracted | Centralised Isar schema list (`kCampusIqIsarSchemas`) and `openCampusIqIsar()` function extracted from `isar_provider.dart` into a dedicated file. Makes schema registration explicit and auditable in one place. |
+| Offline banner in shell | `OfflineBanner` moved from per-screen usage into `_AppShell` — a single `Positioned` banner at the top of every shell tab when offline. No per-screen wiring needed. Uses `isOnlineProvider` reactively. |
+| Shell watches connectivity | `_AppShell` now watches `isOnlineProvider` and adjusts layout (banner offset, nav inset) when connectivity changes. |
+
+#### Data-loss guards
+
+| Change | Description |
+|---|---|
+| Complete Semester confirmation | The "Complete Semester" action shows a confirmation dialog with the target semester displayed. The course deletion + past-semester creation is wrapped in a single Isar `writeTxn` — either both succeed or neither does. |
+| Draft auto-save | Manual entry form state is persisted to `UserPrefsModel.manualCwaDraftJson` on every change. If the app is killed mid-entry, the draft is restored on next open. |
+| Duplicate semester guard | Importing a result slip for a semester that already exists prompts replace-or-cancel. Double-saving is impossible. |
+| Delete confirmations hardened | All destructive actions (delete course, delete session, delete note, delete timetable slot, delete past semester) show confirmation dialogs with clear consequences. No silent deletes. |
+
+#### Error state coverage
+
+| Change | Description |
+|---|---|
+| AI chat error recovery | `AiChatProvider` now catches and surfaces `DeepSeekException` with retry action. No silent spinner on API failure. |
+| Import flow error messages | All 3 import state machines (timetable, registration slip, result slip) show specific, human-readable error messages for each failure mode: no internet, oversized image, empty parse, API timeout, truncation. |
+| Isar open failure | `openCampusIqIsar()` catches Isar open failures with a logged stack trace and re-throws — the app shows a meaningful error instead of a null-dereference crash. |
+
+#### Dead code & polish
+
+| Change | Description |
+|---|---|
+| Unused imports removed | Across ~15 files |
+| Stale route references cleaned | `/today` alias removed from `_locationToIndex` |
+| Plan generator hardened | Malformed study plan time values caught with safe fallbacks instead of crashing the Home screen |
+| Streak calculator edge case | Fixed off-by-one in streak calculator for sessions logged exactly at midnight |
+| Session screen pause/resume | Session screen polished with improved layout and pause support refinements |
+| Timetable slot card | Refined card styling for better readability at small sizes |
+| Day selector polish | Day selector pills refined for consistent tap targets |
+| Course card polish | Compact course cards with improved score slider and grade chip layout |
+| Milestone grid | Fixed milestone grid layout for small screens |
+
+**New files (Phase 15.8):** `lib/core/data/isar_database.dart`
+
+**Modified files (Phase 15.8):** `isar_provider.dart`, `app_router.dart`, `plan_generator.dart`, `plan_screen.dart`, `session_screen.dart`, `timetable_screen.dart`, `timetable_slot_card.dart`, `day_selector.dart`, `course_card.dart`, `milestone_grid.dart`, `streak_calculator.dart`, `ai_chat_provider.dart`, `ai_chat_screen.dart`, `weekly_review_screen.dart`, `add_manual_task_sheet.dart`, `add_slot_sheet.dart`, `class_timetable_grid.dart`, `free_block_indicator.dart`, `settings_screen.dart`, plus ~10 more files (unused-import cleanup)
+
+---
+
 ## Isar Collections (full list)
 
 | Collection | Feature | Phase | Purpose |
@@ -900,10 +1083,10 @@ Navigation uses a `ShellRoute` with a 4-destination floating pill-shaped bottom 
 | `TimetableSlotModel` | Timetable | 2 | Official class slots |
 | ~~`PersonalSlotModel`~~ | ~~Timetable~~ | ~~3~~ | **Removed in v1.0** |
 | `StudySessionModel` | Sessions | 4 | Completed study session records |
-| `UserPrefsModel` | Core / Streak | 5 | Single-row key/value persistent flags (attended days, notification prefs, reflection notes, daily goal) |
+| `UserPrefsModel` | Core / Streak | 5 | Single-row key/value persistent flags (attended days, notification prefs, reflection notes, daily goal). 15.6: +activeSemesterKey, +targetCwa, +manualCwaDraftJson |
 | `AiMessageModel` | AI Chat | 12 | Individual user/assistant chat messages |
 | `AiChatSessionModel` | AI Chat | 12 | Individual chat session containers; `courseCode` field added in 15.1 |
-| `AiUsageModel` | AI Limits | 12 | Tracks daily usage and limits per quota type |
+| `AiUsageModel` | AI Limits | 12 | Tracks daily usage and limits per quota type; 15.7: whatif quota removed, chat-only now |
 | `SubscriptionModel` | Payments | 12 | Tracks premium status and subscription details |
 | `StudyPlanModel` | AI Planner | 15 | Container for AI-generated study plans |
 | `StudyPlanSlotModel` | AI Planner | 15 | Individual tasks/slots within a study plan |
@@ -911,7 +1094,7 @@ Navigation uses a `ShellRoute` with a 4-destination floating pill-shaped bottom 
 | `DailyPlanTaskModel` | Daily Plan | 15 | Daily tasks and checklist items with completion state |
 | ~~`ExamModel`~~ | ~~Exam Mode~~ | ~~15~~ | **Removed in v1.0** |
 | `CourseNoteModel` | Course Hub | 15.1 | Per-course markdown notes |
-| `PastSemesterModel` | CWA | 15.3 | Past semester results |
+| `PastSemesterModel` | CWA | 15.3 | Past semester results; 15.6: +semesterKey for dedup and cross-ref with CourseModel |
 
 ---
 
@@ -1055,10 +1238,25 @@ flutter run
 | UI redesign v1 | `ui redesign v1 done` |
 | Home tab | `home screen added to navbar` |
 | Nav fix | `fix: use push() for detail screen navigation so back button returns to previous screen` |
+| Home/CWA simplify | `Simplify home and CWA screens` |
+| Home/CWA compact | `refactor: compact home page hero and pulse cards` / `refactor: compact cwa screen cards and spacing` |
+| Sessions compact | `refactor: compact sessions progress card` |
+| Today refine | `Refine Today dashboard layout` |
+| CWA card polish | `Polish CWA dashboard cards` |
+| Timetable/Sessions polish | `Polish timetable and sessions layout` |
+| Pre-launch checklist | `Add pre-launch checklist` |
+| CWA gap docs | `Document gaps found in CWA feature flow` |
+| Semester completion | `Improve CWA semester completion flow` |
+| Result slip auto-label | `Auto-populate result slip labelling screen from AI-parsed metadata` |
+| CWA flow gap fixes | `Complete CWA flow gap fixes` |
+| What-if removal | `Remove dead what-if AI feature, fix hardcoded programme list, and improve "Update Results" UX` |
+| Pre-release audit | `Fix 28 pre-release audit items: data-loss guards, error states, dead code, and polish` |
 
 ---
 
-## What Comes Next (Post-Redesign)
+## What Comes Next (Post Pre-Release Audit)
+
+The codebase is now stabilised. CWA flow gaps are closed, dead features are removed, and production hardening (error states, data-loss guards, Isar write safety) is complete. The next phase is Play Store preparation.
 
 ### Immediate — Before Beta Release
 
@@ -1066,7 +1264,7 @@ flutter run
 |---|---|
 | **Build APK** | `flutter build apk --debug` or `--release` |
 | **Install on real device** | Physical Android device (not just emulator) |
-| **Run updated E2E test checklist** | `_dev/E2E_TEST_CHECKLIST.md` — work through all 13 sections |
+| **Run updated E2E test checklist** | `_dev/E2E_TEST_CHECKLIST.md` — work through all sections including new CWA flow tests |
 | **Send APK to friend/tester** | Collect fresh-eyes feedback on UX, bugs, and performance |
 | **Fix critical issues** | Any crash, major overflow, or broken flow found during device testing |
 
@@ -1075,9 +1273,10 @@ flutter run
 | Feature | Notes |
 |---|---|
 | **Phase 16 — Play Store Release** | App signing (`upload-keystore.jks`), `build.gradle` production config (minify, shrink, version codes), store listing assets (screenshots, icon, short description, privacy policy URL) |
-| Onboarding flow | University + programme picker, initial target CWA setup |
-| Semester switcher | Archive/restore courses and timetable per semester |
-| Premium payment integration | Replace `SubscribeScreenStub` with real in-app purchase flow |
+| **Vercel API Proxy** | Move API keys off-device; add rate limiting; update DeepSeek client endpoints (see `_dev/PRE_LAUNCH_CHECKLIST.md` for full 27-item checklist) |
+| Onboarding flow | University + programme picker, initial target CWA setup (5 screens — see pre-launch checklist) |
+| Premium payment integration | Replace `SubscribeScreenStub` with RevenueCat-powered paywall |
+| Sentry + PostHog | Crash logging and analytics (see pre-launch checklist items 2–3) |
 
 ### Longer-term
 

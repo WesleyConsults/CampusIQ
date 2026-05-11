@@ -1,4 +1,4 @@
-# CampusIQ Project Context (v1.0 Lean + UI Redesign Complete)
+# CampusIQ Project Context (v1.0 Lean — UI Redesign, CWA Gap Fixes & Pre-Release Audit Complete)
 
 This document provides a concise technical overview of CampusIQ for AI agents and developers.
 
@@ -20,7 +20,7 @@ Strict three-layer structure per feature:
 - `presentation/`: Riverpod providers, screens, and widgets.
 
 ## 4. Core Features (v1.0)
-1.  **CWA Planner:** Manual entry + registration slip import (AI Vision). Supports Semester and Cumulative tracking.
+1.  **CWA Planner:** Manual entry + registration slip import (AI Vision). Supports Semester and Cumulative tracking. Includes Complete Semester flow, active semester picker, persisted target CWA, grade-first cumulative entry, duplicate semester detection, draft auto-save, and semester progression view.
 2.  **Timetable:** Single-layer class grid with a compact day summary, full-page daily timeline, image import (AI Vision), and free-time detection.
 3.  **Study Sessions:** Count-up (Normal) and Count-down (Pomodoro) timers. Tracks focus time only.
 4.  **Course Hub:** Per-course workspace with Overview, Sessions, and Notes only.
@@ -29,20 +29,25 @@ Strict three-layer structure per feature:
 7.  **Streak System:** Daily study and attendance tracking with milestone rewards.
 
 ## 5. Key Data Models (Isar)
-- `CourseModel`: CWA courses, credits, scores.
+- `CourseModel`: CWA courses, credits, scores. Keyed by `semesterKey` string (e.g. `"2024-Sem2"`).
 - `TimetableSlotModel`: Class times, venues, types.
 - `StudySessionModel`: Session logs (duration, course, type).
-- `UserPrefsModel`: Global flags (streak, notifications, attendance).
+- `UserPrefsModel`: Global flags (streak, notifications, attendance). Also stores `activeSemesterKey`, `targetCwa`, and `manualCwaDraftJson` (Phase 15.6).
 - `CourseNoteModel`: Course-specific notes.
 - `AiMessageModel` / `AiChatSessionModel`: Chat history.
 - `DailyPlanTaskModel`: Generated tasks for the current day.
-- `PastSemesterModel`: Archived result data for cumulative CWA.
+- `PastSemesterModel`: Archived result data for cumulative CWA. Has `semesterKey` for cross-referencing with `CourseModel` and duplicate detection (Phase 15.6).
 
 ## 6. Critical Implementation Notes
 - **Timer Logic:** Stores a `DateTime` anchor (`startTime`). Elapsed time is `now.difference(startTime)` to survive app pauses.
 - **AI Context:** Uses a `ContextBuilder` to inject academic stats, notes, and session history into system prompts for personalized coaching.
-- **Course Hub Scope:** Course Hub Files and per-course AI chat were removed from the launch build and deferred to a later version.
-- **Lean Build:** Personal Timetable, Exam Mode, Exam Prep Generator, Course Hub Files, and Course Hub AI chat were removed in v1.0 to prioritize stability.
+- **Course Hub Scope:** Course Hub Files, per-course AI chat, and the Course Hub context builder were removed from the launch build and deferred to a later version.
+- **Lean Build:** Personal Timetable, Exam Mode, Exam Prep Generator, Course Hub Files, Course Hub AI chat, and the What-If AI feature were removed in v1.0 to prioritize stability.
+- **Isar Database:** Schema registration is centralized in `lib/core/data/isar_database.dart` (`kCampusIqIsarSchemas` list + `openCampusIqIsar()`). `isar_provider.dart` delegates to this.
+- **CWA Semester Model:** `CourseModel` and `PastSemesterModel` share a common `semesterKey` format. The active semester is persisted in `UserPrefsModel.activeSemesterKey`. A Complete Semester flow bridges projected courses → real results.
+- **Offline Banner:** The `OfflineBanner` is rendered once inside `_AppShell` via `isOnlineProvider` — it appears on all shell tabs when offline.
+- **Credit Hours Cap:** Raised from 6 to 12 across all entry points to accommodate project work and industrial attachment courses.
+- **CWA Draft Auto-Save:** Manual entry form state is persisted to `UserPrefsModel.manualCwaDraftJson` on every change and restored on next open.
 
 ## 7. UI Structure & Navigation
 ### App shell
@@ -53,11 +58,12 @@ Strict three-layer structure per feature:
 - The AI FAB opens the main AI chat at `/ai` from anywhere inside the shell.
 - Shell tabs now render full height behind the floating nav instead of being permanently clipped above it.
 - Each shell tab is responsible for its own trailing bottom clearance so lower content can scroll above the bottom nav, AI FAB, and active-session mini timer without leaving a persistent dead band.
-- Full-screen routes outside the shell intentionally do not show the bottom nav or shell AI FAB.
+- An `OfflineBanner` is rendered as a `Positioned` widget at the top of `_AppShell` when `isOnlineProvider` reports offline. It pushes shell content down by `AppSpacing.xxl + 4` when visible.
+- Full-screen routes outside the shell intentionally do not show the bottom nav, shell AI FAB, or shell offline banner.
 
 ### Main top-level screens a user can reach
 - `Today` at `/plan`: the daily hub and main landing screen. Internally still the Plan route, but user-facing copy should prefer `Today`.
-- `CWA` at `/cwa`: course management, target planning, import bottom sheet, semester/cumulative toggle, and workspace entry point.
+- `CWA` at `/cwa`: course management, target planning (persisted), active semester picker, import bottom sheet, semester/cumulative toggle, Complete Semester flow, semester progression card, and workspace entry point.
 - `Timetable` at `/timetable`: class timetable with compact day summary, calmer slot/free-block styling, slot detail sheet, timetable import entry point, and workspace entry point.
 - `Sessions` at `/sessions`: timer, analytics, plan-related surfaces, and workspace entry point from course breakdown.
 - `AI Chat` at `/ai`: global AI assistant only.
@@ -122,20 +128,28 @@ Strict three-layer structure per feature:
   - `Upload Image`
   - `Choose PDF`
   - `Enter Manually`
-- Import options reuse the existing registration-slip and result-slip import flows instead of introducing a second import system.
+- `Take Photo` / `Upload Image` / `Choose PDF` → navigates to GoRouter named routes:
+  - `/cwa/import/registration?source=camera|gallery|pdf` (Semester mode)
+  - `/cwa/import/results?source=camera|gallery|pdf` (Cumulative mode)
+- `PastSemestersScreen` is now at `/cwa/history` (GoRouter named route), accessed via the history icon in CWA AppBar.
+- These import screens no longer use raw `Navigator.push` — they are proper GoRouter routes with deep-link support.
 - `Enter Manually` opens `/cwa/manual-entry?mode=semester|cumulative`, a dedicated full-screen form outside the shell.
 - `/cwa/manual-entry` intentionally does not show the bottom nav or shell AI FAB.
 - The manual-entry screen supports both `Semester` and `Cumulative` modes, defaulting from the currently selected CWA mode.
+- In `Cumulative` mode, manual entry uses **grade dropdown** (A–F, colour-coded) as the primary field, with an optional mark/score input.
 - The manual-entry screen includes:
   - semester-information dropdowns
   - repeatable course cards
   - live summary updates
   - duplicate course-code warning
+  - **draft auto-save** — form state persists to `UserPrefsModel.manualCwaDraftJson` and restores on next open
   - sticky `Cancel` and `Save Courses` actions
   - unsaved-changes protection on back/cancel
 - Saving reuses the existing CWA persistence stack:
   - `CourseModel` / `CwaRepository` for semester mode
   - `PastSemesterModel` / `PastResultRepository` for cumulative mode
+- The **Complete Semester** flow (accessible from CWA Semester mode) pre-fills all current courses into a grade-entry form, creates a `PastSemesterModel` on save, clears the old `CourseModel` entries, and advances `activeSemesterKey`.
+- Credit hour inputs are capped at **12** (raised from 6) across all CWA entry points.
 - `Timetable` can open `/timetable/import` from the scanner action.
 - `AI Chat` and some other screens can open `Settings` from AppBar actions where present.
 - `Weekly Review` is accessed from the global AI area, not from Course Hub.
@@ -165,7 +179,7 @@ Strict three-layer structure per feature:
 - Any new drill-down screen must use `context.push()` to ensure proper back-button behaviour.
 
 ## 8. Key File Locations
-- `lib/core/`: Providers (Isar, connectivity, notification), Router, and Theme.
+- `lib/core/`: Providers (Isar, connectivity, notification), Router, Theme, and centralised Isar schema (`lib/core/data/isar_database.dart`).
 - `lib/features/`: Feature-specific code.
 - `lib/shared/`: Reusable widgets and extensions.
-- `_dev/`: Documentation (MVP report, E2E checklist).
+- `_dev/`: Documentation (MVP report, E2E checklist, CWA flow gaps, pre-launch checklist, project context).
