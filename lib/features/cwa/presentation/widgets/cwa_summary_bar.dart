@@ -47,8 +47,9 @@ class CwaSummaryBar extends StatelessWidget {
     final insight = _buildInsight(isOnTrack);
     final horizontalPadding = compact ? AppSpacing.sm2 : AppSpacing.md;
     final topPadding = compact ? AppSpacing.sm2 : AppSpacing.md;
-    final bottomPadding = compact ? AppSpacing.xs : AppSpacing.sm;
+    final bottomPadding = compact ? AppSpacing.sm2 : AppSpacing.sm;
     final heroSpacing = compact ? AppSpacing.xxs : AppSpacing.sm;
+    final shouldCenterContent = compact && !showInsight;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -67,6 +68,9 @@ class CwaSummaryBar extends StatelessWidget {
         boxShadow: AppShadows.card,
       ),
       child: Column(
+        mainAxisAlignment: shouldCenterContent
+            ? MainAxisAlignment.center
+            : MainAxisAlignment.start,
         crossAxisAlignment:
             centerHero ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         children: [
