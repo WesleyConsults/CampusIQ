@@ -13,7 +13,6 @@ import 'package:campusiq/features/cwa/presentation/widgets/cwa_summary_bar.dart'
 import 'package:campusiq/features/cwa/presentation/widgets/course_card.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
-import 'package:campusiq/features/cwa/presentation/widgets/cwa_coach_sheet.dart';
 import 'package:campusiq/features/cwa/presentation/screens/complete_semester_screen.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
 import 'package:campusiq/shared/widgets/campus_button.dart';
@@ -650,7 +649,7 @@ class _QuickStatsGrid extends StatelessWidget {
   const _QuickStatsGrid({required this.items});
 
   /// Scales with profile — reduce for compact, increase for comfortable.
-  static const double _quickStatCardHeight = 82;
+  static const double _quickStatCardHeight = 88;
 
   @override
   Widget build(BuildContext context) {
@@ -691,42 +690,140 @@ class _QuickStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CampusCard(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs2,
+        horizontal: AppSpacing.xs,
         vertical: AppSpacing.xs,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(item.icon, size: AppIconSizes.sm, color: AppTheme.primary),
-          const SizedBox(height: AppSpacing.xxxs),
-          Text(
-            item.label,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 10,
-              color: AppTheme.textSecondary,
-              height: 1.15,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxxs),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              item.value,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textPrimary,
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(item.icon, size: AppIconSizes.sm, color: AppTheme.primary),
+              const SizedBox(height: AppSpacing.xxxs),
+              Text(
+                item.label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppTheme.textSecondary,
+                  height: 1.15,
+                ),
               ),
-            ),
+              const SizedBox(height: AppSpacing.xxxs),
+              Text(
+                item.value,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
+    );
+  }
+}
+
+class _CwaOverviewPanel extends StatelessWidget {
+  static const double _wideLayoutMinWidth = 320;
+  static const double _wideLayoutGap = AppSpacing.xs2;
+  static const double _wideLayoutHeight =
+      (_QuickStatsGrid._quickStatCardHeight * 2) + _wideLayoutGap;
+
+  final double projected;
+  final double target;
+  final double gap;
+  final String label;
+  final String eyebrow;
+  final bool hasData;
+  final String? emptyStateMessage;
+  final List<_QuickStatItem> stats;
+
+  const _CwaOverviewPanel({
+    required this.projected,
+    required this.target,
+    required this.gap,
+    required this.label,
+    required this.eyebrow,
+    required this.hasData,
+    required this.stats,
+    this.emptyStateMessage,
+  }) : assert(stats.length >= 2);
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < _wideLayoutMinWidth) {
+          return Column(
+            children: [
+              CwaSummaryBar(
+                projected: projected,
+                target: target,
+                gap: gap,
+                label: label,
+                eyebrow: eyebrow,
+                hasData: hasData,
+                emptyStateMessage: emptyStateMessage,
+                compact: true,
+                centerHero: true,
+              ),
+              const SizedBox(height: AppSpacing.xs2),
+              _QuickStatsGrid(items: stats),
+            ],
+          );
+        }
+
+        final statRailWidth = constraints.maxWidth < 360 ? 108.0 : 118.0;
+
+        return SizedBox(
+          height: _wideLayoutHeight,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: CwaSummaryBar(
+                  projected: projected,
+                  target: target,
+                  gap: gap,
+                  label: label,
+                  eyebrow: eyebrow,
+                  hasData: hasData,
+                  emptyStateMessage: emptyStateMessage,
+                  compact: true,
+                  centerHero: true,
+                  showInsight: false,
+                ),
+              ),
+              const SizedBox(width: _wideLayoutGap),
+              SizedBox(
+                width: statRailWidth,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: _QuickStatsGrid._quickStatCardHeight,
+                      child: _QuickStatCard(item: stats[0]),
+                    ),
+                    const SizedBox(height: _wideLayoutGap),
+                    SizedBox(
+                      height: _QuickStatsGrid._quickStatCardHeight,
+                      child: _QuickStatCard(item: stats[1]),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -941,26 +1038,14 @@ class _SemesterView extends ConsumerWidget {
                   AppSpacing.xl,
                   0,
                 ),
-                child: CwaSummaryBar(
+                child: _CwaOverviewPanel(
                   projected: projected,
                   target: target,
                   gap: gap,
                   label: 'Projected CWA',
                   eyebrow: 'Current semester',
                   hasData: hasCourses,
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  AppSpacing.xs2,
-                  AppSpacing.xl,
-                  0,
-                ),
-                child: _QuickStatsGrid(
-                  items: [
+                  stats: [
                     _QuickStatItem(
                       label: 'Courses',
                       value: '${courses.length}',
@@ -988,18 +1073,6 @@ class _SemesterView extends ConsumerWidget {
                   subtitle: hasCourses
                       ? '${courses.length} course${courses.length == 1 ? '' : 's'}'
                       : 'No courses yet',
-                  trailing: TextButton.icon(
-                    onPressed: () => showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => const CwaCoachSheet(),
-                    ),
-                    icon:
-                        const Icon(LucideIcons.sparkles, size: AppIconSizes.md),
-                    label: const Text('Coach'),
-                  ),
                 ),
               ),
             ),
@@ -1184,7 +1257,7 @@ class _CumulativeView extends ConsumerWidget {
                   AppSpacing.xl,
                   0,
                 ),
-                child: CwaSummaryBar(
+                child: _CwaOverviewPanel(
                   projected: cumulativeCwa,
                   target: target,
                   gap: gap,
@@ -1195,19 +1268,7 @@ class _CumulativeView extends ConsumerWidget {
                   hasData: hasAnyData,
                   emptyStateMessage:
                       'Import past result slips to build your academic history and unlock your cumulative CWA.',
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  CwaScreen._compactSectionGap,
-                  AppSpacing.xl,
-                  0,
-                ),
-                child: _QuickStatsGrid(
-                  items: [
+                  stats: [
                     _QuickStatItem(
                       label: 'Semester records',
                       value: '${semesters.length}',
@@ -1218,12 +1279,6 @@ class _CumulativeView extends ConsumerWidget {
                       value: '${totalCredits.toInt()} cr',
                       icon: LucideIcons.chartColumn,
                     ),
-                    if (hasPending)
-                      _QuickStatItem(
-                        label: 'Pending results',
-                        value: '$pendingCount',
-                        icon: LucideIcons.clock3,
-                      ),
                   ],
                 ),
               ),

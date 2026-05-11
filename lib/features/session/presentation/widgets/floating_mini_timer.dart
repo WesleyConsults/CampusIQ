@@ -10,7 +10,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 /// Placement is handled by the AppShell so the widget stays reusable.
 class FloatingMiniTimer extends ConsumerStatefulWidget {
   final VoidCallback onTap;
-  const FloatingMiniTimer({super.key, required this.onTap});
+  final bool compact;
+
+  const FloatingMiniTimer({
+    super.key,
+    required this.onTap,
+    this.compact = false,
+  });
 
   @override
   ConsumerState<FloatingMiniTimer> createState() => _FloatingMiniTimerState();
@@ -63,13 +69,55 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
       timerDisplay = session.formattedElapsed;
     }
 
+    if (widget.compact) {
+      return GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            color: AppColors.surface.withValues(alpha: 0.98),
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.shadow,
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                isPaused ? LucideIcons.pause : LucideIcons.timer,
+                color: accentColor,
+                size: AppIconSizes.xl,
+              ),
+              Positioned(
+                right: 13,
+                top: 13,
+                child: _StatusIndicator(
+                  color: accentColor,
+                  isPaused: isPaused,
+                  compact: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: widget.onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
           color: AppColors.surface.withValues(alpha: 0.98),
@@ -99,16 +147,21 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
                     session.courseCode,
                     style: const TextStyle(
                       color: AppTheme.textPrimary,
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
+                      height: 1.05,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     secondaryLabel,
                     style: const TextStyle(
                       color: AppTheme.textSecondary,
-                      fontSize: 10,
+                      fontSize: 9,
+                      height: 1.05,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -116,8 +169,8 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
             ),
             Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
+                horizontal: AppSpacing.xs2,
+                vertical: AppSpacing.xxs2,
               ),
               decoration: BoxDecoration(
                 color: accentColor.withValues(alpha: 0.10),
@@ -127,7 +180,7 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
                 timerDisplay,
                 style: TextStyle(
                   color: accentColor,
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
@@ -149,10 +202,12 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
 class _StatusIndicator extends StatefulWidget {
   final Color color;
   final bool isPaused;
+  final bool compact;
 
   const _StatusIndicator({
     required this.color,
     required this.isPaused,
+    this.compact = false,
   });
 
   @override
@@ -184,8 +239,8 @@ class _StatusIndicatorState extends State<_StatusIndicator>
   Widget build(BuildContext context) {
     if (widget.isPaused) {
       return Container(
-        width: 18,
-        height: 18,
+        width: widget.compact ? 14 : 18,
+        height: widget.compact ? 14 : 18,
         decoration: BoxDecoration(
           color: widget.color.withValues(alpha: 0.14),
           shape: BoxShape.circle,
@@ -193,7 +248,7 @@ class _StatusIndicatorState extends State<_StatusIndicator>
         alignment: Alignment.center,
         child: Icon(
           LucideIcons.pause,
-          size: 10,
+          size: widget.compact ? 8 : 10,
           color: widget.color,
         ),
       );
@@ -202,8 +257,8 @@ class _StatusIndicatorState extends State<_StatusIndicator>
     return FadeTransition(
       opacity: _anim,
       child: Container(
-        width: 8,
-        height: 8,
+        width: widget.compact ? 7 : 8,
+        height: widget.compact ? 7 : 8,
         decoration: BoxDecoration(color: widget.color, shape: BoxShape.circle),
       ),
     );

@@ -13,6 +13,9 @@ class CwaSummaryBar extends StatelessWidget {
   final String? eyebrow;
   final bool hasData;
   final String? emptyStateMessage;
+  final bool compact;
+  final bool centerHero;
+  final bool showInsight;
 
   const CwaSummaryBar({
     super.key,
@@ -23,6 +26,9 @@ class CwaSummaryBar extends StatelessWidget {
     this.eyebrow,
     this.hasData = true,
     this.emptyStateMessage,
+    this.compact = false,
+    this.centerHero = false,
+    this.showInsight = true,
   });
 
   @override
@@ -39,13 +45,17 @@ class CwaSummaryBar extends StatelessWidget {
             ? 'On track'
             : gap.toCwaString();
     final insight = _buildInsight(isOnTrack);
+    final horizontalPadding = compact ? AppSpacing.sm2 : AppSpacing.md;
+    final topPadding = compact ? AppSpacing.sm2 : AppSpacing.md;
+    final bottomPadding = compact ? AppSpacing.xs : AppSpacing.sm;
+    final heroSpacing = compact ? AppSpacing.xxs : AppSpacing.sm;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.sm,
+      padding: EdgeInsets.fromLTRB(
+        horizontalPadding,
+        topPadding,
+        horizontalPadding,
+        bottomPadding,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -57,25 +67,30 @@ class CwaSummaryBar extends StatelessWidget {
         boxShadow: AppShadows.card,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            centerHero ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         children: [
           if (eyebrow != null) ...[
             Text(
               eyebrow!,
-              style: const TextStyle(
+              textAlign: centerHero ? TextAlign.center : TextAlign.start,
+              maxLines: compact ? 2 : null,
+              overflow: compact ? TextOverflow.ellipsis : null,
+              style: TextStyle(
                 color: AppColors.goldSoft,
-                fontSize: 11,
+                fontSize: compact ? 10 : 11,
                 fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
+                height: 1.15,
               ),
             ),
             const SizedBox(height: AppSpacing.xxs2),
           ],
           Text(
             heroValue,
-            style: const TextStyle(
+            textAlign: centerHero ? TextAlign.center : TextAlign.start,
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 34,
+              fontSize: compact ? 29 : 34,
               fontWeight: FontWeight.w800,
               height: 0.94,
             ),
@@ -83,13 +98,14 @@ class CwaSummaryBar extends StatelessWidget {
           const SizedBox(height: AppSpacing.xxs),
           Text(
             label,
+            textAlign: centerHero ? TextAlign.center : TextAlign.start,
             style: const TextStyle(
               color: Colors.white70,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: heroSpacing),
           Row(
             children: [
               Expanded(
@@ -97,6 +113,8 @@ class CwaSummaryBar extends StatelessWidget {
                   label: 'Target',
                   value: target.toCwaString(),
                   valueColor: AppTheme.accent,
+                  compact: compact,
+                  centered: centerHero,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -105,24 +123,27 @@ class CwaSummaryBar extends StatelessWidget {
                   label: 'Gap',
                   value: gapValue,
                   valueColor: gapColor,
+                  compact: compact,
+                  centered: centerHero,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: compact ? AppSpacing.xs2 : AppSpacing.sm),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               value: progressValue,
               backgroundColor: Colors.white.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(gapColor),
-              minHeight: 5,
+              minHeight: compact ? 4 : 5,
             ),
           ),
-          if (insight != null) ...[
+          if (showInsight && insight != null) ...[
             const SizedBox(height: AppSpacing.xxs2),
             Text(
               insight,
+              textAlign: centerHero ? TextAlign.center : TextAlign.start,
               style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 11,
@@ -171,21 +192,34 @@ class _DetailStat extends StatelessWidget {
   final String label;
   final String value;
   final Color valueColor;
+  final bool compact;
+  final bool centered;
 
-  const _DetailStat(
-      {required this.label, required this.value, required this.valueColor});
+  const _DetailStat({
+    required this.label,
+    required this.value,
+    required this.valueColor,
+    this.compact = false,
+    this.centered = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(color: Colors.white54, fontSize: 11)),
+            textAlign: centered ? TextAlign.center : TextAlign.start,
+            style:
+                TextStyle(color: Colors.white54, fontSize: compact ? 10 : 11)),
         const SizedBox(height: AppSpacing.xxxs),
         Text(value,
+            textAlign: centered ? TextAlign.center : TextAlign.start,
             style: TextStyle(
-                color: valueColor, fontSize: 15, fontWeight: FontWeight.w700)),
+                color: valueColor,
+                fontSize: compact ? 14 : 15,
+                fontWeight: FontWeight.w700)),
       ],
     );
   }

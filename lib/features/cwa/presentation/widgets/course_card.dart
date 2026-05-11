@@ -68,9 +68,9 @@ class _CourseCardState extends State<CourseCard> {
 
     return Padding(
       padding:
-          const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 3),
+          const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 2),
       child: CampusCard(
-        padding: const EdgeInsets.all(AppSpacing.sm2),
+        padding: const EdgeInsets.all(AppSpacing.sm),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -122,8 +122,13 @@ class _CourseCardState extends State<CourseCard> {
                     PopupMenuButton<String>(
                       tooltip: 'Course options',
                       padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: AppFloors.minTapTarget,
+                        minHeight: AppFloors.minTapTarget,
+                      ),
                       icon: const Icon(
                         Icons.more_horiz,
+                        size: AppIconSizes.xl,
                         color: AppTheme.textSecondary,
                       ),
                       onSelected: (v) {
@@ -154,7 +159,7 @@ class _CourseCardState extends State<CourseCard> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.xs2),
+            const SizedBox(height: AppSpacing.xs),
             Row(
               children: [
                 Expanded(
@@ -174,7 +179,7 @@ class _CourseCardState extends State<CourseCard> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.xs2),
+            const SizedBox(height: AppSpacing.xxs2),
             Row(
               children: [
                 TextButton.icon(
@@ -188,7 +193,7 @@ class _CourseCardState extends State<CourseCard> {
                   style: TextButton.styleFrom(
                     foregroundColor: AppTheme.primary,
                     padding: EdgeInsets.zero,
-                    minimumSize: const Size(0, 32),
+                    minimumSize: const Size(0, 30),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
@@ -207,7 +212,7 @@ class _CourseCardState extends State<CourseCard> {
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
               secondChild: Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xs2),
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -283,12 +288,12 @@ class _CompactInfoBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(
-        minWidth: 142,
-        minHeight: 58,
+        minWidth: 128,
+        minHeight: 48,
       ),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs2,
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
@@ -302,7 +307,7 @@ class _CompactInfoBlock extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               color: AppTheme.textSecondary,
               height: 1.15,
             ),
@@ -312,7 +317,7 @@ class _CompactInfoBlock extends StatelessWidget {
             value,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w800,
               color: valueColor,
             ),

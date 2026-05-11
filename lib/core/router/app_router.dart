@@ -163,6 +163,7 @@ class _AppShell extends ConsumerWidget {
     final isOnline = ref.watch(isOnlineProvider).valueOrNull ?? true;
     final selectedIndex = _locationToIndex(context);
     final usesShellNav = selectedIndex != null;
+    final isSessionsTab = selectedIndex == 3;
     final mediaQuery = MediaQuery.of(context);
     final bannerHeight = !isOnline ? AppSpacing.xxl + 4 : 0.0;
     final navBottomOffset = mediaQuery.padding.bottom + _navBottomMargin;
@@ -207,7 +208,10 @@ class _AppShell extends ConsumerWidget {
               left: _navHorizontalMargin,
               right: _navHorizontalMargin + _fabSize + AppSpacing.md,
               bottom: timerBottomOffset,
-              child: FloatingMiniTimer(onTap: () => context.go('/sessions')),
+              child: _ActiveSessionTimerSlot(
+                compact: !isSessionsTab,
+                onTap: () => context.go('/sessions'),
+              ),
             ),
           Positioned(
             left: _navHorizontalMargin,
@@ -240,6 +244,55 @@ class _AppShell extends ConsumerWidget {
             child: _AiFab(onPressed: () => context.push('/ai')),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ActiveSessionTimerSlot extends StatelessWidget {
+  final bool compact;
+  final VoidCallback onTap;
+
+  const _ActiveSessionTimerSlot({
+    required this.compact,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: AppSpacing.timerHeight,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final timerWidth = compact ? 58.0 : constraints.maxWidth;
+
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 120),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeOut,
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  alignment: Alignment.centerLeft,
+                  children: [
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
+              child: SizedBox(
+                key: ValueKey<bool>(compact),
+                width: timerWidth,
+                height: compact ? 58 : null,
+                child: FloatingMiniTimer(
+                  compact: compact,
+                  onTap: onTap,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

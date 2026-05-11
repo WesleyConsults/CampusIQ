@@ -220,6 +220,11 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Colors.white24),
+                  minimumSize: const Size(0, 42),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
                 ),
                 icon: Icon(
                   session.isBreak ? LucideIcons.forward : LucideIcons.pause,
@@ -235,6 +240,11 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.accent,
                   foregroundColor: AppTheme.primary,
+                  minimumSize: const Size(0, 42),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
                 ),
                 icon: const Icon(LucideIcons.square, size: AppIconSizes.md),
                 label: const Text('End & Save'),
@@ -275,6 +285,11 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Colors.white24),
+                  minimumSize: const Size(0, 42),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
                 ),
                 icon: Icon(
                   isPaused ? LucideIcons.play : LucideIcons.pause,
@@ -290,6 +305,11 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.accent,
                   foregroundColor: AppTheme.primary,
+                  minimumSize: const Size(0, 42),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
                 ),
                 icon: const Icon(LucideIcons.square, size: AppIconSizes.md),
                 label: const Text('End & Save'),
@@ -358,10 +378,10 @@ class _HeroShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: const BoxDecoration(
         borderRadius: AppRadii.card,
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
@@ -385,35 +405,37 @@ class _HeroShell extends StatelessWidget {
                       eyebrow.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white70,
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.xxs2),
                     Text(
                       title,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 20,
                         fontWeight: FontWeight.w700,
                         height: 1.15,
                       ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.sm),
               _StatusBadge(
                 label: statusLabel,
                 color: statusColor,
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
             children: [
               _MetaChip(
                 icon: LucideIcons.bookOpen,
@@ -428,29 +450,29 @@ class _HeroShell extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.md),
           Text(
             timer,
             style: TextStyle(
               color: timerColor,
-              fontSize: 48,
+              fontSize: 38,
               fontWeight: FontWeight.w700,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.xxs),
           Text(
             timerCaption,
             style: const TextStyle(
               color: Colors.white70,
-              fontSize: 13,
+              fontSize: 12,
             ),
           ),
           if (footer != null) ...[
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.md),
             footer!,
           ],
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.md),
           actions,
         ],
       ),
@@ -473,8 +495,8 @@ class _MetaChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: compact ? AppSpacing.sm : AppSpacing.md,
-        vertical: AppSpacing.xs,
+        horizontal: compact ? AppSpacing.xs2 : AppSpacing.sm,
+        vertical: AppSpacing.xxs2,
       ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.1),
@@ -484,13 +506,13 @@ class _MetaChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: compact ? 10 : 14, color: Colors.white70),
-          const SizedBox(width: AppSpacing.xs),
+          Icon(icon, size: compact ? 10 : 13, color: Colors.white70),
+          const SizedBox(width: AppSpacing.xxs2),
           Text(
             label,
             style: TextStyle(
               color: Colors.white,
-              fontSize: compact ? 11 : 12,
+              fontSize: compact ? 10 : 11,
               fontWeight: compact ? FontWeight.w500 : FontWeight.w600,
             ),
           ),
@@ -513,8 +535,8 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxs2,
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.16),
@@ -524,7 +546,7 @@ class _StatusBadge extends StatelessWidget {
         label,
         style: TextStyle(
           color: color,
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w700,
         ),
       ),
