@@ -56,17 +56,15 @@ final generatePlanProvider =
   if (repo == null) throw Exception('Could not access local storage.');
 
   try {
-    await repo.deleteAllTasksForDate(date);
     final models = tasks.map((t) => t.toDailyPlanTaskModel(date)).toList();
-    await repo.saveTasks(models);
+    await repo.replaceGeneratedTasksForDate(date, models);
   } catch (e) {
     throw Exception('Could not save study plan. Please try again.');
   }
 
   for (final model in tasks.map((t) => t.toDailyPlanTaskModel(date))) {
     try {
-      await NotificationService.instance
-          .schedulePlannedSessionReminder(model);
+      await NotificationService.instance.schedulePlannedSessionReminder(model);
     } catch (_) {
       // Notification scheduling is best-effort — plan is already saved
     }

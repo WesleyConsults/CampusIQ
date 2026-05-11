@@ -36,6 +36,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
   static const double _homeCompactHeaderGap = AppSpacing.sm;
 
   bool _isGenerating = false;
+  List<DailyPlanTaskModel> _lastVisibleTasks = const [];
 
   Future<void> _generatePlan() async {
     setState(() => _isGenerating = true);
@@ -90,7 +91,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
   @override
   Widget build(BuildContext context) {
     final tasksAsync = ref.watch(todayPlanProvider);
-    final (completed, total) = ref.watch(planProgressProvider);
     final activeSession = ref.watch(activeSessionProvider);
     final studyStreak = ref.watch(studyStreakProvider);
     final attendanceStreak = ref.watch(attendanceStreakProvider);
@@ -102,7 +102,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     final now = DateTime.now();
     final dateLabel = DateFormat('EEEE, d MMMM').format(now);
     final greeting = _greetingFor(now);
-    final isDone = total > 0 && completed >= total;
     final todayIndex = now.weekday <= 6 ? now.weekday - 1 : 0;
     final todaySlots = allSlots
         .where((slot) => slot.dayIndex == todayIndex)
@@ -205,25 +204,38 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           message: 'We could not load today\'s plan right now.',
           onRetry: () => ref.invalidate(todayPlanProvider),
         ),
-        data: (tasks) => _buildBody(
-          tasks: tasks,
-          completed: completed,
-          total: total,
-          isDone: isDone,
-          greeting: greeting,
-          dateLabel: dateLabel,
-          activeSession: activeSession,
-          studyStreak: studyStreak,
-          attendanceStreak: attendanceStreak,
-          totalCourseStreaks: perCourseStreaks.values
-              .where((result) => result.currentStreak > 0)
-              .length,
-          projectedCwa: projectedCwa,
-          targetCwa: targetCwa,
-          todaySlots: todaySlots,
-          freeBlocks: freeBlocks,
-          bottomContentPadding: bottomContentPadding,
-        ),
+        data: (tasks) {
+          if (tasks.isNotEmpty || !_isGenerating) {
+            _lastVisibleTasks = tasks;
+          }
+          final visibleTasks =
+              _isGenerating && tasks.isEmpty && _lastVisibleTasks.isNotEmpty
+                  ? _lastVisibleTasks
+                  : tasks;
+          final visibleCompleted =
+              visibleTasks.where((t) => t.isCompleted).length;
+          final visibleTotal = visibleTasks.length;
+
+          return _buildBody(
+            tasks: visibleTasks,
+            completed: visibleCompleted,
+            total: visibleTotal,
+            isDone: visibleTotal > 0 && visibleCompleted >= visibleTotal,
+            greeting: greeting,
+            dateLabel: dateLabel,
+            activeSession: activeSession,
+            studyStreak: studyStreak,
+            attendanceStreak: attendanceStreak,
+            totalCourseStreaks: perCourseStreaks.values
+                .where((result) => result.currentStreak > 0)
+                .length,
+            projectedCwa: projectedCwa,
+            targetCwa: targetCwa,
+            todaySlots: todaySlots,
+            freeBlocks: freeBlocks,
+            bottomContentPadding: bottomContentPadding,
+          );
+        },
       ),
     );
   }
@@ -313,19 +325,28 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 const SizedBox(height: AppSpacing.xl),
                 CampusSectionHeader(
                   title: 'Today\'s plan',
-                  trailing: tasks.isEmpty
-                      ? null
-                      : Row(
+                  trailing: tasks.isNotEmpty || _isGenerating
+                      ? Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
                               onPressed: _isGenerating ? null : _generatePlan,
-                              icon: const Icon(LucideIcons.refreshCw,
-                                  size: AppIconSizes.md),
+                              icon: _isGenerating
+                                  ? const SizedBox(
+                                      width: AppIconSizes.md,
+                                      height: AppIconSizes.md,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      LucideIcons.refreshCw,
+                                      size: AppIconSizes.md,
+                                    ),
                               tooltip: 'Regenerate plan',
                             ),
                             OutlinedButton.icon(
-                              onPressed: _showAddSheet,
+                              onPressed: _isGenerating ? null : _showAddSheet,
                               icon: const Icon(
                                 LucideIcons.plus,
                                 size: AppIconSizes.md,
@@ -340,15 +361,18 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                               ),
                             ),
                           ],
-                        ),
+                        )
+                      : null,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                if (tasks.isEmpty)
+                if (tasks.isEmpty && !_isGenerating)
                   _EmptyPlanCard(
                     onGenerate: _generatePlan,
                     onAddTask: _showAddSheet,
                     isGenerating: _isGenerating,
-                  ),
+                  )
+                else if (tasks.isEmpty && _isGenerating)
+                  const _PlanGeneratingIndicator(),
               ],
             ),
           ),
@@ -490,13 +514,60 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     }
 
     if (totalClasses > 0) {
+      final dayIndex = DateTime.now().day;
+
+      const eyebrows = [
+        'Day wrapped well',
+        'Done for the day',
+        'Classes in the books',
+        "That's a wrap",
+      ];
+
+      const titles = [
+        'Your classes are behind you',
+        'You made it through',
+        'Rest of the day is yours',
+        'Schedule cleared',
+      ];
+
+      const allDoneBodies = [
+        'All {n} classes are done for today. Use the rest of the day for review, rest, or a short focused session.',
+        '{n} classes down. Time to recharge or catch up on revision.',
+        "That's all {n} classes done. What's one thing you want to finish before tomorrow?",
+        'The scheduled part of your day is done. Make the rest count.',
+        'All done. Shift gears — revise something, rest, or plan tomorrow.',
+      ];
+
+      const betweenBodies = [
+        'You are between blocks right now. There are {n} free window{s} you can still use well.',
+        '{n} free block{s} still open. Pick one and make it count.',
+        'A gap in your schedule — {n} window{s} left to study, review, or reset.',
+        'Not quite done yet. {n} window{s} remain for you to use well.',
+        'Still got {n} open window{s}. One short session can go a long way.',
+      ];
+
+      const metas = [
+        '{done} of {total} classes completed',
+        '{done} down, {total} total',
+        '{done} done today',
+        '{done} out of {total} done',
+        '{done}/{total} complete',
+      ];
+
+      String pick(List<String> list, int seed) => list[seed % list.length];
+
       return _HeroContent(
-        eyebrow: 'Day wrapped well',
-        title: 'Your classes are behind you',
+        eyebrow: pick(eyebrows, dayIndex),
+        title: pick(titles, dayIndex + 1),
         body: completedClasses == totalClasses
-            ? 'All $totalClasses classes are done for today. Use the rest of the day for review, rest, or a short focused session.'
-            : 'You are between blocks right now. There are ${freeBlocks.length} free window${freeBlocks.length == 1 ? '' : 's'} you can still use well.',
-        meta: '$completedClasses of $totalClasses classes completed',
+            ? pick(allDoneBodies, dayIndex + 2)
+                .replaceAll('{n}', '$totalClasses')
+            : pick(betweenBodies, dayIndex + 2)
+                .replaceAll('{n}', '${freeBlocks.length}')
+                .replaceAll('{s}', freeBlocks.length == 1 ? '' : 's'),
+        meta: pick(metas, dayIndex + 3)
+            .replaceAll('{done}', '$completedClasses')
+            .replaceAll('{total}', '$totalClasses'),
       );
     }
 
@@ -806,7 +877,10 @@ class _TodayAtGlanceCard extends StatelessWidget {
         total == 0 ? 'No tasks yet' : '$completed of $total done';
 
     return CampusCard(
-      padding: AppSpacing.compactCardPadding,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       child: Column(
         children: [
           _SummaryRow(
@@ -814,26 +888,17 @@ class _TodayAtGlanceCard extends StatelessWidget {
             title: classCount == 0
                 ? 'No classes today'
                 : '$classCount classes today',
-            subtitle: classCount == 0
-                ? 'A quieter day for review, rest, or planning.'
-                : 'Your timetable already defines the main rhythm of today.',
           ),
-          const Divider(height: AppSpacing.xl, color: AppColors.divider),
+          const Divider(height: AppSpacing.md, color: AppColors.divider),
           _SummaryRow(
             icon: LucideIcons.bookOpen,
             title:
                 '$pendingStudyTaskCount suggested study task${pendingStudyTaskCount == 1 ? '' : 's'}',
-            subtitle: pendingStudyTaskCount == 0
-                ? 'Nothing urgent is queued right now.'
-                : 'Start with one clear block and let the rest follow.',
           ),
-          const Divider(height: AppSpacing.xl, color: AppColors.divider),
+          const Divider(height: AppSpacing.md, color: AppColors.divider),
           _SummaryRow(
             icon: LucideIcons.checkCheck,
             title: progressText,
-            subtitle: total == 0
-                ? 'Generate a plan or add a manual task when you are ready.'
-                : 'Small completions still count toward a calmer day.',
           ),
         ],
       ),
@@ -1072,20 +1137,18 @@ class _MetricTile extends StatelessWidget {
 class _SummaryRow extends StatelessWidget {
   final IconData icon;
   final String title;
-  final String subtitle;
 
-  static const double _iconBoxSize = 36;
+  static const double _iconBoxSize = 28;
 
   const _SummaryRow({
     required this.icon,
     required this.title,
-    required this.subtitle,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           width: _iconBoxSize,
@@ -1096,28 +1159,15 @@ class _SummaryRow extends StatelessWidget {
           ),
           child: Icon(icon, size: AppIconSizes.md, color: AppTheme.primary),
         ),
-        const SizedBox(width: AppSpacing.sm),
+        const SizedBox(width: AppSpacing.xxs2),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xxxs),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-            ],
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
           ),
         ),
       ],
@@ -1326,6 +1376,27 @@ class _PlanLoadingState extends StatelessWidget {
                     ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PlanGeneratingIndicator extends StatelessWidget {
+  const _PlanGeneratingIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppTheme.primary,
           ),
         ),
       ),

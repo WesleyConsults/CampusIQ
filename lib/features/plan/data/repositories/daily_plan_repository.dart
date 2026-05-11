@@ -38,6 +38,30 @@ class DailyPlanRepository {
     }
   }
 
+  /// Replaces generated tasks for [date] without touching manual tasks.
+  Future<void> replaceGeneratedTasksForDate(
+    DateTime date,
+    List<DailyPlanTaskModel> tasks,
+  ) async {
+    final day = DateTime(date.year, date.month, date.day);
+    final next = day.add(const Duration(days: 1));
+    try {
+      await _isar.writeTxn(() async {
+        final generatedIds = await _isar.dailyPlanTaskModels
+            .filter()
+            .dateBetween(day, next, includeLower: true, includeUpper: false)
+            .isManualEqualTo(false)
+            .idProperty()
+            .findAll();
+        await _isar.dailyPlanTaskModels.deleteAll(generatedIds);
+        await _isar.dailyPlanTaskModels.putAll(tasks);
+      });
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
   /// Toggle isCompleted for a task.
   Future<void> markComplete(int taskId, bool completed) async {
     try {
