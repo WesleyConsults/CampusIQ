@@ -8,8 +8,6 @@ import 'package:campusiq/features/timetable/data/repositories/timetable_reposito
 import 'package:campusiq/core/data/repositories/user_prefs_repository.dart';
 import 'package:campusiq/features/ai/domain/deepseek_client.dart';
 import 'package:campusiq/features/ai/domain/context_builder.dart';
-import 'package:campusiq/features/ai/data/repositories/ai_usage_repository.dart';
-import 'package:campusiq/features/ai/data/repositories/ai_chat_repository.dart';
 
 part 'ai_providers.g.dart';
 
@@ -19,18 +17,6 @@ Future<DeepSeekClient> deepseekClient(Ref ref) async {
   if (key.isEmpty) throw Exception('DEEPSEEK_API_KEY not set in .env');
   final model = dotenv.env['DEEPSEEK_MODEL'] ?? 'deepseek-chat';
   return DeepSeekClient(apiKey: key, model: model);
-}
-
-@riverpod
-Future<AiUsageRepository> aiUsageRepository(Ref ref) async {
-  final isar = await ref.watch(isarProvider.future);
-  return AiUsageRepository(isar);
-}
-
-@riverpod
-Future<AiChatRepository> aiChatRepository(Ref ref) async {
-  final isar = await ref.watch(isarProvider.future);
-  return AiChatRepository(isar);
 }
 
 @riverpod

@@ -1,9 +1,9 @@
-# CampusIQ Project Context (v1.0 Lean — UI Redesign, CWA Gap Fixes & Pre-Release Audit Complete)
+# CampusIQ Project Context (v1.0 Lean — Focused AI MVP)
 
 This document provides a concise technical overview of CampusIQ for AI agents and developers.
 
 ## 1. Overview
-CampusIQ is an Android-first academic productivity app for Ghanaian university students (KNUST target). It centralizes CWA tracking, timetable management, study sessions, and AI-powered assistance.
+CampusIQ is an Android-first academic productivity app for Ghanaian university students (KNUST target). It centralizes CWA tracking, timetable management, study sessions, and focused AI assistance for import, weekly review, and study planning.
 
 ## 2. Tech Stack
 - **Framework:** Flutter (Material 3)
@@ -24,7 +24,7 @@ Strict three-layer structure per feature:
 2.  **Timetable:** Single-layer class grid with a compact day summary, full-page daily timeline, image import (AI Vision), and free-time detection.
 3.  **Study Sessions:** Count-up (Normal) and Count-down (Pomodoro) timers. Tracks focus time only.
 4.  **Course Hub:** Per-course workspace with Overview, Sessions, and Notes only.
-5.  **Daily Plan:** AI-generated task list based on timetable free blocks.
+5.  **Daily Plan & AI Study Plan:** Daily tasks plus an AI-generated study plan based on courses, timetable free blocks, and past study patterns.
 6.  **Insights & Reviews:** Automated analytics and AI-generated narrative weekly reviews.
 7.  **Streak System:** Daily study and attendance tracking with milestone rewards.
 
@@ -34,15 +34,17 @@ Strict three-layer structure per feature:
 - `StudySessionModel`: Session logs (duration, course, type).
 - `UserPrefsModel`: Global flags (streak, notifications, attendance). Also stores `activeSemesterKey`, `targetCwa`, and `manualCwaDraftJson` (Phase 15.6).
 - `CourseNoteModel`: Course-specific notes.
-- `AiMessageModel` / `AiChatSessionModel`: Chat history.
 - `DailyPlanTaskModel`: Generated tasks for the current day.
+- `StudyPlanModel` / `StudyPlanSlotModel`: AI-generated study plan storage.
+- `WeeklyReviewModel`: AI-generated weekly review storage.
 - `PastSemesterModel`: Archived result data for cumulative CWA. Has `semesterKey` for cross-referencing with `CourseModel` and duplicate detection (Phase 15.6).
 
 ## 6. Critical Implementation Notes
 - **Timer Logic:** Stores a `DateTime` anchor (`startTime`). Elapsed time is `now.difference(startTime)` to survive app pauses.
-- **AI Context:** Uses a `ContextBuilder` to inject academic stats, notes, and session history into system prompts for personalized coaching.
+- **AI Scope:** MVP keeps focused AI surfaces only: CWA import via OpenAI Vision, AI Weekly Review, AI Study Plan, and AI-generated streak notification text. The global chatbot and CWA Coach were removed.
+- **AI Context:** Uses a `ContextBuilder` for Weekly Review and Study Plan prompts.
 - **Course Hub Scope:** Course Hub Files, per-course AI chat, and the Course Hub context builder were removed from the launch build and deferred to a later version.
-- **Lean Build:** Personal Timetable, Exam Mode, Exam Prep Generator, Course Hub Files, Course Hub AI chat, and the What-If AI feature were removed in v1.0 to prioritize stability.
+- **Lean Build:** Personal Timetable, Exam Mode, Exam Prep Generator, Course Hub Files, Course Hub AI chat, global AI chat, CWA Coach, AI usage/chat quotas, and the What-If AI feature were removed in v1.0 to prioritize stability.
 - **Isar Database:** Schema registration is centralized in `lib/core/data/isar_database.dart` (`kCampusIqIsarSchemas` list + `openCampusIqIsar()`). `isar_provider.dart` delegates to this.
 - **CWA Semester Model:** `CourseModel` and `PastSemesterModel` share a common `semesterKey` format. The active semester is persisted in `UserPrefsModel.activeSemesterKey`. A Complete Semester flow bridges projected courses → real results.
 - **Offline Banner:** The `OfflineBanner` is rendered once inside `_AppShell` via `isOnlineProvider` — it appears on all shell tabs when offline.
@@ -52,21 +54,19 @@ Strict three-layer structure per feature:
 ## 7. UI Structure & Navigation
 ### App shell
 - Initial route is `/plan`.
-- The main shell uses a `ShellRoute` with a persistent bottom navigation bar and a global AI floating action button.
+- The main shell uses a `ShellRoute` with a persistent bottom navigation bar.
 - Bottom navigation now shows 4 destinations: `Home` (`/plan`), `CWA` (`/cwa`), `Table` (`/timetable`), and `Sessions` (`/sessions`).
 - The shell also owns the floating active-session mini timer; if a study session is active, tapping the timer returns the user to `/sessions`.
-- The AI FAB opens the main AI chat at `/ai` from anywhere inside the shell.
 - Shell tabs now render full height behind the floating nav instead of being permanently clipped above it.
-- Each shell tab is responsible for its own trailing bottom clearance so lower content can scroll above the bottom nav, AI FAB, and active-session mini timer without leaving a persistent dead band.
+- Each shell tab is responsible for its own trailing bottom clearance so lower content can scroll above the bottom nav and active-session mini timer without leaving a persistent dead band.
 - An `OfflineBanner` is rendered as a `Positioned` widget at the top of `_AppShell` when `isOnlineProvider` reports offline. It pushes shell content down by `AppSpacing.xxl + 4` when visible.
-- Full-screen routes outside the shell intentionally do not show the bottom nav, shell AI FAB, or shell offline banner.
+- Full-screen routes outside the shell intentionally do not show the bottom nav or shell offline banner.
 
 ### Main top-level screens a user can reach
 - `Today` at `/plan`: the daily hub and main landing screen. Internally still the Plan route, but user-facing copy should prefer `Today`.
 - `CWA` at `/cwa`: course management, target planning (persisted), active semester picker, import bottom sheet, semester/cumulative toggle, Complete Semester flow, semester progression card, and workspace entry point.
 - `Timetable` at `/timetable`: class timetable with compact day summary, calmer slot/free-block styling, slot detail sheet, timetable import entry point, and workspace entry point.
 - `Sessions` at `/sessions`: timer, analytics, plan-related surfaces, and workspace entry point from course breakdown.
-- `AI Chat` at `/ai`: global AI assistant only.
 - `Streak` at `/streak`: streak dashboard.
 - `Insights` at `/insights`: secondary destination reachable from Today drawer.
 - `Settings` at `/settings`: notification settings and dev premium toggle.
@@ -100,7 +100,7 @@ Strict three-layer structure per feature:
 - A compact day summary card appears near the top and can show the selected day, class count, next/first class, and free-block count.
 - The `Daily timeline` is the primary content area; the whole Timetable page scrolls naturally instead of trapping the grid inside a small inner vertical scroll box.
 - Class slots use calmer cards, and free blocks are intentionally lighter and less visually dominant.
-- Timetable content now scrolls cleanly above the floating shell nav and AI FAB using the same shell-overlay spacing model as the other bottom-nav tabs.
+- Timetable content now scrolls cleanly above the floating shell nav using the same shell-overlay spacing model as the other bottom-nav tabs.
 
 ### Primary shell return pattern
 - Today remains the primary home base at `/plan` and is accessible through the **Home** bottom-nav tab.
@@ -134,7 +134,7 @@ Strict three-layer structure per feature:
 - `PastSemestersScreen` is now at `/cwa/history` (GoRouter named route), accessed via the history icon in CWA AppBar.
 - These import screens no longer use raw `Navigator.push` — they are proper GoRouter routes with deep-link support.
 - `Enter Manually` opens `/cwa/manual-entry?mode=semester|cumulative`, a dedicated full-screen form outside the shell.
-- `/cwa/manual-entry` intentionally does not show the bottom nav or shell AI FAB.
+- `/cwa/manual-entry` intentionally does not show the bottom nav.
 - The manual-entry screen supports both `Semester` and `Cumulative` modes, defaulting from the currently selected CWA mode.
 - In `Cumulative` mode, manual entry uses **grade dropdown** (A–F, colour-coded) as the primary field, with an optional mark/score input.
 - The manual-entry screen includes:
@@ -151,8 +151,7 @@ Strict three-layer structure per feature:
 - The **Complete Semester** flow (accessible from CWA Semester mode) pre-fills all current courses into a grade-entry form, creates a `PastSemesterModel` on save, clears the old `CourseModel` entries, and advances `activeSemesterKey`.
 - Credit hour inputs are capped at **12** (raised from 6) across all CWA entry points.
 - `Timetable` can open `/timetable/import` from the scanner action.
-- `AI Chat` and some other screens can open `Settings` from AppBar actions where present.
-- `Weekly Review` is accessed from the global AI area, not from Course Hub.
+- `Weekly Review` is accessed from the Today drawer/deep link, not from Course Hub.
 
 ### Regression and stability notes from this redesign session
 - Phase 7 focused on spacing, consistency, semantics, touch targets, dark-mode resilience, and keyboard-safe layout behavior.
@@ -160,7 +159,7 @@ Strict three-layer structure per feature:
 - A widget regression suite now exists at `test/ui_redesign_regression_test.dart`.
 - That regression suite covers:
   - shell navigation presence
-  - shell AI FAB visibility
+  - shell AI FAB absence
   - CWA import-sheet options
   - manual-entry rendering on small screens
   - active-session mini timer visibility
@@ -169,11 +168,11 @@ Strict three-layer structure per feature:
 
 ### Navigation back-button behaviour (updated 2026-05-02)
 - Shell tab switches use `context.go()` — pressing Back from a tab exits the app (expected).
-- Detail/drill-down screens (AI Chat, Streak, Insights, Settings, Course Hub, etc.) use `context.push()` — pressing Back returns to the previous screen inside the app.
+- Detail/drill-down screens (Streak, Insights, Settings, Course Hub, Weekly Review, etc.) use `context.push()` — pressing Back returns to the previous screen inside the app.
 - This matches the production pattern used by Google Pay and Nubank: `go()` for same-level tab switching, `push()` for deeper navigation.
 
 ### Navigation assumptions for future changes
-- Global AI lives only in `/ai`; there is no per-course AI surface in the workspace.
+- There is no global chat or per-course AI surface in the workspace. AI is limited to focused import/review/planning flows.
 - Any feature added to Course Hub should be treated as a separate tab or in-tab action inside the 3-tab workspace unless the shell structure itself is being changed.
 - Workspace changes should be checked against all 3 entry points: CWA, Timetable, and Sessions.
 - Any new drill-down screen must use `context.push()` to ensure proper back-button behaviour.

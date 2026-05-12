@@ -8,7 +8,16 @@
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The v1.0 build covers: CWA Target Planner (semester + cumulative with complete-semester flow), Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes), Streak System, Smart Notifications, Insights System, Weekly Review, AI Chat & Coach, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, and Cumulative CWA with Past Result Slip Import. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the Course Hub Flashcards tab, the Course Hub Files tab, the Course Hub per-course AI chat, and the What-If AI feature — all cut to reduce complexity and improve stability for launch.
+CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The v1.0 build covers: CWA Target Planner (semester + cumulative with complete-semester flow), Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes), Streak System, Smart Notifications, Insights System, Weekly Review, AI Weekly Review, AI Study Plan, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, and Cumulative CWA with Past Result Slip Import. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the global AI chatbot, CWA AI Coach, AI chat history/usage quotas, markdown/math chat rendering dependencies, the Course Hub Flashcards tab, the Course Hub Files tab, the Course Hub per-course AI chat, and the What-If AI feature — all cut to reduce complexity and improve stability for launch.
+
+### Current MVP AI Scope Update
+
+The May 2026 MVP scope keeps only focused AI features that perform a specific job:
+
+- **Kept:** CWA registration/result slip import via OpenAI Vision, AI Weekly Review, AI Study Plan, and AI-generated streak notification text.
+- **Removed:** global AI Assistant FAB, `/ai` chatbot route, chat UI/history, chat storage models, chat usage limits, CWA Coach, and chatbot-only markdown/math packages.
+- **Storage kept:** `StudyPlanModel`, `StudyPlanSlotModel`, and `WeeklyReviewModel`.
+- **Storage removed:** `AiMessageModel`, `AiChatSessionModel`, and `AiUsageModel`.
 
 ---
 
@@ -54,10 +63,10 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 - 4-tab bottom nav: **Home, CWA, Table, Sessions**
 - Floating rounded pill-shaped bottom navigation bar with semi-transparent background, border, and drop shadow
 - `_ShellBottomNav` renders four destinations with Lucide icons; selected tab gets tinted background and bold label
-- `_AiFab` — smaller, calmer gold sparkles FAB positioned bottom-right above the nav bar; pushes `/ai`
+- Global AI FAB removed for the focused AI MVP
 - `FloatingMiniTimer` — appears above the nav bar when a session is active; pushes `/sessions` on tap
-- AI page (`/ai`) moved outside bottom-nav shell (full-screen push route)
-- Shell tabs render full height with in-page trailing overlay clearance so content scrolls above the nav, AI FAB, and mini timer
+- `/ai` chatbot route removed
+- Shell tabs render full height with in-page trailing overlay clearance so content scrolls above the nav and mini timer
 - Safe-area and bottom-nav spacing refined — content is no longer permanently clipped above the navbar
 - Contrast fixes for header action buttons
 
@@ -72,7 +81,7 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 - Lower detail sections: active session resume card, today's classes, free blocks, task list (Planned classes / Suggested study tasks / Personal tasks)
 - `Suggested focus` section removed during refinement to reduce first-screen congestion
 - Free-block metric removed from Today at a glance
-- Local add-task FAB removed to avoid competing with shell AI FAB; task creation remains available through inline actions
+- Local add-task FAB removed to reduce floating-action clutter; task creation remains available through inline actions
 - Bottom-safe spacing refined so lower Home content scrolls above the floating bottom nav
 - Small-screen overflows fixed: tightened academic pulse tile padding/typography, long task labels wrap to 2 lines with ellipsis, stable trailing column for task time/duration
 
@@ -127,17 +136,10 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 - Delete confirmations added where safe (courses, sessions, notes, timetable slots)
 - Keyboard-safe modal behaviour improved
 
-### Phase 7B — AI Chat Screen Polish
+### ~~Phase 7B — AI Chat Screen Polish~~ *(removed from current MVP)*
 
-- AI Chat polished as full-screen secondary route (`/ai`, no bottom nav)
-- Premium header with back navigation
-- Improved empty state and starter prompts
-- Improved message bubbles (user right, assistant left)
-- Improved input composer with send button
-- Improved chat history drawer (end drawer with past conversations)
-- Markdown rendering via `MarkdownBody` preserved
-- LaTeX math rendering via `Math.tex()` for inline `$...$` and display `$$...$$` preserved
-- AI API, prompt templates, and usage logic unchanged
+- The full-screen AI Chat route (`/ai`), chat composer, chat history drawer, message bubbles, typing indicator, usage counter, and chat-only markdown/math rendering were removed in the focused AI MVP pass.
+- Weekly Review and Study Plan remain active AI surfaces.
 
 ### Phase 7C — Course Hub Polish
 
@@ -153,7 +155,7 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 
 ### Phase 7D — Import + Manual Entry Flow Polish
 
-- Manual course entry screen (`/cwa/manual-entry`) polished — focused full-screen form, no bottom nav, no AI FAB
+- Manual course entry screen (`/cwa/manual-entry`) polished — focused full-screen form, no bottom nav
 - Import review, loading, and error states polished
 - Past semester / history screen polished
 - Validation preserved (empty fields, duplicate course codes, non-numeric values)
@@ -191,7 +193,6 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 - `Sessions` at `/sessions` — Study Session Tracker
 
 **Full-screen routes (outside shell, no bottom nav):**
-- `/ai` — AI Coach & Chat (opened via gold sparkles FAB)
 - `/streak` — Streak System (via drawer from Today)
 - `/insights` — Insights (via drawer from Today)
 - `/settings` — Settings (via drawer or bell icon from Today)
@@ -205,7 +206,7 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 - Tab switches use `context.go()` — back from a tab exits the app
 - Drill-down screens use `context.push()` — back returns to the previous screen
 - Today screen has a local drawer (hamburger menu) with links to Today, Streak, Insights, Weekly Review, Settings, and Subscribe
-- AI FAB and active-session mini timer render inside `_AppShell` and persist across all tab switches
+- Active-session mini timer renders inside `_AppShell` and persists across all tab switches
 
 ### Validation Summary
 
@@ -261,9 +262,8 @@ Business logic is never placed in widgets. Domain layer has zero Flutter depende
 - `/timetable` — Class Timetable (Table tab)
 - `/sessions` — Study Session Tracker
 
-### Full-screen routes outside the shell (no bottom nav, no AI FAB)
+### Full-screen routes outside the shell (no bottom nav)
 
-- `/ai` — AI Coach & Chat (opened via gold sparkles FAB)
 - `/streak` — Streak System (via drawer from Today)
 - `/insights` — Insights (via drawer from Today)
 - `/settings` — Settings (via drawer or bell icon from Today)
@@ -273,7 +273,7 @@ Business logic is never placed in widgets. Domain layer has zero Flutter depende
 - `/cwa/manual-entry` — Manual Course Entry
 - `/subscribe` — Premium subscription
 
-These full-screen routes intentionally do not show the bottom nav or shell AI FAB.
+These full-screen routes intentionally do not show the bottom nav.
 
 ---
 
@@ -323,7 +323,6 @@ lib/
 │   │           ├── active_semester_picker.dart    — Phase 15.6: configurable semester selector
 │   │           ├── add_course_sheet.dart          — 15.6: credit cap raised to 12
 │   │           ├── course_card.dart               — 15.7: what-if explain chip removed
-│   │           ├── cwa_coach_sheet.dart           — Phase 13: AI CWA coach bottom sheet
 │   │           └── cwa_summary_bar.dart           — hero CWA display (semester + cumulative); 15.6: +cumulative progression
 │   ├── timetable/                                 — Phase 2 + redesign
 │   │   ├── data/models/timetable_slot_model.dart
@@ -413,55 +412,32 @@ lib/
 │   │   └── presentation/
 │   │       ├── providers/settings_provider.dart
 │   │       └── screens/settings_screen.dart       — notification toggles, reminder time, dev premium
-│   └── ai/                                        — Phase 12 + 14 + 15
+│   └── ai/                                        — focused AI: DeepSeek review/planning + smart alerts
 │       ├── data/
 │       │   ├── models/
-│       │   │   ├── ai_message_model.dart
-│       │   │   ├── ai_chat_session_model.dart
-│       │   │   ├── ai_usage_model.dart
 │       │   │   ├── study_plan_model.dart          — Phase 15
 │       │   │   ├── study_plan_slot_model.dart     — Phase 15
 │       │   │   └── weekly_review_model.dart       — Phase 15
-│       │   └── repositories/
-│       │       ├── ai_chat_repository.dart
-│       │       └── ai_usage_repository.dart
 │       ├── domain/
 │       │   ├── context_builder.dart
 │       │   ├── deepseek_client.dart
 │       │   ├── deepseek_exception.dart
-│       │   ├── exam_prep_models.dart              — Phase 14: MCQ/ShortAnswer/Flashcard types
-│       │   ├── notification_scheduler.dart        — Phase 14: schedules smart alerts
-│       │   └── prompt_templates.dart              — AI rendering fix: updated system prompt with markdown + $...$ math rules
+│       │   └── notification_scheduler.dart        — Phase 14: schedules smart alerts
 │       └── presentation/
 │           ├── providers/
-│           │   ├── ai_chat_provider.dart
 │           │   ├── ai_providers.dart
-│           │   ├── ai_usage_provider.dart
-│           │   ├── exam_prep_provider.dart        — Phase 14
 │           │   ├── study_plan_provider.dart       — Phase 15
 │           │   └── weekly_review_provider.dart    — Phase 15
 │           ├── screens/
-│           │   ├── ai_chat_screen.dart
-│           │   ├── exam_prep_screen.dart          — Phase 14
 │           │   ├── subscribe_screen_stub.dart     — premium upsell stub
 │           │   └── weekly_review_screen.dart      — Phase 15: AI weekly review + free gate
 │           └── widgets/
-│               ├── ai_chat_history_drawer.dart
-│               ├── ai_message_bubble.dart         — AI rendering fix: MarkdownBody + Math.tex() for inline ($) and display ($$) LaTeX
-│               ├── ai_typing_indicator.dart
-│               ├── flashcard_widget.dart          — Phase 14: 3D flip animation
-│               ├── mcq_card.dart                  — Phase 14: MCQ with reveal animation
 │               ├── plan_day_card.dart             — Phase 15
 │               ├── plan_free_gate_card.dart       — Phase 15: free-tier gate for AI plan
 │               ├── plan_slot_tile.dart            — Phase 15
-│               ├── premium_gate_widget.dart
-│               ├── question_type_selector.dart    — Phase 14
 │               ├── review_gate_overlay.dart       — Phase 15: premium gate for AI review
 │               ├── review_section_card.dart       — Phase 15
-│               ├── short_answer_card.dart         — Phase 14
-│               ├── study_plan_tab.dart            — Phase 15
-│               ├── usage_counter_chip.dart
-│               └── weekly_review_banner.dart      — Phase 15: banner in AI tab
+│               └── study_plan_tab.dart            — Phase 15
 │   └── course_hub/                                — Phase 15.1 + 15.4 + 15.7
 │       ├── data/
 │       │   ├── models/course_note_model.dart      — Isar @collection: notes per course
@@ -494,7 +470,6 @@ lib/
 | `/sessions` | Study Session Tracker + Analytics Dashboard | 4 + redesign |
 | `/streak` | Streak System + Milestone Gallery | 5 + redesign |
 | `/insights` | Insights System | 9 + redesign |
-| `/ai` | AI Coach & Academic Assistant Chatbot | 12 + redesign |
 | `/ai/weekly-review` | AI-powered Weekly Review (full screen) | 15 |
 | `/settings` | Notification Settings + DEV premium toggle | 14 + redesign |
 | `/subscribe` | Premium subscription upsell stub | 12+ |
@@ -505,7 +480,7 @@ lib/
 | `/cwa/import/registration` | Registration Slip Import (full-screen, no bottom nav) | 15.6 |
 | `/cwa/import/results` | Result Slip Import (full-screen, no bottom nav) | 15.6 |
 
-Navigation uses a `ShellRoute` with a 4-destination floating pill-shaped bottom nav bar: Home, CWA, Table, Sessions. Tab switches use `context.go()`; drill-down screens (AI Chat, Streak, Insights, Settings, Course Hub, etc.) use `context.push()` for proper back-button behaviour. The floating mini-timer and gold AI Assistant FAB are rendered inside `_AppShell` and persist across all tab switches. Shell tabs render at full height and use in-page trailing overlay clearance so content scrolls above the nav/FAB/timer stack cleanly. Full-screen routes intentionally do not show the bottom nav or AI FAB.
+Navigation uses a `ShellRoute` with a 4-destination floating pill-shaped bottom nav bar: Home, CWA, Table, Sessions. Tab switches use `context.go()`; drill-down screens (Streak, Insights, Settings, Course Hub, Weekly Review, etc.) use `context.push()` for proper back-button behaviour. The floating mini-timer is rendered inside `_AppShell` and persists across all tab switches. Shell tabs render at full height and use in-page trailing overlay clearance so content scrolls above the nav/timer stack cleanly. Full-screen routes intentionally do not show the bottom nav.
 
 ---
 
@@ -642,37 +617,23 @@ Navigation uses a `ShellRoute` with a 4-destination floating pill-shaped bottom 
 
 ---
 
-### Phase 12 — AI Integration & Chat History
+### ~~Phase 12 — AI Integration & Chat History~~ *(chat removed from current MVP)*
 
-**Route:** `/ai_chat` (accessible via Floating Action Button)
+The DeepSeek client remains active for AI Weekly Review, AI Study Plan, and AI-generated streak notification text. The global chatbot layer was removed from the current MVP:
 
-| Feature | Description |
+| Removed item | Current status |
 |---|---|
-| DeepSeek Integration | Direct integration with DeepSeek API via `dart:convert` and `http`. |
-| Context Builder | Injects user's academic context implicitly into AI prompts for personalization. |
-| AI Chat Interface | Streamlined messaging UI with user/assistant bubbles and a typing indicator. |
-| Chat History Tracker | Automatically tracks individual conversations, storing them in Isar as unified sessions. |
-| Chat Session Drawer | `endDrawer` interface listing previous conversations allowing users to switch chats. |
-| AI Usage Limits | Local usage counter (`ai_usage_table`) capping non-premium users to 3 generic prompts per day. |
-| Premium Paywall | Gateway widget substituting chat inputs when free-tier users exceed their limit. |
-| Markdown rendering | Assistant bubbles now rendered with `MarkdownBody` — supports **bold**, *italic*, bullet lists, and inline code blocks. |
-| Math rendering | Inline `$...$` expressions rendered with `Math.tex()` (text style); display `$$...$$` blocks pre-split before `MarkdownBody` and rendered centred with `Math.tex()` (display style). `onErrorFallback` shows raw monospace text if the expression is unparseable. |
-| AI prompt rules | `prompt_templates.dart` system prompt updated: instructs DeepSeek to use `$...$` for inline math and `$$...$$` for display/block math; never output bare LaTeX commands. |
+| `/ai` route and global AI FAB | Removed from `app_router.dart` / `_AppShell` |
+| AI Chat Interface | Removed (`AiChatScreen`, composer, bubbles, typing indicator, history drawer) |
+| Chat History Tracker | Removed (`AiMessageModel`, `AiChatSessionModel`, `AiChatRepository`) |
+| AI Usage Limits for chat | Removed (`AiUsageModel`, usage repository/provider, usage counter chip) |
+| Markdown/math chat rendering | Removed (`flutter_markdown`, `flutter_math_fork`, `markdown`) |
 
-### Phase 13 — CWA AI Coach + What-If Explainer
+### ~~Phase 13 — CWA AI Coach + What-If Explainer~~ *(removed from current MVP)*
 
-**Route:** `/cwa` (coach and what-if are bottom sheets launched from CWA screen)
+The CWA AI Coach bottom sheet and What-If Explainer were removed to keep the MVP focused on reliable CWA tracking and import. CWA import AI remains active through OpenAI Vision in `RegistrationSlipParser` and `ResultSlipParser`.
 
-| Feature | Description |
-|---|---|
-| CWA Coach sheet | Bottom sheet that calls DeepSeek with the student's full course context and returns personalised academic advice; "Ask a follow-up" seeds the AI chat with the coaching advice as an initial assistant message so follow-up questions have full context |
-| What-If Explainer | When a course score slider is dragged away from its saved value, an "Explain" chip appears; tapping it calls DeepSeek for a concise natural-language impact explanation |
-| WhatIfState | `StateNotifier` tracking per-course adjusted scores, loading states, and cached explanations — avoids redundant API calls if the slider hasn't changed |
-| Usage quota | CWA coach shares the `chat` quota (3/day free); what-if uses a separate `whatif` quota (2/day free); premium bypasses both |
-| Premium gate | `PremiumGateWidget` shown inline in the coach sheet when quota is exhausted |
-| LaTeX sanitizer | `latex_sanitizer.dart` strips LaTeX markup (`\(...\)`, `\[...\]`, `$$...$$`) from AI responses before display |
-
-**Isar schemas:** None (reads `CourseModel`, uses `AiUsageModel` quota via existing `ai_usage_table`)
+**Isar schemas:** None.
 
 ---
 
@@ -720,8 +681,8 @@ Navigation uses a `ShellRoute` with a 4-destination floating pill-shaped bottom 
 | AI review generation | DeepSeek generates a paragraph-form weekly performance narrative injected with session stats, streak, and CWA context |
 | Review sections | `ReviewSectionCard` widgets display structured review segments with animated entry |
 | Free gate | `ReviewGateOverlay` blocks the AI narrative for free-tier users; stats summary remains visible |
-| AI tab banner | `WeeklyReviewBanner` in the AI chat tab directs users to the full-screen review |
-| Study plan tab | `StudyPlanTab` in the AI screen shows the AI-generated plan for the current day |
+| Chat follow-up | Removed; the old "Ask about this review" button depended on `/ai` |
+| Study plan tab | `StudyPlanTab` in the Sessions screen shows the AI-generated plan |
 | Plan free gate card | `PlanFreeGateCard` blocks AI plan generation for free users; manual task adding still available |
 
 #### Settings Screen
@@ -836,7 +797,7 @@ Navigation uses a `ShellRoute` with a 4-destination floating pill-shaped bottom 
 |---|---|
 | Course Hub simplification | The launch build removes the Course Hub Files tab and per-course AI chat, leaving a focused 3-tab workspace: Overview, Sessions, Notes |
 | File feature removal | `CourseFileModel`, file repository/provider wiring, PDF extraction helpers, and file UI components were deleted from the launch branch |
-| Per-course AI removal | `hub_ai_provider.dart` and `hub_ai_tab.dart` were removed; AI remains available only in the main `/ai` surfaces |
+| Per-course AI removal | `hub_ai_provider.dart` and `hub_ai_tab.dart` were removed; focused AI remains only in import/review/planning flows |
 | Isar cleanup | `CourseFileModelSchema` was removed from `isarProvider`, so the file feature is no longer part of the active local schema set |
 
 **Launch cleanup commit:** `Remove workspace files and AI chat`
@@ -1001,11 +962,11 @@ The What-If explainer (Phase 13) was a bottom-sheet AI feature that explained ho
 | `presentation/widgets/whatif_explain_chip.dart` | 64 |
 | `presentation/widgets/whatif_result_card.dart` | 59 |
 
-The `whatif` quota key was removed from `AiUsageModel`. The "Explain" chip on course cards was removed — dragging the score slider now simply shows the live CWA recalculation without an AI call.
+The `whatif` quota key was removed during the first cleanup pass. In the later focused AI MVP pass, `AiUsageModel` itself was removed with the global chatbot and CWA Coach. The "Explain" chip on course cards was removed — dragging the score slider now simply shows the live CWA recalculation without an AI call.
 
 #### LaTeX sanitizer removed
 
-`latex_sanitizer.dart` (307 lines) was a utility that stripped LaTeX markup from AI responses before display in non-math surfaces (e.g., CWA coach sheet). It is no longer needed — the AI system prompt already instructs the model to use `$...$` / `$$...$$` exclusively, and the chat bubble renders these natively via `Math.tex()`. Coach sheet text is now shown through the same markdown pipeline, which handles math correctly.
+`latex_sanitizer.dart` (307 lines) was a utility that stripped LaTeX markup from AI responses before display in non-math surfaces. It is no longer needed in the current MVP because the global chatbot, CWA Coach, and chatbot-only markdown/math rendering pipeline were removed.
 
 #### Course Hub context builder removed
 
@@ -1013,7 +974,7 @@ The `whatif` quota key was removed from `AiUsageModel`. The "Explain" chip on co
 
 #### AI usage model cleanup
 
-`AiUsageModel` quota keys simplified from `[chat, whatif]` to `[chat]` only. The `whatif` quota tracking fields and methods removed.
+`AiUsageModel` was removed from the current MVP with the global chatbot, CWA Coach, chat quota repository/provider, and usage counter chip.
 
 **Deleted files (Phase 15.7):**
 - `lib/features/cwa/presentation/providers/whatif_provider.dart`
@@ -1022,7 +983,7 @@ The `whatif` quota key was removed from `AiUsageModel`. The "Explain" chip on co
 - `lib/features/ai/domain/latex_sanitizer.dart`
 - `lib/features/course_hub/domain/course_hub_context_builder.dart`
 
-**Modified files (Phase 15.7):** `course_card.dart` (removed explain chip), `ai_usage_model.dart` (removed whatif quota), `context_builder.dart` (removed whatif references)
+**Modified files (Phase 15.7):** `course_card.dart` (removed explain chip), `context_builder.dart` (removed whatif references). Historical note: `ai_usage_model.dart` existed during the first cleanup pass but was later deleted in the focused AI MVP pass.
 
 ---
 
@@ -1051,7 +1012,7 @@ The `whatif` quota key was removed from `AiUsageModel`. The "Explain" chip on co
 
 | Change | Description |
 |---|---|
-| AI chat error recovery | `AiChatProvider` now catches and surfaces `DeepSeekException` with retry action. No silent spinner on API failure. |
+| ~~AI chat error recovery~~ | Removed from current MVP with `AiChatProvider` and `/ai` |
 | Import flow error messages | All 3 import state machines (timetable, registration slip, result slip) show specific, human-readable error messages for each failure mode: no internet, oversized image, empty parse, API timeout, truncation. |
 | Isar open failure | `openCampusIqIsar()` catches Isar open failures with a logged stack trace and re-throws — the app shows a meaningful error instead of a null-dereference crash. |
 
@@ -1071,7 +1032,27 @@ The `whatif` quota key was removed from `AiUsageModel`. The "Explain" chip on co
 
 **New files (Phase 15.8):** `lib/core/data/isar_database.dart`
 
-**Modified files (Phase 15.8):** `isar_provider.dart`, `app_router.dart`, `plan_generator.dart`, `plan_screen.dart`, `session_screen.dart`, `timetable_screen.dart`, `timetable_slot_card.dart`, `day_selector.dart`, `course_card.dart`, `milestone_grid.dart`, `streak_calculator.dart`, `ai_chat_provider.dart`, `ai_chat_screen.dart`, `weekly_review_screen.dart`, `add_manual_task_sheet.dart`, `add_slot_sheet.dart`, `class_timetable_grid.dart`, `free_block_indicator.dart`, `settings_screen.dart`, plus ~10 more files (unused-import cleanup)
+**Modified files (Phase 15.8):** `isar_provider.dart`, `app_router.dart`, `plan_generator.dart`, `plan_screen.dart`, `session_screen.dart`, `timetable_screen.dart`, `timetable_slot_card.dart`, `day_selector.dart`, `course_card.dart`, `milestone_grid.dart`, `streak_calculator.dart`, `weekly_review_screen.dart`, `add_manual_task_sheet.dart`, `add_slot_sheet.dart`, `class_timetable_grid.dart`, `free_block_indicator.dart`, `settings_screen.dart`, plus ~10 more files (unused-import cleanup). The earlier `ai_chat_provider.dart` / `ai_chat_screen.dart` changes are historical only; those files were later removed from the current MVP.
+
+---
+
+### Phase 15.9 — Focused AI MVP Scope Cleanup
+
+The MVP AI surface was reduced to features with a narrow, reviewable job. CWA import AI, AI Weekly Review, and AI Study Plan remain; the broad assistant/chat layer was removed.
+
+| Removed | Result |
+|---|---|
+| Global AI Assistant FAB | `_AppShell` no longer shows a gold AI button above the bottom nav |
+| `/ai` route | General chatbot screen is no longer reachable |
+| Chat UI | Deleted `AiChatScreen`, history drawer, message bubble, typing indicator, usage counter, and weekly review banner |
+| Chat state/storage | Deleted `AiChatProvider`, `AiUsageProvider`, chat/usage repositories, `AiMessageModel`, `AiChatSessionModel`, and `AiUsageModel` |
+| CWA Coach | Deleted the text-advice bottom sheet and its follow-up-to-chat path |
+| Chat rendering dependencies | Removed `flutter_markdown`, `flutter_math_fork`, and `markdown` from runtime dependencies |
+| Weekly Review follow-up | Removed the premium "Ask about this review" button because it depended on `/ai` |
+
+**Kept:** `DeepSeekClient`, `ContextBuilder`, `WeeklyReviewModel`, `StudyPlanModel`, `StudyPlanSlotModel`, OpenAI Vision CWA import parsers, AI Weekly Review, AI Study Plan, and AI-generated streak notification text.
+
+**Verification:** `flutter analyze --no-fatal-infos --no-fatal-warnings` passes with existing warnings/infos only. Full `flutter test` still has two unrelated UI regression failures around the CWA import sheet rendering and mini timer expectation.
 
 ---
 
@@ -1084,9 +1065,9 @@ The `whatif` quota key was removed from `AiUsageModel`. The "Explain" chip on co
 | ~~`PersonalSlotModel`~~ | ~~Timetable~~ | ~~3~~ | **Removed in v1.0** |
 | `StudySessionModel` | Sessions | 4 | Completed study session records |
 | `UserPrefsModel` | Core / Streak | 5 | Single-row key/value persistent flags (attended days, notification prefs, reflection notes, daily goal). 15.6: +activeSemesterKey, +targetCwa, +manualCwaDraftJson |
-| `AiMessageModel` | AI Chat | 12 | Individual user/assistant chat messages |
-| `AiChatSessionModel` | AI Chat | 12 | Individual chat session containers; `courseCode` field added in 15.1 |
-| `AiUsageModel` | AI Limits | 12 | Tracks daily usage and limits per quota type; 15.7: whatif quota removed, chat-only now |
+| ~~`AiMessageModel`~~ | ~~AI Chat~~ | ~~12~~ | **Removed from current MVP** |
+| ~~`AiChatSessionModel`~~ | ~~AI Chat~~ | ~~12~~ | **Removed from current MVP** |
+| ~~`AiUsageModel`~~ | ~~AI Limits~~ | ~~12~~ | **Removed from current MVP** |
 | `SubscriptionModel` | Payments | 12 | Tracks premium status and subscription details |
 | `StudyPlanModel` | AI Planner | 15 | Container for AI-generated study plans |
 | `StudyPlanSlotModel` | AI Planner | 15 | Individual tasks/slots within a study plan |
@@ -1121,9 +1102,6 @@ The `whatif` quota key was removed from `AiUsageModel`. The "Explain" chip on co
 | workmanager | ^0.9.0 | Background task execution |
 | open_filex | ^4.4.1 | Open attached files with the device's default app handler |
 | image_picker | ^1.1.2 | Camera and gallery image picker for timetable image import (Phase 15.2) |
-| flutter_markdown | ^0.7.3 | Markdown rendering for AI chat assistant bubbles |
-| flutter_math_fork | ^0.7.2 | LaTeX math rendering (`Math.tex()`) for inline and display math in AI chat |
-| markdown | ^7.2.2 | Custom `InlineSyntax` extension for `$...$` detection inside `MarkdownBody` |
 | connectivity_plus | ^6.0.3 | On-demand network connectivity check for offline guards before AI/API calls (Phase 15.5) |
 
 ### Dev
@@ -1165,8 +1143,8 @@ Overlapping timetable slots are rendered side-by-side using a greedy column-assi
 ### 8. Workmanager init without auto permission request
 `callbackDispatcher` is a top-level function registered with Workmanager for background streak checks. The `NotificationService.init()` call was removed from the Workmanager dispatcher's first-run hook to prevent the OS permission dialog firing before the app's custom permission dialog, which rendered the Allow button non-functional. Permission is now only requested from within the app UI flow.
 
-### 9. Separate quotas per AI feature type
-Rather than a single daily AI usage counter, each AI feature has its own quota key (`chat`, `whatif`) tracked in `AiUsageModel`. This allows fine-grained rate limiting — e.g., 3 chat calls/day vs 2 what-if explanations/day — without a new Isar collection per feature.
+### 9. ~~Separate quotas per AI feature type~~ *(removed from current MVP)*
+`AiUsageModel` and chat/CWA Coach quota tracking were removed with the global chatbot and CWA Coach. The remaining focused AI features are not using the old local chat quota table.
 
 ### 10. PlanGenerator free-block scheduling
 `PlanGenerator` does not just suggest sessions per course — it first computes free gaps between class slots in the 6AM–8PM grid (minimum 30-min block), then fills those gaps with study tasks ordered by days-since-last-session. This ensures generated plans are timetable-aware and never overlap with classes.
@@ -1251,6 +1229,7 @@ flutter run
 | CWA flow gap fixes | `Complete CWA flow gap fixes` |
 | What-if removal | `Remove dead what-if AI feature, fix hardcoded programme list, and improve "Update Results" UX` |
 | Pre-release audit | `Fix 28 pre-release audit items: data-loss guards, error states, dead code, and polish` |
+| Focused AI MVP cleanup | Removed global chatbot, CWA Coach, chat storage/usage models, and chat-only markdown/math dependencies; kept CWA import AI, AI Weekly Review, and AI Study Plan |
 
 ---
 

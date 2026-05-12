@@ -11,7 +11,6 @@ import 'package:campusiq/features/session/presentation/providers/active_session_
 import 'package:campusiq/features/session/presentation/widgets/floating_mini_timer.dart';
 import 'package:campusiq/features/insights/presentation/screens/insights_screen.dart';
 import 'package:campusiq/features/streak/presentation/screens/streak_screen.dart';
-import 'package:campusiq/features/ai/presentation/screens/ai_chat_screen.dart';
 import 'package:campusiq/features/ai/presentation/screens/subscribe_screen_stub.dart';
 import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.dart';
 import 'package:campusiq/features/course_hub/presentation/screens/course_hub_screen.dart';
@@ -79,11 +78,6 @@ final appRouter = GoRouter(
       builder: (context, state) => const SettingsScreen(),
     ),
     GoRoute(
-      path: '/ai',
-      name: 'ai',
-      builder: (context, state) => const AiChatScreen(),
-    ),
-    GoRoute(
       path: '/course/:courseCode',
       name: 'course-hub',
       builder: (context, state) {
@@ -143,7 +137,6 @@ class _AppShell extends ConsumerWidget {
   static const double _navHorizontalMargin = AppSpacing.navHorizontalMargin;
   static const double _timerGap = AppSpacing.timerGap;
   static const double _timerEstimatedHeight = AppSpacing.timerHeight;
-  static const double _fabSize = AppSpacing.fabSize;
 
   final Widget child;
   const _AppShell({required this.child});
@@ -206,7 +199,7 @@ class _AppShell extends ConsumerWidget {
           if (isSessionActive)
             Positioned(
               left: _navHorizontalMargin,
-              right: _navHorizontalMargin + _fabSize + AppSpacing.md,
+              right: _navHorizontalMargin,
               bottom: timerBottomOffset,
               child: _ActiveSessionTimerSlot(
                 compact: !isSessionsTab,
@@ -237,11 +230,6 @@ class _AppShell extends ConsumerWidget {
                 }
               },
             ),
-          ),
-          Positioned(
-            right: _navHorizontalMargin,
-            bottom: navBottomOffset + _navHeight + AppSpacing.md,
-            child: _AiFab(onPressed: () => context.push('/ai')),
           ),
         ],
       ),
@@ -412,39 +400,6 @@ class _ShellBottomNav extends StatelessWidget {
             );
           }),
         ),
-      ),
-    );
-  }
-}
-
-class _AiFab extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const _AiFab({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final lucide = Theme.of(context).extension<AppLucideTheme>();
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: AppRadii.pill,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.gold.withValues(alpha: 0.18),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: FloatingActionButton.small(
-        onPressed: onPressed,
-        tooltip: 'AI Assistant',
-        backgroundColor: AppColors.goldSoft,
-        foregroundColor: AppTheme.primary,
-        elevation: 0,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadii.pill),
-        child: Icon(lucide?.ai ?? LucideIcons.sparkles, size: AppIconSizes.lg),
       ),
     );
   }

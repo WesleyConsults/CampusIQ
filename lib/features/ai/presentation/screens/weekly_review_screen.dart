@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/providers/subscription_provider.dart';
@@ -91,7 +90,8 @@ class WeeklyReviewScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(LucideIcons.circleAlert, size: 48, color: Colors.grey.shade400),
+              Icon(LucideIcons.circleAlert,
+                  size: 48, color: Colors.grey.shade400),
               const SizedBox(height: AppSpacing.sm),
               Text(reviewState.error!,
                   textAlign: TextAlign.center,
@@ -134,55 +134,46 @@ class WeeklyReviewScreen extends ConsumerWidget {
     final isPremium = isPremiumAsync.valueOrNull ?? false;
 
     return CustomScrollView(
-          slivers: [
-            // Summary — always visible
-            SliverToBoxAdapter(
-              child: ReviewSectionCard(
-                title: 'Your week at a glance',
-                body: review.summaryText,
-              ),
-            ),
-            // Wins — blurred for free users
-            SliverToBoxAdapter(
-              child: ReviewSectionCard(
-                title: 'Wins this week',
-                body: review.wellText,
-                isBlurred: !isPremium,
-              ),
-            ),
-            // Watch out — blurred for free users
-            SliverToBoxAdapter(
-              child: ReviewSectionCard(
-                title: 'Something to fix',
-                body: review.watchText,
-                isBlurred: !isPremium,
-              ),
-            ),
-            // Focus — blurred for free users
-            SliverToBoxAdapter(
-              child: ReviewSectionCard(
-                title: 'Your #1 priority',
-                body: review.focusText,
-                isBlurred: !isPremium,
-              ),
-            ),
-            // Gate card for free users, follow-up button for premium
-            SliverToBoxAdapter(
-              child: !isPremium
-                  ? const ReviewGateOverlay()
-                  : Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                      child: TextButton.icon(
-                        onPressed: () => context.push('/ai'),
-                        icon: const Icon(LucideIcons.arrowRight, size: AppIconSizes.md),
-                        label: const Text('Ask about this review'),
-                        style: TextButton.styleFrom(
-                            foregroundColor: AppTheme.primary),
-                      ),
-                    ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
-          ],
-        );
+      slivers: [
+        // Summary — always visible
+        SliverToBoxAdapter(
+          child: ReviewSectionCard(
+            title: 'Your week at a glance',
+            body: review.summaryText,
+          ),
+        ),
+        // Wins — blurred for free users
+        SliverToBoxAdapter(
+          child: ReviewSectionCard(
+            title: 'Wins this week',
+            body: review.wellText,
+            isBlurred: !isPremium,
+          ),
+        ),
+        // Watch out — blurred for free users
+        SliverToBoxAdapter(
+          child: ReviewSectionCard(
+            title: 'Something to fix',
+            body: review.watchText,
+            isBlurred: !isPremium,
+          ),
+        ),
+        // Focus — blurred for free users
+        SliverToBoxAdapter(
+          child: ReviewSectionCard(
+            title: 'Your #1 priority',
+            body: review.focusText,
+            isBlurred: !isPremium,
+          ),
+        ),
+        // Gate card for free users
+        SliverToBoxAdapter(
+          child: !isPremium
+              ? const ReviewGateOverlay()
+              : const SizedBox(height: AppSpacing.lg),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
+      ],
+    );
   }
 }

@@ -42,7 +42,7 @@ void main() {
     expect(find.text('CWA'), findsOneWidget);
     expect(find.text('Table'), findsOneWidget);
     expect(find.text('Sessions'), findsOneWidget);
-    expect(find.byTooltip('AI Assistant'), findsOneWidget);
+    expect(find.byTooltip('AI Assistant'), findsNothing);
 
     await tester.tap(find.text('CWA'));
     await _pumpFrames(tester);
