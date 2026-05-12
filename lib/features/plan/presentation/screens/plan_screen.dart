@@ -973,19 +973,13 @@ class _ProgressOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final supportingText = isDone
-        ? 'You gave today real shape. Keep the rest of the evening light.'
-        : total > 0
-            ? '$completed of $total tasks are complete so far.'
-            : 'Generate a plan or add a task to shape the day gently.';
-
     return CampusCard(
       padding: AppSpacing.compactCardPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Progress',
+            "Today's Progress",
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -994,14 +988,6 @@ class _ProgressOverviewCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           PlanProgressBar(completed: completed, total: total),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            supportingText,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDone ? AppColors.success : AppTheme.textSecondary,
-                  fontWeight: isDone ? FontWeight.w600 : FontWeight.w500,
-                ),
-          ),
         ],
       ),
     );
