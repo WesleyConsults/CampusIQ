@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_import_provider.dart';
@@ -14,6 +15,21 @@ class TimetableImportScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(timetableImportNotifierProvider);
     final notifier = ref.read(timetableImportNotifierProvider.notifier);
+
+    Future<void> pickIfOnline(ImageSource source) async {
+      final isOnline = await ref.read(isOnlineProvider.future);
+      if (!context.mounted) return;
+      if (!isOnline) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("You're offline. Connect to use features."),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      await notifier.pickAndParse(source);
+    }
 
     // Auto-navigate when done
     ref.listen(timetableImportNotifierProvider, (_, next) {
@@ -53,8 +69,7 @@ class TimetableImportScreen extends ConsumerWidget {
         ],
       ),
       body: switch (state.step) {
-        ImportStep.idle =>
-          _IdleBody(onPick: (source) => notifier.pickAndParse(source)),
+        ImportStep.idle => _IdleBody(onPick: pickIfOnline),
         ImportStep.picking => const _LoadingBody(message: 'Opening camera…'),
         ImportStep.parsing =>
           const _LoadingBody(message: 'Extracting timetable…'),

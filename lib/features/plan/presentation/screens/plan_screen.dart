@@ -1,6 +1,7 @@
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/layout/shell_overlay_padding.dart';
+import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 import 'package:campusiq/features/plan/presentation/providers/plan_provider.dart';
@@ -75,6 +76,22 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         context.go(route);
       }
     });
+  }
+
+  Future<void> _openWeeklyReviewFromDrawer() async {
+    Navigator.of(context).pop();
+    final isOnline = await ref.read(isOnlineProvider.future);
+    if (!mounted) return;
+    if (!isOnline) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("You're offline. Connect to use features."),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    context.push('/ai/weekly-review');
   }
 
   String _greetingFor(DateTime now) {
@@ -165,18 +182,12 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               _DrawerItem(
                 icon: Icons.rate_review_outlined,
                 label: 'Weekly Review',
-                onTap: () =>
-                    _navigateFromDrawer('/ai/weekly-review', push: true),
+                onTap: _openWeeklyReviewFromDrawer,
               ),
               _DrawerItem(
                 icon: Icons.settings_outlined,
                 label: 'Settings',
                 onTap: () => _navigateFromDrawer('/settings', push: true),
-              ),
-              _DrawerItem(
-                icon: Icons.workspace_premium_outlined,
-                label: 'Subscribe',
-                onTap: () => _navigateFromDrawer('/subscribe', push: true),
               ),
             ],
           ),

@@ -10,9 +10,10 @@ class OfflineBanner extends StatelessWidget {
       duration: const Duration(milliseconds: 300),
       color: Colors.grey.shade700,
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs2, horizontal: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.xxs2, horizontal: AppSpacing.md),
       child: const Text(
-        'You are offline. AI features require a connection.',
+        "You're offline. Connect to use features.",
         style: TextStyle(color: Colors.white, fontSize: 12),
         textAlign: TextAlign.center,
       ),

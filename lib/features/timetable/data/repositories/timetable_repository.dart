@@ -62,6 +62,13 @@ class TimetableRepository {
         .findAll();
   }
 
+  Future<List<TimetableSlotModel>> getAllSlotsOnce(String semesterKey) async {
+    return _isar.timetableSlotModels
+        .filter()
+        .semesterKeyEqualTo(semesterKey)
+        .findAll();
+  }
+
   /// Returns how many slots exist — used to assign next color.
   Future<int> countSlots(String semesterKey) async {
     return _isar.timetableSlotModels

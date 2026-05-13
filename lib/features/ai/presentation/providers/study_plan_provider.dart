@@ -85,7 +85,7 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
     if (!isOnline) {
       state = state.copyWith(
         isLoading: false,
-        error: 'You are offline. AI features require a connection.',
+        error: "You're offline. Connect to use features.",
       );
       return;
     }

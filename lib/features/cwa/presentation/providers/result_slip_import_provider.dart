@@ -193,7 +193,7 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
     if (!isOnline) {
       state = state.copyWith(
         step: ResultImportStep.error,
-        errorMessage: 'You are offline. AI features require a connection.',
+        errorMessage: "You're offline. Connect to use features.",
       );
       return;
     }
@@ -204,8 +204,7 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
       if (apiKey.isEmpty) {
         state = state.copyWith(
           step: ResultImportStep.error,
-          errorMessage:
-              'OpenAI API key not configured. Check your .env file.',
+          errorMessage: 'OpenAI API key not configured. Check your .env file.',
         );
         return;
       }

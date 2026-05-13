@@ -46,8 +46,7 @@ class SlipImportState {
         selectedIndexes: selectedIndexes ?? this.selectedIndexes,
         errorMessage: errorMessage,
         skippedCourseCount: skippedCourseCount ?? this.skippedCourseCount,
-        duplicateCourseCount:
-            duplicateCourseCount ?? this.duplicateCourseCount,
+        duplicateCourseCount: duplicateCourseCount ?? this.duplicateCourseCount,
       );
 }
 
@@ -142,7 +141,7 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
     if (!isOnline) {
       state = state.copyWith(
         step: SlipImportStep.error,
-        errorMessage: 'You are offline. AI features require a connection.',
+        errorMessage: "You're offline. Connect to use features.",
       );
       return;
     }
@@ -153,8 +152,7 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
       if (apiKey.isEmpty) {
         state = state.copyWith(
           step: SlipImportStep.error,
-          errorMessage:
-              'OpenAI API key not configured. Check your .env file.',
+          errorMessage: 'OpenAI API key not configured. Check your .env file.',
         );
         return;
       }

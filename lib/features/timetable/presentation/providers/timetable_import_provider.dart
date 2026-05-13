@@ -65,7 +65,7 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
       if (!isOnline) {
         state = state.copyWith(
           step: ImportStep.error,
-          errorMessage: 'You are offline. AI features require a connection.',
+          errorMessage: "You're offline. Connect to use features.",
         );
         return;
       }

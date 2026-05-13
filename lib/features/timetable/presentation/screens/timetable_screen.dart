@@ -9,6 +9,7 @@ import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
+import 'package:campusiq/features/timetable/presentation/providers/course_reminder_provider.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/day_selector.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/class_timetable_grid.dart';
@@ -118,8 +119,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content:
-                      Text('Could not delete slot. Please try again.'),
+                  content: Text('Could not delete slot. Please try again.'),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -132,8 +132,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content:
-                      Text('Could not delete slot. Please try again.'),
+                  content: Text('Could not delete slot. Please try again.'),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -175,12 +174,40 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       context,
       hasActiveSession: hasActiveSession,
     );
+    final activeReminderCount = ref.watch(activeCourseReminderCountProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
         title: const Text('Table'),
         actions: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                icon: const Icon(LucideIcons.bell),
+                tooltip: 'Course reminders',
+                onPressed: () => context.push('/timetable/reminders'),
+              ),
+              if (activeReminderCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    width: 9,
+                    height: 9,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppTheme.surface,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(LucideIcons.scanText),
             tooltip: 'Import from image',

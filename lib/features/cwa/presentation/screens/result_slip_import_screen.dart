@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
@@ -25,6 +26,25 @@ class _ResultSlipImportScreenState
     extends ConsumerState<ResultSlipImportScreen> {
   bool _didTriggerInitialSource = false;
 
+  void _showOfflineMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("You're offline. Connect to use features."),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _runIfOnline(Future<void> Function() action) async {
+    final isOnline = await ref.read(isOnlineProvider.future);
+    if (!mounted) return;
+    if (!isOnline) {
+      _showOfflineMessage();
+      return;
+    }
+    await action();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -39,13 +59,13 @@ class _ResultSlipImportScreenState
       final notifier = ref.read(resultSlipImportNotifierProvider.notifier);
       switch (source) {
         case 'camera':
-          notifier.pickFromCamera();
+          _runIfOnline(notifier.pickFromCamera);
           return;
         case 'gallery':
-          notifier.pickFromGallery();
+          _runIfOnline(notifier.pickFromGallery);
           return;
         case 'pdf':
-          notifier.pickFromFile();
+          _runIfOnline(notifier.pickFromFile);
           return;
       }
     });
@@ -71,7 +91,11 @@ class _ResultSlipImportScreenState
         ),
       ),
       body: switch (state.step) {
-        ResultImportStep.idle => _IdleView(notifier: notifier),
+        ResultImportStep.idle => _IdleView(
+            onCamera: () => _runIfOnline(notifier.pickFromCamera),
+            onGallery: () => _runIfOnline(notifier.pickFromGallery),
+            onPdf: () => _runIfOnline(notifier.pickFromFile),
+          ),
         ResultImportStep.picking || ResultImportStep.parsing => _LoadingView(
             state.step == ResultImportStep.parsing
                 ? 'AI is reading your result slip…'
@@ -108,8 +132,15 @@ class _ResultSlipImportScreenState
 // ─── Idle ─────────────────────────────────────────────────────────────────────
 
 class _IdleView extends StatelessWidget {
-  final ResultSlipImportNotifier notifier;
-  const _IdleView({required this.notifier});
+  final VoidCallback onCamera;
+  final VoidCallback onGallery;
+  final VoidCallback onPdf;
+
+  const _IdleView({
+    required this.onCamera,
+    required this.onGallery,
+    required this.onPdf,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -138,21 +169,21 @@ class _IdleView extends StatelessWidget {
             icon: LucideIcons.camera,
             label: 'Take a photo',
             subtitle: 'Capture your result slip with the camera',
-            onTap: notifier.pickFromCamera,
+            onTap: onCamera,
           ),
           const SizedBox(height: AppSpacing.sm),
           _OptionTile(
             icon: LucideIcons.image,
             label: 'Upload image from gallery',
             subtitle: 'Pick a JPG or PNG from your photos',
-            onTap: notifier.pickFromGallery,
+            onTap: onGallery,
           ),
           const SizedBox(height: AppSpacing.sm),
           _OptionTile(
             icon: LucideIcons.fileText,
             label: 'Choose a PDF',
             subtitle: 'Upload a PDF result slip',
-            onTap: notifier.pickFromFile,
+            onTap: onPdf,
           ),
           const Spacer(),
           const Center(
@@ -1223,7 +1254,6 @@ class _AddResultCourseSheetState extends State<_AddResultCourseSheet> {
     );
   }
 }
-
 
 // ─── Done ─────────────────────────────────────────────────────────────────────
 

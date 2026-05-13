@@ -11,17 +11,16 @@ import 'package:campusiq/features/session/presentation/providers/active_session_
 import 'package:campusiq/features/session/presentation/widgets/floating_mini_timer.dart';
 import 'package:campusiq/features/insights/presentation/screens/insights_screen.dart';
 import 'package:campusiq/features/streak/presentation/screens/streak_screen.dart';
-import 'package:campusiq/features/ai/presentation/screens/subscribe_screen_stub.dart';
+
 import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.dart';
 import 'package:campusiq/features/course_hub/presentation/screens/course_hub_screen.dart';
 import 'package:campusiq/features/timetable/presentation/screens/timetable_import_screen.dart';
+import 'package:campusiq/features/timetable/presentation/screens/course_reminders_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/cwa_manual_entry_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
-import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
-import 'package:campusiq/shared/widgets/offline_banner.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 
 final appRouter = GoRouter(
@@ -51,11 +50,6 @@ final appRouter = GoRouter(
           builder: (context, state) => const SessionScreen(),
         ),
       ],
-    ),
-    GoRoute(
-      path: '/subscribe',
-      name: 'subscribe',
-      builder: (context, state) => const SubscribeScreenStub(),
     ),
     GoRoute(
       path: '/ai/weekly-review',
@@ -98,6 +92,11 @@ final appRouter = GoRouter(
       path: '/timetable/import',
       name: 'timetable-import',
       builder: (context, state) => const TimetableImportScreen(),
+    ),
+    GoRoute(
+      path: '/timetable/reminders',
+      name: 'course-reminders',
+      builder: (context, state) => const CourseRemindersScreen(),
     ),
     GoRoute(
       path: '/cwa/manual-entry',
@@ -153,12 +152,10 @@ class _AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSessionActive = ref.watch(activeSessionProvider) != null;
-    final isOnline = ref.watch(isOnlineProvider).valueOrNull ?? true;
     final selectedIndex = _locationToIndex(context);
     final usesShellNav = selectedIndex != null;
     final isSessionsTab = selectedIndex == 3;
     final mediaQuery = MediaQuery.of(context);
-    final bannerHeight = !isOnline ? AppSpacing.xxl + 4 : 0.0;
     final navBottomOffset = mediaQuery.padding.bottom + _navBottomMargin;
     final shellBottomInset = mediaQuery.padding.bottom +
         _navBottomMargin +
@@ -176,16 +173,9 @@ class _AppShell extends ConsumerWidget {
       backgroundColor: AppTheme.surface,
       body: Stack(
         children: [
-          if (!isOnline)
-            const Positioned(
-              left: 0,
-              top: 0,
-              right: 0,
-              child: OfflineBanner(),
-            ),
           Positioned(
             left: 0,
-            top: bannerHeight,
+            top: 0,
             right: 0,
             bottom: childBottomInset,
             child: MediaQuery(

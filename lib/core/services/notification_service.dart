@@ -3,7 +3,10 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
+import 'package:campusiq/features/timetable/data/models/course_reminder_model.dart';
+import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
+import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
@@ -17,6 +20,7 @@ class NotificationService {
   static const String _channelStreakAlert = 'streak_alert';
   static const String _channelMilestone = 'milestone_alert';
   static const String _channelWeeklyReview = 'weekly_review';
+  static const String _channelCourseReminder = 'course_reminder';
 
   // ── ID ranges ────────────────────────────────────────────────────────────
   // Free block reminders : 100–199
@@ -26,6 +30,7 @@ class NotificationService {
   // Weekly review        : 400
   // Session reminders    : 500–599
   // Pomodoro phase end   : 600
+  // Course reminders     : 700–999
 
   static const String _channelPomodoro = 'pomodoro_timer';
   static const int _pomodoroNotifId = 600;
@@ -217,6 +222,88 @@ class NotificationService {
       _channelStudyReminder,
       'Study Reminders',
     );
+  }
+
+  Future<void> scheduleCourseReminderNotifications({
+    required List<CourseReminderModel> reminders,
+    required List<TimetableSlotModel> slots,
+  }) async {
+    await cancelCourseReminderNotifications();
+
+    final enabledReminders = reminders.where((r) => r.isEnabled).toList();
+    if (enabledReminders.isEmpty || slots.isEmpty) return;
+
+    final now = DateTime.now();
+    int notifId = 700;
+
+    for (final reminder in enabledReminders) {
+      final courseSlots = slots
+          .where((slot) =>
+              slot.semesterKey == reminder.semesterKey &&
+              slot.courseCode.toUpperCase() ==
+                  reminder.courseCode.toUpperCase())
+          .toList()
+        ..sort((a, b) {
+          final day = a.dayIndex.compareTo(b.dayIndex);
+          if (day != 0) return day;
+          return a.startMinutes.compareTo(b.startMinutes);
+        });
+
+      for (final slot in courseSlots) {
+        if (notifId > 999) return;
+
+        final scheduledAt = _nextWeeklyCourseReminderTime(
+          now: now,
+          dayIndex: slot.dayIndex,
+          classStartMinutes: slot.startMinutes,
+          offsetMinutes: reminder.offsetMinutes,
+        );
+        final day = TimetableConstants.dayLabels[slot.dayIndex];
+        final start = TimetableConstants.minutesToLabel(slot.startMinutes);
+
+        await _plugin.zonedSchedule(
+          id: notifId,
+          title: '${slot.courseCode} starts soon',
+          body: '${slot.courseName} is at $start on $day.',
+          scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
+          notificationDetails: NotificationDetails(
+            android: _androidDetails(
+              _channelCourseReminder,
+              'Course Reminders',
+            ),
+          ),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        );
+        notifId++;
+      }
+    }
+  }
+
+  DateTime _nextWeeklyCourseReminderTime({
+    required DateTime now,
+    required int dayIndex,
+    required int classStartMinutes,
+    required int offsetMinutes,
+  }) {
+    final todayIndex = now.weekday - 1;
+    var daysUntilClass = dayIndex - todayIndex;
+    if (daysUntilClass < 0) daysUntilClass += 7;
+
+    final classDate = DateTime(now.year, now.month, now.day)
+        .add(Duration(days: daysUntilClass))
+        .add(Duration(minutes: classStartMinutes));
+    var reminderTime = classDate.subtract(Duration(minutes: offsetMinutes));
+    if (!reminderTime.isAfter(now)) {
+      reminderTime = reminderTime.add(const Duration(days: 7));
+    }
+    return reminderTime;
+  }
+
+  Future<void> cancelCourseReminderNotifications() async {
+    for (int i = 700; i <= 999; i++) {
+      await _plugin.cancel(id: i);
+    }
   }
 
   /// Cancel notification IDs 200 and 201 (used when a session is logged).

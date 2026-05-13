@@ -54,7 +54,7 @@ class DeepSeekClient {
       );
     } on SocketException {
       throw const DeepSeekException(
-        'No internet connection. AI features require a connection.',
+        "You're offline. Connect to use features.",
       );
     } on FormatException {
       throw const DeepSeekException(

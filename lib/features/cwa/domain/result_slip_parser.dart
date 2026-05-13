@@ -212,7 +212,7 @@ class ResultSlipParser {
       );
     } on SocketException {
       throw Exception(
-        'No internet connection. AI features require a connection.',
+        "You're offline. Connect to use features.",
       );
     } on FormatException {
       throw Exception(
