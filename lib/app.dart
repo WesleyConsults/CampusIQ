@@ -67,7 +67,9 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
 
     showModalBottomSheet(
       context: navContext,
+      useRootNavigator: true,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const WeeklyReviewSheet(),
     );

@@ -191,7 +191,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           TextButton.icon(
             onPressed: () => showModalBottomSheet(
               context: context,
+              useRootNavigator: true,
               isScrollControlled: true,
+              useSafeArea: true,
               backgroundColor: Colors.transparent,
               builder: (_) => const WeeklyReviewSheet(),
             ),
@@ -226,8 +228,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                 _HistoryTab(
                   activeSession: activeSession,
                   bottomContentPadding: bottomContentPadding,
-                  onStart: (isPomodoroMode, focus, shortBreak,
-                          longBreak, totalRounds) =>
+                  onStart: (isPomodoroMode, focus, shortBreak, longBreak,
+                          totalRounds) =>
                       _startSession(
                     context,
                     isPomodoroMode: isPomodoroMode,

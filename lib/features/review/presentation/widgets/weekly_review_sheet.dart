@@ -42,7 +42,8 @@ class _WeeklyReviewSheetState extends ConsumerState<WeeklyReviewSheet> {
         return Container(
           decoration: const BoxDecoration(
             color: AppTheme.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.md2)),
+            borderRadius:
+                BorderRadius.vertical(top: Radius.circular(AppRadii.md2)),
           ),
           child: reviewAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -328,15 +329,18 @@ class _HighlightChip extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
+  static const Color _highlightFill = Color(0xFFE6EBF5);
+  static const Color _highlightBorder = Color(0xFFB8C4D8);
+  static const Color _highlightText = Color(0xFF14213D);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withAlpha(20),
+        color: _highlightFill,
         borderRadius: BorderRadius.circular(AppRadii.xs2),
-        border: Border.all(color: color.withAlpha(60), width: 0.5),
+        border: Border.all(color: _highlightBorder, width: 1),
       ),
       child: Row(
         children: [
@@ -348,8 +352,11 @@ class _HighlightChip extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                      fontSize: 11, color: color, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: _highlightText,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 Text(
                   value,

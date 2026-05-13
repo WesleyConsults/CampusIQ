@@ -12,19 +12,9 @@ class InsightCard extends StatelessWidget {
 
   final Insight insight;
   final int index;
-
-  Color get _stripColor {
-    switch (insight.type) {
-      case InsightType.warning:
-        return const Color(0xFFF59E0B); // amber
-      case InsightType.positive:
-        return const Color(0xFF10B981); // green
-      case InsightType.neutral:
-        return const Color(0xFF3B82F6); // blue
-      case InsightType.tip:
-        return const Color(0xFF8B5CF6); // purple
-    }
-  }
+  static const Color _coursePillFill = Color(0xFFE6EBF5);
+  static const Color _coursePillBorder = Color(0xFFB8C4D8);
+  static const Color _coursePillText = Color(0xFF14213D);
 
   @override
   Widget build(BuildContext context) {
@@ -56,17 +46,6 @@ class InsightCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Colour strip
-              Container(
-                width: 5,
-                decoration: BoxDecoration(
-                  color: _stripColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(AppRadii.sm),
-                    bottomLeft: Radius.circular(AppRadii.sm),
-                  ),
-                ),
-              ),
               // Emoji icon
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -107,19 +86,20 @@ class InsightCard extends StatelessWidget {
                             vertical: AppSpacing.xxs,
                           ),
                           decoration: BoxDecoration(
-                            color: _stripColor.withAlpha(25),
+                            color: _coursePillFill,
                             borderRadius: BorderRadius.circular(AppRadii.md2),
-                            border: Border.all(
-                                color: _stripColor.withAlpha(80), width: 0.5),
+                            border:
+                                Border.all(color: _coursePillBorder, width: 1),
                           ),
                           child: Text(
                             insight.courseCode!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelMedium
-                                ?.copyWith(
-                                  color: _stripColor,
-                                ),
+                            style: const TextStyle(
+                              color: _coursePillText,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              height: 1.2,
+                              letterSpacing: 0,
+                            ),
                           ),
                         ),
                       ],
