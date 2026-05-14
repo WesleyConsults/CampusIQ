@@ -8,9 +8,18 @@ class UserPrefsRepository {
   final Isar _isar;
   UserPrefsRepository(this._isar);
 
+  static const int _defaultPomodoroFocusMinutes = 25;
+  static const int _defaultPomodoroShortBreakMinutes = 5;
+  static const int _defaultPomodoroLongBreakMinutes = 15;
+  static const int _defaultPomodoroTotalRounds = 4;
+  static const int _defaultThemeModeIndex = 1;
+
   Future<UserPrefsModel> _getOrCreate() async {
     final existing = await _isar.userPrefsModels.get(1);
-    if (existing != null) return existing;
+    if (existing != null) {
+      await _normalizeMigratedPrefs(existing);
+      return existing;
+    }
     final prefs = UserPrefsModel();
     try {
       await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
@@ -19,6 +28,84 @@ class UserPrefsRepository {
       rethrow;
     }
     return prefs;
+  }
+
+  Future<void> _normalizeMigratedPrefs(UserPrefsModel prefs) async {
+    var changed = false;
+
+    final focus = _validRangeOrDefault(
+      prefs.defaultFocusMinutes,
+      min: 10,
+      max: 60,
+      fallback: _defaultPomodoroFocusMinutes,
+    );
+    if (focus != prefs.defaultFocusMinutes) {
+      prefs.defaultFocusMinutes = focus;
+      changed = true;
+    }
+
+    final shortBreak = _validRangeOrDefault(
+      prefs.defaultShortBreakMinutes,
+      min: 5,
+      max: 30,
+      fallback: _defaultPomodoroShortBreakMinutes,
+    );
+    if (shortBreak != prefs.defaultShortBreakMinutes) {
+      prefs.defaultShortBreakMinutes = shortBreak;
+      changed = true;
+    }
+
+    final longBreak = _validRangeOrDefault(
+      prefs.defaultLongBreakMinutes,
+      min: 10,
+      max: 60,
+      fallback: _defaultPomodoroLongBreakMinutes,
+    );
+    if (longBreak != prefs.defaultLongBreakMinutes) {
+      prefs.defaultLongBreakMinutes = longBreak;
+      changed = true;
+    }
+
+    final rounds = _validRangeOrDefault(
+      prefs.defaultTotalRounds,
+      min: 2,
+      max: 10,
+      fallback: _defaultPomodoroTotalRounds,
+    );
+    if (rounds != prefs.defaultTotalRounds) {
+      prefs.defaultTotalRounds = rounds;
+      changed = true;
+    }
+
+    final themeMode = _validRangeOrDefault(
+      prefs.themeModeIndex,
+      min: 0,
+      max: 2,
+      fallback: _defaultThemeModeIndex,
+    );
+    if (themeMode != prefs.themeModeIndex) {
+      prefs.themeModeIndex = themeMode;
+      changed = true;
+    }
+
+    if (!changed) return;
+
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  int _validRangeOrDefault(
+    int value, {
+    required int min,
+    required int max,
+    required int fallback,
+  }) {
+    if (value < min || value > max) return fallback;
+    return value;
   }
 
   Stream<UserPrefsModel?> watchPrefs() {
@@ -137,6 +224,126 @@ class UserPrefsRepository {
       rethrow;
     }
   }
+
+  // ── Pomodoro defaults ─────────────────────────────────────────────────────
+
+  Future<int> getDefaultFocusMinutes() async {
+    final prefs = await _getOrCreate();
+    return prefs.defaultFocusMinutes;
+  }
+
+  Future<void> setDefaultFocusMinutes(int value) async {
+    final prefs = await _getOrCreate();
+    prefs.defaultFocusMinutes = value.clamp(10, 60).toInt();
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<int> getDefaultShortBreakMinutes() async {
+    final prefs = await _getOrCreate();
+    return prefs.defaultShortBreakMinutes;
+  }
+
+  Future<void> setDefaultShortBreakMinutes(int value) async {
+    final prefs = await _getOrCreate();
+    prefs.defaultShortBreakMinutes = value.clamp(5, 30).toInt();
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<int> getDefaultLongBreakMinutes() async {
+    final prefs = await _getOrCreate();
+    return prefs.defaultLongBreakMinutes;
+  }
+
+  Future<void> setDefaultLongBreakMinutes(int value) async {
+    final prefs = await _getOrCreate();
+    prefs.defaultLongBreakMinutes = value.clamp(10, 60).toInt();
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<int> getDefaultTotalRounds() async {
+    final prefs = await _getOrCreate();
+    return prefs.defaultTotalRounds;
+  }
+
+  Future<void> setDefaultTotalRounds(int value) async {
+    final prefs = await _getOrCreate();
+    prefs.defaultTotalRounds = value.clamp(2, 10).toInt();
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  // ── Timer feedback ────────────────────────────────────────────────────────
+
+  Future<bool> getVibrateOnTimerEnd() async {
+    final prefs = await _getOrCreate();
+    return prefs.vibrateOnTimerEnd;
+  }
+
+  Future<void> setVibrateOnTimerEnd(bool value) async {
+    final prefs = await _getOrCreate();
+    prefs.vibrateOnTimerEnd = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> getPlaySoundOnTimerEnd() async {
+    final prefs = await _getOrCreate();
+    return prefs.playSoundOnTimerEnd;
+  }
+
+  Future<void> setPlaySoundOnTimerEnd(bool value) async {
+    final prefs = await _getOrCreate();
+    prefs.playSoundOnTimerEnd = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  // ── Appearance ────────────────────────────────────────────────────────────
+
+  Future<int> getThemeModeIndex() async {
+    final prefs = await _getOrCreate();
+    return prefs.themeModeIndex;
+  }
+
+  Future<void> setThemeModeIndex(int value) async {
+    final prefs = await _getOrCreate();
+    prefs.themeModeIndex = value.clamp(0, 2).toInt();
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  // ── Active semester ───────────────────────────────────────────────────────
 
   Future<String> getActiveSemesterKey() async {
     final prefs = await _getOrCreate();

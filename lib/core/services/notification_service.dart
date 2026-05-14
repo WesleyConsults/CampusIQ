@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
@@ -54,12 +55,22 @@ class NotificationService {
   // ── Internal helpers ─────────────────────────────────────────────────────
 
   AndroidNotificationDetails _androidDetails(
-          String channelId, String channelName) =>
+    String channelId,
+    String channelName, {
+    bool vibrate = true,
+    bool playSound = true,
+  }) =>
       AndroidNotificationDetails(
         channelId,
         channelName,
         importance: Importance.high,
         priority: Priority.high,
+        playSound: playSound,
+        sound: playSound
+            ? null // system default
+            : const RawResourceAndroidNotificationSound('silent'),
+        vibrationPattern:
+            vibrate ? Int64List.fromList([0, 500, 200, 500]) : null,
       );
 
   Future<void> _schedule(
@@ -68,15 +79,19 @@ class NotificationService {
     String body,
     DateTime scheduledAt,
     String channelId,
-    String channelName,
-  ) async {
+    String channelName, {
+    bool vibrate = true,
+    bool playSound = true,
+  }) async {
     await _plugin.zonedSchedule(
       id: id,
       title: title,
       body: body,
       scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
-      notificationDetails:
-          NotificationDetails(android: _androidDetails(channelId, channelName)),
+      notificationDetails: NotificationDetails(
+        android: _androidDetails(channelId, channelName,
+            vibrate: vibrate, playSound: playSound),
+      ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
@@ -125,19 +140,32 @@ class NotificationService {
   }
 
   /// Schedule a streak-at-risk alert at 8:30 PM today.
+  /// If that time has already passed, fire immediately so late-day
+  /// users still get a nudge.
   Future<void> scheduleStreakAtRiskAlert(int currentStreak) async {
     await _plugin.cancel(id: 200);
     if (currentStreak <= 0) return;
 
     final now = DateTime.now();
     final target = DateTime(now.year, now.month, now.day, 20, 30);
-    if (target.isBefore(now)) return;
+    final body = "You haven't studied today. "
+        'Your $currentStreak-day streak ends at midnight.';
+
+    if (target.isBefore(now)) {
+      await showImmediate(
+        id: 200,
+        title: 'Your streak is at risk 🔥',
+        body: body,
+        channelId: _channelStreakAlert,
+        channelName: 'Streak Alerts',
+      );
+      return;
+    }
 
     await _schedule(
       200,
       'Your streak is at risk 🔥',
-      "You haven't studied today. "
-          'Your $currentStreak-day streak ends at midnight.',
+      body,
       target,
       _channelStreakAlert,
       'Streak Alerts',
@@ -355,6 +383,8 @@ class NotificationService {
     required bool isLongBreak,
     required int round,
     required int totalRounds,
+    bool vibrate = true,
+    bool playSound = true,
   }) async {
     await _plugin.cancel(id: _pomodoroNotifId);
     if (phaseEndsAt.isBefore(DateTime.now())) return;
@@ -380,6 +410,8 @@ class NotificationService {
       phaseEndsAt,
       _channelPomodoro,
       'Pomodoro Timer',
+      vibrate: vibrate,
+      playSound: playSound,
     );
   }
 

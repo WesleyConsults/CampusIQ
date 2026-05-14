@@ -47,6 +47,34 @@ class UserPrefsModel {
   @Name('zzManualCwaDraftJson')
   String manualCwaDraftJson = '';
 
+  // ── Pomodoro defaults ──────────────────────────────────────────────────────
+
+  @Name('zzPomodoroFocusMinutes')
+  int defaultFocusMinutes = 25;
+
+  @Name('zzPomodoroShortBreakMinutes')
+  int defaultShortBreakMinutes = 5;
+
+  @Name('zzPomodoroLongBreakMinutes')
+  int defaultLongBreakMinutes = 15;
+
+  @Name('zzPomodoroTotalRounds')
+  int defaultTotalRounds = 4;
+
+  // ── Timer feedback ────────────────────────────────────────────────────────
+
+  @Name('zzVibrateOnTimerEnd')
+  bool vibrateOnTimerEnd = true;
+
+  @Name('zzSoundOnTimerEnd')
+  bool playSoundOnTimerEnd = true;
+
+  // ── Appearance ────────────────────────────────────────────────────────────
+
+  /// 0 = system, 1 = light, 2 = dark
+  @Name('zzThemeModeIndex')
+  int themeModeIndex = 1;
+
   // ── Weekly Review ─────────────────────────────────────────────────────────
 
   /// JSON map of week key → reflection note. e.g. {"2026_W14": "focus more on maths"}

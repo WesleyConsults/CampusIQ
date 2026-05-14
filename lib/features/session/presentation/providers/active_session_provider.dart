@@ -7,6 +7,9 @@ import 'package:campusiq/features/session/domain/active_session_state.dart';
 class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
   ActiveSessionNotifier() : super(null);
 
+  bool _vibrateOnTimerEnd = true;
+  bool _playSoundOnTimerEnd = true;
+
   void startSession({
     required String courseCode,
     required String courseName,
@@ -16,7 +19,33 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
     Duration shortBreakDuration = const Duration(minutes: 5),
     Duration longBreakDuration = const Duration(minutes: 15),
     int totalRounds = 4,
+    bool vibrateOnTimerEnd = true,
+    bool playSoundOnTimerEnd = true,
   }) {
+    _vibrateOnTimerEnd = vibrateOnTimerEnd;
+    _playSoundOnTimerEnd = playSoundOnTimerEnd;
+
+    final normalizedFocusDuration = _validDurationOrDefault(
+      focusDuration,
+      minMinutes: 10,
+      maxMinutes: 60,
+      fallback: const Duration(minutes: 25),
+    );
+    final normalizedShortBreakDuration = _validDurationOrDefault(
+      shortBreakDuration,
+      minMinutes: 5,
+      maxMinutes: 30,
+      fallback: const Duration(minutes: 5),
+    );
+    final normalizedLongBreakDuration = _validDurationOrDefault(
+      longBreakDuration,
+      minMinutes: 10,
+      maxMinutes: 60,
+      fallback: const Duration(minutes: 15),
+    );
+    final normalizedTotalRounds =
+        totalRounds < 2 || totalRounds > 10 ? 4 : totalRounds;
+
     final now = DateTime.now();
     final s = ActiveSessionState(
       courseCode: courseCode,
@@ -24,11 +53,11 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
       courseSource: courseSource,
       startTime: now,
       isPomodoroMode: isPomodoroMode,
-      focusDuration: focusDuration,
-      shortBreakDuration: shortBreakDuration,
-      longBreakDuration: longBreakDuration,
-      totalRounds: totalRounds,
-      phaseEndsAt: isPomodoroMode ? now.add(focusDuration) : null,
+      focusDuration: normalizedFocusDuration,
+      shortBreakDuration: normalizedShortBreakDuration,
+      longBreakDuration: normalizedLongBreakDuration,
+      totalRounds: normalizedTotalRounds,
+      phaseEndsAt: isPomodoroMode ? now.add(normalizedFocusDuration) : null,
       phaseStartedAt: isPomodoroMode ? now : null,
     );
     state = s;
@@ -39,6 +68,8 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
         isLongBreak: false,
         round: 1,
         totalRounds: s.totalRounds,
+        vibrate: _vibrateOnTimerEnd,
+        playSound: _playSoundOnTimerEnd,
       );
     }
   }
@@ -68,6 +99,8 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
         isLongBreak: isLong,
         round: s.currentRound,
         totalRounds: s.totalRounds,
+        vibrate: _vibrateOnTimerEnd,
+        playSound: _playSoundOnTimerEnd,
       );
     } else {
       // Break ended → next focus round or session complete
@@ -88,6 +121,8 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
           isLongBreak: false,
           round: next.currentRound,
           totalRounds: next.totalRounds,
+          vibrate: _vibrateOnTimerEnd,
+          playSound: _playSoundOnTimerEnd,
         );
       }
     }
@@ -157,6 +192,8 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
       isLongBreak: next.isLongBreak,
       round: next.currentRound,
       totalRounds: next.totalRounds,
+      vibrate: _vibrateOnTimerEnd,
+      playSound: _playSoundOnTimerEnd,
     );
   }
 
@@ -174,6 +211,17 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
   }
 
   bool get isActive => state != null;
+
+  Duration _validDurationOrDefault(
+    Duration duration, {
+    required int minMinutes,
+    required int maxMinutes,
+    required Duration fallback,
+  }) {
+    final minutes = duration.inMinutes;
+    if (minutes < minMinutes || minutes > maxMinutes) return fallback;
+    return duration;
+  }
 }
 
 final activeSessionProvider =

@@ -82,10 +82,45 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'zzManualCwaDraftJson',
       type: IsarType.string,
     ),
-    r'zzTargetCwa': PropertySchema(
+    r'zzPomodoroFocusMinutes': PropertySchema(
       id: 13,
+      name: r'zzPomodoroFocusMinutes',
+      type: IsarType.long,
+    ),
+    r'zzPomodoroLongBreakMinutes': PropertySchema(
+      id: 14,
+      name: r'zzPomodoroLongBreakMinutes',
+      type: IsarType.long,
+    ),
+    r'zzPomodoroShortBreakMinutes': PropertySchema(
+      id: 15,
+      name: r'zzPomodoroShortBreakMinutes',
+      type: IsarType.long,
+    ),
+    r'zzPomodoroTotalRounds': PropertySchema(
+      id: 16,
+      name: r'zzPomodoroTotalRounds',
+      type: IsarType.long,
+    ),
+    r'zzSoundOnTimerEnd': PropertySchema(
+      id: 17,
+      name: r'zzSoundOnTimerEnd',
+      type: IsarType.bool,
+    ),
+    r'zzTargetCwa': PropertySchema(
+      id: 18,
       name: r'zzTargetCwa',
       type: IsarType.double,
+    ),
+    r'zzThemeModeIndex': PropertySchema(
+      id: 19,
+      name: r'zzThemeModeIndex',
+      type: IsarType.long,
+    ),
+    r'zzVibrateOnTimerEnd': PropertySchema(
+      id: 20,
+      name: r'zzVibrateOnTimerEnd',
+      type: IsarType.bool,
     )
   },
   estimateSize: _userPrefsModelEstimateSize,
@@ -135,7 +170,14 @@ void _userPrefsModelSerialize(
   writer.writeString(offsets[10], object.weeklyNotesJson);
   writer.writeString(offsets[11], object.activeSemesterKey);
   writer.writeString(offsets[12], object.manualCwaDraftJson);
-  writer.writeDouble(offsets[13], object.targetCwa);
+  writer.writeLong(offsets[13], object.defaultFocusMinutes);
+  writer.writeLong(offsets[14], object.defaultLongBreakMinutes);
+  writer.writeLong(offsets[15], object.defaultShortBreakMinutes);
+  writer.writeLong(offsets[16], object.defaultTotalRounds);
+  writer.writeBool(offsets[17], object.playSoundOnTimerEnd);
+  writer.writeDouble(offsets[18], object.targetCwa);
+  writer.writeLong(offsets[19], object.themeModeIndex);
+  writer.writeBool(offsets[20], object.vibrateOnTimerEnd);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -159,7 +201,14 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.weeklyNotesJson = reader.readString(offsets[10]);
   object.activeSemesterKey = reader.readString(offsets[11]);
   object.manualCwaDraftJson = reader.readString(offsets[12]);
-  object.targetCwa = reader.readDouble(offsets[13]);
+  object.defaultFocusMinutes = reader.readLong(offsets[13]);
+  object.defaultLongBreakMinutes = reader.readLong(offsets[14]);
+  object.defaultShortBreakMinutes = reader.readLong(offsets[15]);
+  object.defaultTotalRounds = reader.readLong(offsets[16]);
+  object.playSoundOnTimerEnd = reader.readBool(offsets[17]);
+  object.targetCwa = reader.readDouble(offsets[18]);
+  object.themeModeIndex = reader.readLong(offsets[19]);
+  object.vibrateOnTimerEnd = reader.readBool(offsets[20]);
   return object;
 }
 
@@ -197,7 +246,21 @@ P _userPrefsModelDeserializeProp<P>(
     case 12:
       return (reader.readString(offset)) as P;
     case 13:
+      return (reader.readLong(offset)) as P;
+    case 14:
+      return (reader.readLong(offset)) as P;
+    case 15:
+      return (reader.readLong(offset)) as P;
+    case 16:
+      return (reader.readLong(offset)) as P;
+    case 17:
+      return (reader.readBool(offset)) as P;
+    case 18:
       return (reader.readDouble(offset)) as P;
+    case 19:
+      return (reader.readLong(offset)) as P;
+    case 20:
+      return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -1271,6 +1334,240 @@ extension UserPrefsModelQueryFilter
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultFocusMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzPomodoroFocusMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultFocusMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzPomodoroFocusMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultFocusMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzPomodoroFocusMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultFocusMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzPomodoroFocusMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultLongBreakMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzPomodoroLongBreakMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultLongBreakMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzPomodoroLongBreakMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultLongBreakMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzPomodoroLongBreakMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultLongBreakMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzPomodoroLongBreakMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultShortBreakMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzPomodoroShortBreakMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultShortBreakMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzPomodoroShortBreakMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultShortBreakMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzPomodoroShortBreakMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultShortBreakMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzPomodoroShortBreakMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultTotalRoundsEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzPomodoroTotalRounds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultTotalRoundsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzPomodoroTotalRounds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultTotalRoundsLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzPomodoroTotalRounds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      defaultTotalRoundsBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzPomodoroTotalRounds',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      playSoundOnTimerEndEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzSoundOnTimerEnd',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
       targetCwaEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -1332,6 +1629,72 @@ extension UserPrefsModelQueryFilter
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      themeModeIndexEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzThemeModeIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      themeModeIndexGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzThemeModeIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      themeModeIndexLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzThemeModeIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      themeModeIndexBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzThemeModeIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      vibrateOnTimerEndEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzVibrateOnTimerEnd',
+        value: value,
       ));
     });
   }
@@ -1527,6 +1890,76 @@ extension UserPrefsModelQuerySortBy
     });
   }
 
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDefaultFocusMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroFocusMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDefaultFocusMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroFocusMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDefaultLongBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroLongBreakMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDefaultLongBreakMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroLongBreakMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDefaultShortBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroShortBreakMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDefaultShortBreakMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroShortBreakMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDefaultTotalRounds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroTotalRounds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDefaultTotalRoundsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroTotalRounds', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByPlaySoundOnTimerEnd() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzSoundOnTimerEnd', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByPlaySoundOnTimerEndDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzSoundOnTimerEnd', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy> sortByTargetCwa() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzTargetCwa', Sort.asc);
@@ -1537,6 +1970,34 @@ extension UserPrefsModelQuerySortBy
       sortByTargetCwaDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzTargetCwa', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByThemeModeIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzThemeModeIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByThemeModeIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzThemeModeIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByVibrateOnTimerEnd() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzVibrateOnTimerEnd', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByVibrateOnTimerEndDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzVibrateOnTimerEnd', Sort.desc);
     });
   }
 }
@@ -1737,6 +2198,76 @@ extension UserPrefsModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDefaultFocusMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroFocusMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDefaultFocusMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroFocusMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDefaultLongBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroLongBreakMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDefaultLongBreakMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroLongBreakMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDefaultShortBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroShortBreakMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDefaultShortBreakMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroShortBreakMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDefaultTotalRounds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroTotalRounds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDefaultTotalRoundsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzPomodoroTotalRounds', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByPlaySoundOnTimerEnd() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzSoundOnTimerEnd', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByPlaySoundOnTimerEndDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzSoundOnTimerEnd', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy> thenByTargetCwa() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzTargetCwa', Sort.asc);
@@ -1747,6 +2278,34 @@ extension UserPrefsModelQuerySortThenBy
       thenByTargetCwaDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzTargetCwa', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByThemeModeIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzThemeModeIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByThemeModeIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzThemeModeIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByVibrateOnTimerEnd() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzVibrateOnTimerEnd', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByVibrateOnTimerEndDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzVibrateOnTimerEnd', Sort.desc);
     });
   }
 }
@@ -1850,9 +2409,58 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByDefaultFocusMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzPomodoroFocusMinutes');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByDefaultLongBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzPomodoroLongBreakMinutes');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByDefaultShortBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzPomodoroShortBreakMinutes');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByDefaultTotalRounds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzPomodoroTotalRounds');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByPlaySoundOnTimerEnd() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzSoundOnTimerEnd');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByTargetCwa() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'zzTargetCwa');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByThemeModeIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzThemeModeIndex');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByVibrateOnTimerEnd() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzVibrateOnTimerEnd');
     });
   }
 }
@@ -1956,9 +2564,57 @@ extension UserPrefsModelQueryProperty
     });
   }
 
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      defaultFocusMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzPomodoroFocusMinutes');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      defaultLongBreakMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzPomodoroLongBreakMinutes');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      defaultShortBreakMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzPomodoroShortBreakMinutes');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      defaultTotalRoundsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzPomodoroTotalRounds');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, bool, QQueryOperations>
+      playSoundOnTimerEndProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzSoundOnTimerEnd');
+    });
+  }
+
   QueryBuilder<UserPrefsModel, double, QQueryOperations> targetCwaProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'zzTargetCwa');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, int, QQueryOperations> themeModeIndexProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzThemeModeIndex');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, bool, QQueryOperations>
+      vibrateOnTimerEndProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzVibrateOnTimerEnd');
     });
   }
 }

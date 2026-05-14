@@ -68,6 +68,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       if (!context.mounted) return;
     }
 
+    final prefsRepo = ref.read(userPrefsRepositoryProvider);
+    final vibrate = await prefsRepo?.getVibrateOnTimerEnd() ?? true;
+    final playSound = await prefsRepo?.getPlaySoundOnTimerEnd() ?? true;
+    if (!context.mounted) return;
+
     final picked = await showModalBottomSheet<PickedCourse>(
       context: context,
       isScrollControlled: true,
@@ -87,6 +92,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           shortBreakDuration: shortBreakDuration,
           longBreakDuration: longBreakDuration,
           totalRounds: totalRounds,
+          vibrateOnTimerEnd: vibrate,
+          playSoundOnTimerEnd: playSound,
         );
   }
 
@@ -492,7 +499,7 @@ class _TabSwitcher extends StatelessWidget {
   }
 }
 
-class _StartCard extends StatefulWidget {
+class _StartCard extends ConsumerStatefulWidget {
   final void Function(
     bool isPomodoroMode,
     Duration focus,
@@ -504,16 +511,85 @@ class _StartCard extends StatefulWidget {
   const _StartCard({required this.onStart});
 
   @override
-  State<_StartCard> createState() => _StartCardState();
+  ConsumerState<_StartCard> createState() => _StartCardState();
 }
 
-class _StartCardState extends State<_StartCard> {
+class _StartCardState extends ConsumerState<_StartCard> {
+  static const int _defaultTotalRounds = 4;
+  static const int _defaultFocusMinutes = 25;
+  static const int _defaultShortBreakMinutes = 5;
+  static const int _defaultLongBreakMinutes = 15;
+
   bool _isPomodoroMode = false;
   bool _showPomodoroCustomizer = false;
-  int _totalRounds = 4;
-  int _focusMinutes = 25;
-  int _shortBreakMinutes = 5;
-  int _longBreakMinutes = 15;
+  int _totalRounds = _defaultTotalRounds;
+  int _focusMinutes = _defaultFocusMinutes;
+  int _shortBreakMinutes = _defaultShortBreakMinutes;
+  int _longBreakMinutes = _defaultLongBreakMinutes;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDefaults();
+  }
+
+  Future<void> _loadDefaults() async {
+    final repo = ref.read(userPrefsRepositoryProvider);
+    if (repo == null) return;
+    final focus = _validRangeOrDefault(
+      await repo.getDefaultFocusMinutes(),
+      min: 10,
+      max: 60,
+      fallback: _defaultFocusMinutes,
+    );
+    final short = _validRangeOrDefault(
+      await repo.getDefaultShortBreakMinutes(),
+      min: 5,
+      max: 30,
+      fallback: _defaultShortBreakMinutes,
+    );
+    final long = _validRangeOrDefault(
+      await repo.getDefaultLongBreakMinutes(),
+      min: 10,
+      max: 60,
+      fallback: _defaultLongBreakMinutes,
+    );
+    final rounds = _validRangeOrDefault(
+      await repo.getDefaultTotalRounds(),
+      min: 2,
+      max: 10,
+      fallback: _defaultTotalRounds,
+    );
+    if (mounted) {
+      setState(() {
+        _focusMinutes = focus;
+        _shortBreakMinutes = short;
+        _longBreakMinutes = long;
+        _totalRounds = rounds;
+      });
+    }
+  }
+
+  Future<void> _saveDefaults() async {
+    final repo = ref.read(userPrefsRepositoryProvider);
+    if (repo == null) return;
+    await Future.wait([
+      repo.setDefaultFocusMinutes(_focusMinutes),
+      repo.setDefaultShortBreakMinutes(_shortBreakMinutes),
+      repo.setDefaultLongBreakMinutes(_longBreakMinutes),
+      repo.setDefaultTotalRounds(_totalRounds),
+    ]);
+  }
+
+  int _validRangeOrDefault(
+    int value, {
+    required int min,
+    required int max,
+    required int fallback,
+  }) {
+    if (value < min || value > max) return fallback;
+    return value;
+  }
 
   void _adjust(
     int current,
@@ -730,13 +806,16 @@ class _StartCardState extends State<_StartCard> {
           SizedBox(
             width: double.infinity,
             child: CampusButton(
-              onPressed: () => widget.onStart(
-                _isPomodoroMode,
-                Duration(minutes: _focusMinutes),
-                Duration(minutes: _shortBreakMinutes),
-                Duration(minutes: _longBreakMinutes),
-                _totalRounds,
-              ),
+              onPressed: () {
+                _saveDefaults();
+                widget.onStart(
+                  _isPomodoroMode,
+                  Duration(minutes: _focusMinutes),
+                  Duration(minutes: _shortBreakMinutes),
+                  Duration(minutes: _longBreakMinutes),
+                  _totalRounds,
+                );
+              },
               icon: Icon(
                 _isPomodoroMode ? LucideIcons.timerReset : LucideIcons.play,
                 size: AppIconSizes.lg,
