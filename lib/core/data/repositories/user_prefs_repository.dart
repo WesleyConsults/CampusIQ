@@ -12,7 +12,7 @@ class UserPrefsRepository {
   static const int _defaultPomodoroShortBreakMinutes = 5;
   static const int _defaultPomodoroLongBreakMinutes = 15;
   static const int _defaultPomodoroTotalRounds = 4;
-  static const int _defaultThemeModeIndex = 1;
+  static const int _defaultThemeModeIndex = 0;
 
   Future<UserPrefsModel> _getOrCreate() async {
     final existing = await _isar.userPrefsModels.get(1);

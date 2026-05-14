@@ -5,6 +5,7 @@ import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/constants/app_constants.dart';
 import 'package:campusiq/core/services/notification_service.dart';
 
+import 'package:campusiq/features/settings/presentation/providers/settings_provider.dart';
 import 'package:campusiq/features/review/presentation/providers/review_provider.dart';
 import 'package:campusiq/features/review/presentation/widgets/weekly_review_sheet.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
@@ -135,9 +136,13 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
 
   @override
   Widget build(BuildContext context) {
+    final themeMode =
+        ref.watch(themeModeProvider).valueOrNull ?? ThemeMode.system;
     return MaterialApp.router(
       title: AppConstants.appName,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
     );

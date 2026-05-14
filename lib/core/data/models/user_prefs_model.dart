@@ -73,7 +73,7 @@ class UserPrefsModel {
 
   /// 0 = system, 1 = light, 2 = dark
   @Name('zzThemeModeIndex')
-  int themeModeIndex = 1;
+  int themeModeIndex = 0;
 
   // ── Weekly Review ─────────────────────────────────────────────────────────
 

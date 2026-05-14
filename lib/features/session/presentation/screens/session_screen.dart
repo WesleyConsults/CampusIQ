@@ -191,7 +191,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     );
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Sessions'),
         actions: [
@@ -473,22 +473,23 @@ class _TabSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: AppRadii.pill,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: TabBar(
         controller: controller,
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
-        indicator: const BoxDecoration(
-          color: AppTheme.primary,
+        indicator: BoxDecoration(
+          color: colorScheme.primary,
           borderRadius: AppRadii.pill,
         ),
-        labelColor: Colors.white,
-        unselectedLabelColor: AppTheme.textSecondary,
+        labelColor: colorScheme.onPrimary,
+        unselectedLabelColor: colorScheme.onSurfaceVariant,
         overlayColor: WidgetStateProperty.all(Colors.transparent),
         tabs: const [
           Tab(text: 'History'),
@@ -606,6 +607,7 @@ class _StartCardState extends ConsumerState<_StartCard> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final title = _isPomodoroMode ? 'Pomodoro focus' : 'Normal study session';
     final description = _isPomodoroMode
         ? 'Use focused rounds with gentle breaks when you want a clearer rhythm.'
@@ -636,7 +638,7 @@ class _StartCardState extends ConsumerState<_StartCard> {
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppTheme.textPrimary,
+                  color: colorScheme.onSurface,
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
                 ),
@@ -645,7 +647,7 @@ class _StartCardState extends ConsumerState<_StartCard> {
           Text(
             description,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                   fontSize: 13,
                   height: 1.35,
                 ),
@@ -840,12 +842,13 @@ class _ModeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xxs2),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: AppRadii.pill,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -887,6 +890,7 @@ class _ModeSegment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: AppRadii.pill,
@@ -897,7 +901,7 @@ class _ModeSegment extends StatelessWidget {
           vertical: AppSpacing.xs2,
         ),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.primary : Colors.transparent,
+          color: selected ? colorScheme.primary : Colors.transparent,
           borderRadius: AppRadii.pill,
         ),
         child: Row(
@@ -906,7 +910,9 @@ class _ModeSegment extends StatelessWidget {
             Icon(
               icon,
               size: AppIconSizes.md,
-              color: selected ? Colors.white : AppTheme.textSecondary,
+              color: selected
+                  ? colorScheme.onPrimary
+                  : colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: AppSpacing.xs),
             Flexible(
@@ -914,7 +920,9 @@ class _ModeSegment extends StatelessWidget {
                 label,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: selected ? Colors.white : AppTheme.textSecondary,
+                  color: selected
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -1053,6 +1061,7 @@ class _StepperButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onPressed,
       borderRadius: AppRadii.pill,
@@ -1060,11 +1069,11 @@ class _StepperButton extends StatelessWidget {
         width: _size,
         height: _size,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colorScheme.surface,
           borderRadius: AppRadii.pill,
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: colorScheme.outlineVariant),
         ),
-        child: Icon(icon, size: AppIconSizes.md, color: AppTheme.primary),
+        child: Icon(icon, size: AppIconSizes.md, color: colorScheme.primary),
       ),
     );
   }

@@ -1,15 +1,22 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:campusiq/core/services/notification_service.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
-import 'package:campusiq/core/providers/subscription_provider.dart';
+
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
 import 'package:campusiq/features/settings/presentation/providers/settings_provider.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
+
+// ── Static URLs ────────────────────────────────────────────────────────────
+const _privacyUrl = 'https://campusiq.app/privacy';
+const _termsUrl = 'https://campusiq.app/terms';
+const _feedbackEmail = 'hello@campusiq.app';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -20,7 +27,7 @@ class SettingsScreen extends ConsumerWidget {
     final activeSemesterKey = ref.watch(activeSemesterProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Settings',
             style: TextStyle(fontWeight: FontWeight.w700)),
@@ -31,119 +38,125 @@ class SettingsScreen extends ConsumerWidget {
         data: (prefs) => ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
-            Card(
-              child: ListTile(
-                leading: const Icon(
-                  LucideIcons.calendarDays,
-                  color: AppTheme.textSecondary,
-                ),
-                title: const Text(
-                  'Active semester',
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                ),
-                subtitle: Text(
-                  formatActiveSemesterLabel(activeSemesterKey),
-                  style: const TextStyle(color: AppTheme.textSecondary),
-                ),
-                trailing: const Icon(
-                  LucideIcons.chevronRight,
-                  color: AppTheme.textSecondary,
-                ),
+            // ── Academic ───────────────────────────────────────────────────
+            const _SectionLabel(title: 'Academic'),
+            const SizedBox(height: AppSpacing.xs),
+            _Card(children: [
+              _RowTile(
+                leading: LucideIcons.calendarDays,
+                title: 'Active semester',
+                subtitle: formatActiveSemesterLabel(activeSemesterKey),
                 onTap: () => showActiveSemesterDialog(
                   context,
                   ref,
                   activeSemesterKey,
                 ),
               ),
-            ),
+            ]),
 
             const SizedBox(height: AppSpacing.lg),
 
-            // ── Notification toggles ────────────────────────────────────
-            Card(
-              child: Column(
-                children: [
-                  _NotifTile(
-                    title: 'Study reminders',
-                    subtitle: 'Free block and daily study alerts',
-                    value: prefs.notifyStudyReminders,
-                    onChanged: (v) async {
-                      final repo = ref.read(userPrefsRepositoryProvider);
-                      await repo?.setNotifyStudyReminders(v);
-                      if (!v) {
-                        for (int i = 100; i < 200; i++) {
-                          await NotificationService.instance
-                              .cancelNotification(i);
-                        }
-                        await NotificationService.instance
-                            .cancelNotification(201);
-                      }
-                      ref.invalidate(notificationPrefsProvider);
-                    },
-                  ),
-                  const Divider(height: 1),
-                  _NotifTile(
-                    title: 'Streak alerts',
-                    subtitle: 'Notified when your streak is at risk',
-                    value: prefs.notifyStreakAlerts,
-                    onChanged: (v) async {
-                      final repo = ref.read(userPrefsRepositoryProvider);
-                      await repo?.setNotifyStreakAlerts(v);
-                      if (!v) {
-                        await NotificationService.instance
-                            .cancelNotification(200);
-                      }
-                      ref.invalidate(notificationPrefsProvider);
-                    },
-                  ),
-                  const Divider(height: 1),
-                  _NotifTile(
-                    title: 'Milestone alerts',
-                    subtitle: 'Notified when a streak milestone is near',
-                    value: prefs.notifyMilestoneAlerts,
-                    onChanged: (v) async {
-                      final repo = ref.read(userPrefsRepositoryProvider);
-                      await repo?.setNotifyMilestoneAlerts(v);
-                      if (!v) {
-                        await NotificationService.instance
-                            .cancelNotification(300);
-                      }
-                      ref.invalidate(notificationPrefsProvider);
-                    },
-                  ),
-                  const Divider(height: 1),
-                  _NotifTile(
-                    title: 'Weekly review prompt',
-                    subtitle: 'Monday morning summary reminder',
-                    value: prefs.notifyWeeklyReview,
-                    onChanged: (v) async {
-                      final repo = ref.read(userPrefsRepositoryProvider);
-                      await repo?.setNotifyWeeklyReview(v);
-                      if (!v) {
-                        await NotificationService.instance
-                            .cancelNotification(400);
-                      }
-                      ref.invalidate(notificationPrefsProvider);
-                    },
-                  ),
-                ],
+            // ── Timer Feedback ─────────────────────────────────────────────
+            const _SectionLabel(title: 'Timer Feedback'),
+            const SizedBox(height: AppSpacing.xs),
+            _Card(children: [
+              _SwitchTile(
+                title: 'Vibrate on phase end',
+                subtitle: 'Phone vibrates when a focus or break phase finishes',
+                value: prefs.vibrateOnTimerEnd,
+                onChanged: (v) async {
+                  final repo = ref.read(userPrefsRepositoryProvider);
+                  await repo?.setVibrateOnTimerEnd(v);
+                  ref.invalidate(notificationPrefsProvider);
+                },
               ),
-            ),
+              const Divider(height: 1),
+              _SwitchTile(
+                title: 'Sound on phase end',
+                subtitle: 'Notification sound when a timer phase finishes',
+                value: prefs.playSoundOnTimerEnd,
+                onChanged: (v) async {
+                  final repo = ref.read(userPrefsRepositoryProvider);
+                  await repo?.setPlaySoundOnTimerEnd(v);
+                  ref.invalidate(notificationPrefsProvider);
+                },
+              ),
+            ]),
 
             const SizedBox(height: AppSpacing.lg),
 
-            // ── Daily reminder time ──────────────────────────────────────
-            Card(
-              child: ListTile(
-                title: const Text('Daily study reminder time',
-                    style: TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: Text(
-                  _formatTime(
-                      prefs.dailyReminderHour, prefs.dailyReminderMinute),
-                  style: const TextStyle(color: AppTheme.textSecondary),
-                ),
-                trailing: const Icon(LucideIcons.clock,
-                    color: AppTheme.textSecondary),
+            // ── Notifications ──────────────────────────────────────────────
+            const _SectionLabel(title: 'Notifications'),
+            const SizedBox(height: AppSpacing.xs),
+            _Card(children: [
+              _SwitchTile(
+                title: 'Study reminders',
+                subtitle: 'Free block and daily study alerts',
+                value: prefs.notifyStudyReminders,
+                onChanged: (v) async {
+                  final repo = ref.read(userPrefsRepositoryProvider);
+                  await repo?.setNotifyStudyReminders(v);
+                  if (!v) {
+                    for (int i = 100; i < 200; i++) {
+                      await NotificationService.instance.cancelNotification(i);
+                    }
+                    await NotificationService.instance.cancelNotification(201);
+                  }
+                  ref.invalidate(notificationPrefsProvider);
+                },
+              ),
+              const Divider(height: 1),
+              _SwitchTile(
+                title: 'Streak alerts',
+                subtitle: 'Notified when your streak is at risk',
+                value: prefs.notifyStreakAlerts,
+                onChanged: (v) async {
+                  final repo = ref.read(userPrefsRepositoryProvider);
+                  await repo?.setNotifyStreakAlerts(v);
+                  if (!v) {
+                    await NotificationService.instance.cancelNotification(200);
+                  }
+                  ref.invalidate(notificationPrefsProvider);
+                },
+              ),
+              const Divider(height: 1),
+              _SwitchTile(
+                title: 'Milestone alerts',
+                subtitle: 'Notified when a streak milestone is near',
+                value: prefs.notifyMilestoneAlerts,
+                onChanged: (v) async {
+                  final repo = ref.read(userPrefsRepositoryProvider);
+                  await repo?.setNotifyMilestoneAlerts(v);
+                  if (!v) {
+                    await NotificationService.instance.cancelNotification(300);
+                  }
+                  ref.invalidate(notificationPrefsProvider);
+                },
+              ),
+              const Divider(height: 1),
+              _SwitchTile(
+                title: 'Weekly review prompt',
+                subtitle: 'Monday morning summary reminder',
+                value: prefs.notifyWeeklyReview,
+                onChanged: (v) async {
+                  final repo = ref.read(userPrefsRepositoryProvider);
+                  await repo?.setNotifyWeeklyReview(v);
+                  if (!v) {
+                    await NotificationService.instance.cancelNotification(400);
+                  }
+                  ref.invalidate(notificationPrefsProvider);
+                },
+              ),
+            ]),
+
+            const SizedBox(height: AppSpacing.md),
+
+            _Card(children: [
+              _RowTile(
+                leading: LucideIcons.clock,
+                title: 'Daily study reminder time',
+                subtitle: _formatTime(
+                    prefs.dailyReminderHour, prefs.dailyReminderMinute),
                 onTap: () async {
                   final picked = await showTimePicker(
                     context: context,
@@ -158,16 +171,10 @@ class SettingsScreen extends ConsumerWidget {
                   ref.invalidate(notificationPrefsProvider);
                 },
               ),
-            ),
+            ]),
 
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.sm),
 
-            // ── DEV ONLY: premium toggle ──────────────────────────────────
-            if (kDebugMode) _DevPremiumTile(),
-
-            const SizedBox(height: AppSpacing.xxl),
-
-            // ── Cancel all button ────────────────────────────────────────
             OutlinedButton.icon(
               onPressed: () async {
                 await NotificationService.instance.cancelAllReminders();
@@ -185,6 +192,67 @@ class SettingsScreen extends ConsumerWidget {
                 side: const BorderSide(color: Colors.red),
               ),
             ),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // ── Appearance ─────────────────────────────────────────────────
+            const _SectionLabel(title: 'Appearance'),
+            const SizedBox(height: AppSpacing.xs),
+            _Card(children: [
+              _RowTile(
+                leading: LucideIcons.sunMoon,
+                title: 'Theme',
+                subtitle: _themeLabel(prefs.themeModeIndex),
+                onTap: () =>
+                    _showThemePicker(context, ref, prefs.themeModeIndex),
+              ),
+            ]),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // ── About ──────────────────────────────────────────────────────
+            const _SectionLabel(title: 'About'),
+            const SizedBox(height: AppSpacing.xs),
+            _Card(children: [
+              _RowTile(
+                leading: LucideIcons.info,
+                title: 'About CampusIQ',
+                subtitle: 'App info, version, and licenses',
+                onTap: () => showAboutDialog(
+                  context: context,
+                  applicationName: 'CampusIQ',
+                  applicationVersion: '1.0.0',
+                  applicationIcon: const Icon(
+                    LucideIcons.graduationCap,
+                    size: 48,
+                  ),
+                  children: [
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              _RowTile(
+                leading: LucideIcons.shield,
+                title: 'Privacy policy',
+                onTap: () => _launchUrl(context, _privacyUrl),
+              ),
+              const Divider(height: 1),
+              _RowTile(
+                leading: LucideIcons.fileText,
+                title: 'Terms of service',
+                onTap: () => _launchUrl(context, _termsUrl),
+              ),
+              const Divider(height: 1),
+              _RowTile(
+                leading: LucideIcons.mail,
+                title: 'Send feedback',
+                subtitle: _feedbackEmail,
+                onTap: () => _launchUrl(context, 'mailto:$_feedbackEmail'),
+              ),
+            ]),
+
+            const SizedBox(height: AppSpacing.xxl),
           ],
         ),
       ),
@@ -196,58 +264,215 @@ class SettingsScreen extends ConsumerWidget {
     final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
     return '${h.toString()}:${minute.toString().padLeft(2, '0')} $suffix';
   }
+
+  String _themeLabel(int index) {
+    switch (index) {
+      case 0:
+        return 'System';
+      case 2:
+        return 'Dark';
+      default:
+        return 'Light';
+    }
+  }
 }
 
-class _DevPremiumTile extends ConsumerWidget {
+// ── Theme Picker Bottom Sheet ──────────────────────────────────────────────
+
+Future<void> _showThemePicker(
+  BuildContext context,
+  WidgetRef ref,
+  int currentIndex,
+) async {
+  int selected = currentIndex;
+
+  await showModalBottomSheet(
+    context: context,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) {
+      return StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return _CampusBottomSheet(
+            title: 'Theme',
+            child: RadioGroup<int>(
+              groupValue: selected,
+              onChanged: (v) {
+                if (v == null) return;
+                setSheetState(() => selected = v);
+                unawaited(_saveThemeMode(ctx, ref, v));
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final entry in [
+                    (index: 1, icon: LucideIcons.sun, label: 'Light'),
+                    (index: 2, icon: LucideIcons.moon, label: 'Dark'),
+                    (index: 0, icon: LucideIcons.sunMoon, label: 'System'),
+                  ])
+                    RadioListTile<int>(
+                      value: entry.index,
+                      title: Row(
+                        children: [
+                          Icon(entry.icon, size: AppIconSizes.lg),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(entry.label),
+                        ],
+                      ),
+                      activeColor: Theme.of(ctx).colorScheme.primary,
+                    ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+Future<void> _saveThemeMode(
+    BuildContext context, WidgetRef ref, int value) async {
+  final repo = ref.read(userPrefsRepositoryProvider);
+  await repo?.setThemeModeIndex(value);
+  ref.invalidate(notificationPrefsProvider);
+  ref.invalidate(themeModeProvider);
+  if (!context.mounted) return;
+  Navigator.of(context).pop();
+}
+
+// ── Shared bottom sheet wrapper ────────────────────────────────────────────
+
+class _CampusBottomSheet extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _CampusBottomSheet({required this.title, required this.child});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isPremiumAsync = ref.watch(isPremiumProvider);
-    return isPremiumAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (isPremium) => Card(
-        color: Colors.amber.shade50,
-        child: ListTile(
-          leading: const Icon(LucideIcons.code, color: Colors.amber),
-          title: Text('DEV: Premium status',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  )),
-          subtitle: Text(
-            isPremium ? 'Currently: Premium' : 'Currently: Free',
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: isPremium ? Colors.green.shade700 : Colors.grey,
-                ),
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color:
+            theme.bottomSheetTheme.backgroundColor ?? theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.xl,
+        AppSpacing.md,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ),
-          trailing: Switch(
-            value: isPremium,
-            activeThumbColor: AppTheme.primary,
-            onChanged: (v) async {
-              final repo =
-                  await ref.read(subscriptionRepositoryProvider.future);
-              await repo.devSetPremium(v);
-              ref.invalidate(isPremiumProvider);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(v ? 'Premium ON' : 'Premium OFF'),
-                  duration: const Duration(seconds: 1),
-                ));
-              }
-            },
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge,
           ),
-        ),
+          const SizedBox(height: AppSpacing.md),
+          child,
+        ],
       ),
     );
   }
 }
 
-class _NotifTile extends StatelessWidget {
+// ── Settings row tiles ─────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String title;
+
+  const _SectionLabel({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding:
+          const EdgeInsets.only(left: AppSpacing.xs, bottom: AppSpacing.xxs),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              letterSpacing: 0.5,
+            ),
+      ),
+    );
+  }
+}
+
+class _Card extends StatelessWidget {
+  final List<Widget> children;
+
+  const _Card({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Column(children: children),
+    );
+  }
+}
+
+class _RowTile extends StatelessWidget {
+  final IconData leading;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
+
+  const _RowTile({
+    required this.leading,
+    required this.title,
+    this.subtitle,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ListTile(
+      leading: Icon(leading, color: colorScheme.onSurfaceVariant),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle!,
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
+            )
+          : null,
+      trailing: onTap != null
+          ? Icon(
+              LucideIcons.chevronRight,
+              color: colorScheme.onSurfaceVariant,
+            )
+          : null,
+      onTap: onTap,
+    );
+  }
+}
+
+class _SwitchTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
 
-  const _NotifTile({
+  const _SwitchTile({
     required this.title,
     required this.subtitle,
     required this.value,
@@ -256,6 +481,7 @@ class _NotifTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SwitchListTile(
       title: Text(title,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -263,10 +489,26 @@ class _NotifTile extends StatelessWidget {
               )),
       subtitle: Text(subtitle,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: AppColors.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               )),
       value: value,
       onChanged: onChanged,
     );
+  }
+}
+
+// ── URL launcher helper ────────────────────────────────────────────────────
+
+Future<void> _launchUrl(BuildContext context, String url) async {
+  final uri = Uri.parse(url);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } else {
+    await Clipboard.setData(ClipboardData(text: url));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Copied to clipboard: $url')),
+      );
+    }
   }
 }
