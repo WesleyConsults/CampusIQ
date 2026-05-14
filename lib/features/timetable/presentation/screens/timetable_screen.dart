@@ -177,7 +177,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     final activeReminderCount = ref.watch(activeCourseReminderCountProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Table'),
         actions: [
@@ -200,7 +200,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                       color: AppTheme.primary,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: AppTheme.surface,
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         width: 1.5,
                       ),
                     ),
@@ -259,9 +259,13 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                           : '${classSlots.length} class${classSlots.length == 1 ? '' : 'es'}',
                       icon: LucideIcons.calendarDays,
                       backgroundColor: classSlots.isEmpty
-                          ? AppColors.surfaceMuted
-                          : AppColors.goldSoft,
-                      foregroundColor: AppTheme.primary,
+                          ? Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                          : Theme.of(context).colorScheme.secondaryContainer,
+                      foregroundColor: classSlots.isEmpty
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                          : Theme.of(context).colorScheme.onSecondaryContainer,
                     ),
                   ],
                 ),
@@ -354,6 +358,7 @@ class _TodaySummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final heading = TimetableConstants.dayFullLabels[activeDay];
     final classSummary = classSlots.isEmpty
         ? 'No classes today'
@@ -380,7 +385,7 @@ class _TodaySummaryCard extends StatelessWidget {
                   heading,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 15,
-                        color: AppTheme.primary,
+                        color: colorScheme.primary,
                       ),
                 ),
               ),
@@ -395,7 +400,7 @@ class _TodaySummaryCard extends StatelessWidget {
           Text(
             classSummary,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textPrimary,
+                  color: colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
                   fontSize: 12.5,
                   height: 1.25,
@@ -452,9 +457,16 @@ class _CompactSummaryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final bg = backgroundColor == AppColors.goldSoft
+        ? colorScheme.secondaryContainer
+        : colorScheme.surfaceContainerHighest;
+    final fg = backgroundColor == AppColors.goldSoft
+        ? colorScheme.onSecondaryContainer
+        : colorScheme.onSurfaceVariant;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: bg,
         borderRadius: AppRadii.pill,
       ),
       child: Padding(
@@ -466,13 +478,13 @@ class _CompactSummaryChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 13, color: AppTheme.primary),
+              Icon(icon, size: 13, color: fg),
               const SizedBox(width: AppSpacing.xxs2),
             ],
             Text(
               label,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppTheme.primary,
+                    color: fg,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),

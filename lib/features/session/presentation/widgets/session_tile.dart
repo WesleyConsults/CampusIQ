@@ -1,4 +1,3 @@
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +15,7 @@ class SessionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final hour = session.startTime.hour;
     final suffix = hour < 12 ? 'AM' : 'PM';
     final displayHour = hour == 0
@@ -31,10 +31,18 @@ class SessionTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: AppRadii.button,
-        border: Border.all(color: AppColors.border),
-        boxShadow: AppShadows.soft,
+        border: Border.all(color: colorScheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(
+              alpha: colorScheme.brightness == Brightness.dark ? 0.18 : 0.07,
+            ),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +51,7 @@ class SessionTile extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: AppColors.surfaceMuted,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(AppSpacing.md),
             ),
             alignment: Alignment.center,
@@ -52,10 +60,9 @@ class SessionTile extends StatelessWidget {
                   ? session.courseCode.substring(0, 2)
                   : session.courseCode,
               style: const TextStyle(
-                color: AppTheme.primary,
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-              ),
+              ).copyWith(color: colorScheme.primary),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -77,7 +84,7 @@ class SessionTile extends StatelessWidget {
                     Text(
                       session.formattedDuration,
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: AppTheme.primary,
+                            color: colorScheme.primary,
                             fontWeight: FontWeight.w700,
                           ),
                     ),
@@ -89,7 +96,7 @@ class SessionTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -120,10 +127,10 @@ class SessionTile extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           IconButton(
             onPressed: onDelete,
-            icon: const Icon(
+            icon: Icon(
               LucideIcons.trash2,
               size: AppIconSizes.lg,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
             ),
             tooltip: 'Delete session',
           ),
@@ -144,25 +151,26 @@ class _HistoryPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: AppRadii.pill,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: AppTheme.textSecondary),
+          Icon(icon, size: 12, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: AppSpacing.xs),
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontSize: 11,
-                  color: AppTheme.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                 ),
           ),
         ],

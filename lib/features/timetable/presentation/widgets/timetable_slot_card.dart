@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
@@ -26,14 +25,20 @@ class TimetableSlotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
     final topOffset =
         (slot.startMinutes - TimetableConstants.gridStartMinutes) *
                 TimetableConstants.pixelsPerMinute +
             TimetableConstants.gridTopPadding;
     final height = slot.durationMinutes * TimetableConstants.pixelsPerMinute;
     final accent = Color(slot.colorValue);
-    final background = Color.lerp(Colors.white, accent, 0.12) ?? Colors.white;
-    final borderColor = accent.withValues(alpha: 0.24);
+    final background = isDark
+        ? Color.lerp(colorScheme.surface, accent, 0.20) ?? colorScheme.surface
+        : Color.lerp(Colors.white, accent, 0.12) ?? Colors.white;
+    final borderColor = accent.withValues(alpha: isDark ? 0.42 : 0.24);
+    final primaryText = colorScheme.onSurface;
+    final secondaryText = colorScheme.onSurfaceVariant;
     final showCourseName =
         height >= TimetableConstants.minSlotHeightForCourseName;
     final showMeta = height >= TimetableConstants.minSlotHeightForMeta;
@@ -75,10 +80,9 @@ class TimetableSlotCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: AppTheme.textPrimary,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                        ),
+                        ).copyWith(color: primaryText),
                       ),
                       const SizedBox(height: AppSpacing.xxxs),
                       Text(
@@ -86,10 +90,9 @@ class TimetableSlotCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: AppTheme.textSecondary,
                           fontSize: 9,
                           fontWeight: FontWeight.w600,
-                        ),
+                        ).copyWith(color: secondaryText),
                       ),
                     ],
                   )
@@ -101,10 +104,9 @@ class TimetableSlotCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: AppTheme.textPrimary,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                        ),
+                        ).copyWith(color: primaryText),
                       ),
                       if (showCourseName) ...[
                         const SizedBox(height: AppSpacing.xxxs),
@@ -113,10 +115,9 @@ class TimetableSlotCard extends StatelessWidget {
                           maxLines: showMeta ? 2 : 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: AppTheme.textPrimary,
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
-                          ),
+                          ).copyWith(color: primaryText),
                         ),
                       ],
                       if (showMeta) ...[
@@ -126,10 +127,9 @@ class TimetableSlotCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: AppTheme.textSecondary,
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
-                          ),
+                          ).copyWith(color: secondaryText),
                         ),
                       ],
                       if (showTimeFooter) ...[
@@ -139,10 +139,9 @@ class TimetableSlotCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: AppTheme.textSecondary,
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
-                          ),
+                          ).copyWith(color: secondaryText),
                         ),
                       ],
                     ],

@@ -115,6 +115,7 @@ void main() async {
   await dotenv.load(fileName: '.env');
   await NotificationService.instance.init();
   await Workmanager().initialize(callbackDispatcher);
+  await NotificationScheduler.scheduleStreakRiskCheck();
 
   runZonedGuarded(() {
     runApp(const ProviderScope(child: CampusIQApp()));

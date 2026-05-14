@@ -21,7 +21,8 @@ class CampusSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +38,7 @@ class CampusSectionHeader extends StatelessWidget {
                   subtitle!,
                   style: subtitleStyle ??
                       textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                 ),
               ],

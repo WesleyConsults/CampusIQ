@@ -7,7 +7,7 @@ part of 'registration_slip_import_provider.dart';
 // **************************************************************************
 
 String _$registrationSlipImportNotifierHash() =>
-    r'8d8aac810ffc7fb7d609794e6899c317156073a1';
+    r'7a01cdcff0219a4cc5b4c6e47949d98d48dafb5e';
 
 /// See also [RegistrationSlipImportNotifier].
 @ProviderFor(RegistrationSlipImportNotifier)

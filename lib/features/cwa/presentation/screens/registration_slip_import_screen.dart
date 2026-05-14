@@ -74,7 +74,7 @@ class _RegistrationSlipImportScreenState
     final notifier = ref.read(registrationSlipImportNotifierProvider.notifier);
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Scan Registration Slip'),
         leading: BackButton(
@@ -198,8 +198,9 @@ class _OptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Material(
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       borderRadius: BorderRadius.circular(AppRadii.sm2),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadii.sm2),
@@ -212,11 +213,11 @@ class _OptionTile extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.08),
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.40),
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(icon,
-                    color: AppTheme.primary, size: AppIconSizes.xxxl),
+                    color: colorScheme.primary, size: AppIconSizes.xxxl),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -224,22 +225,22 @@ class _OptionTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(label,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
-                          color: AppTheme.textPrimary,
+                          color: colorScheme.onSurface,
                         )),
                     const SizedBox(height: AppSpacing.xxxs),
                     Text(subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppTheme.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                         )),
                   ],
                 ),
               ),
-              const Icon(LucideIcons.chevronRight,
-                  color: AppTheme.textSecondary, size: AppIconSizes.xl),
+              Icon(LucideIcons.chevronRight,
+                  color: colorScheme.onSurfaceVariant, size: AppIconSizes.xl),
             ],
           ),
         ),
@@ -401,7 +402,8 @@ class _ReviewView extends StatelessWidget {
     final course = await showModalBottomSheet<RegistrationCourseImport>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).bottomSheetTheme.backgroundColor ??
+          Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -470,8 +472,9 @@ class _ReviewCourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Material(
-      color: isSelected ? Colors.white : AppTheme.surface,
+      color: isSelected ? Theme.of(context).cardColor : colorScheme.surface,
       borderRadius: BorderRadius.circular(AppRadii.sm),
       elevation: isSelected ? 1 : 0,
       child: InkWell(

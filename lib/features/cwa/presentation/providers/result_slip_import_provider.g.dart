@@ -7,7 +7,7 @@ part of 'result_slip_import_provider.dart';
 // **************************************************************************
 
 String _$resultSlipImportNotifierHash() =>
-    r'deab6fa315b92d442aebc0ece7b1baff34f55ae0';
+    r'a706e04c11d3e436f728f099ed586b0d89bf656c';
 
 /// See also [ResultSlipImportNotifier].
 @ProviderFor(ResultSlipImportNotifier)

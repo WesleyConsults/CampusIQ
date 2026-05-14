@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
@@ -15,6 +14,7 @@ class FreeBlockIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final topOffset =
         (block.startMinutes - TimetableConstants.gridStartMinutes) *
                 TimetableConstants.pixelsPerMinute +
@@ -51,8 +51,8 @@ class FreeBlockIndicator extends StatelessWidget {
                     children: [
                       Text(
                         'Free · ${block.durationMinutes} min',
-                        style: const TextStyle(
-                          color: AppTheme.textPrimary,
+                        style: TextStyle(
+                          color: colorScheme.onSurface,
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                         ),
@@ -61,8 +61,8 @@ class FreeBlockIndicator extends StatelessWidget {
                         Text(
                           '${block.startLabel} - ${block.endLabel}',
                           style: TextStyle(
-                            color:
-                                AppTheme.textSecondary.withValues(alpha: 0.9),
+                            color: colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.9),
                             fontSize: 9,
                             fontWeight: FontWeight.w500,
                           ),

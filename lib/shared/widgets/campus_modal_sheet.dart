@@ -39,20 +39,20 @@ class CampusModalSheet extends StatelessWidget {
     final mediaQuery = MediaQuery.of(context);
     final bottomInset = mediaQuery.viewInsets.bottom;
     final bottomSafeArea = mediaQuery.padding.bottom;
-    final resolvedPadding =
-        padding?.resolve(Directionality.of(context)) ??
-            const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              AppSpacing.lg,
-              AppSpacing.xl,
-              AppSpacing.lg,
-            );
+    final resolvedPadding = padding?.resolve(Directionality.of(context)) ??
+        const EdgeInsets.fromLTRB(
+          AppSpacing.xl,
+          AppSpacing.lg,
+          AppSpacing.xl,
+          AppSpacing.lg,
+        );
 
     final body = _buildBody();
     final isFlexibleLayout = scrollable || expandBody;
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final theme = Theme.of(context);
         return AnimatedPadding(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOut,
@@ -64,10 +64,21 @@ class CampusModalSheet extends StatelessWidget {
                 maxHeight: constraints.maxHeight * maxHeightFactor,
               ),
               child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  color: AppColors.surface,
+                decoration: BoxDecoration(
+                  color: theme.bottomSheetTheme.backgroundColor ??
+                      theme.colorScheme.surface,
                   borderRadius: AppRadii.sheet,
-                  boxShadow: AppShadows.card,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(
+                        alpha: theme.colorScheme.brightness == Brightness.dark
+                            ? 0.30
+                            : 0.07,
+                      ),
+                      blurRadius: 24,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: SafeArea(
                   top: false,
@@ -80,8 +91,9 @@ class CampusModalSheet extends StatelessWidget {
                           math.max(bottomSafeArea, AppSpacing.xs),
                     ),
                     child: Column(
-                      mainAxisSize:
-                          isFlexibleLayout ? MainAxisSize.max : MainAxisSize.min,
+                      mainAxisSize: isFlexibleLayout
+                          ? MainAxisSize.max
+                          : MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (showHandle) ...[

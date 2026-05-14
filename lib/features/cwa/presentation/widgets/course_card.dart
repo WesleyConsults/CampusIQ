@@ -63,6 +63,7 @@ class _CourseCardState extends State<CourseCard> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final gradeColor = _scoreTone(_sliderValue);
     final scoreLabel = '${_sliderValue.toInt()}%';
 
@@ -86,10 +87,10 @@ class _CourseCardState extends State<CourseCard> {
                           Flexible(
                             child: Text(
                               widget.course.code,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: AppTheme.primary,
+                                color: colorScheme.primary,
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -105,10 +106,10 @@ class _CourseCardState extends State<CourseCard> {
                         widget.course.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                          color: colorScheme.onSurface,
                           height: 1.25,
                         ),
                       ),
@@ -126,10 +127,10 @@ class _CourseCardState extends State<CourseCard> {
                         minWidth: AppFloors.minTapTarget,
                         minHeight: AppFloors.minTapTarget,
                       ),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.more_horiz,
                         size: AppIconSizes.xl,
-                        color: AppTheme.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       onSelected: (v) {
                         if (v == 'edit') {
@@ -174,7 +175,7 @@ class _CourseCardState extends State<CourseCard> {
                   child: _CompactInfoBlock(
                     label: 'Credits',
                     value: '${widget.course.creditHours.toInt()} cr',
-                    valueColor: AppTheme.primary,
+                    valueColor: colorScheme.primary,
                   ),
                 ),
               ],
@@ -191,7 +192,7 @@ class _CourseCardState extends State<CourseCard> {
                   label:
                       Text(_expanded ? 'Hide score control' : 'Adjust score'),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.primary,
+                    foregroundColor: colorScheme.primary,
                     padding: EdgeInsets.zero,
                     minimumSize: const Size(0, 30),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -218,11 +219,11 @@ class _CourseCardState extends State<CourseCard> {
                   children: [
                     Row(
                       children: [
-                        const Text(
+                        Text(
                           'Expected score',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppTheme.textSecondary,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const Spacer(),
@@ -242,7 +243,7 @@ class _CourseCardState extends State<CourseCard> {
                       max: 100,
                       divisions: 100,
                       activeColor: AppTheme.primary,
-                      inactiveColor: AppColors.divider,
+                      inactiveColor: colorScheme.outlineVariant,
                       onChanged: (value) {
                         setState(() => _sliderValue = value);
                         widget.onScoreChanged(value);
@@ -286,6 +287,7 @@ class _CompactInfoBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       constraints: const BoxConstraints(
         minWidth: 128,
@@ -296,7 +298,7 @@ class _CompactInfoBlock extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppRadii.md),
       ),
       child: Column(
@@ -306,9 +308,9 @@ class _CompactInfoBlock extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
               height: 1.15,
             ),
           ),

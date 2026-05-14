@@ -1,4 +1,5 @@
 import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class CampusChip extends StatelessWidget {
@@ -17,10 +18,12 @@ class CampusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = foregroundColor ?? AppColors.navy;
+    final colorScheme = Theme.of(context).colorScheme;
+    final bg = _resolveBackground(colorScheme);
+    final fg = _resolveForeground(colorScheme);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.goldSoft,
+        color: bg,
         borderRadius: AppRadii.pill,
       ),
       child: Padding(
@@ -45,5 +48,29 @@ class CampusChip extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _resolveBackground(ColorScheme colorScheme) {
+    if (backgroundColor == null || backgroundColor == AppColors.goldSoft) {
+      return colorScheme.secondaryContainer;
+    }
+    if (backgroundColor == AppColors.surfaceMuted ||
+        backgroundColor == AppColors.surface) {
+      return colorScheme.surfaceContainerHighest;
+    }
+    return backgroundColor!;
+  }
+
+  Color _resolveForeground(ColorScheme colorScheme) {
+    if (foregroundColor == null || foregroundColor == AppColors.navy) {
+      return colorScheme.onSecondaryContainer;
+    }
+    if (foregroundColor == AppTheme.primary) {
+      return colorScheme.primary;
+    }
+    if (foregroundColor == AppTheme.textSecondary) {
+      return colorScheme.onSurfaceVariant;
+    }
+    return foregroundColor!;
   }
 }

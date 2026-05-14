@@ -7,12 +7,13 @@ class CampusModalHandle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Container(
         width: 44,
         height: 5,
-        decoration: const BoxDecoration(
-          color: AppColors.border,
+        decoration: BoxDecoration(
+          color: colorScheme.outlineVariant,
           borderRadius: AppRadii.pill,
         ),
       ),

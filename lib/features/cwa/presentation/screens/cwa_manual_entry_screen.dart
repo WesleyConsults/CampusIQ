@@ -477,7 +477,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
         router.go('/cwa');
       },
       child: Scaffold(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           leading: BackButton(onPressed: _cancel),
           title: const Text(
@@ -517,7 +517,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                       Text(
                         helperText,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
+                              color: colorScheme.onSurfaceVariant,
                               height: 1.4,
                             ),
                       ),
@@ -537,7 +537,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                                         .titleMedium
                                         ?.copyWith(
                                           fontWeight: FontWeight.w700,
-                                          color: AppColors.textPrimary,
+                                          color: colorScheme.onSurface,
                                         ),
                                   ),
                                   const SizedBox(height: AppSpacing.xs),
@@ -547,7 +547,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                                         .textTheme
                                         .bodyMedium
                                         ?.copyWith(
-                                          color: AppColors.textSecondary,
+                                          color: colorScheme.onSurfaceVariant,
                                           height: 1.4,
                                         ),
                                   ),
@@ -577,9 +577,10 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                                       labelText: 'Programme',
                                       hintText: 'e.g. Civil Engineering',
                                     ),
-                                    textCapitalization: TextCapitalization.words,
-                                    onChanged: (value) =>
-                                        setState(() => _programme = value.trim()),
+                                    textCapitalization:
+                                        TextCapitalization.words,
+                                    onChanged: (value) => setState(
+                                        () => _programme = value.trim()),
                                   ),
                                   const SizedBox(height: AppSpacing.sm),
                                   _DropdownField(
@@ -707,17 +708,17 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                             child: ElevatedButton(
                               onPressed: _isSaving ? null : _saveCourses,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.primary,
-                                foregroundColor: Colors.white,
+                                backgroundColor: colorScheme.primary,
+                                foregroundColor: colorScheme.onPrimary,
                                 minimumSize: const Size.fromHeight(48),
                               ),
                               child: _isSaving
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 18,
                                       height: 18,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Colors.white,
+                                        color: colorScheme.onPrimary,
                                       ),
                                     )
                                   : const Text('Save Courses'),
@@ -765,7 +766,7 @@ class _ModeSwitcher extends StatelessWidget {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppRadii.sm2),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.65),
@@ -823,7 +824,7 @@ class _ModeTab extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: active
                         ? colorScheme.onPrimary
-                        : AppColors.textSecondary,
+                        : colorScheme.onSurfaceVariant,
                   ),
             ),
           ),
@@ -927,7 +928,7 @@ class _CourseEditorCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppRadii.sm2),
         border: Border.all(color: colorScheme.outlineVariant),
       ),
@@ -1062,7 +1063,7 @@ class _SummaryStat extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppTheme.primary,
+                  color: colorScheme.primary,
                 ),
           ),
         ],

@@ -18,7 +18,7 @@ class PastSemestersScreen extends ConsumerWidget {
     final semestersAsync = ref.watch(pastSemestersProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Result History'),
       ),
@@ -405,7 +405,8 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
             courseCode: c.courseCode,
             courseName: c.courseName,
             creditHours: _credits,
-            grade: _mark != null ? PastCourseEntry.gradeFromScore(_mark!) : _grade,
+            grade:
+                _mark != null ? PastCourseEntry.gradeFromScore(_mark!) : _grade,
             mark: _mark,
             isProjectedMark: _isProjectedMark,
           );
@@ -677,7 +678,6 @@ class _MarkInputState extends State<_MarkInput> {
     );
   }
 }
-
 
 // ─── Finalize blocked banner ──────────────────────────────────────────────────
 

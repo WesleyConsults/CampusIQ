@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 
@@ -11,6 +10,7 @@ class DaySelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final activeDay = ref.watch(activeDayProvider);
     final allSlots = ref.watch(allSlotsProvider).valueOrNull ?? [];
 
@@ -35,10 +35,12 @@ class DaySelector extends ConsumerWidget {
                 vertical: AppSpacing.xs,
               ),
               decoration: BoxDecoration(
-                color: isActive ? AppTheme.primary : Colors.white,
+                color: isActive ? colorScheme.primary : colorScheme.surface,
                 borderRadius: AppRadii.pill,
                 border: Border.all(
-                  color: isActive ? AppTheme.primary : AppColors.border,
+                  color: isActive
+                      ? colorScheme.primary
+                      : colorScheme.outlineVariant,
                   width: 1,
                 ),
                 boxShadow: isActive ? AppShadows.soft : null,
@@ -49,7 +51,9 @@ class DaySelector extends ConsumerWidget {
                   Text(
                     TimetableConstants.dayLabels[i],
                     style: TextStyle(
-                      color: isActive ? Colors.white : AppTheme.textSecondary,
+                      color: isActive
+                          ? colorScheme.onPrimary
+                          : colorScheme.onSurfaceVariant,
                       fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
                       fontSize: 12,
                     ),
@@ -60,7 +64,9 @@ class DaySelector extends ConsumerWidget {
                       width: 5,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: isActive ? Colors.white : AppTheme.accent,
+                        color: isActive
+                            ? colorScheme.onPrimary
+                            : colorScheme.secondary,
                         shape: BoxShape.circle,
                       ),
                     ),

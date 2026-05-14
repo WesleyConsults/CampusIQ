@@ -19,13 +19,22 @@ class CampusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
     final card = Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: color ?? Theme.of(context).cardColor,
+        color: _resolveCardColor(context),
         borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.border),
-        boxShadow: AppShadows.soft,
+        border: Border.all(color: colorScheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.07),
+            blurRadius: isDark ? 22 : 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Padding(
         padding: padding ?? AppSpacing.cardPadding,
@@ -43,5 +52,19 @@ class CampusCard extends StatelessWidget {
         child: card,
       ),
     );
+  }
+
+  Color _resolveCardColor(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    if (color == AppColors.surfaceMuted) {
+      return colorScheme.surfaceContainerHighest;
+    }
+    if (color == AppColors.surface) {
+      return colorScheme.surface;
+    }
+    if (color == AppColors.goldSoft) {
+      return colorScheme.secondaryContainer;
+    }
+    return color ?? Theme.of(context).cardColor;
   }
 }

@@ -3,10 +3,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
-import 'package:campusiq/core/providers/subscription_provider.dart';
 import 'package:campusiq/features/ai/presentation/providers/weekly_review_provider.dart';
 import 'package:campusiq/features/ai/presentation/widgets/review_section_card.dart';
-import 'package:campusiq/features/ai/presentation/widgets/review_gate_overlay.dart';
 
 class WeeklyReviewScreen extends ConsumerWidget {
   const WeeklyReviewScreen({super.key});
@@ -37,7 +35,6 @@ class WeeklyReviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewState = ref.watch(weeklyReviewProvider);
-    final isPremiumAsync = ref.watch(isPremiumProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
@@ -59,7 +56,7 @@ class WeeklyReviewScreen extends ConsumerWidget {
           ],
         ),
       ),
-      body: _buildBody(context, ref, reviewState, isPremiumAsync),
+      body: _buildBody(context, ref, reviewState),
     );
   }
 
@@ -67,7 +64,6 @@ class WeeklyReviewScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     WeeklyReviewState reviewState,
-    AsyncValue<bool> isPremiumAsync,
   ) {
     if (reviewState.isLoading) {
       return Center(
@@ -128,49 +124,31 @@ class WeeklyReviewScreen extends ConsumerWidget {
 
     final review = reviewState.review!;
 
-    if (isPremiumAsync.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    final isPremium = isPremiumAsync.valueOrNull ?? false;
-
     return CustomScrollView(
       slivers: [
-        // Summary — always visible
         SliverToBoxAdapter(
           child: ReviewSectionCard(
             title: 'Your week at a glance',
             body: review.summaryText,
           ),
         ),
-        // Wins — blurred for free users
         SliverToBoxAdapter(
           child: ReviewSectionCard(
             title: 'Wins this week',
             body: review.wellText,
-            isBlurred: !isPremium,
           ),
         ),
-        // Watch out — blurred for free users
         SliverToBoxAdapter(
           child: ReviewSectionCard(
             title: 'Something to fix',
             body: review.watchText,
-            isBlurred: !isPremium,
           ),
         ),
-        // Focus — blurred for free users
         SliverToBoxAdapter(
           child: ReviewSectionCard(
             title: 'Your #1 priority',
             body: review.focusText,
-            isBlurred: !isPremium,
           ),
-        ),
-        // Gate card for free users
-        SliverToBoxAdapter(
-          child: !isPremium
-              ? const ReviewGateOverlay()
-              : const SizedBox(height: AppSpacing.lg),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
       ],

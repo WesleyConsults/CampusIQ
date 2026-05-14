@@ -134,7 +134,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: Drawer(
         child: SafeArea(
           child: ListView(
@@ -630,14 +630,14 @@ class _PageHeader extends StatelessWidget {
         Text(
           greeting,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppTheme.primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           dateLabel,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
         ),
       ],
@@ -763,15 +763,16 @@ class _AcademicPulseSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const CampusSectionHeader(
+        CampusSectionHeader(
           title: 'Academic pulse',
           titleStyle: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
+            color: colorScheme.onSurface,
             height: 1.2,
           ),
         ),
@@ -984,17 +985,18 @@ class _ProgressOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return CampusCard(
       padding: AppSpacing.compactCardPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             "Today's Progress",
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -1020,6 +1022,7 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return CampusCard(
       padding: AppSpacing.compactCardPadding,
       child: Column(
@@ -1032,11 +1035,11 @@ class _SectionCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceMuted,
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
-                child:
-                    Icon(icon, size: AppIconSizes.lg, color: AppTheme.primary),
+                child: Icon(icon,
+                    size: AppIconSizes.lg, color: colorScheme.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -1045,18 +1048,18 @@ class _SectionCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -1085,6 +1088,7 @@ class _MetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -1104,9 +1108,9 @@ class _MetricTile extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
               height: 1.2,
             ),
           ),
@@ -1144,6 +1148,7 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -1151,19 +1156,19 @@ class _SummaryRow extends StatelessWidget {
           width: _iconBoxSize,
           height: _iconBoxSize,
           decoration: BoxDecoration(
-            color: AppColors.surfaceMuted,
+            color: colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(AppRadii.sm),
           ),
-          child: Icon(icon, size: AppIconSizes.md, color: AppTheme.primary),
+          child: Icon(icon, size: AppIconSizes.md, color: colorScheme.primary),
         ),
         const SizedBox(width: AppSpacing.xxs2),
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: colorScheme.onSurface,
             ),
           ),
         ),

@@ -151,6 +151,7 @@ class _AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final isSessionActive = ref.watch(activeSessionProvider) != null;
     final selectedIndex = _locationToIndex(context);
     final usesShellNav = selectedIndex != null;
@@ -170,7 +171,7 @@ class _AppShell extends ConsumerWidget {
                 : 0);
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           Positioned(
@@ -181,7 +182,7 @@ class _AppShell extends ConsumerWidget {
             child: MediaQuery(
               data: mediaQuery,
               child: ColoredBox(
-                color: AppTheme.surface,
+                color: theme.scaffoldBackgroundColor,
                 child: child,
               ),
             ),
@@ -290,6 +291,8 @@ class _ShellBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
     final lucide = theme.extension<AppLucideTheme>();
     final destinations = [
       (
@@ -316,14 +319,14 @@ class _ShellBottomNav extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.96),
+        color: colorScheme.surface.withValues(alpha: isDark ? 0.92 : 0.96),
         borderRadius: const BorderRadius.all(Radius.circular(30)),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
-        boxShadow: const [
+        border: Border.all(color: colorScheme.outlineVariant),
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 26,
-            offset: Offset(0, 10),
+            color: Colors.black.withValues(alpha: isDark ? 0.34 : 0.08),
+            blurRadius: isDark ? 30 : 26,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -337,7 +340,7 @@ class _ShellBottomNav extends StatelessWidget {
             final destination = destinations[index];
             final isSelected = selectedIndex == index;
             final iconColor =
-                isSelected ? AppTheme.primary : AppColors.textSecondary;
+                isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant;
             final baseIcon =
                 isSelected ? destination.selectedIcon : destination.icon;
             final icon = index == 3 && isSessionActive
@@ -362,7 +365,8 @@ class _ShellBottomNav extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: AppRadii.pill,
                       color: isSelected
-                          ? AppTheme.primary.withValues(alpha: 0.08)
+                          ? colorScheme.primary
+                              .withValues(alpha: isDark ? 0.18 : 0.08)
                           : Colors.transparent,
                     ),
                     child: Column(

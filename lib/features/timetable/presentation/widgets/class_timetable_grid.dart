@@ -26,6 +26,7 @@ class ClassTimetableGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -49,7 +50,8 @@ class ClassTimetableGrid extends StatelessWidget {
                   height: TimetableConstants.totalGridHeight +
                       TimetableConstants.gridTopPadding,
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceMuted.withValues(alpha: 0.35),
+                    color: colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                   child: Stack(
@@ -180,10 +182,10 @@ class _TimeLabels extends StatelessWidget {
             right: 4,
             child: Text(label,
                 textAlign: TextAlign.right,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 )),
           );
         }).toList(),
@@ -197,6 +199,7 @@ class _HourLines extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     const hours =
         TimetableConstants.gridEndHour - TimetableConstants.gridStartHour;
     return SizedBox(
@@ -212,7 +215,7 @@ class _HourLines extends StatelessWidget {
             right: 0,
             child: Container(
               height: 1,
-              color: AppColors.divider,
+              color: colorScheme.outlineVariant.withValues(alpha: 0.75),
             ),
           );
         }),

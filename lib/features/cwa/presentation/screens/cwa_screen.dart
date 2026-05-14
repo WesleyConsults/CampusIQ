@@ -102,7 +102,7 @@ class CwaScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('CWA', style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
@@ -374,13 +374,14 @@ class _ViewToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 46,
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: AppRadii.button,
         border: Border.all(
-          color: AppColors.border,
+          color: colorScheme.outlineVariant,
         ),
       ),
       child: Row(
@@ -411,6 +412,7 @@ class _ToggleTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Expanded(
       child: Semantics(
         button: true,
@@ -422,7 +424,7 @@ class _ToggleTab extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             margin: const EdgeInsets.all(AppSpacing.xxs),
             decoration: BoxDecoration(
-              color: active ? AppTheme.primary : Colors.transparent,
+              color: active ? colorScheme.primary : Colors.transparent,
               borderRadius: AppRadii.button,
             ),
             alignment: Alignment.center,
@@ -431,7 +433,9 @@ class _ToggleTab extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: active ? Colors.white : AppTheme.textSecondary,
+                color: active
+                    ? colorScheme.onPrimary
+                    : colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -688,6 +692,7 @@ class _QuickStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return CampusCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xs,
@@ -700,16 +705,17 @@ class _QuickStatCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(item.icon, size: AppIconSizes.sm, color: AppTheme.primary),
+              Icon(item.icon,
+                  size: AppIconSizes.sm, color: colorScheme.primary),
               const SizedBox(height: AppSpacing.xxxs),
               Text(
                 item.label,
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: AppTheme.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                   height: 1.15,
                 ),
               ),
@@ -718,10 +724,10 @@ class _QuickStatCard extends StatelessWidget {
                 item.value,
                 textAlign: TextAlign.center,
                 maxLines: 1,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],

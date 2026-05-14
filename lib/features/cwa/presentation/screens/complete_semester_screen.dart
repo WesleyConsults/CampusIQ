@@ -252,8 +252,9 @@ class _CompleteSemesterScreenState
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'Complete Semester',
@@ -280,19 +281,19 @@ class _CompleteSemesterScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
                               Icon(
                                 LucideIcons.arrowRight,
                                 size: AppIconSizes.md,
-                                color: AppTheme.primary,
+                                color: colorScheme.primary,
                               ),
-                              SizedBox(width: AppSpacing.xs),
+                              const SizedBox(width: AppSpacing.xs),
                               Text(
                                 'Move to',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.textPrimary,
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                             ],
@@ -508,22 +509,23 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppRadii.sm2),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Semester handoff',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -576,6 +578,7 @@ class _MiniStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 96,
       padding: const EdgeInsets.symmetric(
@@ -583,7 +586,7 @@ class _MiniStat extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppRadii.sm),
       ),
       child: Column(
@@ -594,18 +597,18 @@ class _MiniStat extends StatelessWidget {
             label,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.xxs),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: colorScheme.onSurface,
             ),
           ),
         ],
@@ -627,10 +630,11 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: AppIconSizes.md, color: AppTheme.primary),
+        Icon(icon, size: AppIconSizes.md, color: colorScheme.primary),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
           child: RichText(
@@ -641,15 +645,13 @@ class _InfoRow extends StatelessWidget {
                   text: '$label: ',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                  ),
+                  ).copyWith(color: colorScheme.onSurface),
                 ),
                 TextSpan(
                   text: value,
                   style: const TextStyle(
-                    color: AppTheme.textSecondary,
                     height: 1.4,
-                  ),
+                  ).copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -672,12 +674,13 @@ class _CompletedCourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppRadii.sm2),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -694,9 +697,8 @@ class _CompletedCourseCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.primary,
                         letterSpacing: 0.4,
-                      ),
+                      ).copyWith(color: colorScheme.primary),
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
@@ -704,8 +706,7 @@ class _CompletedCourseCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
-                      ),
+                      ).copyWith(color: colorScheme.onSurface),
                     ),
                   ],
                 ),
@@ -717,7 +718,7 @@ class _CompletedCourseCard extends StatelessWidget {
                   vertical: AppSpacing.xxs,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceMuted,
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Text(
@@ -725,8 +726,7 @@ class _CompletedCourseCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textSecondary,
-                  ),
+                  ).copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ),
             ],
@@ -736,8 +736,7 @@ class _CompletedCourseCard extends StatelessWidget {
             'Projected score: ${course.projectedScore.toInt()}',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.textSecondary,
-            ),
+            ).copyWith(color: colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
