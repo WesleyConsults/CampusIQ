@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/insights/domain/insight.dart';
 import 'package:campusiq/features/insights/presentation/providers/insight_provider.dart';
@@ -22,7 +21,7 @@ class InsightsScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'Insights',
@@ -65,7 +64,9 @@ class InsightsScreen extends ConsumerWidget {
                         'Log more sessions to generate insights.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: AppColors.textSecondary,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                       ),
                     ],

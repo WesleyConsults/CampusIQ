@@ -44,14 +44,16 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
     final session = ref.watch(activeSessionProvider);
     if (session == null) return const SizedBox.shrink();
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
     final isPomodoro = session.isPomodoroMode;
     final isBreak = isPomodoro && session.isBreak;
     final isPaused = session.isPaused;
     final accentColor = isPaused
-        ? AppTheme.accent
+        ? colorScheme.secondary
         : isBreak
             ? AppTheme.success
-            : AppTheme.primary;
+            : colorScheme.primary;
 
     String? secondaryLabel;
     String timerDisplay;
@@ -77,14 +79,14 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
           width: 58,
           height: 58,
           decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: 0.98),
+            color: colorScheme.surface.withValues(alpha: isDark ? 0.94 : 0.98),
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.border),
-            boxShadow: const [
+            border: Border.all(color: colorScheme.outlineVariant),
+            boxShadow: [
               BoxShadow(
-                color: AppColors.shadow,
+                color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.07),
                 blurRadius: 18,
-                offset: Offset(0, 8),
+                offset: const Offset(0, 8),
               ),
             ],
           ),
@@ -120,14 +122,14 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
           vertical: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.98),
+          color: colorScheme.surface.withValues(alpha: isDark ? 0.94 : 0.98),
           borderRadius: AppRadii.pill,
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
+          border: Border.all(color: colorScheme.outlineVariant),
+          boxShadow: [
             BoxShadow(
-              color: AppColors.shadow,
+              color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.07),
               blurRadius: 18,
-              offset: Offset(0, 8),
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -145,8 +147,8 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
                 children: [
                   Text(
                     session.courseCode,
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       height: 1.05,
@@ -156,8 +158,8 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
                   ),
                   Text(
                     secondaryLabel,
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 9,
                       height: 1.05,
                     ),
@@ -187,9 +189,9 @@ class _FloatingMiniTimerState extends ConsumerState<FloatingMiniTimer> {
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
-            const Icon(
+            Icon(
               LucideIcons.chevronRight,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
               size: AppIconSizes.md,
             ),
           ],

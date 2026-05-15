@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
@@ -88,6 +87,7 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
   @override
   Widget build(BuildContext context) {
     final courses = ref.watch(coursesProvider).valueOrNull ?? [];
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Form(
       key: _formKey,
@@ -181,8 +181,8 @@ class _AddManualTaskSheetState extends ConsumerState<AddManualTaskSheet> {
                       : 'Tap to set',
                   style: TextStyle(
                     color: _startTime != null
-                        ? AppTheme.textPrimary
-                        : AppTheme.textSecondary,
+                        ? colorScheme.onSurface
+                        : colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),

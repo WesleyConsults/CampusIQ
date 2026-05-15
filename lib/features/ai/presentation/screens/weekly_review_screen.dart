@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/ai/presentation/providers/weekly_review_provider.dart';
 import 'package:campusiq/features/ai/presentation/widgets/review_section_card.dart';
@@ -37,7 +36,7 @@ class WeeklyReviewScreen extends ConsumerWidget {
     final reviewState = ref.watch(weeklyReviewProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +86,11 @@ class WeeklyReviewScreen extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(LucideIcons.circleAlert,
-                  size: 48, color: Colors.grey.shade400),
+                  size: 48,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withValues(alpha: 0.7)),
               const SizedBox(height: AppSpacing.sm),
               Text(reviewState.error!,
                   textAlign: TextAlign.center,
@@ -105,8 +108,11 @@ class WeeklyReviewScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(LucideIcons.calendarDays,
-                  size: 56, color: AppColors.textSecondary),
+              Icon(
+                LucideIcons.calendarDays,
+                size: 56,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: AppSpacing.md),
               Text('No review yet',
                   style: Theme.of(context).textTheme.headlineSmall),

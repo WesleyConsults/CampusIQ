@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
@@ -10,6 +9,8 @@ class NextMilestoneCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final next = streak.nextMilestone;
     if (next == null) {
       return const Card(
@@ -48,22 +49,26 @@ class NextMilestoneCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(next.label,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 14)),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          )),
                       Text(
                         '${streak.daysToNextMilestone} day${streak.daysToNextMilestone == 1 ? '' : 's'} to unlock',
-                        style: const TextStyle(
-                            fontSize: 12, color: AppTheme.textSecondary),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Text(
                   '${next.days}d',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
-                    color: AppTheme.primary,
+                    color: colorScheme.primary,
                   ),
                 ),
               ],
@@ -74,16 +79,17 @@ class NextMilestoneCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progress.clamp(0, 1),
                 minHeight: 8,
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: colorScheme.surfaceContainerHighest,
                 valueColor:
-                    const AlwaysStoppedAnimation<Color>(AppTheme.accent),
+                    AlwaysStoppedAnimation<Color>(colorScheme.secondary),
               ),
             ),
             const SizedBox(height: AppSpacing.xxs2),
             Text(
               '${streak.longestStreak} / ${next.days} days',
-              style:
-                  const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
@@ -25,6 +24,7 @@ class SlotDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Color(slot.colorValue);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return CampusModalSheet(
       title: slot.courseCode,
@@ -72,8 +72,8 @@ class SlotDetailSheet extends StatelessWidget {
                   icon: const Icon(LucideIcons.trash2, size: AppIconSizes.md),
                   label: const Text('Delete'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.warning,
-                    side: const BorderSide(color: AppColors.border),
+                    foregroundColor: colorScheme.error,
+                    side: BorderSide(color: colorScheme.outlineVariant),
                   ),
                 ),
               ),
@@ -84,7 +84,8 @@ class SlotDetailSheet extends StatelessWidget {
                     Navigator.of(context).pop();
                     onEdit();
                   },
-                  icon: const Icon(LucideIcons.pencilLine, size: AppIconSizes.md),
+                  icon:
+                      const Icon(LucideIcons.pencilLine, size: AppIconSizes.md),
                   label: const Text('Edit'),
                 ),
               ),
@@ -107,8 +108,8 @@ class SlotDetailSheet extends StatelessWidget {
               ),
               _MetaPill(
                 label: TimetableConstants.dayFullLabels[slot.dayIndex],
-                backgroundColor: AppColors.surfaceMuted,
-                foregroundColor: AppTheme.textSecondary,
+                backgroundColor: colorScheme.surfaceContainerHighest,
+                foregroundColor: colorScheme.onSurfaceVariant,
               ),
             ],
           ),
@@ -117,9 +118,9 @@ class SlotDetailSheet extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.surfaceMuted,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: AppRadii.button,
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: colorScheme.outlineVariant),
             ),
             child: Column(
               children: [
@@ -214,17 +215,19 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: AppIconSizes.md, color: AppTheme.textSecondary),
+        Icon(icon, size: AppIconSizes.md, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
               height: 1.35,
             ),
           ),

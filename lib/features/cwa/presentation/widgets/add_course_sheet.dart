@@ -166,6 +166,8 @@ class _MetricSliderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -174,9 +176,9 @@ class _MetricSliderCard extends StatelessWidget {
         AppSpacing.xxs2,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: AppRadii.button,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,7 +196,7 @@ class _MetricSliderCard extends StatelessWidget {
               Text(
                 valueLabel,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppTheme.primary,
+                      color: colorScheme.primary,
                     ),
               ),
             ],
@@ -207,8 +209,8 @@ class _MetricSliderCard extends StatelessWidget {
               min: min,
               max: max,
               divisions: divisions,
-              activeColor: AppTheme.primary,
-              inactiveColor: AppColors.border,
+              activeColor: colorScheme.primary,
+              inactiveColor: colorScheme.outlineVariant,
               onChanged: onChanged,
             ),
           ),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:campusiq/core/services/notification_service.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/data/models/course_reminder_model.dart';
@@ -202,7 +201,7 @@ class CourseRemindersScreen extends ConsumerWidget {
     final options = _courseOptionsFromSlots(slots);
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Course Reminders'),
       ),
@@ -318,6 +317,7 @@ class _ReminderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final schedule = _scheduleSummary(slots);
 
@@ -333,15 +333,15 @@ class _ReminderTile extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: reminder.isEnabled
-                      ? AppColors.goldSoft
-                      : AppColors.surfaceMuted,
+                      ? colorScheme.secondaryContainer
+                      : colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: Icon(
                   LucideIcons.bell,
                   color: reminder.isEnabled
-                      ? AppTheme.primary
-                      : AppColors.textSecondary,
+                      ? colorScheme.onSecondaryContainer
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -359,7 +359,7 @@ class _ReminderTile extends StatelessWidget {
                     Text(
                       reminder.courseName,
                       style: textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -382,7 +382,7 @@ class _ReminderTile extends StatelessWidget {
           Text(
             schedule,
             style: textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -418,6 +418,8 @@ class _TurnOnAllCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return CampusCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -429,12 +431,12 @@ class _TurnOnAllCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.goldSoft,
+                  color: colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
-                child: const Icon(
+                child: Icon(
                   LucideIcons.bellRing,
-                  color: AppTheme.primary,
+                  color: colorScheme.onSecondaryContainer,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -452,7 +454,7 @@ class _TurnOnAllCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                     ),
                   ],
@@ -497,12 +499,14 @@ class _AllCourseRemindersSheetState extends State<_AllCourseRemindersSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       margin: EdgeInsets.only(bottom: bottomInset),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).bottomSheetTheme.backgroundColor ??
+            colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
         top: false,
@@ -522,7 +526,7 @@ class _AllCourseRemindersSheetState extends State<_AllCourseRemindersSheet> {
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.border,
+                    color: colorScheme.outlineVariant,
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -536,7 +540,7 @@ class _AllCourseRemindersSheetState extends State<_AllCourseRemindersSheet> {
               Text(
                 'Choose one reminder time for every course currently on your timetable.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -544,7 +548,7 @@ class _AllCourseRemindersSheetState extends State<_AllCourseRemindersSheet> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceMuted,
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: Text(
@@ -630,12 +634,14 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final editing = widget.existing != null;
     final dropdownOptions = _dropdownOptions;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       margin: EdgeInsets.only(bottom: bottomInset),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).bottomSheetTheme.backgroundColor ??
+            colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
         top: false,
@@ -655,7 +661,7 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.border,
+                    color: colorScheme.outlineVariant,
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -669,7 +675,7 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
               Text(
                 'CampusIQ will remind you before every scheduled class for this course.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -712,7 +718,7 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                 ),
               ],
@@ -786,6 +792,8 @@ class _EmptyReminderState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return CampusCard(
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
@@ -798,7 +806,7 @@ class _EmptyReminderState extends StatelessWidget {
           Text(
             message,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                 ),
           ),
           if (actionLabel != null && onAction != null) ...[

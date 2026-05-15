@@ -37,6 +37,7 @@ class PlanTaskTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(planRepositoryProvider);
+    final colorScheme = Theme.of(context).colorScheme;
     final accent = _accentColor();
     final done = task.isCompleted;
 
@@ -86,10 +87,10 @@ class PlanTaskTile extends ConsumerWidget {
                         height: 1.25,
                         fontWeight: FontWeight.w600,
                         color: done
-                            ? const Color(0xFF6B7280)
-                            : const Color(0xFF1A1A2E),
+                            ? colorScheme.onSurfaceVariant
+                            : colorScheme.onSurface,
                         decoration: done ? TextDecoration.lineThrough : null,
-                        decorationColor: const Color(0xFF6B7280),
+                        decorationColor: colorScheme.onSurfaceVariant,
                       ),
                     ),
                     if (task.isManual) ...[
@@ -98,14 +99,14 @@ class PlanTaskTile extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
+                          color: colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(AppRadii.xs),
                         ),
-                        child: const Text(
+                        child: Text(
                           'custom',
                           style: TextStyle(
                               fontSize: 10,
-                              color: Color(0xFF6B7280),
+                              color: colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -128,8 +129,10 @@ class PlanTaskTile extends ConsumerWidget {
                         _formatTime(task.startTime!),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 11, color: Color(0xFF6B7280)),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     Text(
                       '${task.durationMinutes} min',

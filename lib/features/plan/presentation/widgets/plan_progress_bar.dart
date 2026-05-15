@@ -24,6 +24,7 @@ class PlanProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final progress = _progress;
     final percent = (progress * 100).round();
     final color = _barColor(progress);
@@ -48,9 +49,9 @@ class PlanProgressBar extends StatelessWidget {
                 ),
                 Text(
                   '$completed / $total tasks',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF6B7280),
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -64,7 +65,7 @@ class PlanProgressBar extends StatelessWidget {
                   Container(
                     height: 12,
                     width: constraints.maxWidth,
-                    color: Colors.grey.shade200,
+                    color: colorScheme.surfaceContainerHighest,
                   ),
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 450),

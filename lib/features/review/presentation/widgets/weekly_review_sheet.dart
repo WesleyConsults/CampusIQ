@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/review/domain/weekly_review_data.dart';
 import 'package:campusiq/features/review/presentation/providers/review_provider.dart';
@@ -17,15 +16,6 @@ class WeeklyReviewSheet extends ConsumerStatefulWidget {
 }
 
 class _WeeklyReviewSheetState extends ConsumerState<WeeklyReviewSheet> {
-  final _noteController = TextEditingController();
-  bool _saving = false;
-
-  @override
-  void dispose() {
-    _noteController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final isCurrentWeek = widget.weekStart == null;
@@ -39,43 +29,29 @@ class _WeeklyReviewSheetState extends ConsumerState<WeeklyReviewSheet> {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
         return Container(
-          decoration: const BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius:
-                BorderRadius.vertical(top: Radius.circular(AppRadii.md2)),
+          decoration: BoxDecoration(
+            color:
+                theme.bottomSheetTheme.backgroundColor ?? colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadii.md2),
+            ),
           ),
           child: reviewAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            error: (e, _) => Center(
+              child: Text(
+                'Error: $e',
+                style: TextStyle(color: colorScheme.onSurface),
+              ),
+            ),
             data: (data) {
-              // Pre-fill note controller once
-              if (_noteController.text.isEmpty && data.reflectionNote != null) {
-                _noteController.text = data.reflectionNote!;
-              }
               return _ReviewContent(
                 data: data,
                 scrollController: scrollController,
-                noteController: _noteController,
-                saving: _saving,
-                readOnly: !isCurrentWeek,
-                onSave: isCurrentWeek
-                    ? () async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        setState(() => _saving = true);
-                        await ref.read(saveReflectionNoteProvider(
-                                _noteController.text.trim())
-                            .future);
-                        if (!mounted) return;
-                        setState(() => _saving = false);
-                        messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Reflection saved ✓'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    : null,
                 onClose: () => Navigator.of(context).pop(),
               );
             },
@@ -90,19 +66,11 @@ class _ReviewContent extends StatelessWidget {
   const _ReviewContent({
     required this.data,
     required this.scrollController,
-    required this.noteController,
-    required this.saving,
-    required this.readOnly,
-    required this.onSave,
     required this.onClose,
   });
 
   final WeeklyReviewData data;
   final ScrollController scrollController;
-  final TextEditingController noteController;
-  final bool saving;
-  final bool readOnly;
-  final VoidCallback? onSave;
   final VoidCallback onClose;
 
   String _formatMinutes(int minutes) {
@@ -121,6 +89,9 @@ class _ReviewContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return ListView(
       controller: scrollController,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
@@ -132,21 +103,28 @@ class _ReviewContent extends StatelessWidget {
             height: 4,
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: colorScheme.outlineVariant,
               borderRadius: BorderRadius.circular(AppRadii.xxxs),
             ),
           ),
         ),
 
         // ── Header ────────────────────────────────────────────────────────
-        const Text(
+        Text(
           '📊 Week in Review',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
         ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
         const SizedBox(height: AppSpacing.xxs),
         Text(
           _dateRange(),
-          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+          style: TextStyle(
+            color: colorScheme.onSurfaceVariant,
+            fontSize: 14,
+          ),
         ).animate().fadeIn(delay: 80.ms, duration: 300.ms),
 
         const SizedBox(height: AppSpacing.lg),
@@ -181,18 +159,22 @@ class _ReviewContent extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
 
         // ── Highlights ────────────────────────────────────────────────────
-        const Text(
+        Text(
           'Highlights',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
         ).animate().fadeIn(delay: 220.ms, duration: 300.ms),
         const SizedBox(height: AppSpacing.xs2),
 
         if (data.mostStudiedCourse == null && data.mostNeglectedCourse == null)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
               'No sessions logged this week.',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
           ).animate().fadeIn(delay: 280.ms, duration: 300.ms)
         else ...[
@@ -201,7 +183,7 @@ class _ReviewContent extends StatelessWidget {
               emoji: '💪',
               label: 'Most studied',
               value: data.mostStudiedCourse!,
-              color: AppTheme.success,
+              color: colorScheme.primary,
             ).animate().fadeIn(delay: 280.ms, duration: 300.ms),
           const SizedBox(height: AppSpacing.xs),
           if (data.mostNeglectedCourse != null)
@@ -211,55 +193,6 @@ class _ReviewContent extends StatelessWidget {
               value: data.mostNeglectedCourse!,
               color: const Color(0xFFF59E0B),
             ).animate().fadeIn(delay: 340.ms, duration: 300.ms),
-        ],
-
-        const SizedBox(height: AppSpacing.xl),
-
-        // ── Reflection ────────────────────────────────────────────────────
-        const Text(
-          'What will you improve next week?',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-        ).animate().fadeIn(delay: 400.ms, duration: 300.ms),
-        const SizedBox(height: AppSpacing.xs2),
-
-        TextField(
-          controller: noteController,
-          readOnly: readOnly,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: readOnly
-                ? (noteController.text.isEmpty
-                    ? 'No reflection saved for this week.'
-                    : null)
-                : 'Write your reflection here…',
-            hintStyle: const TextStyle(color: AppTheme.textSecondary),
-          ),
-        ).animate().fadeIn(delay: 460.ms, duration: 300.ms),
-
-        if (!readOnly) ...[
-          const SizedBox(height: AppSpacing.sm),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: saving ? null : onSave,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadii.xs2)),
-              ),
-              child: saving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Text('Save note',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
-            ),
-          ).animate().fadeIn(delay: 500.ms, duration: 300.ms),
         ],
 
         const SizedBox(height: AppSpacing.md),
@@ -287,13 +220,15 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(AppRadii.sm),
-          border: Border.all(color: AppColors.border, width: 0.5),
+          border: Border.all(color: colorScheme.outlineVariant, width: 0.5),
         ),
         child: Column(
           children: [
@@ -301,13 +236,19 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xxs),
             Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
               textAlign: TextAlign.center,
             ),
             Text(
               label,
-              style:
-                  const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+              style: TextStyle(
+                fontSize: 11,
+                color: colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -329,18 +270,17 @@ class _HighlightChip extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  static const Color _highlightFill = Color(0xFFE6EBF5);
-  static const Color _highlightBorder = Color(0xFFB8C4D8);
-  static const Color _highlightText = Color(0xFF14213D);
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: _highlightFill,
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadii.xs2),
-        border: Border.all(color: _highlightBorder, width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
       ),
       child: Row(
         children: [
@@ -352,16 +292,19 @@ class _HighlightChip extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: _highlightText,
+                    color: colorScheme.onSurface,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   value,
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),

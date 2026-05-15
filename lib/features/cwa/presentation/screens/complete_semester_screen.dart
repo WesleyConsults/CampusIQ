@@ -448,8 +448,8 @@ class _CompleteSemesterScreenState
                               : 'Save Official Results & Move On',
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          foregroundColor: Colors.white,
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                       ),
@@ -464,10 +464,10 @@ class _CompleteSemesterScreenState
                         label: const Text(
                             'Start Next Semester Without Results Yet'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.primary,
+                          foregroundColor: colorScheme.primary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(
-                            color: AppTheme.primary.withValues(alpha: 0.22),
+                            color: colorScheme.primary.withValues(alpha: 0.45),
                           ),
                         ),
                       ),
@@ -476,9 +476,9 @@ class _CompleteSemesterScreenState
                     Text(
                       'Official save requires marks. The secondary action stores this semester as pending results and still moves you to ${_nextSemester.displayLabel}.',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

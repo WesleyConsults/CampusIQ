@@ -12,12 +12,12 @@ class InsightCard extends StatelessWidget {
 
   final Insight insight;
   final int index;
-  static const Color _coursePillFill = Color(0xFFE6EBF5);
-  static const Color _coursePillBorder = Color(0xFFB8C4D8);
-  static const Color _coursePillText = Color(0xFF14213D);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Animate(
       effects: [
         FadeEffect(
@@ -38,9 +38,9 @@ class InsightCard extends StatelessWidget {
           vertical: AppSpacing.xxs2,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(AppRadii.sm),
-          border: Border.all(color: AppColors.border, width: 0.5),
+          border: Border.all(color: colorScheme.outlineVariant, width: 0.5),
         ),
         child: IntrinsicHeight(
           child: Row(
@@ -54,10 +54,7 @@ class InsightCard extends StatelessWidget {
                 ),
                 child: Text(
                   insight.icon,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineMedium
-                      ?.copyWith(height: 1.0),
+                  style: theme.textTheme.headlineMedium?.copyWith(height: 1.0),
                 ),
               ),
               // Content
@@ -73,10 +70,10 @@ class InsightCard extends StatelessWidget {
                     children: [
                       Text(
                         insight.message,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              height: 1.4,
-                              color: AppColors.textPrimary,
-                            ),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          height: 1.4,
+                          color: colorScheme.onSurface,
+                        ),
                       ),
                       if (insight.courseCode != null) ...[
                         const SizedBox(height: AppSpacing.xs),
@@ -86,15 +83,17 @@ class InsightCard extends StatelessWidget {
                             vertical: AppSpacing.xxs,
                           ),
                           decoration: BoxDecoration(
-                            color: _coursePillFill,
+                            color: colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(AppRadii.md2),
-                            border:
-                                Border.all(color: _coursePillBorder, width: 1),
+                            border: Border.all(
+                              color: colorScheme.outlineVariant,
+                              width: 1,
+                            ),
                           ),
                           child: Text(
                             insight.courseCode!,
-                            style: const TextStyle(
-                              color: _coursePillText,
+                            style: TextStyle(
+                              color: colorScheme.onPrimaryContainer,
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                               height: 1.2,

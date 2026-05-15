@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
@@ -60,12 +59,15 @@ class _MiniCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(AppRadii.sm),
-        border: Border.all(color: Colors.grey.shade200, width: 0.5),
+        border: Border.all(color: colorScheme.outlineVariant, width: 0.5),
       ),
       child: Column(
         children: [
@@ -76,12 +78,18 @@ class _MiniCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: isAlive ? AppTheme.primary : Colors.grey.shade400,
+              color: isAlive
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontSize: 10,
+            ),
+          ),
         ],
       ),
     );

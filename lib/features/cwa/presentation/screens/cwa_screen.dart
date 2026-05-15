@@ -100,6 +100,7 @@ class CwaScreen extends ConsumerWidget {
       context,
       hasActiveSession: hasActiveSession,
     );
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -114,7 +115,7 @@ class CwaScreen extends ConsumerWidget {
               icon: const Icon(LucideIcons.fileUp, size: AppIconSizes.lg),
               label: const Text('Import'),
               style: TextButton.styleFrom(
-                foregroundColor: AppTheme.primary,
+                foregroundColor: colorScheme.primary,
                 minimumSize: const Size(0, 44),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -502,16 +503,18 @@ class _ImportSheetIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: 48,
       height: 48,
-      decoration: const BoxDecoration(
-        color: AppColors.goldSoft,
+      decoration: BoxDecoration(
+        color: colorScheme.secondaryContainer,
         borderRadius: AppRadii.button,
       ),
-      child: const Icon(
+      child: Icon(
         LucideIcons.fileUp,
-        color: AppTheme.primary,
+        color: colorScheme.onSecondaryContainer,
         size: AppIconSizes.xl,
       ),
     );
@@ -525,6 +528,8 @@ class _ImportOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return CampusCard(
       padding: EdgeInsets.zero,
       color: AppColors.surfaceMuted,
@@ -541,13 +546,13 @@ class _ImportOptionTile extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: colorScheme.surface,
                 borderRadius: AppRadii.button,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: colorScheme.outlineVariant),
               ),
               child: Icon(
                 option.icon,
-                color: AppTheme.primary,
+                color: colorScheme.primary,
                 size: AppIconSizes.xl,
               ),
             ),
@@ -558,27 +563,27 @@ class _ImportOptionTile extends StatelessWidget {
                 children: [
                   Text(
                     option.label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
                     option.subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                       height: 1.3,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               LucideIcons.chevronRight,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
               size: AppIconSizes.lg,
             ),
           ],
@@ -603,6 +608,8 @@ class _SupportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return CampusCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -612,26 +619,27 @@ class _SupportCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.08),
+              color: colorScheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
-            child: Icon(icon, color: AppTheme.primary, size: AppIconSizes.xl),
+            child:
+                Icon(icon, color: colorScheme.primary, size: AppIconSizes.xl),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: AppSpacing.xxs2),
           Text(
             subtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
               height: 1.35,
             ),
           ),
@@ -849,6 +857,8 @@ class _StateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return CampusCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -859,19 +869,23 @@ class _StateCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.08),
+              color: colorScheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadii.md),
             ),
-            child: Icon(icon, color: AppTheme.primary, size: AppIconSizes.xxxl),
+            child: Icon(
+              icon,
+              color: colorScheme.primary,
+              size: AppIconSizes.xxxl,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: colorScheme.onSurface,
             ),
           ),
           if (subtitle != null && subtitle!.isNotEmpty) ...[
@@ -879,9 +893,9 @@ class _StateCard extends StatelessWidget {
             Text(
               subtitle!,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
                 height: 1.4,
               ),
             ),
@@ -984,9 +998,9 @@ class _SectionNote extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 12,
-        color: AppTheme.textSecondary,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
         height: 1.35,
       ),
     );
@@ -1014,6 +1028,7 @@ class _SemesterView extends ConsumerWidget {
     final projected = ref.watch(projectedCwaProvider);
     final target = ref.watch(targetCwaProvider);
     final gap = ref.watch(cwaGapProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return coursesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -1189,9 +1204,9 @@ class _SemesterView extends ConsumerWidget {
                     label: const Text('Finish Semester'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(52),
-                      foregroundColor: AppTheme.primary,
+                      foregroundColor: colorScheme.primary,
                       side: BorderSide(
-                        color: AppTheme.primary.withValues(alpha: 0.24),
+                        color: colorScheme.primary.withValues(alpha: 0.45),
                       ),
                     ),
                   ),
@@ -1500,6 +1515,7 @@ class _SemesterProgressionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final latest = entries.last;
     final latestDelta = latest.cumulativeDelta;
 
@@ -1514,12 +1530,12 @@ class _SemesterProgressionCard extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
-                child: const Icon(
+                child: Icon(
                   LucideIcons.trendingUp,
-                  color: AppTheme.primary,
+                  color: colorScheme.primary,
                   size: AppIconSizes.xl,
                 ),
               ),
@@ -1528,12 +1544,12 @@ class _SemesterProgressionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Semester progression',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: AppTheme.textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxxs),
@@ -1541,9 +1557,9 @@ class _SemesterProgressionCard extends StatelessWidget {
                       latestDelta == null
                           ? 'Your first recorded semester is now on the timeline.'
                           : 'Latest cumulative move: ${_signed(latestDelta)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -1614,6 +1630,7 @@ class _ProgressionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final pending = entry.semester.isPendingResults;
 
     return Padding(
@@ -1643,19 +1660,19 @@ class _ProgressionRow extends StatelessWidget {
                   entry.semester.semesterLabel,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xxxs),
                 Text(
                   '${entry.semester.courses.length} courses'
                   '${pending ? ' • Pending official marks' : ''}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -1667,18 +1684,18 @@ class _ProgressionRow extends StatelessWidget {
             children: [
               Text(
                 'Sem ${entry.semesterCwa.toStringAsFixed(1)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: AppSpacing.xxxs),
               Text(
                 'Cum ${entry.cumulativeCwa.toStringAsFixed(1)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: AppTheme.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -1699,7 +1716,9 @@ class _DeltaPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final value = delta;
-    final color = _deltaColor(value);
+    final color = value == null || value.abs() < 0.05
+        ? Theme.of(context).colorScheme.onSurfaceVariant
+        : _deltaColor(value);
     final icon = value == null
         ? LucideIcons.minus
         : value > 0
@@ -1774,6 +1793,7 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
   @override
   Widget build(BuildContext context) {
     final cwa = _semCwa;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return CampusCard(
       padding: EdgeInsets.zero,
@@ -1797,19 +1817,19 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                       children: [
                         Text(
                           widget.semester.semesterLabel,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
-                            color: AppTheme.textPrimary,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xxs),
                         Text(
                           '${widget.semester.courses.length} courses'
                           '${widget.semester.reportedSemesterCwa != null ? ' • Slip: ${widget.semester.reportedSemesterCwa!.toStringAsFixed(2)}' : ''}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textSecondary,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -1821,7 +1841,7 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceMuted,
+                      color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -1837,7 +1857,7 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                   Icon(
                     _expanded ? Icons.expand_less : Icons.expand_more,
                     size: AppIconSizes.xl,
-                    color: AppTheme.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -1876,17 +1896,19 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                       children: [
                         Expanded(
                           child: Text(c.courseName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
-                                color: AppTheme.textPrimary,
+                                color: colorScheme.onSurface,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis),
                         ),
                         Text(
                           '${c.creditHours.toInt()} cr',
-                          style: const TextStyle(
-                              fontSize: 12, color: AppTheme.textSecondary),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -1910,6 +1932,8 @@ class _CurrentCourseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return CampusCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -1933,9 +1957,9 @@ class _CurrentCourseRow extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   course.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.textPrimary,
+                    color: colorScheme.onSurface,
                     height: 1.25,
                   ),
                   maxLines: 2,
@@ -1946,7 +1970,10 @@ class _CurrentCourseRow extends StatelessWidget {
           ),
           Text(
             '${course.creditHours.toInt()} cr',
-            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+            style: TextStyle(
+              fontSize: 12,
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Container(
@@ -1955,7 +1982,7 @@ class _CurrentCourseRow extends StatelessWidget {
               vertical: 4,
             ),
             decoration: BoxDecoration(
-              color: AppColors.surfaceMuted,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -2042,7 +2069,8 @@ class _GradePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _colors[grade.toUpperCase()] ?? AppTheme.textSecondary;
+    final color = _colors[grade.toUpperCase()] ??
+        Theme.of(context).colorScheme.onSurfaceVariant;
     return Container(
       constraints: const BoxConstraints(minWidth: 28),
       padding: const EdgeInsets.symmetric(

@@ -68,6 +68,9 @@ class CampusChip extends StatelessWidget {
     if (foregroundColor == AppTheme.primary) {
       return colorScheme.primary;
     }
+    if (foregroundColor == AppTheme.textPrimary) {
+      return colorScheme.onSurface;
+    }
     if (foregroundColor == AppTheme.textSecondary) {
       return colorScheme.onSurfaceVariant;
     }

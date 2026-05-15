@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_import_provider.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/import_slot_review_tile.dart';
@@ -40,7 +39,7 @@ class TimetableImportScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'Import Timetable',
@@ -60,8 +59,8 @@ class TimetableImportScreen extends ConsumerWidget {
                   : null,
               child: Text(
                 'Import (${state.selectedIndexes.length})',
-                style: const TextStyle(
-                  color: AppTheme.primary,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -95,6 +94,9 @@ class _IdleBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -105,29 +107,31 @@ class _IdleBody extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.08),
+                color: colorScheme.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.document_scanner_outlined,
                 size: 40,
-                color: AppTheme.primary,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            const Text(
+            Text(
               'Import from Image',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
-            const Text(
+            Text(
               'Take a photo or upload an image of your university timetable and we\'ll fill it in automatically.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 36),
             SizedBox(
@@ -137,7 +141,8 @@ class _IdleBody extends StatelessWidget {
                 label: const Text('Take Photo'),
                 onPressed: () => onPick(ImageSource.camera),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadii.sm),
@@ -153,8 +158,8 @@ class _IdleBody extends StatelessWidget {
                 label: const Text('Choose from Gallery'),
                 onPressed: () => onPick(ImageSource.gallery),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.primary,
-                  side: const BorderSide(color: AppTheme.primary),
+                  foregroundColor: colorScheme.primary,
+                  side: BorderSide(color: colorScheme.primary),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadii.sm),
@@ -178,6 +183,8 @@ class _LoadingBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -186,9 +193,9 @@ class _LoadingBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Text(
             message,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -213,6 +220,7 @@ class _ReviewBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final allSelected = state.selectedIndexes.length == state.slots.length;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Stack(
       children: [
@@ -224,15 +232,15 @@ class _ReviewBody extends StatelessWidget {
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.xs,
               ),
-              color: AppColors.surfaceMuted,
+              color: colorScheme.surfaceContainerHighest,
               child: Row(
                 children: [
                   Text(
                     '${state.slots.length} slot${state.slots.length == 1 ? '' : 's'} found',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const Spacer(),
@@ -241,9 +249,9 @@ class _ReviewBody extends StatelessWidget {
                         allSelected ? notifier.deselectAll : notifier.selectAll,
                     child: Text(
                       allSelected ? 'Deselect All' : 'Select All',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: AppTheme.primary,
+                        color: colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -284,9 +292,10 @@ class _ReviewBody extends StatelessWidget {
                         ? () => notifier.confirmImport()
                         : null,
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       disabledBackgroundColor:
-                          AppTheme.textSecondary.withValues(alpha: 0.3),
+                          colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadii.sm),
@@ -343,20 +352,22 @@ class _ErrorBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 56, color: AppTheme.warning),
+            Icon(Icons.error_outline, size: 56, color: colorScheme.error),
             const SizedBox(height: AppSpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: AppTheme.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -365,7 +376,8 @@ class _ErrorBody extends StatelessWidget {
               label: const Text('Try Again'),
               onPressed: onRetry,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.primary,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(

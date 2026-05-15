@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
@@ -54,6 +53,7 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
   Widget build(BuildContext context) {
     final cwaCourses = ref.watch(coursesProvider).valueOrNull ?? [];
     final todaySlots = ref.watch(activeDaySlotsProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return CampusModalSheet(
       title: 'Choose course',
@@ -61,7 +61,7 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
       trailing: IconButton(
         onPressed: () => Navigator.of(context).pop(),
         icon: const Icon(Icons.close, size: AppIconSizes.xl),
-        color: AppTheme.textSecondary,
+        color: colorScheme.onSurfaceVariant,
         tooltip: 'Close',
       ),
       expandBody: true,
@@ -78,22 +78,23 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
           Container(
             padding: const EdgeInsets.all(AppSpacing.xxs),
             decoration: BoxDecoration(
-              color: AppColors.surfaceMuted,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: AppRadii.pill,
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: colorScheme.outlineVariant),
             ),
             child: TabBar(
               controller: _tabs,
               dividerColor: Colors.transparent,
               padding: EdgeInsets.zero,
-              labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-              indicator: const BoxDecoration(
-                color: AppTheme.primary,
+              labelPadding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              indicator: BoxDecoration(
+                color: colorScheme.primary,
                 borderRadius: AppRadii.pill,
               ),
               indicatorSize: TabBarIndicatorSize.tab,
-              labelColor: Colors.white,
-              unselectedLabelColor: AppTheme.textSecondary,
+              labelColor: colorScheme.onPrimary,
+              unselectedLabelColor: colorScheme.onSurfaceVariant,
               labelStyle: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -125,9 +126,9 @@ class _CoursePickerSheetState extends ConsumerState<CoursePickerSheet>
                         itemBuilder: (context, index) {
                           final course = cwaCourses[index];
                           return _PickerListTile(
-                            leading: const Icon(
+                            leading: Icon(
                               Icons.school_outlined,
-                              color: AppTheme.primary,
+                              color: colorScheme.primary,
                               size: AppIconSizes.xl,
                             ),
                             title: course.code,
@@ -242,6 +243,9 @@ class _PickerListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -250,9 +254,9 @@ class _PickerListTile extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.surfaceMuted,
+            color: colorScheme.surface,
             borderRadius: AppRadii.button,
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: colorScheme.outlineVariant),
           ),
           child: Row(
             children: [
@@ -264,28 +268,28 @@ class _PickerListTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              const Icon(
+              Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: AppIconSizes.sm,
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ],
           ),
@@ -308,28 +312,35 @@ class _EmptyPickerState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: AppIconSizes.status, color: AppTheme.textSecondary),
+            Icon(
+              icon,
+              size: AppIconSizes.status,
+              color: colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               title,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
             ),
             const SizedBox(height: AppSpacing.xxs),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppTheme.textSecondary,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
                 height: 1.45,
               ),
             ),

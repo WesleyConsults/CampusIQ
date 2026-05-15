@@ -605,8 +605,10 @@ class _DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ListTile(
-      leading: Icon(icon, color: AppTheme.textPrimary),
+      leading: Icon(icon, color: colorScheme.onSurface),
       title: Text(label),
       onTap: onTap,
     );
@@ -925,6 +927,7 @@ class _ActiveSessionResumeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final subtitle = session.isPaused
         ? 'Session paused for ${session.courseCode}'
         : session.isPomodoroMode
@@ -943,18 +946,18 @@ class _ActiveSessionResumeCard extends StatelessWidget {
               children: [
                 Text(
                   session.courseName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   'Started at ${DateFormat('h:mm a').format(session.startTime)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -1192,6 +1195,8 @@ class _EmptyPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return CampusCard(
       padding: AppSpacing.compactCardPadding,
       child: Column(
@@ -1201,13 +1206,13 @@ class _EmptyPlanCard extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: AppColors.surfaceMuted,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(AppRadii.lg),
             ),
-            child: const Icon(
+            child: Icon(
               LucideIcons.notebookTabs,
               size: 28,
-              color: AppTheme.primary,
+              color: colorScheme.primary,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -1222,7 +1227,7 @@ class _EmptyPlanCard extends StatelessWidget {
             'Generate a calm plan from your timetable or add a task manually if you already know what needs your attention.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                 ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -1315,6 +1320,8 @@ class _TaskGroupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -1325,14 +1332,14 @@ class _TaskGroupHeader extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: AppIconSizes.md, color: AppTheme.primary),
+            Icon(icon, size: AppIconSizes.md, color: colorScheme.primary),
             const SizedBox(width: AppSpacing.xs),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
           ],
@@ -1347,6 +1354,8 @@ class _PlanLoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: AppSpacing.screenPadding,
@@ -1359,7 +1368,6 @@ class _PlanLoadingState extends StatelessWidget {
                 height: 28,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: AppTheme.primary,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -1374,7 +1382,7 @@ class _PlanLoadingState extends StatelessWidget {
                 'CampusIQ is pulling together your plan, classes, and progress.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
               ),
             ],

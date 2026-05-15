@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
@@ -18,6 +17,8 @@ class AttendanceTracker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final today = DateTime.now();
     final days = List.generate(7, (i) {
       return DateTime(today.year, today.month, today.day)
@@ -43,10 +44,10 @@ class AttendanceTracker extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xxs),
                     Text(
                       '${attendanceStreak.currentStreak}d',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
-                        color: AppTheme.primary,
+                        color: colorScheme.primary,
                       ),
                     ),
                   ],
@@ -54,9 +55,11 @@ class AttendanceTracker extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.xxs),
-            const Text(
+            Text(
               'Tap a day to mark class attendance',
-              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             Row(
@@ -81,8 +84,8 @@ class AttendanceTracker extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           color: isToday
-                              ? AppTheme.primary
-                              : AppTheme.textSecondary,
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
                           fontWeight:
                               isToday ? FontWeight.w700 : FontWeight.w400,
                         ),
@@ -94,13 +97,14 @@ class AttendanceTracker extends StatelessWidget {
                         height: 36,
                         decoration: BoxDecoration(
                           color: isAttended
-                              ? AppTheme.primary
+                              ? colorScheme.primary
                               : isFuture
-                                  ? Colors.grey.shade100
-                                  : Colors.grey.shade200,
+                                  ? colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.5)
+                                  : colorScheme.surfaceContainerHighest,
                           shape: BoxShape.circle,
                           border: isToday
-                              ? Border.all(color: AppTheme.primary, width: 2)
+                              ? Border.all(color: colorScheme.primary, width: 2)
                               : null,
                         ),
                         alignment: Alignment.center,
@@ -113,8 +117,9 @@ class AttendanceTracker extends StatelessWidget {
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                   color: isFuture
-                                      ? Colors.grey.shade300
-                                      : AppTheme.textSecondary,
+                                      ? colorScheme.onSurfaceVariant
+                                          .withValues(alpha: 0.45)
+                                      : colorScheme.onSurfaceVariant,
                                 ),
                               ),
                       ),

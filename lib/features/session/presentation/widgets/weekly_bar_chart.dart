@@ -17,6 +17,7 @@ class WeeklyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final maxMinutes = weekly.days
         .map((day) => day.totalActualMinutes)
         .fold(0, (a, b) => a > b ? a : b);
@@ -42,7 +43,7 @@ class WeeklyBarChart extends StatelessWidget {
               Text(
                 _fmt(weekly.totalActualMinutes),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppTheme.textPrimary,
+                      color: colorScheme.onSurface,
                       fontWeight: FontWeight.w700,
                     ),
               ),
@@ -74,7 +75,7 @@ class WeeklyBarChart extends StatelessWidget {
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     fontSize: 9,
                                     height: 1,
-                                    color: AppTheme.textSecondary,
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
                         ),
                         const SizedBox(height: AppSpacing.xxs),
@@ -83,8 +84,8 @@ class WeeklyBarChart extends StatelessWidget {
                           height: (fill * 56).clamp(5, 56),
                           decoration: BoxDecoration(
                             color: isToday
-                                ? AppTheme.primary
-                                : AppTheme.primary.withValues(alpha: 0.28),
+                                ? colorScheme.primary
+                                : colorScheme.primary.withValues(alpha: 0.28),
                             borderRadius: BorderRadius.circular(999),
                           ),
                         ),
@@ -98,8 +99,8 @@ class WeeklyBarChart extends StatelessWidget {
                                 fontSize: 10,
                                 height: 1,
                                 color: isToday
-                                    ? AppTheme.primary
-                                    : AppTheme.textSecondary,
+                                    ? colorScheme.primary
+                                    : colorScheme.onSurfaceVariant,
                                 fontWeight:
                                     isToday ? FontWeight.w700 : FontWeight.w600,
                               ),
@@ -164,15 +165,17 @@ class _WeeklyInsight extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xs2,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: AppRadii.button,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -187,7 +190,7 @@ class _WeeklyInsight extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 10,
                         height: 1.1,
                       ),

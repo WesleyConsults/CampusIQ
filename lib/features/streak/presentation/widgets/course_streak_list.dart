@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
@@ -49,6 +48,8 @@ class _CourseStreakRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isAlive = result.isAlive && result.currentStreak > 0;
 
     return Padding(
@@ -58,14 +59,16 @@ class _CourseStreakRow extends StatelessWidget {
           CircleAvatar(
             radius: 18,
             backgroundColor: isAlive
-                ? AppTheme.primary.withValues(alpha: 0.1)
-                : Colors.grey.shade100,
+                ? colorScheme.primary.withValues(alpha: 0.14)
+                : colorScheme.surfaceContainerHighest,
             child: Text(
               courseCode.length >= 2 ? courseCode.substring(0, 2) : courseCode,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: isAlive ? AppTheme.primary : Colors.grey.shade400,
+                color: isAlive
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -75,16 +78,19 @@ class _CourseStreakRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(courseCode,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13)),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    )),
                 Text(
                   result.studiedToday
                       ? 'Studied today ✓'
                       : result.currentStreak > 0
                           ? 'Last studied — keep going!'
                           : 'No streak yet',
-                  style: const TextStyle(
-                      fontSize: 11, color: AppTheme.textSecondary),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -101,7 +107,9 @@ class _CourseStreakRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: isAlive ? AppTheme.primary : Colors.grey.shade400,
+                  color: isAlive
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
               ),
             ],

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 
 /// 4-week rolling activity heatmap — darker = more sessions that day.
@@ -11,6 +10,8 @@ class ActivityHeatmap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final today = DateTime.now();
     final todayNorm = DateTime(today.year, today.month, today.day);
 
@@ -53,11 +54,15 @@ class ActivityHeatmap extends StatelessWidget {
                           height: 14,
                           decoration: BoxDecoration(
                             color: count == 0
-                                ? Colors.grey.shade100
-                                : AppTheme.primary.withValues(alpha: intensity),
+                                ? colorScheme.surfaceContainerHighest
+                                : colorScheme.primary
+                                    .withValues(alpha: intensity),
                             borderRadius: BorderRadius.circular(3),
                             border: isToday
-                                ? Border.all(color: AppTheme.accent, width: 1.5)
+                                ? Border.all(
+                                    color: colorScheme.secondary,
+                                    width: 1.5,
+                                  )
                                 : null,
                           ),
                         ),
@@ -71,9 +76,13 @@ class ActivityHeatmap extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                const Text('Less',
-                    style:
-                        TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                Text(
+                  'Less',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 10,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(width: AppSpacing.xxs),
                 ...List.generate(4, (i) {
                   return Container(
@@ -81,16 +90,20 @@ class ActivityHeatmap extends StatelessWidget {
                     height: 10,
                     margin: const EdgeInsets.only(right: 2),
                     decoration: BoxDecoration(
-                      color:
-                          AppTheme.primary.withValues(alpha: 0.15 + i * 0.25),
+                      color: colorScheme.primary
+                          .withValues(alpha: 0.15 + i * 0.25),
                       borderRadius: BorderRadius.circular(AppRadii.xxxs),
                     ),
                   );
                 }),
                 const SizedBox(width: AppSpacing.xxs),
-                const Text('More',
-                    style:
-                        TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                Text(
+                  'More',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 10,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ],

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
@@ -128,6 +127,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
     final isPrefilled = !isEditing &&
         widget.prefillStartMinutes != null &&
         widget.prefillEndMinutes != null;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Form(
       key: _formKey,
@@ -224,7 +224,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
             Text(
               'Pick the start and end time for this class block.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -279,6 +279,8 @@ class _QuickFillCourses extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
@@ -286,9 +288,9 @@ class _QuickFillCourses extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: AppRadii.button,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,14 +311,13 @@ class _QuickFillCourses extends StatelessWidget {
                   avatar: const Icon(
                     LucideIcons.bookOpen,
                     size: AppIconSizes.sm,
-                    color: AppTheme.primary,
                   ),
-                  backgroundColor: AppColors.surface,
-                  side: const BorderSide(color: AppColors.border),
+                  backgroundColor: colorScheme.surface,
+                  side: BorderSide(color: colorScheme.outlineVariant),
                   labelStyle: Theme.of(context)
                       .textTheme
                       .labelMedium
-                      ?.copyWith(color: AppTheme.primary),
+                      ?.copyWith(color: colorScheme.primary),
                   onPressed: () => onSelected(course),
                 );
               },
@@ -343,6 +344,8 @@ class _TimeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -351,9 +354,9 @@ class _TimeTile extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.surfaceMuted,
+            color: colorScheme.surfaceContainerHighest,
             borderRadius: AppRadii.button,
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: colorScheme.outlineVariant),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,13 +366,13 @@ class _TimeTile extends StatelessWidget {
                   Icon(
                     icon,
                     size: AppIconSizes.md,
-                    color: AppTheme.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     label,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                   ),
                 ],
@@ -389,16 +392,18 @@ class _ModalIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: 48,
       height: 48,
-      decoration: const BoxDecoration(
-        color: AppColors.goldSoft,
+      decoration: BoxDecoration(
+        color: colorScheme.secondaryContainer,
         borderRadius: AppRadii.button,
       ),
-      child: const Icon(
+      child: Icon(
         LucideIcons.calendarPlus2,
-        color: AppTheme.primary,
+        color: colorScheme.onSecondaryContainer,
         size: AppIconSizes.xl,
       ),
     );
@@ -416,27 +421,29 @@ class _PrefillNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: const BoxDecoration(
-        color: AppColors.goldSoft,
+      decoration: BoxDecoration(
+        color: colorScheme.secondaryContainer,
         borderRadius: AppRadii.button,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
+          Icon(
             LucideIcons.sparkles,
             size: AppIconSizes.md,
-            color: AppTheme.primary,
+            color: colorScheme.onSecondaryContainer,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               'Free block detected from $startLabel to $endLabel. We kept that timing ready for you.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.primary,
+                    color: colorScheme.onSecondaryContainer,
                   ),
             ),
           ),
@@ -453,6 +460,7 @@ class _DurationBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final hours = minutes / 60;
     final hasFraction = minutes % 60 != 0;
     final label = hasFraction
@@ -465,14 +473,14 @@ class _DurationBadge extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: AppRadii.pill,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppTheme.primary,
+              color: colorScheme.primary,
             ),
       ),
     );

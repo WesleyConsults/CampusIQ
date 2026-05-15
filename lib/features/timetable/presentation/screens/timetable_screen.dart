@@ -504,6 +504,8 @@ class _EmptyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -514,13 +516,13 @@ class _EmptyPage extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: AppColors.surfaceMuted,
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(AppRadii.lg),
               ),
-              child: const Icon(
+              child: Icon(
                 LucideIcons.calendarHeart,
                 size: 30,
-                color: AppTheme.primary,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -553,23 +555,24 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
+          const SizedBox(
             width: 28,
             height: 28,
             child: CircularProgressIndicator(
               strokeWidth: 2.2,
-              color: AppTheme.primary,
             ),
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
           Text(
             'Loading your timetable...',
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
               fontSize: 14,
             ),
           ),

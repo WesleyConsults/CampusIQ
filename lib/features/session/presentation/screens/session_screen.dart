@@ -189,6 +189,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       context,
       hasActiveSession: activeSession != null,
     );
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -206,6 +207,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
             ),
             icon: const Icon(LucideIcons.calendarRange, size: AppIconSizes.md),
             label: const Text('This Week'),
+            style: TextButton.styleFrom(
+              foregroundColor: colorScheme.primary,
+            ),
           ),
           const StreakActionButton(),
           IconButton(
@@ -1084,6 +1088,8 @@ class _HistoryEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return CampusCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -1093,12 +1099,12 @@ class _HistoryEmptyState extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: AppColors.goldSoft,
+              color: colorScheme.secondaryContainer,
               borderRadius: BorderRadius.circular(AppRadii.md),
             ),
-            child: const Icon(
+            child: Icon(
               LucideIcons.clock3,
-              color: AppTheme.primary,
+              color: colorScheme.onSecondaryContainer,
               size: AppIconSizes.xxxl,
             ),
           ),
@@ -1115,7 +1121,7 @@ class _HistoryEmptyState extends StatelessWidget {
             'Start your first study session and build your focus rhythm one calm block at a time.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                   fontSize: 13,
                   height: 1.35,
                 ),

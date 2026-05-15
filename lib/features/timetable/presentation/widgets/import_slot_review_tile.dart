@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
@@ -20,6 +19,7 @@ class ImportSlotReviewTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final dayLabel = TimetableConstants.dayFullLabels[slot.dayIndex];
     final startLabel = TimetableConstants.minutesToLabel(slot.startMinutes);
     final endLabel = TimetableConstants.minutesToLabel(slot.endMinutes);
@@ -27,7 +27,7 @@ class ImportSlotReviewTile extends ConsumerWidget {
     final chipColor = switch (slot.slotType) {
       'Practical' => Colors.teal,
       'Tutorial' => Colors.orange,
-      _ => AppTheme.primary,
+      _ => colorScheme.primary,
     };
 
     return InkWell(
@@ -39,7 +39,7 @@ class ImportSlotReviewTile extends ConsumerWidget {
           children: [
             Checkbox(
               value: isSelected,
-              activeColor: AppTheme.primary,
+              activeColor: colorScheme.primary,
               onChanged: (_) => ref
                   .read(timetableImportNotifierProvider.notifier)
                   .toggleSlot(index),
@@ -53,9 +53,10 @@ class ImportSlotReviewTile extends ConsumerWidget {
                     slot.courseCode.isNotEmpty
                         ? '${slot.courseCode} — ${slot.courseName}'
                         : slot.courseName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
+                      color: colorScheme.onSurface,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -67,9 +68,9 @@ class ImportSlotReviewTile extends ConsumerWidget {
                       '$startLabel – $endLabel',
                       if (slot.venue.isNotEmpty) slot.venue,
                     ].join(' · '),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

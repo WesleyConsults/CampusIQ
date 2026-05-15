@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/streak/domain/milestone.dart';
 
@@ -15,6 +14,9 @@ class MilestoneGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -29,8 +31,10 @@ class MilestoneGrid extends StatelessWidget {
                 const Spacer(),
                 Text(
                   '${unlocked.length} / ${Milestone.all.length}',
-                  style: const TextStyle(
-                      fontSize: 12, color: AppTheme.textSecondary),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -81,20 +85,23 @@ class _BadgeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Opacity(
       opacity: isUnlocked ? 1.0 : 0.35,
       child: Container(
         decoration: BoxDecoration(
           color: isUnlocked
-              ? AppTheme.accent.withValues(alpha: 0.1)
-              : Colors.grey.shade100,
+              ? colorScheme.secondaryContainer.withValues(alpha: 0.65)
+              : colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(AppRadii.sm),
           border: Border.all(
             color: isUnlocked
-                ? AppTheme.accent.withValues(alpha: 0.4)
+                ? colorScheme.secondary.withValues(alpha: 0.45)
                 : isNext
-                    ? AppTheme.primary.withValues(alpha: 0.3)
-                    : Colors.grey.shade200,
+                    ? colorScheme.primary.withValues(alpha: 0.35)
+                    : colorScheme.outlineVariant,
             width: isNext ? 1.5 : 0.5,
           ),
         ),
@@ -111,15 +118,19 @@ class _BadgeTile extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: isUnlocked ? AppTheme.primary : Colors.grey.shade400,
+                color: isUnlocked
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
             ),
             if (isNext) ...[
               const SizedBox(height: AppSpacing.xxxs),
               Text(
                 '${milestone.days - longestStreak} left',
-                style:
-                    const TextStyle(fontSize: 9, color: AppTheme.textSecondary),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 9,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ],

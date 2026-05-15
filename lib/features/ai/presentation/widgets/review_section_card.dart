@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 
 class ReviewSectionCard extends StatelessWidget {
@@ -17,6 +16,9 @@ class ReviewSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Padding(
@@ -26,10 +28,10 @@ class ReviewSectionCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.primary,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -38,10 +40,10 @@ class ReviewSectionCard extends StatelessWidget {
                 children: [
                   Text(
                     body,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       height: 1.6,
-                      color: AppTheme.textPrimary,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   if (isBlurred)
@@ -49,7 +51,8 @@ class ReviewSectionCard extends StatelessWidget {
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
                         child: Container(
-                            color: Colors.white.withValues(alpha: 0.1)),
+                          color: theme.cardColor.withValues(alpha: 0.1),
+                        ),
                       ),
                     ),
                 ],

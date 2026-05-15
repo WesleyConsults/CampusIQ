@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
@@ -40,13 +39,12 @@ class StreakScreen extends ConsumerWidget {
     final isLoading = (sessionsAsync.isLoading && !sessionsAsync.hasValue) ||
         (coursesAsync.isLoading && !coursesAsync.hasValue) ||
         (datesAsync.isLoading && !datesAsync.hasValue);
-    final hasError = sessionsAsync.hasError ||
-        coursesAsync.hasError ||
-        datesAsync.hasError;
+    final hasError =
+        sessionsAsync.hasError || coursesAsync.hasError || datesAsync.hasError;
 
     if (isLoading) {
       return Scaffold(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text('Streaks',
               style: TextStyle(fontWeight: FontWeight.w700)),
@@ -57,7 +55,7 @@ class StreakScreen extends ConsumerWidget {
 
     if (hasError) {
       return Scaffold(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text('Streaks',
               style: TextStyle(fontWeight: FontWeight.w700)),
@@ -84,7 +82,7 @@ class StreakScreen extends ConsumerWidget {
         perCourseStreaks.values.where((r) => r.currentStreak > 0).length;
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Streaks',
             style: TextStyle(fontWeight: FontWeight.w700)),
@@ -94,7 +92,8 @@ class StreakScreen extends ConsumerWidget {
           // ── Summary mini row ─────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
               child: StreakSummaryRow(
                 study: studyStreak,
                 attendance: attendanceStreak,
@@ -106,7 +105,8 @@ class StreakScreen extends ConsumerWidget {
           // ── Study streak hero ─────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
               child: StreakHeroCard(
                 streak: studyStreak,
                 title: 'Study streak',
@@ -117,7 +117,8 @@ class StreakScreen extends ConsumerWidget {
           // ── Next milestone ────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
               child: NextMilestoneCard(streak: studyStreak),
             ),
           ),
@@ -125,7 +126,8 @@ class StreakScreen extends ConsumerWidget {
           // ── Milestone badge grid ──────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
               child: MilestoneGrid(
                 unlocked: studyStreak.unlockedMilestones,
                 longestStreak: studyStreak.longestStreak,
@@ -136,7 +138,8 @@ class StreakScreen extends ConsumerWidget {
           // ── Attendance tracker ────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
               child: AttendanceTracker(
                 attendanceStreak: attendanceStreak,
                 attendedDates: attendedDates,
@@ -149,7 +152,8 @@ class StreakScreen extends ConsumerWidget {
           if (perCourseStreaks.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
                 child: CourseStreakList(streaks: perCourseStreaks),
               ),
             ),
@@ -157,14 +161,15 @@ class StreakScreen extends ConsumerWidget {
           // ── Activity heatmap ──────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
               child: ActivityHeatmap(activityByDay: activityMap),
             ),
           ),
 
           const SliverToBoxAdapter(
-              child: SizedBox(height: AppSpacing.fabSize + AppSpacing.xxl),
-            ),
+            child: SizedBox(height: AppSpacing.fabSize + AppSpacing.xxl),
+          ),
         ],
       ),
     );

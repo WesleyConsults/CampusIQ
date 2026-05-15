@@ -52,6 +52,7 @@ class _CourseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final fill = stats.completionRate.clamp(0.0, 1.0);
     final accent = stats.isOverStudied
         ? AppTheme.success
@@ -94,7 +95,7 @@ class _CourseRow extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppTheme.textSecondary,
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
                         ),
                       ],
@@ -106,7 +107,7 @@ class _CourseRow extends StatelessWidget {
                         ? '${stats.formattedActual} / ${stats.formattedPlanned}'
                         : stats.formattedActual,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: AppTheme.textPrimary,
+                          color: colorScheme.onSurface,
                           fontSize: 12,
                         ),
                   ),
@@ -118,7 +119,7 @@ class _CourseRow extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: fill,
                   minHeight: 5,
-                  backgroundColor: AppColors.surfaceMuted,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
                   valueColor: AlwaysStoppedAnimation<Color>(accent),
                 ),
               ),

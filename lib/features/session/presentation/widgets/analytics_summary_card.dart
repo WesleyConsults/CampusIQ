@@ -16,6 +16,7 @@ class AnalyticsSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final completionRate =
         (analytics.completionRate * 100).clamp(0, 200).toInt();
     final hasPlan = analytics.totalPlannedMinutes > 0;
@@ -119,7 +120,7 @@ class AnalyticsSummaryCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: analytics.completionRate.clamp(0, 1),
                 minHeight: 4,
-                backgroundColor: AppColors.surfaceMuted,
+                backgroundColor: colorScheme.surfaceContainerHighest,
                 valueColor: AlwaysStoppedAnimation<Color>(
                   completionRate >= 100 ? AppTheme.success : AppTheme.primary,
                 ),
@@ -155,15 +156,17 @@ class _MetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xs,
         vertical: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: AppRadii.button,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -171,7 +174,7 @@ class _MetricTile extends StatelessWidget {
           Icon(
             icon,
             size: AppIconSizes.xs,
-            color: emphasize ? AppTheme.success : AppTheme.textSecondary,
+            color: emphasize ? AppTheme.success : colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: AppSpacing.xxs2),
           Expanded(
@@ -184,8 +187,9 @@ class _MetricTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color:
-                            emphasize ? AppTheme.success : AppTheme.textPrimary,
+                        color: emphasize
+                            ? AppTheme.success
+                            : colorScheme.onSurface,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         height: 1.05,
@@ -197,7 +201,7 @@ class _MetricTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 9,
                         height: 1.1,
                       ),
