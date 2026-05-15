@@ -101,9 +101,9 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
         : 'Capture a quick thought, summary, or reminder for this course.';
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.75,
-      minChildSize: 0.4,
-      maxChildSize: 0.95,
+      initialChildSize: 0.9,
+      minChildSize: 0.55,
+      maxChildSize: 0.98,
       expand: false,
       builder: (context, scrollController) {
         return CampusModalSheet(
@@ -116,22 +116,13 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
             tooltip: 'Close',
             icon: const Icon(LucideIcons.x, size: AppIconSizes.xl),
           ),
-          bottomBar: CampusModalActionRow(
-            primaryLabel: isEditing ? 'Save changes' : 'Save note',
-            onPrimaryPressed: _isSaving ? null : _save,
-            secondaryLabel: 'Cancel',
-            onSecondaryPressed:
-                _isSaving ? null : () => Navigator.of(context).pop(),
-            isPrimaryLoading: _isSaving,
-          ),
           child: Scrollbar(
             controller: scrollController,
             thumbVisibility: false,
             child: SingleChildScrollView(
               controller: scrollController,
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior.onDrag,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -172,6 +163,15 @@ class _NoteEditorSheetState extends ConsumerState<NoteEditorSheet> {
                       keyboardType: TextInputType.multiline,
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.lg),
+                  CampusModalActionRow(
+                    primaryLabel: isEditing ? 'Save changes' : 'Save note',
+                    onPrimaryPressed: _isSaving ? null : _save,
+                    secondaryLabel: 'Cancel',
+                    onSecondaryPressed:
+                        _isSaving ? null : () => Navigator.of(context).pop(),
+                    isPrimaryLoading: _isSaving,
+                  ),
                 ],
               ),
             ),
@@ -195,16 +195,19 @@ class _FieldShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
-      constraints: minHeight == null
-          ? null
-          : BoxConstraints(minHeight: minHeight!),
+      constraints:
+          minHeight == null ? null : BoxConstraints(minHeight: minHeight!),
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+        ),
       ),
       child: Align(
         alignment: alignment,
