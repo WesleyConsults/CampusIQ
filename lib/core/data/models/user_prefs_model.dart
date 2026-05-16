@@ -51,6 +51,20 @@ class UserPrefsModel {
   @Name('zzGradingSystemId')
   String gradingSystemId = 'cwa';
 
+  // ── Onboarding ─────────────────────────────────────────────────────────────
+
+  /// Whether the student has completed the first-run onboarding flow.
+  @Name('zzHasCompletedOnboarding')
+  bool hasCompletedOnboarding = false;
+
+  /// The university the student attends (e.g. "KNUST", "University of Ghana").
+  @Name('zzUniversityName')
+  String? universityName;
+
+  /// The programme the student is enrolled in (e.g. "BSc Computer Engineering").
+  @Name('zzProgrammeName')
+  String? programmeName;
+
   // ── Pomodoro defaults ──────────────────────────────────────────────────────
 
   @Name('zzPomodoroFocusMinutes')

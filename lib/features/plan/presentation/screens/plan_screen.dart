@@ -1,4 +1,5 @@
 import 'package:campusiq/core/domain/grading_system.dart';
+import 'package:campusiq/core/domain/university_defaults.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/layout/shell_overlay_padding.dart';
@@ -25,6 +26,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+final _drawerUniversityProvider = StreamProvider<University?>((ref) async* {
+  final repo = ref.watch(userPrefsRepositoryProvider);
+  if (repo == null) {
+    yield null;
+    return;
+  }
+
+  await for (final prefs in repo.watchPrefs()) {
+    final universityName = prefs?.universityName;
+    yield universityName == null ? null : universityByName(universityName);
+  }
+});
 
 class PlanScreen extends ConsumerStatefulWidget {
   const PlanScreen({super.key});
@@ -117,6 +131,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     final projectedCwa = ref.watch(projectedCwaProvider);
     final targetCwa = ref.watch(targetCwaProvider);
     final allSlots = ref.watch(allSlotsProvider).valueOrNull ?? [];
+    final drawerUniversity = ref.watch(_drawerUniversityProvider).valueOrNull;
 
     final now = DateTime.now();
     final dateLabel = DateFormat('EEEE, d MMMM').format(now);
@@ -142,29 +157,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
-              const DrawerHeader(
-                decoration: BoxDecoration(color: AppTheme.primary),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Icon(Icons.home_rounded, color: Colors.white, size: 32),
-                    SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'CampusIQ',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      'Today is your home base',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
-                    ),
-                  ],
-                ),
+              DrawerHeader(
+                decoration: const BoxDecoration(color: AppTheme.primary),
+                child: _DrawerHeaderContent(university: drawerUniversity),
               ),
               _DrawerItem(
                 icon: Icons.today_outlined,
@@ -616,6 +611,104 @@ class _DrawerItem extends StatelessWidget {
       leading: Icon(icon, color: colorScheme.onSurface),
       title: Text(label),
       onTap: onTap,
+    );
+  }
+}
+
+class _DrawerHeaderContent extends StatelessWidget {
+  final University? university;
+
+  const _DrawerHeaderContent({required this.university});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        const Icon(Icons.home_rounded, color: Colors.white, size: 32),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'CampusIQ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    'Today is your home base',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            _DrawerSchoolLogo(university: university),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _DrawerSchoolLogo extends StatelessWidget {
+  final University? university;
+
+  const _DrawerSchoolLogo({required this.university});
+
+  @override
+  Widget build(BuildContext context) {
+    const logoWidth = 96.0;
+    const logoHeight = 64.0;
+    final logoAssetPath = university?.logoAssetPath;
+    final needsDarkBackground = university?.logoNeedsDarkBackground ?? false;
+    final backgroundColor = logoAssetPath == null
+        ? Colors.white.withValues(alpha: 0.12)
+        : needsDarkBackground
+            ? AppColors.navySoft
+            : Colors.white;
+
+    Widget fallbackIcon() {
+      return Icon(
+        LucideIcons.school,
+        color: Colors.white.withValues(alpha: 0.86),
+        size: AppIconSizes.hero,
+      );
+    }
+
+    return Semantics(
+      label: university == null || logoAssetPath == null
+          ? 'Selected school'
+          : '${university!.name} logo',
+      child: Container(
+        width: logoWidth,
+        height: logoHeight,
+        padding: const EdgeInsets.all(AppSpacing.xs),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
+        ),
+        child: Center(
+          child: logoAssetPath == null
+              ? fallbackIcon()
+              : Image.asset(
+                  logoAssetPath,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => fallbackIcon(),
+                ),
+        ),
+      ),
     );
   }
 }

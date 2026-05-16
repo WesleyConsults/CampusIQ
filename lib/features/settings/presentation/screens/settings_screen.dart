@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -263,6 +264,29 @@ class SettingsScreen extends ConsumerWidget {
                 title: 'Send feedback',
                 subtitle: _feedbackEmail,
                 onTap: () => _launchUrl(context, 'mailto:$_feedbackEmail'),
+              ),
+            ]),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // ── Dev ──────────────────────────────────────────────────────────
+            const _SectionLabel(title: 'Dev'),
+            const SizedBox(height: AppSpacing.xs),
+            _Card(children: [
+              _RowTile(
+                leading: LucideIcons.rotateCcw,
+                title: 'Reset onboarding',
+                subtitle: 'Restart the first-run experience',
+                onTap: () async {
+                  final repo = ref.read(userPrefsRepositoryProvider);
+                  await repo?.setHasCompletedOnboarding(false);
+                  await repo?.setUniversityName(null);
+                  await repo?.setProgrammeName(null);
+                  ref.invalidate(notificationPrefsProvider);
+                  if (context.mounted) {
+                    context.go('/onboarding');
+                  }
+                },
               ),
             ]),
 

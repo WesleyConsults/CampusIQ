@@ -95,6 +95,14 @@ class UserPrefsRepository {
       changed = true;
     }
 
+    // Existing users (who already have app data) should skip onboarding.
+    // The hasCompletedOnboarding field is new; for existing rows it = false
+    // (the Dart default), but these users already went through the app.
+    if (!prefs.hasCompletedOnboarding && prefs.lastOpenedDate != null) {
+      prefs.hasCompletedOnboarding = true;
+      changed = true;
+    }
+
     if (!changed) return;
 
     try {
@@ -404,6 +412,56 @@ class UserPrefsRepository {
     final gradingSystem = GradingSystem.byId(value);
     prefs.gradingSystemId = gradingSystem.id;
     prefs.targetCwa = gradingSystem.defaultTarget;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  // ── Onboarding ─────────────────────────────────────────────────────────────
+
+  Future<bool> getHasCompletedOnboarding() async {
+    final prefs = await _getOrCreate();
+    return prefs.hasCompletedOnboarding;
+  }
+
+  Future<void> setHasCompletedOnboarding(bool value) async {
+    final prefs = await _getOrCreate();
+    prefs.hasCompletedOnboarding = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<String?> getUniversityName() async {
+    final prefs = await _getOrCreate();
+    return prefs.universityName;
+  }
+
+  Future<void> setUniversityName(String? value) async {
+    final prefs = await _getOrCreate();
+    prefs.universityName = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<String?> getProgrammeName() async {
+    final prefs = await _getOrCreate();
+    return prefs.programmeName;
+  }
+
+  Future<void> setProgrammeName(String? value) async {
+    final prefs = await _getOrCreate();
+    prefs.programmeName = value;
     try {
       await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
     } catch (e) {

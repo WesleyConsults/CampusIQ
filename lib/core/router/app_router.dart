@@ -21,12 +21,30 @@ import 'package:campusiq/features/cwa/presentation/screens/cwa_manual_entry_scre
 import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
+import 'package:campusiq/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:campusiq/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/plan',
+  redirect: (context, state) {
+    final uri = state.uri.toString();
+    final container = ProviderScope.containerOf(context);
+    final hasCompleted =
+        container.read(hasCompletedOnboardingProvider).valueOrNull;
+    if (hasCompleted == null) return null;
+    if (uri == '/onboarding' && hasCompleted) return '/plan';
+    if (uri == '/onboarding') return null;
+    if (hasCompleted == false) return '/onboarding';
+    return null;
+  },
   routes: [
+    GoRoute(
+      path: '/onboarding',
+      name: 'onboarding',
+      builder: (context, state) => const OnboardingScreen(),
+    ),
     ShellRoute(
       builder: (context, state, child) => _AppShell(child: child),
       routes: [
