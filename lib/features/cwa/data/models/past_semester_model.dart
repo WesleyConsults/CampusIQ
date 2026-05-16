@@ -14,6 +14,10 @@ class PastSemesterModel {
   @Name('zzSemesterKey')
   String? semesterKey;
 
+  /// Grading system used for this completed semester record.
+  @Name('zzGradingSystemId')
+  String gradingSystemId = 'cwa';
+
   /// Ordered list of courses from that semester.
   late List<PastCourseEntry> courses;
 
@@ -43,6 +47,7 @@ class PastSemesterModel {
     required this.semesterLabel,
     required this.courses,
     this.semesterKey,
+    this.gradingSystemId = 'cwa',
     this.reportedSemesterCwa,
     this.reportedCumulativeCwa,
     this.isPendingResults = false,
@@ -92,6 +97,10 @@ class PastCourseEntry {
   /// If mark is available, use it directly (as KNUST CWA uses actual marks).
   double get score {
     if (mark != null) return mark!;
+    return gradeToScore(grade);
+  }
+
+  static double gradeToScore(String grade) {
     switch (grade.trim().toUpperCase()) {
       case 'A':
         return 85.0;

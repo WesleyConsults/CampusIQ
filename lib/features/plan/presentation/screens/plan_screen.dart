@@ -1,3 +1,4 @@
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/layout/shell_overlay_padding.dart';
@@ -112,6 +113,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     final studyStreak = ref.watch(studyStreakProvider);
     final attendanceStreak = ref.watch(attendanceStreakProvider);
     final perCourseStreaks = ref.watch(perCourseStreakProvider);
+    final gradingSystem = ref.watch(gradingSystemProvider);
     final projectedCwa = ref.watch(projectedCwaProvider);
     final targetCwa = ref.watch(targetCwaProvider);
     final allSlots = ref.watch(allSlotsProvider).valueOrNull ?? [];
@@ -242,6 +244,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 .length,
             projectedCwa: projectedCwa,
             targetCwa: targetCwa,
+            gradingSystem: gradingSystem,
             todaySlots: todaySlots,
             freeBlocks: freeBlocks,
             bottomContentPadding: bottomContentPadding,
@@ -264,6 +267,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     required int totalCourseStreaks,
     required double projectedCwa,
     required double targetCwa,
+    required GradingSystem gradingSystem,
     required List<TimetableSlotModel> todaySlots,
     required List<FreeBlock> freeBlocks,
     required double bottomContentPadding,
@@ -470,6 +474,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             child: _AcademicPulseSection(
               projectedCwa: projectedCwa,
               targetCwa: targetCwa,
+              gradingSystem: gradingSystem,
               cwaGap: cwaGap,
               studyStreak: studyStreak,
               attendanceStreak: attendanceStreak,
@@ -749,6 +754,7 @@ class _HeroCard extends StatelessWidget {
 class _AcademicPulseSection extends StatelessWidget {
   final double projectedCwa;
   final double targetCwa;
+  final GradingSystem gradingSystem;
   final double cwaGap;
   final StreakResult studyStreak;
   final StreakResult attendanceStreak;
@@ -757,6 +763,7 @@ class _AcademicPulseSection extends StatelessWidget {
   const _AcademicPulseSection({
     required this.projectedCwa,
     required this.targetCwa,
+    required this.gradingSystem,
     required this.cwaGap,
     required this.studyStreak,
     required this.attendanceStreak,
@@ -780,8 +787,11 @@ class _AcademicPulseSection extends StatelessWidget {
         ),
         const SizedBox(height: _PlanScreenState._homeCompactHeaderGap),
         _AcademicPulseCard(
-          projectedCwa: projectedCwa,
-          targetCwa: targetCwa,
+          gradingSystemLabel: gradingSystem.label,
+          projectedLabel: gradingSystem.projectedLabel,
+          projectedValue: gradingSystem.formatScore(projectedCwa),
+          targetValue: gradingSystem.formatScore(targetCwa),
+          gapValue: gradingSystem.formatDelta(cwaGap),
           cwaGap: cwaGap,
           studyStreak: studyStreak,
           attendanceStreak: attendanceStreak,
@@ -793,16 +803,22 @@ class _AcademicPulseSection extends StatelessWidget {
 }
 
 class _AcademicPulseCard extends StatelessWidget {
-  final double projectedCwa;
-  final double targetCwa;
+  final String gradingSystemLabel;
+  final String projectedLabel;
+  final String projectedValue;
+  final String targetValue;
+  final String gapValue;
   final double cwaGap;
   final StreakResult studyStreak;
   final StreakResult attendanceStreak;
   final int totalCourseStreaks;
 
   const _AcademicPulseCard({
-    required this.projectedCwa,
-    required this.targetCwa,
+    required this.gradingSystemLabel,
+    required this.projectedLabel,
+    required this.projectedValue,
+    required this.targetValue,
+    required this.gapValue,
     required this.cwaGap,
     required this.studyStreak,
     required this.attendanceStreak,
@@ -811,17 +827,16 @@ class _AcademicPulseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gapLabel =
-        cwaGap <= 0 ? 'On target' : '${cwaGap.toStringAsFixed(1)} short';
+    final gapLabel = cwaGap <= 0 ? 'On target' : '$gapValue short';
     final tiles = [
       _MetricTile(
-        label: 'Projected CWA',
-        value: projectedCwa.toStringAsFixed(1),
+        label: projectedLabel,
+        value: projectedValue,
         accentColor: AppTheme.primary,
       ),
       _MetricTile(
-        label: 'Target',
-        value: targetCwa.toStringAsFixed(1),
+        label: 'Target $gradingSystemLabel',
+        value: targetValue,
         accentColor: AppColors.info,
       ),
       _MetricTile(

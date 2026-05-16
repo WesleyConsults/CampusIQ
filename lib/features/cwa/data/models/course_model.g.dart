@@ -51,6 +51,11 @@ const CourseModelSchema = CollectionSchema(
       id: 6,
       name: r'semesterKey',
       type: IsarType.string,
+    ),
+    r'zzGradingSystemId': PropertySchema(
+      id: 7,
+      name: r'zzGradingSystemId',
+      type: IsarType.string,
     )
   },
   estimateSize: _courseModelEstimateSize,
@@ -76,6 +81,7 @@ int _courseModelEstimateSize(
   bytesCount += 3 + object.code.length * 3;
   bytesCount += 3 + object.name.length * 3;
   bytesCount += 3 + object.semesterKey.length * 3;
+  bytesCount += 3 + object.gradingSystemId.length * 3;
   return bytesCount;
 }
 
@@ -92,6 +98,7 @@ void _courseModelSerialize(
   writer.writeDouble(offsets[4], object.expectedScore);
   writer.writeString(offsets[5], object.name);
   writer.writeString(offsets[6], object.semesterKey);
+  writer.writeString(offsets[7], object.gradingSystemId);
 }
 
 CourseModel _courseModelDeserialize(
@@ -109,6 +116,7 @@ CourseModel _courseModelDeserialize(
   object.id = id;
   object.name = reader.readString(offsets[5]);
   object.semesterKey = reader.readString(offsets[6]);
+  object.gradingSystemId = reader.readString(offsets[7]);
   return object;
 }
 
@@ -132,6 +140,8 @@ P _courseModelDeserializeProp<P>(
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -942,6 +952,142 @@ extension CourseModelQueryFilter
       ));
     });
   }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      gradingSystemIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      gradingSystemIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      gradingSystemIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      gradingSystemIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzGradingSystemId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      gradingSystemIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      gradingSystemIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      gradingSystemIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      gradingSystemIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'zzGradingSystemId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      gradingSystemIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzGradingSystemId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterFilterCondition>
+      gradingSystemIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'zzGradingSystemId',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension CourseModelQueryObject
@@ -1034,6 +1180,19 @@ extension CourseModelQuerySortBy
   QueryBuilder<CourseModel, CourseModel, QAfterSortBy> sortBySemesterKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterSortBy> sortByGradingSystemId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterSortBy>
+      sortByGradingSystemIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.desc);
     });
   }
 }
@@ -1136,6 +1295,19 @@ extension CourseModelQuerySortThenBy
       return query.addSortBy(r'semesterKey', Sort.desc);
     });
   }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterSortBy> thenByGradingSystemId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QAfterSortBy>
+      thenByGradingSystemIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.desc);
+    });
+  }
 }
 
 extension CourseModelQueryWhereDistinct
@@ -1182,6 +1354,14 @@ extension CourseModelQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'semesterKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CourseModel, CourseModel, QDistinct> distinctByGradingSystemId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzGradingSystemId',
+          caseSensitive: caseSensitive);
     });
   }
 }
@@ -1233,6 +1413,13 @@ extension CourseModelQueryProperty
   QueryBuilder<CourseModel, String, QQueryOperations> semesterKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'semesterKey');
+    });
+  }
+
+  QueryBuilder<CourseModel, String, QQueryOperations>
+      gradingSystemIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzGradingSystemId');
     });
   }
 }

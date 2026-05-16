@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/layout/shell_overlay_padding.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
@@ -30,6 +31,10 @@ class CwaScreen extends ConsumerWidget {
 
   Future<void> _openAddSheet(BuildContext context, WidgetRef ref,
       {CourseModel? existing}) async {
+    final selectedSystem = ref.read(gradingSystemProvider);
+    final sheetSystem = existing == null
+        ? selectedSystem
+        : GradingSystem.byId(existing.gradingSystemId);
     final result = await showModalBottomSheet<CourseModel>(
       context: context,
       isScrollControlled: true,
@@ -39,6 +44,7 @@ class CwaScreen extends ConsumerWidget {
       builder: (_) => AddCourseSheet(
         semesterKey: ref.read(activeSemesterProvider),
         existing: existing,
+        gradingSystem: sheetSystem,
       ),
     );
 
@@ -95,6 +101,7 @@ class CwaScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final viewMode = ref.watch(cwaViewModeProvider);
+    final gradingSystem = ref.watch(gradingSystemProvider);
     final hasActiveSession = ref.watch(activeSessionProvider) != null;
     final bottomContentPadding = shellOverlayBottomPadding(
       context,
@@ -105,7 +112,10 @@ class CwaScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('CWA', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(
+          gradingSystem.label,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         actions: [
           Semantics(
             button: true,
@@ -139,6 +149,7 @@ class CwaScreen extends ConsumerWidget {
                     context,
                     ref,
                     ref.read(targetCwaProvider),
+                    gradingSystem,
                   );
                   return;
                 case _CwaMenuAction.history:
@@ -153,7 +164,7 @@ class CwaScreen extends ConsumerWidget {
               ),
               const PopupMenuItem(
                 value: _CwaMenuAction.target,
-                child: Text('Set target CWA'),
+                child: Text('Set target'),
               ),
               if (viewMode == CwaViewMode.cumulative)
                 const PopupMenuItem(
@@ -197,12 +208,22 @@ class CwaScreen extends ConsumerWidget {
     );
   }
 
-  void _showTargetDialog(BuildContext context, WidgetRef ref, double current) {
-    double temp = current;
+  void _showTargetDialog(
+    BuildContext context,
+    WidgetRef ref,
+    double current,
+    GradingSystem gradingSystem,
+  ) {
+    double temp = current
+        .clamp(gradingSystem.targetMin, gradingSystem.targetMax)
+        .toDouble();
+    final step = gradingSystem.maxScore <= 5 ? 0.1 : 1.0;
+    final targetDivisions =
+        ((gradingSystem.targetMax - gradingSystem.targetMin) / step).round();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Set Target CWA'),
+        title: Text('Set Target ${gradingSystem.label}'),
         content: StatefulBuilder(
           builder: (ctx, setState) => Column(
             mainAxisSize: MainAxisSize.min,
@@ -214,12 +235,19 @@ class CwaScreen extends ConsumerWidget {
                     icon: const Icon(Icons.remove_circle_outline),
                     color: AppTheme.primary,
                     iconSize: 32,
-                    onPressed: temp > 40
-                        ? () => setState(() => temp = (temp - 1).clamp(40, 100))
+                    onPressed: temp > gradingSystem.targetMin
+                        ? () => setState(
+                              () => temp = (temp - step)
+                                  .clamp(
+                                    gradingSystem.targetMin,
+                                    gradingSystem.targetMax,
+                                  )
+                                  .toDouble(),
+                            )
                         : null,
                   ),
                   Text(
-                    '${temp.toInt()}',
+                    gradingSystem.formatScore(temp),
                     style: const TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.w700,
@@ -230,17 +258,24 @@ class CwaScreen extends ConsumerWidget {
                     icon: const Icon(Icons.add_circle_outline),
                     color: AppTheme.primary,
                     iconSize: 32,
-                    onPressed: temp < 100
-                        ? () => setState(() => temp = (temp + 1).clamp(40, 100))
+                    onPressed: temp < gradingSystem.targetMax
+                        ? () => setState(
+                              () => temp = (temp + step)
+                                  .clamp(
+                                    gradingSystem.targetMin,
+                                    gradingSystem.targetMax,
+                                  )
+                                  .toDouble(),
+                            )
                         : null,
                   ),
                 ],
               ),
               Slider(
                 value: temp,
-                min: 40,
-                max: 100,
-                divisions: 60,
+                min: gradingSystem.targetMin,
+                max: gradingSystem.targetMax,
+                divisions: targetDivisions,
                 activeColor: AppTheme.primary,
                 onChanged: (v) => setState(() => temp = v),
               ),
@@ -268,7 +303,11 @@ class CwaScreen extends ConsumerWidget {
               }
 
               try {
-                await repo.setTargetCwa(temp);
+                await repo.setTargetCwa(
+                  temp,
+                  min: gradingSystem.targetMin,
+                  max: gradingSystem.targetMax,
+                );
                 if (ctx.mounted) Navigator.pop(ctx);
               } catch (e) {
                 debugPrint('🔴 CwaScreen _showTargetDialog failed: $e');
@@ -276,7 +315,7 @@ class CwaScreen extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
-                        'Could not save your target CWA. Please try again.',
+                        'Could not save your target. Please try again.',
                       ),
                     ),
                   );
@@ -312,7 +351,7 @@ class CwaScreen extends ConsumerWidget {
         options: [
           _ImportOption(
             icon: LucideIcons.camera,
-            label: 'Take photo',
+            label: 'Take Photo',
             subtitle: 'Capture a registration or result slip now.',
             onTap: () {
               Navigator.of(sheetContext).pop();
@@ -321,7 +360,7 @@ class CwaScreen extends ConsumerWidget {
           ),
           _ImportOption(
             icon: LucideIcons.imageUp,
-            label: 'Upload image',
+            label: 'Upload Image',
             subtitle: 'Pick an existing screenshot or scanned slip.',
             onTap: () {
               Navigator.of(sheetContext).pop();
@@ -339,7 +378,7 @@ class CwaScreen extends ConsumerWidget {
           ),
           _ImportOption(
             icon: LucideIcons.squarePen,
-            label: 'Enter manually',
+            label: 'Enter Manually',
             subtitle: 'Type the course details in yourself.',
             onTap: () {
               Navigator.of(sheetContext).pop();
@@ -363,6 +402,25 @@ class CwaScreen extends ConsumerWidget {
         : 'cwa-import-results';
     context.pushNamed(path, queryParameters: {'source': initialSource});
   }
+}
+
+GradingSystem _gradingSystemForCourse(
+  CourseModel course,
+  GradingSystem fallback,
+) {
+  final system = GradingSystem.byId(course.gradingSystemId);
+  return course.gradingSystemId.trim().isEmpty ? fallback : system;
+}
+
+GradingSystem _gradingSystemForCourses(
+  List<CourseModel> courses,
+  GradingSystem fallback,
+) {
+  if (courses.isEmpty) return fallback;
+  final first = _gradingSystemForCourse(courses.first, fallback);
+  final sameSystem = courses.every(
+      (course) => _gradingSystemForCourse(course, fallback).id == first.id);
+  return sameSystem ? first : fallback;
 }
 
 // ─── Toggle widget ────────────────────────────────────────────────────────────
@@ -484,6 +542,7 @@ class _ImportOptionsSheet extends StatelessWidget {
         icon: const Icon(LucideIcons.x, size: AppIconSizes.xl),
         tooltip: 'Close',
       ),
+      scrollable: true,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -755,6 +814,7 @@ class _CwaOverviewPanel extends StatelessWidget {
   final double projected;
   final double target;
   final double gap;
+  final GradingSystem gradingSystem;
   final String label;
   final String eyebrow;
   final bool hasData;
@@ -765,6 +825,7 @@ class _CwaOverviewPanel extends StatelessWidget {
     required this.projected,
     required this.target,
     required this.gap,
+    required this.gradingSystem,
     required this.label,
     required this.eyebrow,
     required this.hasData,
@@ -783,6 +844,7 @@ class _CwaOverviewPanel extends StatelessWidget {
                 projected: projected,
                 target: target,
                 gap: gap,
+                gradingSystem: gradingSystem,
                 label: label,
                 eyebrow: eyebrow,
                 hasData: hasData,
@@ -808,6 +870,7 @@ class _CwaOverviewPanel extends StatelessWidget {
                   projected: projected,
                   target: target,
                   gap: gap,
+                  gradingSystem: gradingSystem,
                   label: label,
                   eyebrow: eyebrow,
                   hasData: hasData,
@@ -1025,6 +1088,7 @@ class _SemesterView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final coursesAsync = ref.watch(coursesProvider);
+    final selectedGradingSystem = ref.watch(gradingSystemProvider);
     final projected = ref.watch(projectedCwaProvider);
     final target = ref.watch(targetCwaProvider);
     final gap = ref.watch(cwaGapProvider);
@@ -1040,6 +1104,8 @@ class _SemesterView extends ConsumerWidget {
         ),
       ),
       data: (courses) {
+        final gradingSystem =
+            _gradingSystemForCourses(courses, selectedGradingSystem);
         final pairs = courses
             .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
             .toList();
@@ -1063,7 +1129,8 @@ class _SemesterView extends ConsumerWidget {
                   projected: projected,
                   target: target,
                   gap: gap,
-                  label: 'Projected CWA',
+                  gradingSystem: gradingSystem,
+                  label: gradingSystem.projectedLabel,
                   eyebrow: 'Current semester',
                   hasData: hasCourses,
                   stats: [
@@ -1125,6 +1192,8 @@ class _SemesterView extends ConsumerWidget {
                     final repo = ref.read(cwaRepositoryProvider);
                     return CourseCard(
                       course: course,
+                      gradingSystem:
+                          _gradingSystemForCourse(course, gradingSystem),
                       isHighImpact: highImpactIndices.contains(i),
                       onEdit: () =>
                           onOpenAddSheet(context, ref, existing: course),
@@ -1238,6 +1307,7 @@ class _CumulativeView extends ConsumerWidget {
     final semestersAsync = ref.watch(pastSemestersProvider);
     final pendingSemesters = ref.watch(pendingPastSemestersProvider);
     final currentCoursesAsync = ref.watch(coursesProvider);
+    final gradingSystem = ref.watch(gradingSystemProvider);
     final cumulativeCwa = ref.watch(cumulativeCwaProvider);
     final officialRecordedCwa = ref.watch(officialRecordedCwaProvider);
     final totalCredits = ref.watch(totalCreditsProvider);
@@ -1282,13 +1352,14 @@ class _CumulativeView extends ConsumerWidget {
                   projected: cumulativeCwa,
                   target: target,
                   gap: gap,
-                  label: 'Cumulative CWA',
+                  gradingSystem: gradingSystem,
+                  label: gradingSystem.cumulativeMetricLabel,
                   eyebrow: currentCoursesCounted || hasPending
                       ? 'Estimated with current + pending data'
                       : 'From recorded semesters',
                   hasData: hasAnyData,
                   emptyStateMessage:
-                      'Import past result slips to build your academic history and unlock your cumulative CWA.',
+                      'Import past result slips to build your academic history and unlock your cumulative ${gradingSystem.cumulativeLabel}.',
                   stats: [
                     _QuickStatItem(
                       label: 'Semester records',
@@ -1329,7 +1400,7 @@ class _CumulativeView extends ConsumerWidget {
                     icon: LucideIcons.badgeAlert,
                     title: 'Pending results are still estimates',
                     subtitle:
-                        '$pendingCount semester record${pendingCount == 1 ? '' : 's'} ${pendingCount == 1 ? 'is' : 'are'} still awaiting official results. Your main cumulative number includes those archived projections, while recorded results only currently sit at ${officialRecordedCwa.toStringAsFixed(1)}.',
+                        '$pendingCount semester record${pendingCount == 1 ? '' : 's'} ${pendingCount == 1 ? 'is' : 'are'} still awaiting official results. Your main cumulative number includes those archived projections, while recorded results only currently sit at ${gradingSystem.formatScore(officialRecordedCwa)}.',
                     actions: [
                       _InlineActionButton(
                         label: 'Review History',
@@ -1383,7 +1454,7 @@ class _CumulativeView extends ConsumerWidget {
                     icon: LucideIcons.fileUp,
                     title: 'No cumulative history yet',
                     subtitle:
-                        'Import your previous result slips to see your true cumulative CWA across all semesters.',
+                        'Import your previous result slips to see your true cumulative ${gradingSystem.cumulativeLabel} across all semesters.',
                     action: _InlineActionButton(
                       label: 'Import Results',
                       icon: LucideIcons.fileUp,

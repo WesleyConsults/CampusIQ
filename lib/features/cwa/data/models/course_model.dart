@@ -14,6 +14,10 @@ class CourseModel {
   /// Semester this course belongs to e.g. "2024-Sem2"
   late String semesterKey;
 
+  /// Grading system used when this course projection was created.
+  @Name('zzGradingSystemId')
+  String gradingSystemId = 'cwa';
+
   DateTime createdAt = DateTime.now();
 
   /// Scheduled exam date for this course — nullable until exam is added.
@@ -27,5 +31,6 @@ class CourseModel {
     required this.creditHours,
     required this.expectedScore,
     required this.semesterKey,
+    this.gradingSystemId = 'cwa',
   });
 }

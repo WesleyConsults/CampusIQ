@@ -3,10 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
@@ -339,6 +341,8 @@ class _SemesterCardState extends State<_SemesterCard> {
               (c) => _CourseRow(
                 course: c,
                 semesterId: widget.semester.id,
+                gradingSystem:
+                    GradingSystem.byId(widget.semester.gradingSystemId),
                 isPendingResults: widget.semester.isPendingResults,
               ),
             ),
@@ -355,11 +359,13 @@ class _SemesterCardState extends State<_SemesterCard> {
 class _CourseRow extends ConsumerStatefulWidget {
   final PastCourseEntry course;
   final int semesterId;
+  final GradingSystem gradingSystem;
   final bool isPendingResults;
 
   const _CourseRow({
     required this.course,
     required this.semesterId,
+    required this.gradingSystem,
     required this.isPendingResults,
   });
 
@@ -372,15 +378,6 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
   late double _credits;
   double? _mark;
   late bool _isProjectedMark;
-
-  static const _grades = ['A', 'B', 'C', 'D', 'F'];
-  static const _gradeColors = {
-    'A': Color(0xFF2E7D32),
-    'B': Color(0xFF1565C0),
-    'C': Color(0xFFF57F17),
-    'D': Color(0xFFE65100),
-    'F': Color(0xFFC62828),
-  };
 
   @override
   void initState() {
@@ -405,8 +402,9 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
             courseCode: c.courseCode,
             courseName: c.courseName,
             creditHours: _credits,
-            grade:
-                _mark != null ? PastCourseEntry.gradeFromScore(_mark!) : _grade,
+            grade: _mark != null
+                ? widget.gradingSystem.gradeForScore(_mark!)
+                : _grade,
             mark: _mark,
             isProjectedMark: _isProjectedMark,
           );
@@ -429,7 +427,9 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
 
   @override
   Widget build(BuildContext context) {
-    final color = _gradeColors[_grade] ?? AppTheme.textSecondary;
+    final normalizedGrade =
+        normalizedGradeForSystem(_grade, widget.gradingSystem);
+    final color = gradeColor(normalizedGrade, AppTheme.textSecondary);
     final gradeIsDerivedFromMark = _mark != null || widget.isPendingResults;
 
     return Padding(
@@ -463,13 +463,14 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
           const SizedBox(width: AppSpacing.xs),
           _MarkInput(
             mark: _mark,
+            gradingSystem: widget.gradingSystem,
             isProjected: _isProjectedMark,
             onChanged: (val) {
               setState(() {
                 _mark = val;
                 _isProjectedMark = false;
                 if (val != null) {
-                  _grade = PastCourseEntry.gradeFromScore(val);
+                  _grade = widget.gradingSystem.gradeForScore(val);
                 }
               });
               _save();
@@ -526,44 +527,20 @@ class _CourseRowState extends ConsumerState<_CourseRow> {
             ),
             child: gradeIsDerivedFromMark
                 ? Text(
-                    _grades.contains(_grade) ? _grade : 'F',
+                    normalizedGrade,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                       color: color,
                     ),
                   )
-                : DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _grades.contains(_grade) ? _grade : 'F',
-                      isDense: true,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: color,
-                      ),
-                      dropdownColor: Colors.white,
-                      items: _grades
-                          .map((g) => DropdownMenuItem(
-                                value: g,
-                                child: Text(
-                                  g,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                    color: _gradeColors[g] ??
-                                        AppTheme.textSecondary,
-                                  ),
-                                ),
-                              ))
-                          .toList(),
-                      onChanged: (v) {
-                        if (v != null) {
-                          setState(() => _grade = v);
-                          _save();
-                        }
-                      },
-                    ),
+                : CompactGradeDropdown(
+                    grade: _grade,
+                    gradingSystem: widget.gradingSystem,
+                    onChanged: (v) {
+                      setState(() => _grade = v);
+                      _save();
+                    },
                   ),
           ),
         ],
@@ -602,11 +579,13 @@ class _MiniButton extends StatelessWidget {
 
 class _MarkInput extends StatefulWidget {
   final double? mark;
+  final GradingSystem gradingSystem;
   final bool isProjected;
   final ValueChanged<double?> onChanged;
 
   const _MarkInput({
     required this.mark,
+    required this.gradingSystem,
     required this.isProjected,
     required this.onChanged,
   });
@@ -622,7 +601,9 @@ class _MarkInputState extends State<_MarkInput> {
   void initState() {
     super.initState();
     _controller = TextEditingController(
-      text: widget.mark != null ? widget.mark!.toStringAsFixed(0) : '',
+      text: widget.mark != null
+          ? widget.gradingSystem.formatScore(widget.mark!)
+          : '',
     );
   }
 
@@ -630,8 +611,9 @@ class _MarkInputState extends State<_MarkInput> {
   void didUpdateWidget(covariant _MarkInput oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.mark != oldWidget.mark) {
-      final newText =
-          widget.mark != null ? widget.mark!.toStringAsFixed(0) : '';
+      final newText = widget.mark != null
+          ? widget.gradingSystem.formatScore(widget.mark!)
+          : '';
       if (_controller.text != newText) {
         _controller.text = newText;
       }

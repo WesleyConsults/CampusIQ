@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:campusiq/core/constants/app_constants.dart';
 import 'package:campusiq/core/data/models/user_prefs_model.dart';
+import 'package:campusiq/core/domain/grading_system.dart';
 
 class UserPrefsRepository {
   final Isar _isar;
@@ -85,6 +86,12 @@ class UserPrefsRepository {
     );
     if (themeMode != prefs.themeModeIndex) {
       prefs.themeModeIndex = themeMode;
+      changed = true;
+    }
+
+    final gradingSystem = GradingSystem.byId(prefs.gradingSystemId);
+    if (gradingSystem.id != prefs.gradingSystemId) {
+      prefs.gradingSystemId = gradingSystem.id;
       changed = true;
     }
 
@@ -367,12 +374,36 @@ class UserPrefsRepository {
 
   Future<double> getTargetCwa() async {
     final prefs = await _getOrCreate();
-    return prefs.targetCwa.clamp(40.0, AppConstants.maxCwa).toDouble();
+    return prefs.targetCwa
+        .clamp(AppConstants.minCwa, AppConstants.maxCwa)
+        .toDouble();
   }
 
-  Future<void> setTargetCwa(double value) async {
+  Future<void> setTargetCwa(
+    double value, {
+    double min = AppConstants.minCwa,
+    double max = AppConstants.maxCwa,
+  }) async {
     final prefs = await _getOrCreate();
-    prefs.targetCwa = value.clamp(40.0, AppConstants.maxCwa).toDouble();
+    prefs.targetCwa = value.clamp(min, max).toDouble();
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<String> getGradingSystemId() async {
+    final prefs = await _getOrCreate();
+    return GradingSystem.byId(prefs.gradingSystemId).id;
+  }
+
+  Future<void> setGradingSystemId(String value) async {
+    final prefs = await _getOrCreate();
+    final gradingSystem = GradingSystem.byId(value);
+    prefs.gradingSystemId = gradingSystem.id;
+    prefs.targetCwa = gradingSystem.defaultTarget;
     try {
       await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
     } catch (e) {

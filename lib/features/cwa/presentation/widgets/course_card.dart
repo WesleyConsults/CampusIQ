@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
 
 class CourseCard extends StatefulWidget {
   final CourseModel course;
+  final GradingSystem gradingSystem;
   final bool isHighImpact;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -17,6 +20,7 @@ class CourseCard extends StatefulWidget {
   const CourseCard({
     super.key,
     required this.course,
+    this.gradingSystem = GradingSystem.cwa,
     required this.isHighImpact,
     required this.onEdit,
     required this.onDelete,
@@ -37,8 +41,8 @@ class _CourseCardState extends State<CourseCard> {
   @override
   void initState() {
     super.initState();
-    _sliderValue = widget.course.expectedScore;
-    _savedScore = widget.course.expectedScore;
+    _sliderValue = widget.gradingSystem.clampScore(widget.course.expectedScore);
+    _savedScore = _sliderValue;
   }
 
   @override
@@ -46,26 +50,30 @@ class _CourseCardState extends State<CourseCard> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.course.id != widget.course.id) {
       // Entirely different course — full reset
-      _sliderValue = widget.course.expectedScore;
-      _savedScore = widget.course.expectedScore;
+      _sliderValue =
+          widget.gradingSystem.clampScore(widget.course.expectedScore);
+      _savedScore = _sliderValue;
     } else if (widget.course.expectedScore != _savedScore) {
       // Same course but score changed externally (e.g., edit sheet saved)
-      final userIsDragging = (_sliderValue - _savedScore).abs() >= 1.0;
-      _savedScore = widget.course.expectedScore;
+      final userIsDragging = _isAdjusted;
+      _savedScore =
+          widget.gradingSystem.clampScore(widget.course.expectedScore);
       if (!userIsDragging) {
         // Not mid-drag — sync slider to the newly saved value
-        _sliderValue = widget.course.expectedScore;
+        _sliderValue = _savedScore;
       }
     }
   }
 
-  bool get _isAdjusted => (_sliderValue - _savedScore).abs() >= 1.0;
+  bool get _isAdjusted =>
+      (_sliderValue - _savedScore).abs() >=
+      (widget.gradingSystem.maxScore <= 5 ? 0.1 : 1.0);
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final gradeColor = _scoreTone(_sliderValue);
-    final scoreLabel = '${_sliderValue.toInt()}%';
+    final scoreLabel = _scoreLabel(_sliderValue);
 
     return Padding(
       padding:
@@ -165,7 +173,7 @@ class _CourseCardState extends State<CourseCard> {
               children: [
                 Expanded(
                   child: _CompactInfoBlock(
-                    label: 'Expected score',
+                    label: widget.gradingSystem.scoreInputLabel,
                     value: scoreLabel,
                     valueColor: gradeColor,
                   ),
@@ -189,8 +197,7 @@ class _CourseCardState extends State<CourseCard> {
                     _expanded ? Icons.expand_less : Icons.tune,
                     size: AppIconSizes.md,
                   ),
-                  label:
-                      Text(_expanded ? 'Hide score control' : 'Adjust score'),
+                  label: Text(_expanded ? 'Hide control' : 'Adjust'),
                   style: TextButton.styleFrom(
                     foregroundColor: colorScheme.primary,
                     padding: EdgeInsets.zero,
@@ -220,7 +227,7 @@ class _CourseCardState extends State<CourseCard> {
                     Row(
                       children: [
                         Text(
-                          'Expected score',
+                          widget.gradingSystem.scoreInputLabel,
                           style: TextStyle(
                             fontSize: 11,
                             color: colorScheme.onSurfaceVariant,
@@ -237,21 +244,32 @@ class _CourseCardState extends State<CourseCard> {
                         ),
                       ],
                     ),
-                    Slider(
-                      value: _sliderValue,
-                      min: 0,
-                      max: 100,
-                      divisions: 100,
-                      activeColor: AppTheme.primary,
-                      inactiveColor: colorScheme.outlineVariant,
-                      onChanged: (value) {
-                        setState(() => _sliderValue = value);
-                        widget.onScoreChanged(value);
-                      },
-                      onChangeEnd: (value) {
-                        widget.onDragEnd?.call(value);
-                      },
-                    ),
+                    if (widget.gradingSystem.usesLetterGrades)
+                      GradeValueDropdown(
+                        gradingSystem: widget.gradingSystem,
+                        value: _sliderValue,
+                        onChanged: (value) {
+                          setState(() => _sliderValue = value);
+                          widget.onScoreChanged(value);
+                          widget.onDragEnd?.call(value);
+                        },
+                      )
+                    else
+                      Slider(
+                        value: _sliderValue,
+                        min: widget.gradingSystem.minScore,
+                        max: widget.gradingSystem.maxScore,
+                        divisions: widget.gradingSystem.sliderDivisions,
+                        activeColor: AppTheme.primary,
+                        inactiveColor: colorScheme.outlineVariant,
+                        onChanged: (value) {
+                          setState(() => _sliderValue = value);
+                          widget.onScoreChanged(value);
+                        },
+                        onChangeEnd: (value) {
+                          widget.onDragEnd?.call(value);
+                        },
+                      ),
                   ],
                 ),
               ),
@@ -268,9 +286,22 @@ class _CourseCardState extends State<CourseCard> {
   }
 
   Color _scoreTone(double score) {
-    if (score >= 70) return AppTheme.success;
-    if (score >= 55) return AppTheme.accent;
+    final normalized = widget.gradingSystem.maxScore == 0
+        ? 0.0
+        : score / widget.gradingSystem.maxScore;
+    if (normalized >= 0.7) return AppTheme.success;
+    if (normalized >= 0.55) return AppTheme.accent;
     return AppTheme.warning;
+  }
+
+  String _scoreLabel(double score) {
+    final formatted =
+        widget.gradingSystem.formatScore(score, includeUnit: true);
+    final letter = widget.gradingSystem.letterForScore(score);
+    if (letter == null || !widget.gradingSystem.usesLetterGrades) {
+      return formatted;
+    }
+    return '$formatted · $letter';
   }
 }
 

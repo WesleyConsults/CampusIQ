@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
@@ -21,6 +21,10 @@ class HubOverviewTab extends ConsumerWidget {
     final coursesAsync = ref.watch(coursesProvider);
     final perCourseStreak = ref.watch(perCourseStreakProvider);
     final courseStreak = perCourseStreak[course.code];
+    final selectedGradingSystem = ref.watch(gradingSystemProvider);
+    final gradingSystem = course.gradingSystemId.trim().isEmpty
+        ? selectedGradingSystem
+        : GradingSystem.byId(course.gradingSystemId);
 
     // Loading state
     final isLoading = (sessionsAsync.isLoading && !sessionsAsync.hasValue) ||
@@ -76,10 +80,12 @@ class HubOverviewTab extends ConsumerWidget {
     final pairs = allCourses
         .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
         .toList();
-    final currentCwa = CwaCalculator.calculate(pairs);
+    final currentAverage = CwaCalculator.calculate(pairs);
 
-    final gradeLabel = _gradeLabel(course.expectedScore);
-    final gradeColor = _gradeColor(course.expectedScore);
+    final gradeLabel = gradingSystem.letterForScore(course.expectedScore) ??
+        _gradeLabel(course.expectedScore);
+    final gradeColor =
+        _gradeColor(course.expectedScore, context, gradingSystem);
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -89,6 +95,7 @@ class HubOverviewTab extends ConsumerWidget {
           score: course.expectedScore,
           gradeLabel: gradeLabel,
           gradeColor: gradeColor,
+          gradingSystem: gradingSystem,
         ),
         const SizedBox(height: AppSpacing.md),
 
@@ -107,14 +114,15 @@ class HubOverviewTab extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.md),
 
-        // ── CWA impact ─────────────────────────────────────────────────
+        // ── Grade impact ───────────────────────────────────────────────
         _InfoCard(
           icon: LucideIcons.target,
-          title: 'CWA Impact',
+          title: gradingSystem.impactTitle,
           children: [
             _InfoRow(
-              label: 'Your CWA',
-              value: '${currentCwa.toStringAsFixed(1)}%',
+              label: 'Your ${gradingSystem.label}',
+              value:
+                  gradingSystem.formatScore(currentAverage, includeUnit: true),
               bold: true,
             ),
             _InfoRow(
@@ -124,7 +132,7 @@ class HubOverviewTab extends ConsumerWidget {
             _InfoRow(
               label: 'Weight',
               value: totalCredits > 0
-                  ? '${((course.creditHours / totalCredits) * 100).toStringAsFixed(0)}% of CWA'
+                  ? '${((course.creditHours / totalCredits) * 100).toStringAsFixed(0)}% of ${gradingSystem.label}'
                   : '—',
             ),
           ],
@@ -136,8 +144,7 @@ class HubOverviewTab extends ConsumerWidget {
           icon: LucideIcons.chartColumn,
           title: 'Study Stats',
           children: [
-            _InfoRow(
-                label: 'Sessions', value: '${courseSessions.length}'),
+            _InfoRow(label: 'Sessions', value: '${courseSessions.length}'),
             _InfoRow(label: 'Total time', value: timeStr),
             _InfoRow(label: 'Last studied', value: lastStudiedLabel),
           ],
@@ -163,10 +170,17 @@ class HubOverviewTab extends ConsumerWidget {
     return 'F';
   }
 
-  Color _gradeColor(double score) {
-    if (score >= 70) return AppTheme.success;
-    if (score >= 50) return AppTheme.accent;
-    return AppTheme.warning;
+  Color _gradeColor(
+    double score,
+    BuildContext context,
+    GradingSystem gradingSystem,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final normalized =
+        gradingSystem.maxScore == 0 ? 0.0 : score / gradingSystem.maxScore;
+    if (normalized >= 0.7) return cs.primary;
+    if (normalized >= 0.5) return cs.secondary;
+    return cs.error;
   }
 }
 
@@ -176,16 +190,20 @@ class _ScoreHeroCard extends StatelessWidget {
   final double score;
   final String gradeLabel;
   final Color gradeColor;
+  final GradingSystem gradingSystem;
 
   const _ScoreHeroCard({
     required this.score,
     required this.gradeLabel,
     required this.gradeColor,
+    required this.gradingSystem,
   });
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+
+    final cs = Theme.of(context).colorScheme;
 
     return Card(
       child: Container(
@@ -193,27 +211,27 @@ class _ScoreHeroCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: AppRadii.card,
           border: Border.all(color: AppColors.border),
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.surface, AppColors.surfaceMuted],
+            colors: [cs.surface, cs.surfaceContainerHighest],
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Expected Score',
+            Text(gradingSystem.scoreInputLabel,
                 style: textTheme.titleSmall?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: cs.onSurfaceVariant,
                 )),
             const SizedBox(height: AppSpacing.sm),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${score.toInt()}%',
+                  gradingSystem.formatScore(score, includeUnit: true),
                   style: textTheme.headlineLarge?.copyWith(
-                    color: AppTheme.primary,
+                    color: cs.primary,
                     height: 1.0,
                   ),
                 ),
@@ -243,8 +261,10 @@ class _ScoreHeroCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(AppRadii.xs),
               child: LinearProgressIndicator(
-                value: score / 100,
-                backgroundColor: Colors.grey.shade200,
+                value: gradingSystem.maxScore == 0
+                    ? 0
+                    : (score / gradingSystem.maxScore).clamp(0.0, 1.0),
+                backgroundColor: cs.surfaceContainerHighest,
                 valueColor: AlwaysStoppedAnimation<Color>(gradeColor),
                 minHeight: 8,
               ),
@@ -281,7 +301,9 @@ class _InfoCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, size: AppIconSizes.lg, color: AppTheme.primary),
+                Icon(icon,
+                    size: AppIconSizes.lg,
+                    color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: AppSpacing.sm),
                 Text(title, style: textTheme.titleMedium),
               ],
@@ -321,7 +343,7 @@ class _InfoRow extends StatelessWidget {
             value,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-                  color: AppTheme.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
           ),
         ],
@@ -358,13 +380,17 @@ class _StreakCard extends StatelessWidget {
               width: _iconSize,
               height: _iconSize,
               decoration: BoxDecoration(
-                color: isAlive ? Colors.orange.shade50 : Colors.grey.shade100,
+                color: isAlive
+                    ? Colors.orange.withValues(alpha: 0.15)
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(AppRadii.md),
               ),
               child: Icon(
                 LucideIcons.flame,
                 size: AppIconSizes.hero,
-                color: isAlive ? Colors.orange : Colors.grey,
+                color: isAlive
+                    ? Colors.orange
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(width: AppSpacing.md),

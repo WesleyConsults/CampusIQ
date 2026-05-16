@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
@@ -9,6 +10,7 @@ import 'package:campusiq/features/cwa/data/repositories/past_result_repository.d
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 
 class CompleteSemesterScreen extends ConsumerStatefulWidget {
@@ -41,6 +43,11 @@ class _CompleteSemesterScreenState
         semesterNumber: _nextSemesterNumber,
       );
 
+  GradingSystem get _gradingSystem {
+    if (widget.courses.isEmpty) return ref.read(gradingSystemProvider);
+    return GradingSystem.byId(widget.courses.first.gradingSystemId);
+  }
+
   List<int> get _yearOptions {
     final now = DateTime.now();
     final currentAcademicYear = now.month >= 8 ? now.year : now.year - 1;
@@ -72,7 +79,11 @@ class _CompleteSemesterScreenState
 
     final sortedCourses = [...widget.courses]
       ..sort((a, b) => a.code.compareTo(b.code));
-    _courses = sortedCourses.map(_CompletedCourseDraft.fromCourse).toList();
+    final gradingSystem = _gradingSystem;
+    _courses = sortedCourses
+        .map(
+            (course) => _CompletedCourseDraft.fromCourse(course, gradingSystem))
+        .toList();
   }
 
   bool get _hasAllMarks => _courses.every((course) => course.mark != null);
@@ -81,7 +92,9 @@ class _CompleteSemesterScreenState
     if (_isSaving || _courses.isEmpty) return;
     if (!_hasAllMarks) {
       _showMessage(
-        'Enter the actual mark for every course before saving official results.',
+        _gradingSystem.usesLetterGrades
+            ? 'Choose the actual grade for every course before saving official results.'
+            : 'Enter the actual mark for every course before saving official results.',
       );
       return;
     }
@@ -104,18 +117,22 @@ class _CompleteSemesterScreenState
     final replaceExisting = await _confirmReplaceExistingSemester(repo);
     if (replaceExisting == null) return;
 
+    final gradingSystemId = widget.courses.isEmpty
+        ? ref.read(gradingSystemProvider).id
+        : widget.courses.first.gradingSystemId;
     setState(() => _isSaving = true);
     try {
       final completedSemester = PastSemesterModel.create(
         semesterLabel: formatActiveSemesterLabel(widget.currentSemesterKey),
         semesterKey: widget.currentSemesterKey,
+        gradingSystemId: gradingSystemId,
         courses: _courses
             .map(
               (course) => PastCourseEntry.create(
                 courseCode: course.code,
                 courseName: course.name,
                 creditHours: course.creditHours,
-                grade: PastCourseEntry.gradeFromScore(course.mark!),
+                grade: _gradingSystem.gradeForScore(course.mark!),
                 mark: course.mark!,
               ),
             )
@@ -174,11 +191,15 @@ class _CompleteSemesterScreenState
     final replaceExisting = await _confirmReplaceExistingSemester(repo);
     if (replaceExisting == null) return;
 
+    final gradingSystemId = widget.courses.isEmpty
+        ? ref.read(gradingSystemProvider).id
+        : widget.courses.first.gradingSystemId;
     setState(() => _isSaving = true);
     try {
       final pendingSemester = PastSemesterModel.create(
         semesterLabel: formatActiveSemesterLabel(widget.currentSemesterKey),
         semesterKey: widget.currentSemesterKey,
+        gradingSystemId: gradingSystemId,
         isPendingResults: true,
         courses: _courses
             .map(
@@ -186,7 +207,7 @@ class _CompleteSemesterScreenState
                 courseCode: course.code,
                 courseName: course.name,
                 creditHours: course.creditHours,
-                grade: PastCourseEntry.gradeFromScore(course.projectedScore),
+                grade: _gradingSystem.gradeForScore(course.projectedScore),
                 mark: course.projectedScore,
                 isProjectedMark: true,
               ),
@@ -390,9 +411,11 @@ class _CompleteSemesterScreenState
                         color: AppTheme.primary.withValues(alpha: 0.12),
                       ),
                     ),
-                    child: const Text(
-                      'Marks are the source of truth here. Enter the actual mark for each course and CampusIQ will derive the letter grade automatically. If official results are not out yet, you can still archive this semester and move on.',
-                      style: TextStyle(
+                    child: Text(
+                      _gradingSystem.usesLetterGrades
+                          ? 'Grades are the source of truth here. Choose the actual grade for each course. If official results are not out yet, you can still archive this semester and move on.'
+                          : 'Marks are the source of truth here. Enter the actual mark for each course and CampusIQ will derive the letter grade automatically. If official results are not out yet, you can still archive this semester and move on.',
+                      style: const TextStyle(
                         fontSize: 13,
                         color: AppTheme.textSecondary,
                         height: 1.4,
@@ -404,6 +427,7 @@ class _CompleteSemesterScreenState
                     _CompletedCourseCard(
                       key: ValueKey(course.code),
                       course: course,
+                      gradingSystem: _gradingSystem,
                       onMarkChanged: (mark) {
                         setState(() {
                           course.mark = mark;
@@ -664,11 +688,13 @@ class _InfoRow extends StatelessWidget {
 
 class _CompletedCourseCard extends StatelessWidget {
   final _CompletedCourseDraft course;
+  final GradingSystem gradingSystem;
   final ValueChanged<double?> onMarkChanged;
 
   const _CompletedCourseCard({
     super.key,
     required this.course,
+    required this.gradingSystem,
     required this.onMarkChanged,
   });
 
@@ -733,7 +759,7 @@ class _CompletedCourseCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Projected score: ${course.projectedScore.toInt()}',
+            'Projected ${gradingSystem.label}: ${gradingSystem.formatScore(course.projectedScore, includeUnit: true)}',
             style: const TextStyle(
               fontSize: 12,
             ).copyWith(color: colorScheme.onSurfaceVariant),
@@ -759,10 +785,17 @@ class _CompletedCourseCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: _MarkField(
-                  mark: course.mark,
-                  onChanged: onMarkChanged,
-                ),
+                child: gradingSystem.usesLetterGrades
+                    ? GradeValueDropdown(
+                        gradingSystem: gradingSystem,
+                        value: course.mark ?? course.projectedScore,
+                        label: 'Actual Grade',
+                        onChanged: onMarkChanged,
+                      )
+                    : _MarkField(
+                        mark: course.mark,
+                        onChanged: onMarkChanged,
+                      ),
               ),
             ],
           ),
@@ -840,6 +873,7 @@ class _CompletedCourseDraft {
   final String name;
   final double creditHours;
   final double projectedScore;
+  final String gradingSystemId;
   double? mark;
 
   _CompletedCourseDraft({
@@ -847,21 +881,26 @@ class _CompletedCourseDraft {
     required this.name,
     required this.creditHours,
     required this.projectedScore,
+    required this.gradingSystemId,
     required this.mark,
   });
 
-  factory _CompletedCourseDraft.fromCourse(CourseModel course) {
+  factory _CompletedCourseDraft.fromCourse(
+    CourseModel course,
+    GradingSystem gradingSystem,
+  ) {
     return _CompletedCourseDraft(
       code: course.code.trim().toUpperCase(),
       name: course.name.trim(),
       creditHours: course.creditHours,
       projectedScore: course.expectedScore,
-      mark: null,
+      gradingSystemId: gradingSystem.id,
+      mark: gradingSystem.usesLetterGrades ? course.expectedScore : null,
     );
   }
 
   String get derivedGrade =>
-      PastCourseEntry.gradeFromScore(mark ?? projectedScore);
+      GradingSystem.byId(gradingSystemId).gradeForScore(mark ?? projectedScore);
 
   double get score {
     return mark ?? projectedScore;

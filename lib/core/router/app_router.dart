@@ -9,6 +9,7 @@ import 'package:campusiq/features/timetable/presentation/screens/timetable_scree
 import 'package:campusiq/features/session/presentation/screens/session_screen.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
 import 'package:campusiq/features/session/presentation/widgets/floating_mini_timer.dart';
+import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/insights/presentation/screens/insights_screen.dart';
 import 'package:campusiq/features/streak/presentation/screens/streak_screen.dart';
 
@@ -152,6 +153,7 @@ class _AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final gradingSystem = ref.watch(gradingSystemProvider);
     final isSessionActive = ref.watch(activeSessionProvider) != null;
     final selectedIndex = _locationToIndex(context);
     final usesShellNav = selectedIndex != null;
@@ -204,6 +206,7 @@ class _AppShell extends ConsumerWidget {
             child: _ShellBottomNav(
               selectedIndex: selectedIndex,
               isSessionActive: isSessionActive,
+              gradesLabel: gradingSystem.label,
               onDestinationSelected: (i) {
                 switch (i) {
                   case 0:
@@ -280,11 +283,13 @@ class _ActiveSessionTimerSlot extends StatelessWidget {
 class _ShellBottomNav extends StatelessWidget {
   final int? selectedIndex;
   final bool isSessionActive;
+  final String gradesLabel;
   final ValueChanged<int> onDestinationSelected;
 
   const _ShellBottomNav({
     required this.selectedIndex,
     required this.isSessionActive,
+    required this.gradesLabel,
     required this.onDestinationSelected,
   });
 
@@ -301,7 +306,7 @@ class _ShellBottomNav extends StatelessWidget {
         selectedIcon: lucide?.homeFilled ?? LucideIcons.house,
       ),
       (
-        label: 'CWA',
+        label: gradesLabel,
         icon: lucide?.analytics ?? LucideIcons.chartColumn,
         selectedIcon: lucide?.analyticsFilled ?? LucideIcons.chartColumn,
       ),

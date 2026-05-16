@@ -53,13 +53,18 @@ const PastSemesterModelSchema = CollectionSchema(
       name: r'semesterLabel',
       type: IsarType.string,
     ),
-    r'zzPendingResults': PropertySchema(
+    r'zzGradingSystemId': PropertySchema(
       id: 7,
+      name: r'zzGradingSystemId',
+      type: IsarType.string,
+    ),
+    r'zzPendingResults': PropertySchema(
+      id: 8,
       name: r'zzPendingResults',
       type: IsarType.bool,
     ),
     r'zzSemesterKey': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'zzSemesterKey',
       type: IsarType.string,
     )
@@ -94,6 +99,7 @@ int _pastSemesterModelEstimateSize(
     }
   }
   bytesCount += 3 + object.semesterLabel.length * 3;
+  bytesCount += 3 + object.gradingSystemId.length * 3;
   {
     final value = object.semesterKey;
     if (value != null) {
@@ -121,8 +127,9 @@ void _pastSemesterModelSerialize(
   writer.writeDouble(offsets[4], object.reportedCumulativeCwa);
   writer.writeDouble(offsets[5], object.reportedSemesterCwa);
   writer.writeString(offsets[6], object.semesterLabel);
-  writer.writeBool(offsets[7], object.isPendingResults);
-  writer.writeString(offsets[8], object.semesterKey);
+  writer.writeString(offsets[7], object.gradingSystemId);
+  writer.writeBool(offsets[8], object.isPendingResults);
+  writer.writeString(offsets[9], object.semesterKey);
 }
 
 PastSemesterModel _pastSemesterModelDeserialize(
@@ -146,8 +153,9 @@ PastSemesterModel _pastSemesterModelDeserialize(
   object.reportedCumulativeCwa = reader.readDoubleOrNull(offsets[4]);
   object.reportedSemesterCwa = reader.readDoubleOrNull(offsets[5]);
   object.semesterLabel = reader.readString(offsets[6]);
-  object.isPendingResults = reader.readBool(offsets[7]);
-  object.semesterKey = reader.readStringOrNull(offsets[8]);
+  object.gradingSystemId = reader.readString(offsets[7]);
+  object.isPendingResults = reader.readBool(offsets[8]);
+  object.semesterKey = reader.readStringOrNull(offsets[9]);
   return object;
 }
 
@@ -179,8 +187,10 @@ P _pastSemesterModelDeserializeProp<P>(
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 8:
+      return (reader.readBool(offset)) as P;
+    case 9:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -957,6 +967,142 @@ extension PastSemesterModelQueryFilter
   }
 
   QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      gradingSystemIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      gradingSystemIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      gradingSystemIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      gradingSystemIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzGradingSystemId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      gradingSystemIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      gradingSystemIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      gradingSystemIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      gradingSystemIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'zzGradingSystemId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      gradingSystemIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzGradingSystemId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
+      gradingSystemIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'zzGradingSystemId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterFilterCondition>
       isPendingResultsEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1221,6 +1367,20 @@ extension PastSemesterModelQuerySortBy
   }
 
   QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByGradingSystemId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      sortByGradingSystemIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
       sortByIsPendingResults() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzPendingResults', Sort.asc);
@@ -1349,6 +1509,20 @@ extension PastSemesterModelQuerySortThenBy
   }
 
   QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByGradingSystemId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
+      thenByGradingSystemIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QAfterSortBy>
       thenByIsPendingResults() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzPendingResults', Sort.asc);
@@ -1423,6 +1597,14 @@ extension PastSemesterModelQueryWhereDistinct
   }
 
   QueryBuilder<PastSemesterModel, PastSemesterModel, QDistinct>
+      distinctByGradingSystemId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzGradingSystemId',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, PastSemesterModel, QDistinct>
       distinctByIsPendingResults() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'zzPendingResults');
@@ -1492,6 +1674,13 @@ extension PastSemesterModelQueryProperty
       semesterLabelProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'semesterLabel');
+    });
+  }
+
+  QueryBuilder<PastSemesterModel, String, QQueryOperations>
+      gradingSystemIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzGradingSystemId');
     });
   }
 

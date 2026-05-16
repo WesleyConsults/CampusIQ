@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 
 class CwaManualEntryScreen extends ConsumerStatefulWidget {
@@ -44,6 +46,8 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
   bool _isDraftRestored = false;
   bool _showDuplicateWarning = false;
 
+  GradingSystem get _gradingSystem => ref.read(gradingSystemProvider);
+
   static const _academicYears = [
     '2023/2024',
     '2024/2025',
@@ -70,7 +74,10 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     _initialSemesterLabel = _semesterLabel;
     _initialProgramme = _programme;
     _initialLevel = _level;
-    _courses.add(_CourseDraft()..addListener(_refreshDerivedState));
+    _courses.add(
+      _CourseDraft(defaultScore: _gradingSystem.defaultTarget)
+        ..addListener(_refreshDerivedState),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _restoreDraft());
   }
 
@@ -107,7 +114,8 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     return firstCourse.codeController.text.trim().isNotEmpty ||
         firstCourse.titleController.text.trim().isNotEmpty ||
         firstCourse.creditsController.text.trim().isNotEmpty ||
-        firstCourse.scoreController.text.trim() != '70';
+        firstCourse.scoreController.text.trim() !=
+            _gradingSystem.formatScore(_gradingSystem.defaultTarget);
   }
 
   int get _coursesAdded => _courses.length;
@@ -124,7 +132,8 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
       final credits = double.tryParse(course.creditsController.text.trim());
       final score = double.tryParse(course.scoreController.text.trim());
       if (credits == null || score == null || credits <= 0) continue;
-      pairs.add((creditHours: credits, score: score.clamp(0, 100)));
+      pairs
+          .add((creditHours: credits, score: _gradingSystem.clampScore(score)));
     }
     if (pairs.isEmpty) return 0;
     return CwaCalculator.calculate(pairs);
@@ -139,7 +148,10 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
 
   void _addCourse() {
     setState(() {
-      _courses.add(_CourseDraft()..addListener(_refreshDerivedState));
+      _courses.add(
+        _CourseDraft(defaultScore: _gradingSystem.defaultTarget)
+          ..addListener(_refreshDerivedState),
+      );
       _showDuplicateWarning = _hasDuplicateCodes;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -195,7 +207,14 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
       final restoredMode = decoded['mode'] == CwaViewMode.cumulative.name
           ? CwaViewMode.cumulative
           : CwaViewMode.semester;
-      final restoredCourses = courses.map(_CourseDraft.fromJson).toList();
+      final restoredCourses = courses
+          .map(
+            (course) => _CourseDraft.fromJson(
+              course,
+              defaultScore: _gradingSystem.defaultTarget,
+            ),
+          )
+          .toList();
 
       setState(() {
         for (final course in _courses) {
@@ -314,6 +333,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     if (repo == null) throw Exception('CWA repository unavailable');
 
     final semesterKey = ref.read(activeSemesterProvider);
+    final gradingSystem = ref.read(gradingSystemProvider);
     final normalizedCodes = _courses
         .map((course) => course.codeController.text.trim().toUpperCase())
         .toList();
@@ -335,8 +355,9 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
           name: course.titleController.text.trim(),
           code: course.codeController.text.trim().toUpperCase(),
           creditHours: credits,
-          expectedScore: score,
+          expectedScore: gradingSystem.clampScore(score),
           semesterKey: semesterKey,
+          gradingSystemId: gradingSystem.id,
         ),
       );
     }
@@ -347,6 +368,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     final repo = ref.read(pastResultRepositoryProvider);
     if (repo == null) throw Exception('Past result repository unavailable');
     final semesterKey = _buildSemesterKey();
+    final gradingSystem = ref.read(gradingSystemProvider);
 
     final entries = _courses.map((course) {
       final credits = double.parse(course.creditsController.text.trim());
@@ -355,7 +377,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
         courseCode: course.codeController.text.trim().toUpperCase(),
         courseName: course.titleController.text.trim(),
         creditHours: credits,
-        grade: PastCourseEntry.gradeFromScore(score),
+        grade: gradeForScore(score, gradingSystem),
         mark: score,
       );
     }).toList();
@@ -363,6 +385,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     final record = PastSemesterModel.create(
       semesterLabel: _buildSemesterLabel(),
       semesterKey: semesterKey,
+      gradingSystemId: gradingSystem.id,
       courses: entries,
     );
 
@@ -602,6 +625,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                               _CourseEditorCard(
                                 key: ValueKey(course.id),
                                 course: course,
+                                gradingSystem: _gradingSystem,
                                 canRemove: _courses.length > 1,
                                 hasDuplicateCode: _duplicateCodes
                                     .contains(course.normalizedCode),
@@ -660,8 +684,9 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                             SizedBox(
                               width: 140,
                               child: _SummaryStat(
-                                label: 'Estimated CWA',
-                                value: _estimatedCwa.toStringAsFixed(1),
+                                label: 'Estimated ${_gradingSystem.label}',
+                                value:
+                                    _gradingSystem.formatScore(_estimatedCwa),
                               ),
                             ),
                           ],
@@ -908,6 +933,7 @@ class _DropdownField extends StatelessWidget {
 
 class _CourseEditorCard extends StatelessWidget {
   final _CourseDraft course;
+  final GradingSystem gradingSystem;
   final bool canRemove;
   final bool hasDuplicateCode;
   final VoidCallback onChanged;
@@ -916,6 +942,7 @@ class _CourseEditorCard extends StatelessWidget {
   const _CourseEditorCard({
     super.key,
     required this.course,
+    required this.gradingSystem,
     required this.canRemove,
     required this.hasDuplicateCode,
     required this.onChanged,
@@ -1009,25 +1036,42 @@ class _CourseEditorCard extends StatelessWidget {
             },
           ),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            controller: course.scoreController,
-            decoration: const InputDecoration(labelText: 'Expected Score (%)'),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) => onChanged(),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Score must be numeric.';
-              }
-              final score = double.tryParse(value.trim());
-              if (score == null) {
-                return 'Score must be numeric.';
-              }
-              if (score < 0 || score > 100) {
-                return 'Score must be between 0 and 100.';
-              }
-              return null;
-            },
-          ),
+          if (gradingSystem.usesLetterGrades)
+            GradeValueDropdown(
+              gradingSystem: gradingSystem,
+              value: gradingSystem.clampScore(
+                double.tryParse(course.scoreController.text.trim()) ??
+                    gradingSystem.defaultTarget,
+              ),
+              onChanged: (value) {
+                course.scoreController.text = gradingSystem.formatScore(value);
+                onChanged();
+              },
+            )
+          else
+            TextFormField(
+              controller: course.scoreController,
+              decoration: InputDecoration(
+                labelText: gradingSystem.scoreInputLabel,
+              ),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) => onChanged(),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Score must be numeric.';
+                }
+                final score = double.tryParse(value.trim());
+                if (score == null) {
+                  return 'Score must be numeric.';
+                }
+                if (score < gradingSystem.minScore ||
+                    score > gradingSystem.maxScore) {
+                  return 'Score must be between ${gradingSystem.minScore.toStringAsFixed(0)} and ${gradingSystem.maxScore.toStringAsFixed(0)}.';
+                }
+                return null;
+              },
+            ),
         ],
       ),
     );
@@ -1073,20 +1117,23 @@ class _SummaryStat extends StatelessWidget {
 }
 
 class _CourseDraft {
-  _CourseDraft()
+  _CourseDraft({required double defaultScore})
       : id = UniqueKey().toString(),
         codeController = TextEditingController(),
         titleController = TextEditingController(),
         creditsController = TextEditingController(),
-        scoreController = TextEditingController(text: '70') {
+        scoreController =
+            TextEditingController(text: defaultScore.toStringAsFixed(1)) {
     codeController.addListener(_notify);
     titleController.addListener(_notify);
     creditsController.addListener(_notify);
     scoreController.addListener(_notify);
   }
 
-  _CourseDraft.fromJson(Map<String, dynamic> json)
-      : id = UniqueKey().toString(),
+  _CourseDraft.fromJson(
+    Map<String, dynamic> json, {
+    required double defaultScore,
+  })  : id = UniqueKey().toString(),
         codeController = TextEditingController(
           text: json['code'] is String ? json['code'] as String : '',
         ),
@@ -1097,7 +1144,9 @@ class _CourseDraft {
           text: json['credits'] is String ? json['credits'] as String : '',
         ),
         scoreController = TextEditingController(
-          text: json['score'] is String ? json['score'] as String : '70',
+          text: json['score'] is String
+              ? json['score'] as String
+              : defaultScore.toStringAsFixed(1),
         ) {
     codeController.addListener(_notify);
     titleController.addListener(_notify);

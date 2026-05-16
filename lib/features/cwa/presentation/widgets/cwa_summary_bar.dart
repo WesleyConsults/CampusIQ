@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
-import 'package:campusiq/shared/extensions/double_extensions.dart';
 
 class CwaSummaryBar extends StatelessWidget {
   final double projected;
   final double target;
   final double gap;
+  final GradingSystem gradingSystem;
 
   /// Label shown above the projected CWA value. Defaults to 'Projected CWA'.
   final String label;
@@ -22,6 +23,7 @@ class CwaSummaryBar extends StatelessWidget {
     required this.projected,
     required this.target,
     required this.gap,
+    this.gradingSystem = GradingSystem.cwa,
     this.label = 'Projected CWA',
     this.eyebrow,
     this.hasData = true,
@@ -38,12 +40,12 @@ class CwaSummaryBar extends StatelessWidget {
     final progressValue =
         hasData ? (projected / progressTarget).clamp(0.0, 1.0) : 0.0;
     final gapColor = isOnTrack ? AppTheme.success : AppTheme.accent;
-    final heroValue = hasData ? projected.toCwaString() : '--';
+    final heroValue = hasData ? gradingSystem.formatScore(projected) : '--';
     final gapValue = !hasData
         ? '--'
         : isOnTrack
             ? 'On track'
-            : gap.toCwaString();
+            : gradingSystem.formatDelta(gap);
     final insight = _buildInsight(isOnTrack);
     final horizontalPadding = compact ? AppSpacing.sm2 : AppSpacing.md;
     final topPadding = compact ? AppSpacing.sm2 : AppSpacing.md;
@@ -115,7 +117,7 @@ class CwaSummaryBar extends StatelessWidget {
               Expanded(
                 child: _DetailStat(
                   label: 'Target',
-                  value: target.toCwaString(),
+                  value: gradingSystem.formatScore(target),
                   valueColor: AppTheme.accent,
                   compact: compact,
                   centered: centerHero,
@@ -168,13 +170,13 @@ class CwaSummaryBar extends StatelessWidget {
     if (isOnTrack) {
       return switch (_insightVariant(4)) {
         0 => 'Your current projection is meeting your target.',
-        1 => 'You are on track for your target CWA.',
-        2 => 'Your projected CWA is holding above target.',
+        1 => 'You are on track for your target ${gradingSystem.label}.',
+        2 => 'Your projected ${gradingSystem.label} is holding above target.',
         _ => 'Your target is within reach from this projection.',
       };
     }
 
-    final gapText = gap.toCwaString();
+    final gapText = gradingSystem.formatDelta(gap);
     return switch (_insightVariant(5)) {
       0 => 'You are $gapText points away from your target.',
       1 => 'Only $gapText points separate you from your target.',

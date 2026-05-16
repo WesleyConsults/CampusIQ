@@ -159,7 +159,15 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
       final model = dotenv.env['OPENAI_MODEL'] ?? 'gpt-4o';
       final parser = RegistrationSlipParser(apiKey: apiKey, model: model);
       final parseResult = await parser.parse(bytes, mimeType);
-      final courses = parseResult.courses;
+      final gradingSystem = ref.read(gradingSystemProvider);
+      final courses = parseResult.courses.map((course) {
+        final score = gradingSystem.usesLetterGrades
+            ? gradingSystem.defaultTarget
+            : course.expectedScore;
+        return course.copyWith(
+          expectedScore: gradingSystem.clampScore(score),
+        );
+      }).toList();
 
       if (courses.isEmpty) {
         state = state.copyWith(
@@ -206,9 +214,10 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
 
   /// Update expected score for a single course during review.
   void setExpectedScore(int index, double score) {
+    final gradingSystem = ref.read(gradingSystemProvider);
     final updated = List<RegistrationCourseImport>.from(state.courses);
     updated[index] = updated[index].copyWith(
-      expectedScore: score.clamp(0, 100),
+      expectedScore: gradingSystem.clampScore(score),
     );
     state = state.copyWith(courses: updated);
   }
@@ -226,6 +235,7 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
     if (cwaRepo == null) return;
 
     final semesterKey = ref.read(activeSemesterProvider);
+    final gradingSystem = ref.read(gradingSystemProvider);
     state = state.copyWith(step: SlipImportStep.saving);
 
     try {
@@ -242,8 +252,9 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
               name: course.courseName,
               code: code,
               creditHours: course.creditHours,
-              expectedScore: course.expectedScore,
+              expectedScore: gradingSystem.clampScore(course.expectedScore),
               semesterKey: semesterKey,
+              gradingSystemId: gradingSystem.id,
             ),
           );
         } else {

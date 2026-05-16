@@ -307,15 +307,19 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
 
     state = state.copyWith(step: ResultImportStep.saving);
     try {
+      final gradingSystem = ref.read(gradingSystemProvider);
       final ordered = state.selectedIndexes.toList()..sort();
       final entries = ordered.map((i) {
         final c = state.courses[i];
+        final normalizedGrade = c.grade.trim().toUpperCase();
         return PastCourseEntry.create(
           courseCode: c.courseCode.trim().toUpperCase(),
           courseName: c.courseName,
           creditHours: c.creditHours,
-          grade: c.grade.trim().toUpperCase(),
-          mark: c.mark,
+          grade: normalizedGrade,
+          mark: gradingSystem.usesLetterGrades
+              ? gradingSystem.scoreForGrade(normalizedGrade)
+              : c.mark,
         );
       }).toList();
 
@@ -324,6 +328,7 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
       final model = PastSemesterModel.create(
         semesterLabel: state.semesterLabel,
         semesterKey: semesterKey,
+        gradingSystemId: gradingSystem.id,
         courses: entries,
         reportedSemesterCwa: state.reportedSemesterCwa,
         reportedCumulativeCwa: state.reportedCumulativeCwa,

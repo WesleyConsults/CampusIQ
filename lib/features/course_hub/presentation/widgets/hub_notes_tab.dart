@@ -182,7 +182,7 @@ class _EmptyNotesState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: AppRadii.card,
         border: Border.all(color: AppColors.border),
         boxShadow: AppShadows.soft,
@@ -193,13 +193,13 @@ class _EmptyNotesState extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
-              color: AppColors.goldSoft,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondaryContainer,
               borderRadius: AppRadii.button,
             ),
-            child: const Icon(
+            child: Icon(
               LucideIcons.stickyNote,
-              color: AppTheme.primary,
+              color: Theme.of(context).colorScheme.primary,
               size: AppIconSizes.hero,
             ),
           ),
@@ -240,6 +240,8 @@ class _NoteTile extends StatelessWidget {
         ? note.body.replaceAll('\n', ' ')
         : 'Empty note';
 
+    final cs = Theme.of(context).colorScheme;
+
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: InkWell(
@@ -250,13 +252,10 @@ class _NoteTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: AppRadii.card,
             border: Border.all(color: AppColors.border),
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                AppColors.surface,
-                AppColors.surfaceMuted,
-              ],
+              colors: [cs.surface, cs.surfaceContainerHighest],
             ),
           ),
           child: Column(
@@ -280,7 +279,7 @@ class _NoteTile extends StatelessWidget {
                       vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: cs.surfaceContainerHighest,
                       borderRadius: AppRadii.pill,
                       border: Border.all(color: AppColors.border),
                     ),

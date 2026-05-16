@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
 import 'package:campusiq/shared/widgets/campus_modal_action_row.dart';
 import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
 
 class AddCourseSheet extends StatefulWidget {
   final String semesterKey;
   final CourseModel? existing;
+  final GradingSystem gradingSystem;
 
-  const AddCourseSheet({super.key, required this.semesterKey, this.existing});
+  const AddCourseSheet({
+    super.key,
+    required this.semesterKey,
+    this.existing,
+    this.gradingSystem = GradingSystem.cwa,
+  });
 
   @override
   State<AddCourseSheet> createState() => _AddCourseSheetState();
@@ -21,17 +29,19 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
   double _creditHours = 3;
-  double _expectedScore = 70;
+  late double _expectedScore;
   final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
+    _expectedScore = widget.gradingSystem.defaultTarget;
     if (widget.existing != null) {
       _nameController.text = widget.existing!.name;
       _codeController.text = widget.existing!.code;
       _creditHours = widget.existing!.creditHours;
-      _expectedScore = widget.existing!.expectedScore;
+      _expectedScore =
+          widget.gradingSystem.clampScore(widget.existing!.expectedScore);
     }
   }
 
@@ -51,6 +61,10 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
     course.creditHours = _creditHours;
     course.expectedScore = _expectedScore;
     course.semesterKey = widget.semesterKey;
+    final existingSystemId = widget.existing?.gradingSystemId ?? '';
+    course.gradingSystemId = existingSystemId.isNotEmpty
+        ? existingSystemId
+        : widget.gradingSystem.id;
 
     Navigator.of(context).pop(course);
   }
@@ -65,7 +79,7 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
         title: isEditing ? 'Edit Course' : 'Add Course',
         subtitle: isEditing
             ? 'Update the course details and keep your projection current.'
-            : 'Set up a course with its credit load and expected score.',
+            : 'Set up a course with its credit load and expected ${widget.gradingSystem.label}.',
         leading: const _ModalIcon(),
         scrollable: true,
         bottomBar: CampusModalActionRow(
@@ -108,15 +122,25 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
               onChanged: (v) => setState(() => _creditHours = v),
             ),
             const SizedBox(height: AppSpacing.md),
-            _MetricSliderCard(
-              label: 'Expected score',
-              valueLabel: '${_expectedScore.toInt()}%',
-              value: _expectedScore,
-              min: 0,
-              max: 100,
-              divisions: 100,
-              onChanged: (v) => setState(() => _expectedScore = v),
-            ),
+            if (widget.gradingSystem.usesLetterGrades)
+              GradeValueDropdown(
+                gradingSystem: widget.gradingSystem,
+                value: _expectedScore,
+                onChanged: (v) => setState(() => _expectedScore = v),
+              )
+            else
+              _MetricSliderCard(
+                label: widget.gradingSystem.scoreInputLabel,
+                valueLabel: widget.gradingSystem.formatScore(
+                  _expectedScore,
+                  includeUnit: true,
+                ),
+                value: _expectedScore,
+                min: widget.gradingSystem.minScore,
+                max: widget.gradingSystem.maxScore,
+                divisions: widget.gradingSystem.sliderDivisions,
+                onChanged: (v) => setState(() => _expectedScore = v),
+              ),
           ],
         ),
       ),

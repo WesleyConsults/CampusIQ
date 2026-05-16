@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/constants/app_constants.dart';
 import 'package:campusiq/core/data/repositories/user_prefs_repository.dart';
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
@@ -14,6 +15,23 @@ enum CwaViewMode { semester, cumulative }
 final cwaPrefsRepositoryProvider = Provider<UserPrefsRepository?>((ref) {
   final isarAsync = ref.watch(isarProvider);
   return isarAsync.whenOrNull(data: (isar) => UserPrefsRepository(isar));
+});
+
+/// Persisted grading system selected for new academic records.
+final gradingSystemIdPrefsProvider = StreamProvider<String>((ref) async* {
+  final isar = await ref.watch(isarProvider.future);
+  final repo = UserPrefsRepository(isar);
+  await repo.getPrefs();
+
+  await for (final prefs in repo.watchPrefs()) {
+    yield GradingSystem.byId(prefs?.gradingSystemId).id;
+  }
+});
+
+/// Current grading system preference used by labels, ranges, and new records.
+final gradingSystemProvider = Provider<GradingSystem>((ref) {
+  final id = ref.watch(gradingSystemIdPrefsProvider).valueOrNull;
+  return GradingSystem.byId(id);
 });
 
 /// Persisted active semester for semester-scoped features.
@@ -52,20 +70,24 @@ final coursesProvider = StreamProvider<List<CourseModel>>((ref) async* {
 
 /// Persisted target CWA preference.
 final targetCwaPrefsProvider = StreamProvider<double>((ref) async* {
+  final gradingSystem = ref.watch(gradingSystemProvider);
   final isar = await ref.watch(isarProvider.future);
   final repo = UserPrefsRepository(isar);
   await repo.getPrefs();
 
   await for (final prefs in repo.watchPrefs()) {
-    final target = prefs?.targetCwa ?? AppConstants.distinctionThreshold;
-    yield target.clamp(40.0, AppConstants.maxCwa).toDouble();
+    final target = prefs?.targetCwa ?? gradingSystem.defaultTarget;
+    yield target
+        .clamp(gradingSystem.targetMin, gradingSystem.targetMax)
+        .toDouble();
   }
 });
 
 /// Current target CWA used by gap calculations.
 final targetCwaProvider = Provider<double>((ref) {
+  final gradingSystem = ref.watch(gradingSystemProvider);
   final target = ref.watch(targetCwaPrefsProvider).valueOrNull;
-  if (target == null) return AppConstants.distinctionThreshold;
+  if (target == null) return gradingSystem.defaultTarget;
   return target;
 });
 
@@ -142,6 +164,21 @@ bool _hasPastSemesterForKey(
   return pastSemesters.any((semester) => semester.semesterKey == semesterKey);
 }
 
+double _pastCourseScore(PastCourseEntry course, GradingSystem gradingSystem) {
+  if (course.mark != null) return course.mark!;
+  return gradingSystem.scoreForGrade(course.grade);
+}
+
+({double creditHours, double score}) _pastCoursePair(
+  PastCourseEntry course,
+  GradingSystem gradingSystem,
+) {
+  return (
+    creditHours: course.creditHours,
+    score: _pastCourseScore(course, gradingSystem),
+  );
+}
+
 // ─── View mode toggle (per-session, not persisted) ────────────────────────────
 
 final cwaViewModeProvider =
@@ -203,9 +240,8 @@ final cumulativeCwaProvider = Provider<double>((ref) {
 
   // Fallback: reconstruct from individual marks.
   final pastPairs = pastSemesters.map((sem) {
-    return sem.courses
-        .map((c) => (creditHours: c.creditHours, score: c.score))
-        .toList();
+    final gradingSystem = GradingSystem.byId(sem.gradingSystemId);
+    return sem.courses.map((c) => _pastCoursePair(c, gradingSystem)).toList();
   }).toList();
 
   return CwaCalculator.calculateCumulative(
@@ -236,9 +272,8 @@ final officialRecordedCwaProvider = Provider<double>((ref) {
   }
 
   final pastPairs = pastSemesters.map((sem) {
-    return sem.courses
-        .map((c) => (creditHours: c.creditHours, score: c.score))
-        .toList();
+    final gradingSystem = GradingSystem.byId(sem.gradingSystemId);
+    return sem.courses.map((c) => _pastCoursePair(c, gradingSystem)).toList();
   }).toList();
 
   return CwaCalculator.calculateCumulative(
@@ -274,9 +309,8 @@ final totalCreditsProvider = Provider<double>((ref) {
 
   // Fallback.
   final pastPairs = pastSemesters.map((sem) {
-    return sem.courses
-        .map((c) => (creditHours: c.creditHours, score: c.score))
-        .toList();
+    final gradingSystem = GradingSystem.byId(sem.gradingSystemId);
+    return sem.courses.map((c) => _pastCoursePair(c, gradingSystem)).toList();
   }).toList();
 
   return CwaCalculator.totalCredits(
@@ -309,9 +343,11 @@ final semesterProgressionProvider =
   double runningCredits = 0;
 
   for (final semester in semesters) {
+    final gradingSystem = GradingSystem.byId(semester.gradingSystemId);
     final semesterWeighted = semester.courses.fold<double>(
       0,
-      (sum, course) => sum + (course.creditHours * course.score),
+      (sum, course) =>
+          sum + (course.creditHours * _pastCourseScore(course, gradingSystem)),
     );
     final semesterCredits = semester.courses.fold<double>(
       0,

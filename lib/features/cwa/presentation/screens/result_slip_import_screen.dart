@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
-import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/domain/past_course_result.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/providers/result_slip_import_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 
 class ResultSlipImportScreen extends ConsumerStatefulWidget {
@@ -75,6 +76,7 @@ class _ResultSlipImportScreenState
   Widget build(BuildContext context) {
     final state = ref.watch(resultSlipImportNotifierProvider);
     final notifier = ref.read(resultSlipImportNotifierProvider.notifier);
+    final gradingSystem = ref.watch(gradingSystemProvider);
     final activeSemester = ActiveSemesterSelection.fromKey(
       ref.watch(activeSemesterProvider),
     );
@@ -109,8 +111,11 @@ class _ResultSlipImportScreenState
             parsedLevel: state.parsedLevel,
             parsedProgramme: state.parsedProgramme,
           ),
-        ResultImportStep.reviewing =>
-          _ReviewView(state: state, notifier: notifier),
+        ResultImportStep.reviewing => _ReviewView(
+            state: state,
+            notifier: notifier,
+            gradingSystem: gradingSystem,
+          ),
         ResultImportStep.saving => const _LoadingView('Saving results…'),
         ResultImportStep.done => _DoneView(
             count: state.selectedIndexes.length,
@@ -559,8 +564,13 @@ class _LabelViewState extends State<_LabelView> {
 class _ReviewView extends StatelessWidget {
   final ResultImportState state;
   final ResultSlipImportNotifier notifier;
+  final GradingSystem gradingSystem;
 
-  const _ReviewView({required this.state, required this.notifier});
+  const _ReviewView({
+    required this.state,
+    required this.notifier,
+    required this.gradingSystem,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -606,7 +616,7 @@ class _ReviewView extends StatelessWidget {
                                     BorderRadius.circular(AppRadii.xxs),
                               ),
                               child: Text(
-                                'Reported Sem CWA: ${state.reportedSemesterCwa?.toStringAsFixed(2)}',
+                                'Reported Sem ${gradingSystem.label}: ${state.reportedSemesterCwa?.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -623,7 +633,7 @@ class _ReviewView extends StatelessWidget {
                                     BorderRadius.circular(AppRadii.xxs),
                               ),
                               child: Text(
-                                'Reported Cum CWA: ${state.reportedCumulativeCwa?.toStringAsFixed(2)}',
+                                'Reported Cum ${gradingSystem.cumulativeLabel}: ${state.reportedCumulativeCwa?.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -666,7 +676,11 @@ class _ReviewView extends StatelessWidget {
           child: Align(
             alignment: Alignment.centerLeft,
             child: OutlinedButton.icon(
-              onPressed: () => _showAddCourseSheet(context, notifier),
+              onPressed: () => _showAddCourseSheet(
+                context,
+                notifier,
+                gradingSystem,
+              ),
               icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
               label: const Text('Add missing course'),
             ),
@@ -683,10 +697,16 @@ class _ReviewView extends StatelessWidget {
               final isSelected = state.selectedIndexes.contains(i);
               return _ReviewCourseCard(
                 course: course,
+                gradingSystem: gradingSystem,
                 isSelected: isSelected,
                 onToggle: () => notifier.toggleCourse(i),
                 onCreditChanged: (v) => notifier.setCreditHours(i, v),
-                onGradeChanged: (g) => notifier.setGrade(i, g),
+                onGradeChanged: (g) {
+                  notifier.setGrade(i, g);
+                  if (gradingSystem.usesLetterGrades) {
+                    notifier.setMark(i, gradingSystem.scoreForGrade(g));
+                  }
+                },
                 onMarkChanged: (m) => notifier.setMark(i, m),
               );
             },
@@ -727,6 +747,7 @@ class _ReviewView extends StatelessWidget {
   Future<void> _showAddCourseSheet(
     BuildContext context,
     ResultSlipImportNotifier notifier,
+    GradingSystem gradingSystem,
   ) async {
     final course = await showModalBottomSheet<PastCourseResult>(
       context: context,
@@ -736,7 +757,7 @@ class _ReviewView extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => const _AddResultCourseSheet(),
+      builder: (_) => _AddResultCourseSheet(gradingSystem: gradingSystem),
     );
     if (course != null) {
       notifier.addManualCourse(course);
@@ -811,6 +832,7 @@ class _ParseWarningCard extends StatelessWidget {
 
 class _ReviewCourseCard extends StatelessWidget {
   final PastCourseResult course;
+  final GradingSystem gradingSystem;
   final bool isSelected;
   final VoidCallback onToggle;
   final ValueChanged<double> onCreditChanged;
@@ -819,6 +841,7 @@ class _ReviewCourseCard extends StatelessWidget {
 
   const _ReviewCourseCard({
     required this.course,
+    required this.gradingSystem,
     required this.isSelected,
     required this.onToggle,
     required this.onCreditChanged,
@@ -873,17 +896,33 @@ class _ReviewCourseCard extends StatelessWidget {
                       const SizedBox(height: AppSpacing.xs2),
                       Row(
                         children: [
-                          // Mark input
-                          const Text(
-                            'Mark',
-                            style: TextStyle(
+                          Text(
+                            gradingSystem.usesLetterGrades ? 'Points' : 'Mark',
+                            style: const TextStyle(
                                 fontSize: 12, color: AppTheme.textSecondary),
                           ),
                           const SizedBox(width: AppSpacing.xxs2),
-                          _MarkInput(
-                            mark: course.mark,
-                            onChanged: onMarkChanged,
-                          ),
+                          if (gradingSystem.usesLetterGrades)
+                            Text(
+                              gradingSystem.formatScore(
+                                course.mark ??
+                                    scoreForGrade(
+                                      course.grade,
+                                      gradingSystem,
+                                    ),
+                                includeUnit: true,
+                              ),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primary,
+                              ),
+                            )
+                          else
+                            _MarkInput(
+                              mark: course.mark,
+                              onChanged: onMarkChanged,
+                            ),
                           const Spacer(),
                           // Grade picker
                           const Text(
@@ -892,8 +931,9 @@ class _ReviewCourseCard extends StatelessWidget {
                                 fontSize: 12, color: AppTheme.textSecondary),
                           ),
                           const SizedBox(width: AppSpacing.xs),
-                          _GradeDropdown(
+                          CompactGradeDropdown(
                             grade: course.grade,
+                            gradingSystem: gradingSystem,
                             onChanged: onGradeChanged,
                           ),
                         ],
@@ -920,64 +960,6 @@ class _ReviewCourseCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GradeDropdown extends StatelessWidget {
-  final String grade;
-  final ValueChanged<String> onChanged;
-
-  static const _grades = ['A', 'B', 'C', 'D', 'F'];
-  static const _gradeColors = {
-    'A': Color(0xFF2E7D32),
-    'B': Color(0xFF1565C0),
-    'C': Color(0xFFF57F17),
-    'D': Color(0xFFE65100),
-    'F': Color(0xFFC62828),
-  };
-
-  const _GradeDropdown({required this.grade, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _gradeColors[grade.toUpperCase()] ?? AppTheme.textSecondary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppSpacing.xs),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value:
-              _grades.contains(grade.toUpperCase()) ? grade.toUpperCase() : 'F',
-          isDense: true,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            color: color,
-          ),
-          dropdownColor: Colors.white,
-          items: _grades
-              .map((g) => DropdownMenuItem(
-                    value: g,
-                    child: Text(
-                      g,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: _gradeColors[g] ?? AppTheme.textSecondary,
-                      ),
-                    ),
-                  ))
-              .toList(),
-          onChanged: (v) {
-            if (v != null) onChanged(v);
-          },
         ),
       ),
     );
@@ -1120,7 +1102,9 @@ class _StepButton extends StatelessWidget {
 }
 
 class _AddResultCourseSheet extends StatefulWidget {
-  const _AddResultCourseSheet();
+  final GradingSystem gradingSystem;
+
+  const _AddResultCourseSheet({required this.gradingSystem});
 
   @override
   State<_AddResultCourseSheet> createState() => _AddResultCourseSheetState();
@@ -1131,7 +1115,17 @@ class _AddResultCourseSheetState extends State<_AddResultCourseSheet> {
   final _codeController = TextEditingController();
   final _nameController = TextEditingController();
   final _creditsController = TextEditingController(text: '3');
-  final _markController = TextEditingController();
+  late final TextEditingController _markController;
+
+  @override
+  void initState() {
+    super.initState();
+    _markController = TextEditingController(
+      text: widget.gradingSystem.usesLetterGrades
+          ? widget.gradingSystem.formatScore(widget.gradingSystem.defaultTarget)
+          : '',
+    );
+  }
 
   @override
   void dispose() {
@@ -1200,20 +1194,41 @@ class _AddResultCourseSheetState extends State<_AddResultCourseSheet> {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: TextFormField(
-                    controller: _markController,
-                    decoration: const InputDecoration(labelText: 'Mark'),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    validator: _validateMark,
-                  ),
+                  child: widget.gradingSystem.usesLetterGrades
+                      ? GradeValueDropdown(
+                          gradingSystem: widget.gradingSystem,
+                          value: widget.gradingSystem.clampScore(
+                            double.tryParse(_markController.text.trim()) ??
+                                widget.gradingSystem.defaultTarget,
+                          ),
+                          label: 'Grade',
+                          onChanged: (value) {
+                            setState(() {
+                              _markController.text =
+                                  widget.gradingSystem.formatScore(value);
+                            });
+                          },
+                        )
+                      : TextFormField(
+                          controller: _markController,
+                          decoration: const InputDecoration(labelText: 'Mark'),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: _validateMark,
+                        ),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.xs),
-            const Text(
-              'Grade will be derived from the mark.',
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+            Text(
+              widget.gradingSystem.usesLetterGrades
+                  ? 'The selected grade point will be used in the cumulative calculation.'
+                  : 'Grade will be derived from the mark.',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppTheme.textSecondary,
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             SizedBox(
@@ -1239,7 +1254,10 @@ class _AddResultCourseSheetState extends State<_AddResultCourseSheet> {
   String? _validateMark(String? value) {
     final mark = double.tryParse((value ?? '').trim());
     if (mark == null) return 'Required';
-    if (mark < 0 || mark > 100) return 'Use 0-100';
+    if (mark < widget.gradingSystem.minScore ||
+        mark > widget.gradingSystem.maxScore) {
+      return 'Use ${widget.gradingSystem.minScore.toStringAsFixed(0)}-${widget.gradingSystem.maxScore.toStringAsFixed(0)}';
+    }
     return null;
   }
 
@@ -1251,7 +1269,7 @@ class _AddResultCourseSheetState extends State<_AddResultCourseSheet> {
         courseCode: _codeController.text.trim().toUpperCase(),
         courseName: _nameController.text.trim(),
         creditHours: double.parse(_creditsController.text.trim()),
-        grade: PastCourseEntry.gradeFromScore(mark),
+        grade: widget.gradingSystem.gradeForScore(mark),
         mark: mark,
       ),
     );

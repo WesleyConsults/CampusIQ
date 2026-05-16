@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:campusiq/core/services/notification_service.dart';
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
@@ -25,6 +26,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final prefsAsync = ref.watch(notificationPrefsProvider);
     final activeSemesterKey = ref.watch(activeSemesterProvider);
+    final gradingSystem = ref.watch(gradingSystemProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -50,6 +52,18 @@ class SettingsScreen extends ConsumerWidget {
                   context,
                   ref,
                   activeSemesterKey,
+                ),
+              ),
+              const Divider(height: 1),
+              _RowTile(
+                leading: LucideIcons.graduationCap,
+                title: 'Grading system',
+                subtitle:
+                    '${gradingSystem.plannerTitle} · ${gradingSystem.minScore.toStringAsFixed(0)}-${gradingSystem.maxScore.toStringAsFixed(0)}${gradingSystem.scoreUnit == '%' ? '%' : ' pts'}',
+                onTap: () => _showGradingSystemPicker(
+                  context,
+                  ref,
+                  gradingSystem.id,
                 ),
               ),
             ]),
@@ -263,6 +277,59 @@ class SettingsScreen extends ConsumerWidget {
     final suffix = hour < 12 ? 'AM' : 'PM';
     final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
     return '${h.toString()}:${minute.toString().padLeft(2, '0')} $suffix';
+  }
+
+  void _showGradingSystemPicker(
+    BuildContext context,
+    WidgetRef ref,
+    String currentId,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.md,
+            AppSpacing.lg,
+          ),
+          children: [
+            Text(
+              'Grading system',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'New courses and labels will use this system. Existing records keep the system they were created with.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            for (final system in GradingSystem.all)
+              ListTile(
+                leading: Icon(
+                  system.id == currentId
+                      ? LucideIcons.circleCheck
+                      : LucideIcons.circle,
+                ),
+                title: Text(system.plannerTitle),
+                subtitle: Text(
+                  '${system.targetLabel} default: ${system.formatScore(system.defaultTarget, includeUnit: true)}',
+                ),
+                onTap: () async {
+                  final repo = ref.read(userPrefsRepositoryProvider);
+                  await repo?.setGradingSystemId(system.id);
+                  if (sheetContext.mounted) {
+                    Navigator.of(sheetContext).pop();
+                  }
+                },
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   String _themeLabel(int index) {

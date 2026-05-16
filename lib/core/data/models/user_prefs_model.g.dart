@@ -77,48 +77,53 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'zzActiveSemesterKey',
       type: IsarType.string,
     ),
-    r'zzManualCwaDraftJson': PropertySchema(
+    r'zzGradingSystemId': PropertySchema(
       id: 12,
+      name: r'zzGradingSystemId',
+      type: IsarType.string,
+    ),
+    r'zzManualCwaDraftJson': PropertySchema(
+      id: 13,
       name: r'zzManualCwaDraftJson',
       type: IsarType.string,
     ),
     r'zzPomodoroFocusMinutes': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'zzPomodoroFocusMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroLongBreakMinutes': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'zzPomodoroLongBreakMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroShortBreakMinutes': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'zzPomodoroShortBreakMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroTotalRounds': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'zzPomodoroTotalRounds',
       type: IsarType.long,
     ),
     r'zzSoundOnTimerEnd': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'zzSoundOnTimerEnd',
       type: IsarType.bool,
     ),
     r'zzTargetCwa': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'zzTargetCwa',
       type: IsarType.double,
     ),
     r'zzThemeModeIndex': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'zzThemeModeIndex',
       type: IsarType.long,
     ),
     r'zzVibrateOnTimerEnd': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'zzVibrateOnTimerEnd',
       type: IsarType.bool,
     )
@@ -147,6 +152,7 @@ int _userPrefsModelEstimateSize(
   bytesCount += 3 + object.lastReviewShownWeek.length * 3;
   bytesCount += 3 + object.weeklyNotesJson.length * 3;
   bytesCount += 3 + object.activeSemesterKey.length * 3;
+  bytesCount += 3 + object.gradingSystemId.length * 3;
   bytesCount += 3 + object.manualCwaDraftJson.length * 3;
   return bytesCount;
 }
@@ -169,15 +175,16 @@ void _userPrefsModelSerialize(
   writer.writeBool(offsets[9], object.notifyWeeklyReview);
   writer.writeString(offsets[10], object.weeklyNotesJson);
   writer.writeString(offsets[11], object.activeSemesterKey);
-  writer.writeString(offsets[12], object.manualCwaDraftJson);
-  writer.writeLong(offsets[13], object.defaultFocusMinutes);
-  writer.writeLong(offsets[14], object.defaultLongBreakMinutes);
-  writer.writeLong(offsets[15], object.defaultShortBreakMinutes);
-  writer.writeLong(offsets[16], object.defaultTotalRounds);
-  writer.writeBool(offsets[17], object.playSoundOnTimerEnd);
-  writer.writeDouble(offsets[18], object.targetCwa);
-  writer.writeLong(offsets[19], object.themeModeIndex);
-  writer.writeBool(offsets[20], object.vibrateOnTimerEnd);
+  writer.writeString(offsets[12], object.gradingSystemId);
+  writer.writeString(offsets[13], object.manualCwaDraftJson);
+  writer.writeLong(offsets[14], object.defaultFocusMinutes);
+  writer.writeLong(offsets[15], object.defaultLongBreakMinutes);
+  writer.writeLong(offsets[16], object.defaultShortBreakMinutes);
+  writer.writeLong(offsets[17], object.defaultTotalRounds);
+  writer.writeBool(offsets[18], object.playSoundOnTimerEnd);
+  writer.writeDouble(offsets[19], object.targetCwa);
+  writer.writeLong(offsets[20], object.themeModeIndex);
+  writer.writeBool(offsets[21], object.vibrateOnTimerEnd);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -200,15 +207,16 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.notifyWeeklyReview = reader.readBool(offsets[9]);
   object.weeklyNotesJson = reader.readString(offsets[10]);
   object.activeSemesterKey = reader.readString(offsets[11]);
-  object.manualCwaDraftJson = reader.readString(offsets[12]);
-  object.defaultFocusMinutes = reader.readLong(offsets[13]);
-  object.defaultLongBreakMinutes = reader.readLong(offsets[14]);
-  object.defaultShortBreakMinutes = reader.readLong(offsets[15]);
-  object.defaultTotalRounds = reader.readLong(offsets[16]);
-  object.playSoundOnTimerEnd = reader.readBool(offsets[17]);
-  object.targetCwa = reader.readDouble(offsets[18]);
-  object.themeModeIndex = reader.readLong(offsets[19]);
-  object.vibrateOnTimerEnd = reader.readBool(offsets[20]);
+  object.gradingSystemId = reader.readString(offsets[12]);
+  object.manualCwaDraftJson = reader.readString(offsets[13]);
+  object.defaultFocusMinutes = reader.readLong(offsets[14]);
+  object.defaultLongBreakMinutes = reader.readLong(offsets[15]);
+  object.defaultShortBreakMinutes = reader.readLong(offsets[16]);
+  object.defaultTotalRounds = reader.readLong(offsets[17]);
+  object.playSoundOnTimerEnd = reader.readBool(offsets[18]);
+  object.targetCwa = reader.readDouble(offsets[19]);
+  object.themeModeIndex = reader.readLong(offsets[20]);
+  object.vibrateOnTimerEnd = reader.readBool(offsets[21]);
   return object;
 }
 
@@ -246,7 +254,7 @@ P _userPrefsModelDeserializeProp<P>(
     case 12:
       return (reader.readString(offset)) as P;
     case 13:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 14:
       return (reader.readLong(offset)) as P;
     case 15:
@@ -254,12 +262,14 @@ P _userPrefsModelDeserializeProp<P>(
     case 16:
       return (reader.readLong(offset)) as P;
     case 17:
-      return (reader.readBool(offset)) as P;
-    case 18:
-      return (reader.readDouble(offset)) as P;
-    case 19:
       return (reader.readLong(offset)) as P;
+    case 18:
+      return (reader.readBool(offset)) as P;
+    case 19:
+      return (reader.readDouble(offset)) as P;
     case 20:
+      return (reader.readLong(offset)) as P;
+    case 21:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1198,6 +1208,142 @@ extension UserPrefsModelQueryFilter
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      gradingSystemIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      gradingSystemIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      gradingSystemIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      gradingSystemIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzGradingSystemId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      gradingSystemIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      gradingSystemIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      gradingSystemIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'zzGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      gradingSystemIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'zzGradingSystemId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      gradingSystemIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzGradingSystemId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      gradingSystemIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'zzGradingSystemId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
       manualCwaDraftJsonEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1877,6 +2023,20 @@ extension UserPrefsModelQuerySortBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByGradingSystemId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByGradingSystemIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       sortByManualCwaDraftJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzManualCwaDraftJson', Sort.asc);
@@ -2185,6 +2345,20 @@ extension UserPrefsModelQuerySortThenBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByGradingSystemId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByGradingSystemIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzGradingSystemId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       thenByManualCwaDraftJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzManualCwaDraftJson', Sort.asc);
@@ -2401,6 +2575,14 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByGradingSystemId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzGradingSystemId',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByManualCwaDraftJson({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'zzManualCwaDraftJson',
@@ -2554,6 +2736,13 @@ extension UserPrefsModelQueryProperty
       activeSemesterKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'zzActiveSemesterKey');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, String, QQueryOperations>
+      gradingSystemIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzGradingSystemId');
     });
   }
 

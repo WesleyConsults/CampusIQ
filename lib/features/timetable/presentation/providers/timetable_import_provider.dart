@@ -148,6 +148,7 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
 
       // Populate CWA with unique courses from the import (skip duplicates).
       if (cwaRepo != null) {
+        final gradingSystem = ref.read(gradingSystemProvider);
         final seen = <String>{};
         for (final i in ordered) {
           final slot = state.slots[i];
@@ -161,8 +162,9 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
                 name: slot.courseName,
                 code: code,
                 creditHours: 3.0,
-                expectedScore: 70.0,
+                expectedScore: gradingSystem.defaultTarget,
                 semesterKey: semesterKey,
+                gradingSystemId: gradingSystem.id,
               ),
             );
           }

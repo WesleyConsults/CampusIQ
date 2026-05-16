@@ -47,6 +47,10 @@ class UserPrefsModel {
   @Name('zzManualCwaDraftJson')
   String manualCwaDraftJson = '';
 
+  /// Selected grading system for new academic records.
+  @Name('zzGradingSystemId')
+  String gradingSystemId = 'cwa';
+
   // ── Pomodoro defaults ──────────────────────────────────────────────────────
 
   @Name('zzPomodoroFocusMinutes')
