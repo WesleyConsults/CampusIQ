@@ -57,11 +57,23 @@ dev_dependencies:
   build_runner: ^2.4.11
   isar_generator: ^3.1.0+1
   riverpod_generator: ^2.3.9
+  flutter_launcher_icons: ^0.14.4
   # custom_lint and riverpod_lint removed: incompatible with isar_generator's analyzer constraint
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  macos:
+    generate: true
+  image_path: "assets/alternate logo clearer.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/alternate logo clearer.png"
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
   assets:
+    - assets/alternate logo clearer.png
     - assets/images/
     - assets/images/universities/
     - .env
