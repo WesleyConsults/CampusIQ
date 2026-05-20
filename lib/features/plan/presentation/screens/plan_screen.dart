@@ -637,7 +637,7 @@ class _DrawerHeaderContent extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'CampusIQ',
+                    'UniMate',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 22,
@@ -1200,15 +1200,19 @@ class _MetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+    final resolvedAccent = _resolveAccentColor(colorScheme, isDark);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs2,
       ),
       decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.08),
+        color: resolvedAccent.withValues(alpha: isDark ? 0.14 : 0.08),
         borderRadius: BorderRadius.circular(AppRadii.md),
-        border: Border.all(color: accentColor.withValues(alpha: 0.12)),
+        border: Border.all(
+          color: resolvedAccent.withValues(alpha: isDark ? 0.26 : 0.12),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -1234,15 +1238,25 @@ class _MetricTile extends StatelessWidget {
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: accentColor == AppColors.gold
-                  ? AppTheme.primary
-                  : accentColor,
+              color: resolvedAccent,
               height: 1.15,
             ),
           ),
         ],
       ),
     );
+  }
+
+  Color _resolveAccentColor(ColorScheme colorScheme, bool isDark) {
+    if (!isDark) {
+      return accentColor == AppColors.gold ? AppTheme.primary : accentColor;
+    }
+    if (accentColor == AppTheme.primary) return colorScheme.primary;
+    if (accentColor == AppColors.info) return colorScheme.tertiary;
+    if (accentColor == AppColors.success) return const Color(0xFF61D4A6);
+    if (accentColor == AppColors.warning) return const Color(0xFFFF8F73);
+    if (accentColor == AppColors.gold) return colorScheme.secondary;
+    return colorScheme.primary;
   }
 }
 
@@ -1487,7 +1501,7 @@ class _PlanLoadingState extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'CampusIQ is pulling together your plan, classes, and progress.',
+                'UniMate is pulling together your plan, classes, and progress.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,

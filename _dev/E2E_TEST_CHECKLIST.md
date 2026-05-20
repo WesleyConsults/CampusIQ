@@ -2,7 +2,7 @@
 
 Use this document to manually test the app as a real user would, from first launch through every major feature. Work through each section in order.
 
-**This checklist has been updated for the redesigned premium UI and CWA flow gap fixes (Phases 15.6–15.8).** The app now uses a floating pill-shaped bottom nav (Home | CWA | Table | Sessions), a gold AI sparkles FAB, a calm premium design system (deep navy, muted gold, soft off-white, Inter font, Lucide icons), and includes: Complete Semester flow, active semester picker, persisted target CWA, grade-first cumulative entry, GoRouter-based CWA import routes, duplicate semester detection, draft auto-save, an offline banner in the shell, and the what-if AI feature has been removed.
+**This checklist has been updated for v1.0 production polish (2026-05-19).** The app now uses a floating pill-shaped bottom nav (Home | CWA/GPA/CGPA | Table | Sessions) with dynamic grading system labels, 6-step university onboarding, multi-grading-system support (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0), dark mode (System/Light/Dark), timer feedback toggles (vibrate/sound), course reminders, and a restructured Settings with About section. The AI FAB, AI Chat (`/ai`), CWA AI Coach, and What-If AI feature have all been removed. No `/subscribe` route exists in the current build.
 
 Mark each item `[x]` as you confirm it works.
 
@@ -10,83 +10,141 @@ Mark each item `[x]` as you confirm it works.
 
 ## Prerequisites
 
-- Fresh install **or** cleared app data (Settings → Apps → CampusIQ → Clear Data)
+- Fresh install **or** cleared app data (Settings → Apps → UniMate → Clear Data)
 - Device/emulator has internet access (needed for AI features)
 - Notifications are NOT yet granted (test the permission dialog)
 
 ---
 
-## 1. Fresh Install / Launch
+## 1. University Onboarding
 
-### 1.1 First launch
-- [ ] App opens without crash
-- [ ] Lands on the **Today** screen at `/plan` (Home tab)
-- [ ] Soft off-white background (`AppColors.surface`) appears
-- [ ] Bottom navigation bar shows exactly 4 tabs: **Home, CWA, Table, Sessions**
-- [ ] Bottom nav is a floating pill shape (rounded, semi-transparent, with shadow)
-- [ ] Gold AI sparkles FAB is visible at the bottom-right, above the nav bar
-- [ ] If no session is active, no mini timer is shown
-- [ ] No overflow on launch
+> The onboarding is shown on first launch only. Clear app data to re-test.
 
-### 1.2 Hot restart / relaunch
-- [ ] Hot restart — app returns to Today without crash
-- [ ] Full app kill and relaunch — app opens to Today
+### 1.1 Welcome screen
+- [ ] App opens to onboarding welcome screen (not Today)
+- [ ] App logo and tagline visible
+- [ ] "Get Started" button visible
+- [ ] "Skip" button visible in the top-right
+- [ ] Progress dots at the bottom show 6 steps
+
+### 1.2 University selection
+- [ ] Tap "Get Started" → university selection screen
+- [ ] Grid of university cards with logos visible
+- [ ] Scrollable — 20+ universities shown
+- [ ] Tap a university (e.g. KNUST) → university is selected (highlighted)
+- [ ] Tap "Next" → programme screen
+- [ ] Back arrow returns to welcome screen
+
+### 1.3 Programme
+- [ ] Text input for programme name visible
+- [ ] Can skip (leave blank) without issue
+- [ ] Enter a programme (e.g. "Computer Engineering") → persists
+- [ ] Tap "Next" → grading system screen
+
+### 1.4 Grading system
+- [ ] 4 grading systems shown: CWA, GPA 4.0, GPA 4.0 (GIMPA), CGPA 5.0
+- [ ] Each shows score range and default target
+- [ ] The university's default is pre-selected (e.g. KNUST → CWA)
+- [ ] Tap a different system → selection updates
+- [ ] Tap "Next" → target screen
+
+### 1.5 Target score
+- [ ] Target slider shown with the grading system's range
+- [ ] Default target matches the grading system's default
+- [ ] Drag slider → value updates
+- [ ] Tap "Next" → notifications screen
+
+### 1.6 Notifications
+- [ ] 4 toggles shown, all default to on: Study reminders, Streak alerts, Milestone alerts, Weekly review prompt
+- [ ] Toggle one off → switch flips
+- [ ] Tap "Complete" → loading state, then navigates to Today (`/plan`)
+- [ ] Bottom nav now visible with 4 tabs
+
+### 1.7 Skip and redirect guard
+- [ ] Clear app data → relaunch → onboarding shown again
+- [ ] Tap "Skip" on welcome screen → navigates directly to Today
+- [ ] Clear app data → relaunch → kill app on university screen → relaunch → back on onboarding (redirect guard active)
+- [ ] Complete onboarding → kill and relaunch → opens Today (not onboarding)
+
+### 1.8 Reset onboarding
+- [ ] Go to Settings → Dev → Reset onboarding → confirm
+- [ ] App navigates to `/onboarding`
+- [ ] Completing onboarding again works correctly
 
 ---
 
-## 2. App Shell / Navigation
+## 2. Fresh Install / Launch (Post-Onboarding)
 
-### 2.1 Bottom navigation
+### 2.1 First launch after onboarding
+- [ ] App opens without crash
+- [ ] Lands on the **Today** screen at `/plan` (Home tab)
+- [ ] Soft off-white background (`AppColors.surface`) appears
+- [ ] Bottom navigation bar shows exactly 4 tabs: **Home**, grades label (CWA/GPA/CGPA), **Table**, **Sessions**
+- [ ] Bottom nav is a floating pill shape (rounded, semi-transparent, with shadow)
+- [ ] No AI FAB is visible (AI chat removed from current MVP)
+- [ ] If no session is active, no mini timer is shown
+- [ ] No overflow on launch
+
+### 2.2 Hot restart / relaunch
+- [ ] Hot restart — app returns to Today without crash
+- [ ] Full app kill and relaunch — app opens to Today (onboarding already completed)
+
+---
+
+## 3. App Shell / Navigation
+
+### 3.1 Bottom navigation
 - [ ] Tap **Home** — navigates to Today screen (`/plan`)
-- [ ] Tap **CWA** — navigates to CWA screen (`/cwa`)
+- [ ] Tap the **grades tab** (label varies: CWA/GPA/CGPA) — navigates to academic planner (`/cwa`)
 - [ ] Tap **Table** — navigates to Timetable screen (`/timetable`)
 - [ ] Tap **Sessions** — navigates to Sessions screen (`/sessions`)
 - [ ] Active bottom tab is visually highlighted (tinted background, bold label)
 - [ ] No crash or blank screen on any tab
+- [ ] The second tab label changes when grading system is changed in Settings
 
-### 2.2 AI FAB
-- [ ] AI FAB is visible on all 4 shell tabs (Home, CWA, Table, Sessions)
-- [ ] Tap AI FAB — navigates to AI Chat screen (`/ai`)
-- [ ] AI Chat screen has **no bottom nav**
-- [ ] Back from AI Chat returns to the previous tab
-- [ ] AI FAB shows a gold sparkles icon and has a pill shape
+### 3.2 Navigation — no AI FAB
+- [ ] No gold sparkles FAB is visible on any shell tab
+- [ ] No `/ai` chat route exists — verify by checking that tapping bottom-right of any tab does nothing unexpected
 
-### 2.3 Full-screen routes (no bottom nav)
-- [ ] `/ai` — no bottom nav visible
+### 3.3 Full-screen routes (no bottom nav)
+- [ ] `/onboarding` — no bottom nav visible (first-run only)
 - [ ] `/streak` — no bottom nav visible
 - [ ] `/insights` — no bottom nav visible
 - [ ] `/settings` — no bottom nav visible
 - [ ] `/ai/weekly-review` — no bottom nav visible
 - [ ] `/course/:courseCode` — no bottom nav visible
 - [ ] `/timetable/import` — no bottom nav visible
-- [ ] `/cwa/manual-entry` — no bottom nav, no AI FAB visible
-- [ ] `/subscribe` — no bottom nav visible
+- [ ] `/timetable/reminders` — no bottom nav visible
+- [ ] `/cwa/manual-entry` — no bottom nav visible
+- [ ] `/cwa/history` — no bottom nav visible
+- [ ] `/cwa/import/registration` — no bottom nav visible
+- [ ] `/cwa/import/results` — no bottom nav visible
 
-### 2.4 Back navigation
-- [ ] From AI Chat (opened via FAB), press system back — returns to the previous tab
+### 3.4 Back navigation
 - [ ] From Streak (opened via drawer), press system back — returns to Today
 - [ ] From Insights (opened via drawer), press system back — returns to Today
 - [ ] From Settings, press system back — returns to the screen you came from
 - [ ] From Weekly Review, press system back — returns to the previous screen
 - [ ] From Course Hub, press system back — returns to the screen that opened it
+- [ ] From Course Reminders, press system back — returns to Timetable
 - [ ] From any bottom nav tab (Home, CWA, Table, Sessions), press system back — exits to phone launcher (expected)
 - [ ] No "back press" results in a blank screen
 
-### 2.5 Offline banner in shell
+### 3.5 Offline banner in shell
 - [ ] Turn on airplane mode → a grey "You are offline" banner appears at the top of every shell tab (Home, CWA, Table, Sessions)
 - [ ] Banner pushes shell content down cleanly — no overlap with AppBar
 - [ ] Turn off airplane mode → banner disappears, content returns to normal position
-- [ ] Banner does NOT appear on full-screen routes outside the shell (AI Chat, Course Hub, etc.)
+- [ ] Banner does NOT appear on full-screen routes outside the shell (Course Hub, Settings, etc.)
 
-### 2.6 Bottom nav content clearance
+### 3.6 Bottom nav content clearance
 - [ ] Shell tabs render full height
-- [ ] Content on each tab scrolls fully above the floating bottom nav, AI FAB, and mini timer (when active)
+- [ ] Content on each tab scrolls fully above the floating bottom nav and mini timer (when active)
 - [ ] No content permanently hidden behind the nav bar
 - [ ] No persistent dead band at the bottom of any tab
 
 ---
 
-## 3. Home Screen (Today)
+## 4. Home Screen (Today)
 
 ### 3.1 Header and structure
 - [ ] Greeting header visible with date
@@ -136,7 +194,7 @@ Mark each item `[x]` as you confirm it works.
 
 ---
 
-## 4. CWA Screen
+## 5. CWA Screen
 
 > Do this before Sessions and AI features — courses added here appear in those screens.
 
@@ -182,17 +240,14 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Tap **"Open Workspace"** → navigates to that course's Course Hub
 - [ ] Back arrow returns to the CWA screen
 
-### 4.8 AI Coaching
-- [ ] In the "Course performance" section header, tap the **"Coach"** button (sparkles icon)
-- [ ] `CwaCoachSheet` opens with AI-generated advice
-- [ ] Advice is relevant to your current courses and gap
-- [ ] Sheet dismisses on back/swipe
+### 4.8 AI Coach removal verification
+- [ ] No "Coach" or sparkles button visible on CWA screen (CWA Coach removed)
+- [ ] No AI-related UI elements on CWA screen beyond the import flow
 
 ### 4.8b What-If feature removal verification
 - [ ] Drag a course score slider away from its saved value → no "Explain" chip appears (what-if feature is removed)
 - [ ] The CWA recalculation still happens live as the slider moves
 - [ ] No what-if related UI elements visible anywhere on the CWA screen
-- [ ] AI Chat `/ai` still works normally (only `chat` quota, no `whatif` quota)
 
 ### 4.9 Cumulative mode
 - [ ] Switch to **Cumulative** mode
@@ -241,7 +296,7 @@ Mark each item `[x]` as you confirm it works.
 
 ---
 
-## 5. CWA Import / Manual Entry
+## 6. CWA Import / Manual Entry
 
 ### 5.1 Import bottom sheet
 - [ ] Tap the **Import** action in the CWA AppBar
@@ -360,7 +415,7 @@ Mark each item `[x]` as you confirm it works.
 
 ---
 
-## 6. Table / Timetable
+## 7. Table / Timetable
 
 ### 6.1 Header, day selector, and summary
 - [ ] AppBar title reads **Table**
@@ -406,13 +461,35 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Bottom nav does not hide the last timetable entry
 
 ### 6.7 Timetable import — entry point
-- [ ] Scanner icon is visible in the Timetable AppBar alongside the "+" button
+- [ ] Scanner icon is visible in the Timetable AppBar alongside the reminders and "+" buttons
 - [ ] Tap the scanner icon → navigates to `/timetable/import` (no bottom nav visible)
 - [ ] Back arrow returns to the Timetable screen without saving
 
+### 6.8 Course reminders — entry point
+- [ ] Reminders icon (bell) is visible in the Timetable AppBar
+- [ ] Tap the reminders icon → navigates to `/timetable/reminders` (no bottom nav)
+- [ ] Back arrow returns to Timetable
+
+### 6.9 Course reminders — add and edit
+- [ ] Course Reminders screen shows empty state if no reminders exist
+- [ ] Tap **+** or "Add Reminder" → bottom sheet opens
+- [ ] Sheet shows course picker (from timetable slots), time display, and offset selector (10/15/30/60/120 min)
+- [ ] Select a course and offset → tap Save → reminder appears in list
+- [ ] Reminder shows: course code, course name, day, time, and offset (e.g. "30 min before")
+- [ ] Tap an existing reminder → edit sheet opens pre-filled
+- [ ] Change the offset → save → list updates
+- [ ] Swipe to delete a reminder → confirmation → reminder removed
+
+### 6.10 Course reminders — notification scheduling
+- [ ] Add a course reminder for a class today (within the next hour)
+- [ ] Notification should fire at the scheduled offset time
+- [ ] Notification shows course name and time
+- [ ] Kill and relaunch → reminders still listed in Course Reminders screen
+- [ ] Disable all notifications in Settings → reminders list still visible but no notifications fire
+
 ---
 
-## 7. Sessions
+## 8. Sessions
 
 > Requires at least one course from Section 4.
 
@@ -525,50 +602,6 @@ Mark each item `[x]` as you confirm it works.
 
 ---
 
-## 8. AI Chat
-
-### 8.1 Open and basic chat
-- [ ] Tap gold AI FAB → AI Chat opens as full-screen route (no bottom nav)
-- [ ] Premium header with back navigation visible
-- [ ] Chat input field is at the bottom
-- [ ] Empty state / starter prompts visible (if implemented)
-- [ ] Type a study-related question (e.g. "How should I prepare for my exams?")
-- [ ] Tap **Send** — message appears as a user bubble on the right
-- [ ] Typing indicator (dots) appears briefly
-- [ ] AI response appears on the left
-- [ ] Response is readable, relevant, no crash
-
-### 8.2 Markdown and math rendering
-- [ ] Ask **"Explain compound interest with the formula"** — response uses **bold** text and bullet points rendered correctly (not raw `**` or `-`)
-- [ ] Ask **"What is the quadratic formula?"** — formula renders as typeset math (not raw LaTeX)
-- [ ] Ask **"Show me step-by-step Gaussian elimination on a 2×2 system"** — display math blocks (`$$...$$`) render centred, no red crash screen
-- [ ] Ask **"What are the roots of x² - 5x + 6 = 0, show working"** — mixed markdown + math renders without crash
-- [ ] Confirm no red error screen on any math-heavy response
-- [ ] Inline code in AI responses renders with monospace grey background
-- [ ] If AI outputs an unparseable LaTeX expression, it falls back to monospace plain text (not a crash)
-
-### 8.3 Long response and scrolling
-- [ ] Send a prompt that produces a long multi-paragraph response
-- [ ] Chat scrolls smoothly
-- [ ] Input is not hidden by the keyboard
-
-### 8.4 Usage counter
-- [ ] A counter near the top or input shows remaining free queries (e.g. "2 queries left today")
-- [ ] Counter decrements with each message sent
-- [ ] After using all free queries, a **"Upgrade to Premium"** gate card appears
-
-### 8.5 Chat history drawer
-- [ ] Tap the **History icon** in the AppBar (top right)
-- [ ] End drawer opens with list of past conversations
-- [ ] Tap a past conversation — chat loads with previous messages
-- [ ] Swipe drawer closed
-- [ ] Delete chat confirmation works (if implemented)
-
-### 8.6 Back navigation
-- [ ] Press system back — returns to the previous tab (not phone launcher)
-
----
-
 ## 9. Course Hub
 
 > Setup: complete Sections 4, 6, and 7 first. Current launch scope: 3 tabs — Overview, Sessions, Notes.
@@ -658,14 +691,46 @@ Mark each item `[x]` as you confirm it works.
 
 ## 11. Settings / Streak / Insights / Weekly Review
 
-### 11.1 Settings
+### 11.1 Settings — Academic section
 - [ ] Settings screen loads without crash
-- [ ] All notification toggle switches visible: Study Reminders, Streak Alerts, Milestone Alerts, Weekly Review prompt
+- [ ] **Academic** section visible with: Active semester, Grading system
+- [ ] Tap Active semester → picker opens, select different semester, card updates
+- [ ] Tap Grading system → picker opens showing 4 systems (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0)
+- [ ] Select a different grading system → Settings card updates
+- [ ] Switch to a different grading system → navigate to CWA tab → tab label and screen title reflect new system
+
+### 11.1b Settings — Timer Feedback
+- [ ] **Timer Feedback** section visible with: Vibrate on phase end, Sound on phase end
+- [ ] Both toggles work and persist on leaving and returning
+
+### 11.1c Settings — Notifications
+- [ ] **Notifications** section visible with toggles: Study reminders, Streak alerts, Milestone alerts, Weekly review prompt
 - [ ] Each toggle persists if you leave and return to Settings
 - [ ] Tap the **daily reminder time card** → TimePicker dialog opens
 - [ ] Select a time (e.g. 8:00 PM) → card updates
 - [ ] Tap **"Cancel all notifications"** → confirmation → all scheduled notifications cleared
-- [ ] DEV premium toggle visible (debug builds only)
+
+### 11.1d Settings — Appearance (Dark Mode)
+- [ ] **Appearance** section visible with Theme picker
+- [ ] Tap Theme → bottom sheet opens with Light / Dark / System options
+- [ ] Select **Dark** → entire app switches to dark theme immediately
+- [ ] All shell tabs render correctly in dark mode (nav, cards, text)
+- [ ] Bottom sheets and dialogs render correctly in dark mode
+- [ ] Select **Light** → app switches back to light theme
+- [ ] Select **System** → follows device dark/light setting
+- [ ] Theme choice persists across app restart
+
+### 11.1e Settings — About
+- [ ] **About** section visible with: About UniMate, Privacy policy, Terms of service, Send feedback
+- [ ] Tap About UniMate → system About dialog opens showing app name and version
+- [ ] Tap Privacy policy → browser or system sheet opens with URL
+- [ ] Tap Terms of service → opens correctly
+- [ ] Tap Send feedback → email composer opens with `hello@campusiq.app`
+
+### 11.1f Settings — Dev
+- [ ] **Dev** section visible with Reset onboarding
+- [ ] Tap Reset onboarding → confirmation
+- [ ] Confirm → app navigates to onboarding flow
 - [ ] No overflow on the settings screen
 
 ### 11.2 Streak
@@ -735,12 +800,19 @@ Mark each item `[x]` as you confirm it works.
 
 ### 12.6 No internet — AI features
 - [ ] Turn on airplane mode
-- [ ] Go to AI Chat — type a message and send → error message (not crash)
-- [ ] Error message is user-friendly (not a raw stack trace)
-- [ ] Go to CWA Coach → error message shown, app does not hang
 - [ ] Go to Timetable Import → pick an image → offline error shown
 - [ ] Go to Registration Slip Import → pick an image → offline error shown
+- [ ] Go to Weekly Review → generate → offline error message shown (not crash)
+- [ ] Error messages are user-friendly (not raw stack traces)
 - [ ] Turn airplane mode off → retry each feature → works normally
+
+### 12.8 Dark mode edge cases
+- [ ] Switch to dark mode → all screens render with correct contrast
+- [ ] Cards, sheets, and dialogs all use dark surface colours
+- [ ] Text is readable (no dark text on dark background)
+- [ ] Grade dropdowns in Complete Semester / Manual Entry are legible in dark mode
+- [ ] Bottom nav is semi-transparent dark with adjusted shadow
+- [ ] Switch back to light mode → no residual dark styling
 
 ### 12.7 Active Pomodoro edge cases
 - [ ] Background app mid-Pomodoro countdown → return → countdown is still accurate
@@ -785,18 +857,18 @@ Mark each item `[x]` as you confirm it works.
 
 | Section | Status | Notes |
 |---|---|---|
-| 1. Fresh Install / Launch | | |
-| 2. App Shell / Navigation (incl. offline banner) | | |
-| 3. Home Screen (Today) | | |
-| 4. CWA Screen (incl. Complete Semester, active semester picker, target persistence, progression card, what-if removal) | | |
-| 5. CWA Import / Manual Entry (incl. GoRouter routes, duplicate detection, draft saving, credit cap 12, parse warnings, auto-label, grade-first entry) | | |
-| 6. Table / Timetable | | |
-| 7. Sessions (Normal + Pomodoro) | | |
-| 8. AI Chat | | |
+| 1. University Onboarding | | |
+| 2. Fresh Install / Launch (Post-Onboarding) | | |
+| 3. App Shell / Navigation (incl. offline banner, no AI FAB) | | |
+| 4. Home Screen (Today) | | |
+| 5. CWA/GPA Screen (incl. Complete Semester, active semester picker, target persistence, progression card, what-if/coach removal verification) | | |
+| 6. CWA Import / Manual Entry (incl. GoRouter routes, duplicate detection, draft saving, credit cap 12, parse warnings, auto-label, grade-first entry) | | |
+| 7. Table / Timetable (incl. course reminders, import) | | |
+| 8. Sessions (Normal + Pomodoro + timer feedback) | | |
 | 9. Course Hub | | |
 | 10. Modals / Bottom Sheets / Dialogs | | |
-| 11. Settings / Streak / Insights / Weekly Review | | |
-| 12. Edge Case Testing | | |
+| 11. Settings / Streak / Insights / Weekly Review (incl. dark mode, timer feedback, about, grading system picker) | | |
+| 12. Edge Case Testing (incl. dark mode edge cases) | | |
 | 13. Release / Beta Readiness | | |
 
 **Tester:** ___________________

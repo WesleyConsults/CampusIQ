@@ -260,7 +260,7 @@ class _CourseCardState extends State<CourseCard> {
                         min: widget.gradingSystem.minScore,
                         max: widget.gradingSystem.maxScore,
                         divisions: widget.gradingSystem.sliderDivisions,
-                        activeColor: AppTheme.primary,
+                        activeColor: colorScheme.primary,
                         inactiveColor: colorScheme.outlineVariant,
                         onChanged: (value) {
                           setState(() => _sliderValue = value);

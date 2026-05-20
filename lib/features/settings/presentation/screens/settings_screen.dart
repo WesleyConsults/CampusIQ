@@ -231,11 +231,11 @@ class SettingsScreen extends ConsumerWidget {
             _Card(children: [
               _RowTile(
                 leading: LucideIcons.info,
-                title: 'About CampusIQ',
+                title: 'About UniMate',
                 subtitle: 'App info, version, and licenses',
                 onTap: () => showAboutDialog(
                   context: context,
-                  applicationName: 'CampusIQ',
+                  applicationName: 'UniMate',
                   applicationVersion: '1.0.0',
                   applicationIcon: const Icon(
                     LucideIcons.graduationCap,

@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'CampusIQ';
+  static const String appName = 'UniMate';
   static const String defaultSemesterKey = '2024-Sem2';
 
   static const double minPassScore = 50.0;

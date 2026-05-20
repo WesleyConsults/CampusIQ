@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -84,10 +83,8 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
       }
 
       final base64Image = base64Encode(bytes);
-      final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
-      final model = dotenv.env['OPENAI_MODEL'] ?? 'gpt-4o';
-      final slots = await TimetableVisionParser(apiKey: apiKey, model: model)
-          .parse(base64Image);
+      const parser = TimetableVisionParser();
+      final slots = await parser.parse(base64Image);
 
       if (slots.isEmpty) {
         state = state.copyWith(

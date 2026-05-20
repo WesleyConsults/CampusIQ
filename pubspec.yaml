@@ -1,5 +1,5 @@
 name: campusiq
-description: Smart Academic Planning & Performance System for Ghanaian University Students
+description: Smart academic companion for Ghanaian university students
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -14,9 +14,8 @@ dependencies:
   flutter_riverpod: ^2.5.1
   riverpod_annotation: ^2.3.5
 
-  # HTTP and Environment
+  # HTTP and connectivity
   http: ^1.2.0
-  flutter_dotenv: ^5.1.0
   connectivity_plus: ^6.0.3
 
   # Local storage
@@ -65,15 +64,15 @@ flutter_launcher_icons:
   ios: true
   macos:
     generate: true
-  image_path: "assets/alternate logo clearer.png"
+  image_path: "assets/Uni Mate logo 22.png"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/alternate logo clearer.png"
+  adaptive_icon_foreground: "assets/Uni Mate logo 22.png"
   remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
   assets:
+    - assets/Uni Mate logo 22.png
     - assets/alternate logo clearer.png
     - assets/images/
     - assets/images/universities/
-    - .env

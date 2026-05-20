@@ -2,15 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:campusiq/core/config/ai_proxy_config.dart';
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 
-/// Calls the OpenAI vision API with a timetable image and returns parsed slots.
+/// Calls the AI vision proxy with a timetable image and returns parsed slots.
 /// Pure Dart — no Flutter dependencies.
 class TimetableVisionParser {
-  final String apiKey;
-  final String model;
-
-  static const _timeout = Duration(seconds: 60);
+  static const _timeout = Duration(seconds: 90);
 
   static const _prompt = 'You are a university timetable parser. '
       'Extract every class slot from the timetable image and return ONLY a JSON array. '
@@ -26,42 +24,22 @@ class TimetableVisionParser {
       'Example: [{"day":"Monday","course_code":"CS 101","course_name":"Intro to Computing",'
       '"venue":"LT1","start_time":"08:00","end_time":"10:00","slot_type":"Lecture"}]';
 
-  const TimetableVisionParser({required this.apiKey, required this.model});
+  const TimetableVisionParser();
 
   Future<List<TimetableSlotImport>> parse(String imageBase64) async {
-    final url = Uri.parse('https://api.openai.com/v1/chat/completions');
-
     final body = jsonEncode({
-      'model': model,
-      'max_tokens': 4096,
+      'prompt': _prompt,
+      'base64Image': 'data:image/jpeg;base64,$imageBase64',
+      'maxTokens': 4096,
       'temperature': 0.1,
-      'messages': [
-        {
-          'role': 'user',
-          'content': [
-            {
-              'type': 'image_url',
-              'image_url': {
-                'url': 'data:image/jpeg;base64,$imageBase64',
-                'detail': 'high',
-              },
-            },
-            {
-              'type': 'text',
-              'text': _prompt,
-            },
-          ],
-        },
-      ],
     });
 
     try {
       final response = await http
           .post(
-            url,
+            Uri.parse(AiProxyConfig.openaiVisionEndpoint),
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer $apiKey',
             },
             body: body,
           )
@@ -74,10 +52,9 @@ class TimetableVisionParser {
       }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final choice = data['choices'][0] as Map<String, dynamic>;
 
       // Detect token-limit truncation before trying to parse
-      final finishReason = choice['finish_reason'] as String? ?? '';
+      final finishReason = data['finishReason'] as String? ?? '';
       if (finishReason == 'length') {
         throw Exception(
           'Timetable is too large for one scan. '
@@ -85,7 +62,7 @@ class TimetableVisionParser {
         );
       }
 
-      final rawContent = choice['message']['content'] as String;
+      final rawContent = data['reply'] as String;
 
       // Strip markdown code fences if the model added them
       final cleaned = rawContent

@@ -1,4 +1,4 @@
-# CampusIQ — Claude Code Project Brief
+# UniMate — Claude Code Project Brief
 
 ## What this is
 Flutter academic planning app for Ghanaian university students (KNUST first).

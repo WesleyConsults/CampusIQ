@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/ai/presentation/providers/study_plan_provider.dart';
 import 'package:campusiq/features/ai/presentation/widgets/plan_day_card.dart';
@@ -43,18 +42,22 @@ class StudyPlanTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final planState = ref.watch(studyPlanProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     // Loading state
     if (planState.isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: AppSpacing.md),
+            const CircularProgressIndicator(),
+            const SizedBox(height: AppSpacing.md),
             Text(
               'Reading your timetable and sessions...',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
             ),
           ],
         ),
@@ -73,7 +76,7 @@ class StudyPlanTab extends ConsumerWidget {
               const SizedBox(height: AppSpacing.sm),
               Text(planState.error!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppTheme.textSecondary)),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant)),
               const SizedBox(height: AppSpacing.md),
               ElevatedButton(
                 onPressed: () => _generatePlan(context, ref),
@@ -93,8 +96,11 @@ class StudyPlanTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.calendar_month_outlined,
-                  size: 56, color: AppTheme.textSecondary),
+              Icon(
+                Icons.calendar_month_outlined,
+                size: 56,
+                color: colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: AppSpacing.md),
               const Text(
                 'No study plan yet',
@@ -104,7 +110,7 @@ class StudyPlanTab extends ConsumerWidget {
               const Text(
                 'Generate a personalised 7-day plan based on your timetable and courses.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                style: TextStyle(fontSize: 13),
               ),
               const SizedBox(height: AppSpacing.xl),
               ElevatedButton.icon(
@@ -112,8 +118,8 @@ class StudyPlanTab extends ConsumerWidget {
                 icon: const Icon(Icons.auto_awesome),
                 label: const Text('Generate My Study Plan'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -140,8 +146,10 @@ class StudyPlanTab extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
               child: Text(
                 'Generated ${_formatDate(planState.plan!.generatedAt)}',
-                style: const TextStyle(
-                    fontSize: 12, color: AppTheme.textSecondary),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           ),

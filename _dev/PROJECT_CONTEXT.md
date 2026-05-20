@@ -1,9 +1,9 @@
-# CampusIQ Project Context (v1.0 Lean — Focused AI MVP)
+# UniMate Project Context (v1.0 Lean — Production Polish)
 
-This document provides a concise technical overview of CampusIQ for AI agents and developers.
+This document provides a concise technical overview of UniMate for AI agents and developers.
 
 ## 1. Overview
-CampusIQ is an Android-first academic productivity app for Ghanaian university students (KNUST target). It centralizes CWA tracking, timetable management, study sessions, and focused AI assistance for import, weekly review, and study planning.
+UniMate is an Android-first academic productivity app for Ghanaian university students. It includes a 6-step university onboarding flow (with 20+ universities and configurable grading systems), academic target planning (CWA/GPA/CGPA), timetable management with per-course reminders, study session tracking (Normal + Pomodoro) with timer feedback, streak/insights/review systems, and focused AI assistance for import, weekly review, and study planning.
 
 ## 2. Tech Stack
 - **Framework:** Flutter (Material 3)
@@ -20,58 +20,70 @@ Strict three-layer structure per feature:
 - `presentation/`: Riverpod providers, screens, and widgets.
 
 ## 4. Core Features (v1.0)
-1.  **CWA Planner:** Manual entry + registration slip import (AI Vision). Supports Semester and Cumulative tracking. Includes Complete Semester flow, active semester picker, persisted target CWA, grade-first cumulative entry, duplicate semester detection, draft auto-save, and semester progression view.
-2.  **Timetable:** Single-layer class grid with a compact day summary, full-page daily timeline, image import (AI Vision), and free-time detection.
-3.  **Study Sessions:** Count-up (Normal) and Count-down (Pomodoro) timers. Tracks focus time only.
-4.  **Course Hub:** Per-course workspace with Overview, Sessions, and Notes only.
-5.  **Daily Plan & AI Study Plan:** Daily tasks plus an AI-generated study plan based on courses, timetable free blocks, and past study patterns.
-6.  **Insights & Reviews:** Automated analytics and AI-generated narrative weekly reviews.
-7.  **Streak System:** Daily study and attendance tracking with milestone rewards.
+1.  **University Onboarding:** 6-step first-run flow (welcome → university → programme → grading system → target → notifications). University picker with 20+ Ghanaian institutions and logos. GoRouter redirect guard blocks all routes until completed or skipped.
+2.  **Multi-Grading-System:** CWA (0–100, KNUST/UMaT), GPA 4.0 (0.0–4.0, Legon/UCC/UEW/UDS etc.), GPA 4.0 GIMPA (A+/A/B+/B/C+/C/D+/D/F), CGPA 5.0 (0.0–5.0, UPSA/UniMAC etc.). Grade scales are configurable and drive all score displays, grade dropdowns, and target dialogs. Can be changed from Settings.
+3.  **Academic Planner (CWA/GPA/CGPA):** Manual entry + registration slip import (AI Vision). Supports Semester and Cumulative tracking. Includes Complete Semester flow, active semester picker, persisted target, grade-first cumulative entry, duplicate semester detection, draft auto-save, and semester progression view. Tab label adapts to active grading system.
+4.  **Timetable:** Single-layer class grid with a compact day summary, full-page daily timeline, image import (AI Vision), free-time detection, and per-course reminders.
+5.  **Study Sessions:** Count-up (Normal) and Count-down (Pomodoro) timers. Tracks focus time only. Vibrate and sound feedback on timer phase end.
+6.  **Course Reminders:** Per-course notification reminders with configurable offsets (10/15/30/60/120 min before class). Schedules via NotificationService with IDs 700–999.
+7.  **Course Hub:** Per-course workspace with Overview, Sessions, and Notes only.
+8.  **Daily Plan & AI Study Plan:** Daily tasks plus an AI-generated study plan based on courses, timetable free blocks, and past study patterns.
+9.  **Insights & Reviews:** Automated analytics and AI-generated narrative weekly reviews.
+10. **Streak System:** Daily study and attendance tracking with milestone rewards.
+11. **Dark Mode:** System / Light / Dark theme picker in Settings → Appearance. Full dark palette for all screens, cards, sheets, dialogs.
+12. **Settings:** Organised into 6 sections: Academic, Timer Feedback, Notifications, Appearance, About, Dev.
 
 ## 5. Key Data Models (Isar)
-- `CourseModel`: CWA courses, credits, scores. Keyed by `semesterKey` string (e.g. `"2024-Sem2"`).
+- `CourseModel`: CWA/GPA/CGPA courses, credits, scores. Keyed by `semesterKey` string (e.g. `"2024-Sem2"`). Stores `gradingSystemId` for per-course grading context.
 - `TimetableSlotModel`: Class times, venues, types.
+- `CourseReminderModel`: Per-course class reminders with configurable notification offset. Keyed by `semesterKey` + `courseCode`.
 - `StudySessionModel`: Session logs (duration, course, type).
-- `UserPrefsModel`: Global flags (streak, notifications, attendance). Also stores `activeSemesterKey`, `targetCwa`, and `manualCwaDraftJson` (Phase 15.6).
+- `UserPrefsModel`: Global flags (streak, notifications, attendance). Also stores `activeSemesterKey`, `targetCwa`, `manualCwaDraftJson`, `gradingSystemId`, `universityName`, `programmeName`, `themeModeIndex`, `vibrateOnTimerEnd`, `playSoundOnTimerEnd`, `hasCompletedOnboarding`.
 - `CourseNoteModel`: Course-specific notes.
 - `DailyPlanTaskModel`: Generated tasks for the current day.
 - `StudyPlanModel` / `StudyPlanSlotModel`: AI-generated study plan storage.
 - `WeeklyReviewModel`: AI-generated weekly review storage.
-- `PastSemesterModel`: Archived result data for cumulative CWA. Has `semesterKey` for cross-referencing with `CourseModel` and duplicate detection (Phase 15.6).
+- `PastSemesterModel`: Archived result data for cumulative tracking. Has `semesterKey` for cross-referencing with `CourseModel` and duplicate detection. Stores `gradingSystemId`.
 
 ## 6. Critical Implementation Notes
-- **Timer Logic:** Stores a `DateTime` anchor (`startTime`). Elapsed time is `now.difference(startTime)` to survive app pauses.
-- **AI Scope:** MVP keeps focused AI surfaces only: CWA import via OpenAI Vision, AI Weekly Review, AI Study Plan, and AI-generated streak notification text. The global chatbot and CWA Coach were removed.
-- **AI Context:** Uses a `ContextBuilder` for Weekly Review and Study Plan prompts.
+- **Timer Logic:** Stores a `DateTime` anchor (`startTime`). Elapsed time is `now.difference(startTime)` to survive app pauses. Pomodoro uses `phaseEndsAt` DateTime anchor with `_lastFiredPhaseEnd` guard to prevent double-fire.
+- **AI Scope:** MVP keeps focused AI surfaces only: CWA import via OpenAI Vision, AI Weekly Review, AI Study Plan, and AI-generated streak notification text. The global chatbot and CWA Coach were removed. No `/ai` route, no AI FAB.
+- **Onboarding Guard:** GoRouter redirect checks `hasCompletedOnboardingProvider` — if `false`, all non-`/onboarding` routes redirect to `/onboarding`. Once completed, stored in `UserPrefsModel.hasCompletedOnboarding`.
+- **Grading System:** Active grading system drives dynamic UI labels (bottom nav tab, CWA/GPA screen title, grade dropdowns). All grading systems are defined in `lib/core/domain/grading_system.dart`. University defaults in `lib/core/domain/university_defaults.dart`. Grade scale with colour-coded letter grades in `lib/core/domain/grade_scale.dart`.
+- **Dark Mode:** Theme mode persisted as index (0=system, 1=light, 2=dark) in `UserPrefsModel.themeModeIndex`. `themeModeProvider` reads it and `app.dart` passes `themeMode` to `MaterialApp.router`. Full dark theme defined alongside light theme in `app_theme.dart`.
 - **Course Hub Scope:** Course Hub Files, per-course AI chat, and the Course Hub context builder were removed from the launch build and deferred to a later version.
 - **Lean Build:** Personal Timetable, Exam Mode, Exam Prep Generator, Course Hub Files, Course Hub AI chat, global AI chat, CWA Coach, AI usage/chat quotas, and the What-If AI feature were removed in v1.0 to prioritize stability.
-- **Isar Database:** Schema registration is centralized in `lib/core/data/isar_database.dart` (`kCampusIqIsarSchemas` list + `openCampusIqIsar()`). `isar_provider.dart` delegates to this.
-- **CWA Semester Model:** `CourseModel` and `PastSemesterModel` share a common `semesterKey` format. The active semester is persisted in `UserPrefsModel.activeSemesterKey`. A Complete Semester flow bridges projected courses → real results.
+- **Isar Database:** Schema registration is centralized in `lib/core/data/isar_database.dart` (`kCampusIqIsarSchemas` list + `openCampusIqIsar()`). 12 schemas registered including `CourseReminderModelSchema`.
+- **Semester Model:** `CourseModel` and `PastSemesterModel` share a common `semesterKey` format. The active semester is persisted in `UserPrefsModel.activeSemesterKey`. A Complete Semester flow bridges projected courses → real results.
 - **Offline Banner:** The `OfflineBanner` is rendered once inside `_AppShell` via `isOnlineProvider` — it appears on all shell tabs when offline.
 - **Credit Hours Cap:** Raised from 6 to 12 across all entry points to accommodate project work and industrial attachment courses.
-- **CWA Draft Auto-Save:** Manual entry form state is persisted to `UserPrefsModel.manualCwaDraftJson` on every change and restored on next open.
+- **Draft Auto-Save:** Manual entry form state is persisted to `UserPrefsModel.manualCwaDraftJson` on every change and restored on next open.
+- **App Name:** Display name changed to "UniMate" (`AppConstants.appName`). Package ID remains `com.wesleyconsults.campusiq`.
 
 ## 7. UI Structure & Navigation
 ### App shell
-- Initial route is `/plan`.
-- The main shell uses a `ShellRoute` with a persistent bottom navigation bar.
-- Bottom navigation now shows 4 destinations: `Home` (`/plan`), `CWA` (`/cwa`), `Table` (`/timetable`), and `Sessions` (`/sessions`).
-- The shell also owns the floating active-session mini timer; if a study session is active, tapping the timer returns the user to `/sessions`.
-- Shell tabs now render full height behind the floating nav instead of being permanently clipped above it.
-- Each shell tab is responsible for its own trailing bottom clearance so lower content can scroll above the bottom nav and active-session mini timer without leaving a persistent dead band.
-- An `OfflineBanner` is rendered as a `Positioned` widget at the top of `_AppShell` when `isOnlineProvider` reports offline. It pushes shell content down by `AppSpacing.xxl + 4` when visible.
-- Full-screen routes outside the shell intentionally do not show the bottom nav or shell offline banner.
+- Initial route is `/onboarding` for first-run users; after completion, `/plan` is the default.
+- A GoRouter redirect guard blocks all routes until onboarding is completed or skipped.
+- The main shell uses a `ShellRoute` with a persistent floating pill-shaped bottom navigation bar.
+- Bottom navigation shows 4 destinations: `Home` (`/plan`), dynamic grades label (CWA/GPA/CGPA, `/cwa`), `Table` (`/timetable`), and `Sessions` (`/sessions`).
+- The second tab label adapts to the active grading system (e.g. "CWA", "GPA", "CGPA").
+- There is **no AI FAB** in the current MVP. The `/ai` chatbot route is removed.
+- The shell owns the floating active-session mini timer; if a study session is active, tapping the timer returns the user to `/sessions`.
+- Shell tabs render full height behind the floating nav.
+- An `OfflineBanner` is rendered as a `Positioned` widget at the top of `_AppShell` when `isOnlineProvider` reports offline.
+- Full-screen routes outside the shell intentionally do not show the bottom nav.
 
 ### Main top-level screens a user can reach
-- `Today` at `/plan`: the daily hub and main landing screen. Internally still the Plan route, but user-facing copy should prefer `Today`.
-- `CWA` at `/cwa`: course management, target planning (persisted), active semester picker, import bottom sheet, semester/cumulative toggle, Complete Semester flow, semester progression card, and workspace entry point.
-- `Timetable` at `/timetable`: class timetable with compact day summary, calmer slot/free-block styling, slot detail sheet, timetable import entry point, and workspace entry point.
+- `Onboarding` at `/onboarding`: 6-step first-run flow (welcome → university → programme → grading system → target → notifications). Skip available on welcome screen.
+- `Today` at `/plan`: the daily hub and main landing screen.
+- `Grades` at `/cwa`: course management, target planning (persisted), active semester picker, import bottom sheet, semester/cumulative toggle, Complete Semester flow, semester progression card, and workspace entry point. All labels adapt to grading system.
+- `Timetable` at `/timetable`: class timetable with compact day summary, slot detail sheet, timetable import entry point, course reminders entry point, and workspace entry point.
 - `Sessions` at `/sessions`: timer, analytics, plan-related surfaces, and workspace entry point from course breakdown.
 - `Streak` at `/streak`: streak dashboard.
 - `Insights` at `/insights`: secondary destination reachable from Today drawer.
-- `Settings` at `/settings`: notification settings and dev premium toggle.
+- `Settings` at `/settings`: 6 sections — Academic, Timer Feedback, Notifications, Appearance, About, Dev.
 - `Weekly Review` at `/ai/weekly-review`: full-screen AI weekly review.
-- `Subscribe` at `/subscribe`: premium upsell stub.
+- `Course Reminders` at `/timetable/reminders`: per-course class reminder management.
 
 ### Today screen behavior
 - `/plan` is the internal route, but the screen now acts as the student's **Today** home base.
@@ -121,8 +133,9 @@ Strict three-layer structure per feature:
 - From `Sessions`: course row inside the by-course breakdown -> opens that course workspace.
 
 ### Important screen-specific navigation patterns
-- `CWA` has two main modes: `Semester` and `Cumulative`.
-- `CWA` now shows a visible `Import` action in the AppBar.
+- The CWA/GPA screen has two main modes: `Semester` and `Cumulative`.
+- CWA screen title and all labels adapt to the active grading system (e.g. "GPA Planner", "Projected GPA", "Target GPA").
+- CWA screen shows a visible `Import` action in the AppBar.
 - Tapping `Import` opens a rounded bottom sheet with:
   - `Take Photo`
   - `Upload Image`
@@ -131,54 +144,41 @@ Strict three-layer structure per feature:
 - `Take Photo` / `Upload Image` / `Choose PDF` → navigates to GoRouter named routes:
   - `/cwa/import/registration?source=camera|gallery|pdf` (Semester mode)
   - `/cwa/import/results?source=camera|gallery|pdf` (Cumulative mode)
-- `PastSemestersScreen` is now at `/cwa/history` (GoRouter named route), accessed via the history icon in CWA AppBar.
-- These import screens no longer use raw `Navigator.push` — they are proper GoRouter routes with deep-link support.
+- `PastSemestersScreen` is at `/cwa/history` (GoRouter named route), accessed via the history icon in CWA AppBar.
 - `Enter Manually` opens `/cwa/manual-entry?mode=semester|cumulative`, a dedicated full-screen form outside the shell.
-- `/cwa/manual-entry` intentionally does not show the bottom nav.
-- The manual-entry screen supports both `Semester` and `Cumulative` modes, defaulting from the currently selected CWA mode.
-- In `Cumulative` mode, manual entry uses **grade dropdown** (A–F, colour-coded) as the primary field, with an optional mark/score input.
-- The manual-entry screen includes:
-  - semester-information dropdowns
-  - repeatable course cards
-  - live summary updates
-  - duplicate course-code warning
-  - **draft auto-save** — form state persists to `UserPrefsModel.manualCwaDraftJson` and restores on next open
-  - sticky `Cancel` and `Save Courses` actions
-  - unsaved-changes protection on back/cancel
-- Saving reuses the existing CWA persistence stack:
-  - `CourseModel` / `CwaRepository` for semester mode
-  - `PastSemesterModel` / `PastResultRepository` for cumulative mode
-- The **Complete Semester** flow (accessible from CWA Semester mode) pre-fills all current courses into a grade-entry form, creates a `PastSemesterModel` on save, clears the old `CourseModel` entries, and advances `activeSemesterKey`.
-- Credit hour inputs are capped at **12** (raised from 6) across all CWA entry points.
-- `Timetable` can open `/timetable/import` from the scanner action.
+- In `Cumulative` mode, manual entry uses **grade dropdown** (colour-coded, specific to the active grading system's GradeScale) as the primary field, with an optional mark/score input.
+- The manual-entry screen includes semester-information dropdowns, repeatable course cards, live summary updates, duplicate course-code warning, **draft auto-save**, sticky actions, and unsaved-changes protection.
+- The **Complete Semester** flow pre-fills all current courses into a grade-entry form with grading-system-aware grade dropdowns, creates a `PastSemesterModel` on save, clears the old `CourseModel` entries, and advances `activeSemesterKey`.
+- Credit hour inputs are capped at **12** across all CWA entry points.
+- `Timetable` AppBar has three actions: scanner icon (import), reminders icon (course reminders), and add (+).
+- `Timetable` can open `/timetable/import` from the scanner action or `/timetable/reminders` from the reminders action.
 - `Weekly Review` is accessed from the Today drawer/deep link, not from Course Hub.
+- Grading system can be changed from Settings → Academic → Grading system. Existing records keep their original grading system.
 
-### Regression and stability notes from this redesign session
-- Phase 7 focused on spacing, consistency, semantics, touch targets, dark-mode resilience, and keyboard-safe layout behavior.
-- Phase 8 focused on regression cleanup and smoke-test coverage.
-- A widget regression suite now exists at `test/ui_redesign_regression_test.dart`.
-- That regression suite covers:
-  - shell navigation presence
-  - shell AI FAB absence
-  - CWA import-sheet options
-  - manual-entry rendering on small screens
-  - active-session mini timer visibility
+### Regression and stability notes
+- A widget regression suite exists at `test/ui_redesign_regression_test.dart` covering: shell navigation presence, CWA import-sheet options, manual-entry rendering on small screens, active-session mini timer visibility.
+- Dark mode is tested on all screens — cards, sheets, dialogs, input fields all adapt correctly.
+- Grading system dynamic labels are verified across bottom nav, CWA screen, and all grade dropdowns.
+- Onboarding flow is verified end-to-end including redirect guard behaviour.
 - A small-screen dropdown overflow issue in manual entry was fixed during regression cleanup.
-- A later Home refinement pass also fixed small-screen Today overflows by tightening the academic pulse tiles and making long task labels wrap/ellipsis safely.
 
-### Navigation back-button behaviour (updated 2026-05-02)
+### Navigation back-button behaviour (updated 2026-05-19)
+- Onboarding: GoRouter redirect guard blocks all routes until completed.
 - Shell tab switches use `context.go()` — pressing Back from a tab exits the app (expected).
 - Detail/drill-down screens (Streak, Insights, Settings, Course Hub, Weekly Review, etc.) use `context.push()` — pressing Back returns to the previous screen inside the app.
-- This matches the production pattern used by Google Pay and Nubank: `go()` for same-level tab switching, `push()` for deeper navigation.
 
 ### Navigation assumptions for future changes
-- There is no global chat or per-course AI surface in the workspace. AI is limited to focused import/review/planning flows.
-- Any feature added to Course Hub should be treated as a separate tab or in-tab action inside the 3-tab workspace unless the shell structure itself is being changed.
+- There is no global chat, AI FAB, or per-course AI surface in the workspace. AI is limited to focused import/review/planning flows.
+- Any feature added to Course Hub should be treated as a separate tab or in-tab action inside the 3-tab workspace.
 - Workspace changes should be checked against all 3 entry points: CWA, Timetable, and Sessions.
 - Any new drill-down screen must use `context.push()` to ensure proper back-button behaviour.
+- The bottom nav second tab label is dynamically driven by `gradingSystemProvider` — any new grading system must be added to `GradingSystem.all`.
 
 ## 8. Key File Locations
-- `lib/core/`: Providers (Isar, connectivity, notification), Router, Theme, and centralised Isar schema (`lib/core/data/isar_database.dart`).
+- `lib/core/domain/`: Pure Dart domain classes — `grading_system.dart`, `grade_scale.dart`, `university_defaults.dart`.
+- `lib/core/`: Providers (Isar, connectivity, notification), Router (with onboarding guard), Theme (light + dark), and centralised Isar schema (`lib/core/data/isar_database.dart` — 12 schemas).
+- `lib/features/onboarding/`: 6-step onboarding flow with `OnboardingNotifier` and `hasCompletedOnboardingProvider`.
 - `lib/features/`: Feature-specific code.
 - `lib/shared/`: Reusable widgets and extensions.
+- `assets/images/universities/`: 20+ university logo PNGs.
 - `_dev/`: Documentation (MVP report, E2E checklist, CWA flow gaps, pre-launch checklist, project context).

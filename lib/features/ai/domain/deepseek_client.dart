@@ -2,15 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:campusiq/core/config/ai_proxy_config.dart';
 import 'deepseek_exception.dart';
 
 class DeepSeekClient {
-  final String apiKey;
-  final String model;
-  static const _baseUrl = 'https://api.deepseek.com/v1/chat/completions';
   static const _timeout = Duration(seconds: 60);
 
-  const DeepSeekClient({required this.apiKey, required this.model});
+  const DeepSeekClient();
 
   Future<String> complete({
     required String systemPrompt,
@@ -18,29 +16,28 @@ class DeepSeekClient {
     int maxTokens = 800,
   }) async {
     final body = jsonEncode({
-      'model': model,
-      'max_tokens': maxTokens,
       'messages': [
         {'role': 'system', 'content': systemPrompt},
         ...messages,
       ],
+      'maxTokens': maxTokens,
+      'temperature': 0.7,
     });
 
     try {
       final response = await http
           .post(
-            Uri.parse(_baseUrl),
+            Uri.parse(AiProxyConfig.deepseekEndpoint),
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer $apiKey',
             },
             body: body,
           )
           .timeout(_timeout);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices'][0]['message']['content'] as String;
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final content = data['reply'] as String;
         return content.trim();
       } else {
         throw DeepSeekException(

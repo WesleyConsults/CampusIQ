@@ -414,7 +414,7 @@ class _CompleteSemesterScreenState
                     child: Text(
                       _gradingSystem.usesLetterGrades
                           ? 'Grades are the source of truth here. Choose the actual grade for each course. If official results are not out yet, you can still archive this semester and move on.'
-                          : 'Marks are the source of truth here. Enter the actual mark for each course and CampusIQ will derive the letter grade automatically. If official results are not out yet, you can still archive this semester and move on.',
+                          : 'Marks are the source of truth here. Enter the actual mark for each course and UniMate will derive the letter grade automatically. If official results are not out yet, you can still archive this semester and move on.',
                       style: const TextStyle(
                         fontSize: 13,
                         color: AppTheme.textSecondary,

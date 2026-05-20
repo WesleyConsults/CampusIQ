@@ -32,7 +32,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'CampusIQ',
+                'UniMate',
                 style: theme.textTheme.headlineLarge?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: colorScheme.onSurface,

@@ -7,7 +7,7 @@ part of 'timetable_import_provider.dart';
 // **************************************************************************
 
 String _$timetableImportNotifierHash() =>
-    r'e97e7aa85ac89fb32ba57b8aacb6de192d0de24f';
+    r'7e1eec5c4a1038e196e7a226d1195e4d28440f18';
 
 /// See also [TimetableImportNotifier].
 @ProviderFor(TimetableImportNotifier)

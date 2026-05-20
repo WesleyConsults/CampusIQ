@@ -1,14 +1,14 @@
-# CampusIQ — MVP Completion Report
+# UniMate — MVP Completion Report
 
-**Date:** 2026-05-10
+**Date:** 2026-05-19
 **Package:** com.wesleyconsults.campusiq
-**Status:** v1.0 Lean Build — UI Redesign, CWA Flow Gap Fixes, Feature Cleanup & Pre-Release Audit Complete (Phases 1–8 + 15.6–15.8). Runtime device testing required before beta release.
+**Status:** v1.0 Lean Build — University Onboarding, Multi-Grading-System, Dark Mode, Course Reminders, and Production Polish Complete. Runtime device testing required before beta release.
 
 ---
 
 ## Overview
 
-CampusIQ is a Flutter-based academic planning app built Android-first for Ghanaian university students (KNUST target audience). The v1.0 build covers: CWA Target Planner (semester + cumulative with complete-semester flow), Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes), Streak System, Smart Notifications, Insights System, Weekly Review, AI Weekly Review, AI Study Plan, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import into CWA, and Cumulative CWA with Past Result Slip Import. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the global AI chatbot, CWA AI Coach, AI chat history/usage quotas, markdown/math chat rendering dependencies, the Course Hub Flashcards tab, the Course Hub Files tab, the Course Hub per-course AI chat, and the What-If AI feature — all cut to reduce complexity and improve stability for launch.
+UniMate is a Flutter-based academic planning app built Android-first for Ghanaian university students. The v1.0 build covers: 6-step University Onboarding (welcome → university → programme → grading system → target → notifications), Multi-Grading-System Support (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0 with configurable grade scales for 20+ Ghanaian universities), CWA/GPA Target Planner (semester + cumulative with complete-semester flow), Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes) with vibrate/sound timer feedback, Streak System, Smart Notifications, Insights System, Weekly Review, AI Weekly Review, AI Study Plan, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import, Cumulative Result Slip Import, Course Reminders (per-course notification scheduling), Dark Mode (system/light/dark), and a polished Settings screen with About section. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the global AI chatbot, CWA AI Coach, AI chat history/usage quotas, markdown/math chat rendering dependencies, the Course Hub Flashcards tab, the Course Hub Files tab, the Course Hub per-course AI chat, and the What-If AI feature — all cut to reduce complexity and improve stability for launch.
 
 ### Current MVP AI Scope Update
 
@@ -186,9 +186,12 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 
 ### Current Navigation Summary
 
+**Onboarding (shown before shell when first-run):**
+- `/onboarding` — 6-step university onboarding flow; GoRouter redirect guard blocks all other routes until completed
+
 **Shell route (bottom nav):**
 - `Home` at `/plan` — user-facing Today dashboard
-- `CWA` at `/cwa` — CWA Target Planner
+- Grades tab (dynamic label: CWA/GPA/CGPA) at `/cwa` — Academic Target Planner
 - `Table` at `/timetable` — Class Timetable
 - `Sessions` at `/sessions` — Study Session Tracker
 
@@ -199,19 +202,24 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 - `/ai/weekly-review` — AI Weekly Review
 - `/course/:courseCode` — Course Hub Workspace
 - `/timetable/import` — Timetable Image Import
+- `/timetable/reminders` — Course Reminders
 - `/cwa/manual-entry` — Manual Course Entry
-- `/subscribe` — Premium subscription
+- `/cwa/history` — Past Semesters History
+- `/cwa/import/registration` — Registration Slip Import
+- `/cwa/import/results` — Result Slip Import
 
 **Navigation behaviour:**
+- Onboarding guard: if `hasCompletedOnboarding == false`, all routes redirect to `/onboarding`
 - Tab switches use `context.go()` — back from a tab exits the app
 - Drill-down screens use `context.push()` — back returns to the previous screen
 - Today screen has a local drawer (hamburger menu) with links to Today, Streak, Insights, Weekly Review, Settings, and Subscribe
 - Active-session mini timer renders inside `_AppShell` and persists across all tab switches
+- Bottom nav second tab label changes dynamically with the active grading system (e.g. "CWA", "GPA", "CGPA")
 
 ### Validation Summary
 
 - `dart format .` — passed
-- `flutter test` — passed
+- `flutter test` — passed (23+ tests including grading system tests and Pomodoro defaults test)
 - `flutter analyze` — pre-existing baseline of ~56 warnings/info items (generated Riverpod deprecations, experimental Isar API warnings), no new issues introduced
 - `flutter run -d macos` — not tested (xcodebuild unavailable in this environment)
 - `flutter run -d chrome` — not tested (pre-existing Isar JS compile errors unrelated to redesign)
@@ -284,20 +292,24 @@ lib/
 ├── main.dart
 ├── app.dart
 ├── core/
-│   ├── constants/app_constants.dart
+│   ├── constants/app_constants.dart              — app name "UniMate", default semester, pass/distinction thresholds
 │   ├── data/
-│   │   ├── models/user_prefs_model.dart          — single-row key/value Isar store
+│   │   ├── models/user_prefs_model.dart          — single-row key/value Isar store; 17: +gradingSystemId, universityName, programmeName, themeModeIndex, vibrateOnTimerEnd, playSoundOnTimerEnd, hasCompletedOnboarding
 │   │   ├── models/subscription_model.dart        — premium status + subscription details
-│   │   ├── isar_database.dart                    — Phase 15.8: centralised schema list + openCampusIqIsar()
+│   │   ├── isar_database.dart                    — Phase 15.8: centralised schema list + openCampusIqIsar(); 19: +CourseReminderModelSchema
 │   │   ├── repositories/user_prefs_repository.dart
 │   │   └── repositories/subscription_repository.dart
+│   ├── domain/
+│   │   ├── grade_scale.dart                      — Phase 17: GradeScale + GradeScaleEntry value objects
+│   │   ├── grading_system.dart                   — Phase 17: GradingSystem domain class (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0)
+│   │   └── university_defaults.dart              — Phase 17: 20+ Ghanaian universities mapped to grading systems
 │   ├── providers/isar_provider.dart               — singleton FutureProvider<Isar>; 15.8: delegates to isar_database.dart
 │   ├── providers/connectivity_provider.dart       — Phase 15.5: isOnlineProvider (FutureProvider<bool>)
 │   ├── providers/subscription_provider.dart       — isPremiumProvider
-│   ├── router/app_router.dart                     — GoRouter + ShellRoute; null-safe /course/:courseCode (15.5)
+│   ├── router/app_router.dart                     — GoRouter + ShellRoute; 16: onboarding redirect guard + /onboarding route; 19: /timetable/reminders route
 │   ├── services/connectivity_service.dart         — Phase 15.5: ConnectivityService.isOnline() via connectivity_plus
-│   ├── services/notification_service.dart         — centralized local notifications singleton
-│   └── theme/app_theme.dart                       — Material 3 + Inter
+│   ├── services/notification_service.dart         — centralized local notifications singleton; 19: course reminder scheduling (IDs 700-999)
+│   └── theme/app_theme.dart                       — Material 3 light + dark themes; 18: full dark palette
 ├── features/
 │   ├── cwa/                                       — Phase 1 + Phase 13 + Phase 15.3 + 15.6
 │   │   ├── data/models/course_model.dart
@@ -324,19 +336,26 @@ lib/
 │   │           ├── add_course_sheet.dart          — 15.6: credit cap raised to 12
 │   │           ├── course_card.dart               — 15.7: what-if explain chip removed
 │   │           └── cwa_summary_bar.dart           — hero CWA display (semester + cumulative); 15.6: +cumulative progression
-│   ├── timetable/                                 — Phase 2 + redesign
-│   │   ├── data/models/timetable_slot_model.dart
-│   │   ├── data/repositories/timetable_repository.dart
+│   ├── timetable/                                 — Phase 2 + redesign + 19
+│   │   ├── data/
+│   │   │   ├── models/
+│   │   │   │   ├── course_reminder_model.dart      — Phase 19: @collection for per-course class reminders
+│   │   │   │   └── timetable_slot_model.dart
+│   │   │   └── repositories/timetable_repository.dart
 │   │   ├── domain/
 │   │   │   ├── free_time_detector.dart
 │   │   │   ├── timetable_constants.dart
 │   │   │   ├── timetable_slot_import.dart          — Phase 15.2: parsed slot value object
 │   │   │   └── timetable_vision_parser.dart        — Phase 15.2: image → slots
 │   │   └── presentation/
-│   │       ├── providers/timetable_provider.dart
-│   │       ├── providers/timetable_import_provider.dart — Phase 15.2: import state machine
-│   │       ├── screens/timetable_screen.dart
-│   │       ├── screens/timetable_import_screen.dart    — Phase 15.2: full-screen import UI
+│   │       ├── providers/
+│   │       │   ├── course_reminder_provider.dart   — Phase 19: CRUD + notification scheduling
+│   │       │   ├── timetable_import_provider.dart  — Phase 15.2: import state machine
+│   │       │   └── timetable_provider.dart
+│   │       ├── screens/
+│   │       │   ├── course_reminders_screen.dart    — Phase 19: full-screen reminder list + add/edit sheet
+│   │       │   ├── timetable_import_screen.dart    — Phase 15.2: full-screen import UI
+│   │       │   └── timetable_screen.dart
 │   │       └── widgets/
 │   │           ├── add_slot_sheet.dart
 │   │           ├── class_timetable_grid.dart
@@ -408,10 +427,22 @@ lib/
 │   │           ├── add_manual_task_sheet.dart
 │   │           ├── plan_progress_bar.dart
 │   │           └── plan_task_tile.dart
-│   ├── settings/                                  — Phase 14 / Phase 15
+│   ├── settings/                                  — Phase 14 / Phase 15 / Phase 18
 │   │   └── presentation/
-│   │       ├── providers/settings_provider.dart
-│   │       └── screens/settings_screen.dart       — notification toggles, reminder time, dev premium
+│   │       ├── providers/settings_provider.dart    — notificationPrefsProvider + themeModeProvider
+│   │       └── screens/settings_screen.dart       — Academic, Timer Feedback, Notifications, Appearance, About, Dev sections; dark mode picker; grading system picker; about dialog; privacy/terms/feedback links; reset onboarding
+│   ├── onboarding/                                — Phase 16: 6-step first-run flow
+│   │   └── presentation/
+│   │       ├── providers/onboarding_provider.dart  — OnboardingNotifier (StateNotifier) + hasCompletedOnboardingProvider (redirect guard)
+│   │       ├── screens/
+│   │       │   ├── onboarding_screen.dart          — PageView shell with progress dots
+│   │       │   ├── onboarding_welcome_screen.dart
+│   │       │   ├── onboarding_university_screen.dart  — searchable grid of 20+ universities
+│   │       │   ├── onboarding_programme_screen.dart
+│   │       │   ├── onboarding_grading_system_screen.dart
+│   │       │   ├── onboarding_target_screen.dart
+│   │       │   └── onboarding_notifications_screen.dart
+│   │       └── widgets/onboarding_progress_dots.dart
 │   └── ai/                                        — focused AI: DeepSeek review/planning + smart alerts
 │       ├── data/
 │       │   ├── models/
@@ -464,17 +495,18 @@ lib/
 
 | Route | Screen | Phase |
 |---|---|---|
-| `/plan` | Today — Home Dashboard (initial route) | 15 + redesign |
-| `/cwa` | CWA Target Planner | 1, 13 + redesign |
+| `/onboarding` | University Onboarding (6 steps) | 16 |
+| `/plan` | Today — Home Dashboard (initial route after onboarding) | 15 + redesign |
+| `/cwa` | Academic Target Planner | 1, 13 + redesign |
 | `/timetable` | Class Timetable (single-layer, full-page scroll) | 2 + redesign |
 | `/sessions` | Study Session Tracker + Analytics Dashboard | 4 + redesign |
 | `/streak` | Streak System + Milestone Gallery | 5 + redesign |
 | `/insights` | Insights System | 9 + redesign |
 | `/ai/weekly-review` | AI-powered Weekly Review (full screen) | 15 |
-| `/settings` | Notification Settings + DEV premium toggle | 14 + redesign |
-| `/subscribe` | Premium subscription upsell stub | 12+ |
+| `/settings` | Settings (Academic, Timer Feedback, Notifications, Appearance, About, Dev) | 14 + redesign + 18 |
 | `/course/:courseCode` | Course Hub Workspace (3-tab: Overview, Sessions, Notes) | 15.1 + redesign |
 | `/timetable/import` | Timetable Image Import (full-screen, no bottom nav) | 15.2 |
+| `/timetable/reminders` | Course Reminders (full-screen, no bottom nav) | 19 |
 | `/cwa/manual-entry` | Manual Course Entry (full-screen, no bottom nav) | redesign |
 | `/cwa/history` | Past Semesters History (full-screen, no bottom nav) | 15.6 |
 | `/cwa/import/registration` | Registration Slip Import (full-screen, no bottom nav) | 15.6 |
@@ -1056,6 +1088,129 @@ The MVP AI surface was reduced to features with a narrow, reviewable job. CWA im
 
 ---
 
+### Phase 16 — University Onboarding Flow
+
+**Route:** `/onboarding` (GoRouter redirect guard, shown before shell routes when `hasCompletedOnboarding == false`)
+
+A 6-step onboarding flow that collects university, programme, grading system, target score, and notification preferences before the student reaches the main app.
+
+| Step | Screen | Description |
+|---|---|---|
+| Welcome | `OnboardingWelcomeScreen` | App logo, tagline, "Get Started" button |
+| University | `OnboardingUniversityScreen` | Searchable grid of 20+ Ghanaian universities with logos; tapping a university auto-selects its default grading system |
+| Programme | `OnboardingProgrammeScreen` | Text input for programme/major name |
+| Grading System | `OnboardingGradingSystemScreen` | Choose from CWA, GPA 4.0, GPA 4.0 (GIMPA), or CGPA 5.0; each shows score range and default target |
+| Target | `OnboardingTargetScreen` | Slider to set personal target score; default comes from the selected grading system |
+| Notifications | `OnboardingNotificationsScreen` | Toggles for study reminders, streak alerts, milestone alerts, and weekly review prompt; all default to on |
+
+**State management:** `OnboardingNotifier` (`StateNotifierProvider`) holds `OnboardingState` with fields for university, programme, gradingSystemId, target, and notification prefs. On completion, all values are persisted to `UserPrefsModel` and `hasCompletedOnboarding` is set to `true`.
+
+**Navigation guard:** `app_router.dart` redirect guard checks `hasCompletedOnboardingProvider` — if `false`, any non-`/onboarding` route redirects to `/onboarding`. Once completed, `/onboarding` redirects to `/plan`.
+
+**Skip:** Skip button on welcome screen calls `skip()` — sets `hasCompletedOnboarding = true` with default values.
+
+**New files:** `lib/features/onboarding/presentation/providers/onboarding_provider.dart`, 6 screen files, `onboarding_screen.dart` (PageView controller), `onboarding_progress_dots.dart`, `onboarding_welcome_screen.dart`
+
+**Modified files:** `app_router.dart` (redirect guard + `/onboarding` route), `app.dart` (themeMode), `user_prefs_model.dart` (new fields)
+
+---
+
+### Phase 17 — Multi-Grading-System Support
+
+**No new routes. No new Isar collections.** Configurable grading systems that let students from any Ghanaian university use their institution's actual grading scale.
+
+| Feature | Description |
+|---|---|
+| `GradingSystem` | Pure Dart domain class in `lib/core/domain/grading_system.dart`; defines id, label, score range, target range, default target, slider divisions, display decimals, score unit, and optional letter grade scale |
+| `GradeScale` / `GradeScaleEntry` | Pure Dart in `lib/core/domain/grade_scale.dart`; maps score ranges to letter grades with points and interpretation labels |
+| `University` | Pure Dart in `lib/core/domain/university_defaults.dart`; maps each university to its default grading system and provides logo asset path; 20+ Ghanaian universities included |
+| Systems available | **CWA** (0–100, KNUST/UMaT), **GPA 4.0** (0.0–4.0, Legon/UCC/UEW/UDS/UENR/Ashesi/Central/Valley View/Pentecost/All Nations/Academic City), **GPA 4.0 GIMPA** (A+/A/B+/B/C+/C/D+/D/F scale), **CGPA 5.0** (0.0–5.0, UPSA/UniMAC/CKT-UTAS/SD Dombo/GIJ/GIL) |
+| UI adaptation | Bottom nav CWA tab label shows the active grading system's `label` (e.g. "GPA" instead of "CWA"); CWA screen title uses `plannerTitle`; target dialog score range matches grading system |
+| Grade dropdowns | Complete Semester and Manual Entry (cumulative mode) show grade dropdowns specific to the active grading system's `GradeScale` — colour-coded (A=green, F=red) |
+| Settings picker | Grading system can be changed from Settings → Academic → Grading system; shows all 4 systems with their target defaults |
+| Persistence | Active grading system ID stored in `UserPrefsModel.gradingSystemId` |
+
+**New files:** `lib/core/domain/grading_system.dart`, `lib/core/domain/grade_scale.dart`, `lib/core/domain/university_defaults.dart`
+
+**Modified files:** `app_router.dart` (dynamic nav label), `cwa_screen.dart` (grading-aware labels), `cwa_manual_entry_screen.dart` (grading-aware grade dropdowns), `complete_semester_screen.dart` (grading-aware grade dropdowns), `settings_screen.dart` (grading system picker), `cwa_summary_bar.dart`, `user_prefs_model.dart` (new fields: `gradingSystemId`, `universityName`, `programmeName`, `themeModeIndex`, `vibrateOnTimerEnd`, `playSoundOnTimerEnd`, `hasCompletedOnboarding`)
+
+**University logo assets:** `assets/images/universities/` — 20+ PNG files
+
+---
+
+### Phase 18 — Dark Mode, Timer Feedback, About & Settings Polish
+
+**No new routes. No new Isar collections.** Complete dark theme, timer haptic/audio feedback toggles, and a restructured Settings screen.
+
+#### Dark Mode
+
+| Feature | Description |
+|---|---|
+| Dark theme | Full `ThemeData dark` in `app_theme.dart` with dark palette: surface (#1E2030), background (#15171E), primary (#7B9AD4), gold (#D4B55C), muted gold soft (#3D3520) |
+| Theme picker | Settings → Appearance → Theme: System / Light / Dark; persisted via `UserPrefsModel.themeModeIndex` |
+| Reactive switching | `themeModeProvider` (`FutureProvider<ThemeMode>`) reads `themeModeIndex`; `MaterialApp.router` uses `themeMode` |
+| Shell nav dark | Bottom nav bar uses semi-transparent dark surface with adjusted shadow opacity for dark mode |
+| All screens | Every screen adapts to dark mode — cards, sheets, dialogs, input fields, dividers all use `colorScheme` values |
+
+#### Timer Feedback Toggles
+
+| Feature | Description |
+|---|---|
+| Vibrate on phase end | When enabled, phone vibrates when a Pomodoro focus or break phase finishes |
+| Sound on phase end | When enabled, a notification sound plays when a timer phase finishes |
+| Persistence | Both toggles stored in `UserPrefsModel.vibrateOnTimerEnd` and `playSoundOnTimerEnd` |
+
+#### Settings Restructure
+
+The Settings screen (`/settings`) was reorganised into 6 clear sections:
+
+| Section | Contents |
+|---|---|
+| Academic | Active semester picker, Grading system picker |
+| Timer Feedback | Vibrate on phase end, Sound on phase end toggles |
+| Notifications | Study reminders, Streak alerts, Milestone alerts, Weekly review prompt toggles; Daily study reminder time picker; Cancel all notifications button |
+| Appearance | Theme picker (System / Light / Dark) |
+| About | About UniMate dialog (app info, version), Privacy policy link, Terms of service link, Send feedback (email) |
+| Dev | Reset onboarding (restart first-run experience) |
+
+**Modified files:** `app_theme.dart` (dark theme), `app.dart` (themeMode wiring), `settings_screen.dart` (full restructure), `settings_provider.dart` (themeModeProvider), `user_prefs_model.dart` (new fields), `notification_service.dart` (pomodoro phase-end channel)
+
+---
+
+### Phase 19 — Course Reminders
+
+**Route:** `/timetable/reminders` (full-screen push, no bottom nav)
+
+Per-course notification reminders that alert students before their scheduled classes.
+
+| Feature | Description |
+|---|---|
+| `CourseReminderModel` | New Isar `@collection`; stores `courseCode`, `courseName`, `dayIndex`, `timeMinutes` (start time in minutes from midnight), `reminderOffsetMinutes` (how many minutes before class to alert), `isEnabled` |
+| `CourseRemindersScreen` | Full-screen route at `/timetable/reminders`; lists all reminders grouped by day; tap to edit, swipe to delete |
+| Add/edit sheet | Bottom sheet with course picker (from timetable slots), time display, and offset selector (10, 15, 30, 60, or 120 minutes before) |
+| Notification scheduling | `NotificationService` schedules course reminder notifications under notification IDs 700–999; reminders auto-reschedule on app launch via `refreshCourseReminderNotifications()` |
+| Entry point | Reminders icon in Timetable AppBar alongside the scanner and + icons |
+
+**New files:** `lib/features/timetable/data/models/course_reminder_model.dart`, `lib/features/timetable/presentation/providers/course_reminder_provider.dart`, `lib/features/timetable/presentation/screens/course_reminders_screen.dart`
+
+**Modified files:** `isar_database.dart` (registers `CourseReminderModelSchema`), `app_router.dart` (`/timetable/reminders` route), `notification_service.dart` (course reminder scheduling), `timetable_screen.dart` (reminders icon), `app.dart` (refresh on launch)
+
+---
+
+### Production Polish (Ongoing)
+
+| Change | Description |
+|---|---|
+| App name | Changed from "CampusIQ" to "UniMate" in `AppConstants.appName` |
+| App icon | Updated launcher icon with new foreground assets (Android adaptive icon + iOS + macOS) |
+| Note editor fix | Prevented keyboard overflow in note editor sheet |
+| Dark mode readability | Improved contrast and readability across all screens in dark mode |
+| Offline snackbar | Added offline snackbar notification when connectivity is lost |
+| Old dev docs cleanup | Removed 10+ obsolete phase planning documents from `_dev/` |
+| UI polish | Refined CWA, session, insights, and review sheet layouts across light and dark modes |
+
+---
+
 ## Isar Collections (full list)
 
 | Collection | Feature | Phase | Purpose |
@@ -1076,6 +1231,7 @@ The MVP AI surface was reduced to features with a narrow, reviewable job. CWA im
 | ~~`ExamModel`~~ | ~~Exam Mode~~ | ~~15~~ | **Removed in v1.0** |
 | `CourseNoteModel` | Course Hub | 15.1 | Per-course markdown notes |
 | `PastSemesterModel` | CWA | 15.3 | Past semester results; 15.6: +semesterKey for dedup and cross-ref with CourseModel |
+| `CourseReminderModel` | Timetable | 19 | Per-course class reminder notifications with configurable offset |
 
 ---
 
@@ -1103,6 +1259,7 @@ The MVP AI surface was reduced to features with a narrow, reviewable job. CWA im
 | open_filex | ^4.4.1 | Open attached files with the device's default app handler |
 | image_picker | ^1.1.2 | Camera and gallery image picker for timetable image import (Phase 15.2) |
 | connectivity_plus | ^6.0.3 | On-demand network connectivity check for offline guards before AI/API calls (Phase 15.5) |
+| url_launcher | ^6.2.5 | Open privacy policy, terms of service, and mailto links from Settings (Phase 18) |
 
 ### Dev
 
@@ -1230,12 +1387,20 @@ flutter run
 | What-if removal | `Remove dead what-if AI feature, fix hardcoded programme list, and improve "Update Results" UX` |
 | Pre-release audit | `Fix 28 pre-release audit items: data-loss guards, error states, dead code, and polish` |
 | Focused AI MVP cleanup | Removed global chatbot, CWA Coach, chat storage/usage models, and chat-only markdown/math dependencies; kept CWA import AI, AI Weekly Review, and AI Study Plan |
+| Phase 16 S1 | `Add university onboarding and school logos` |
+| Phase 16 S2 | `Add multi-grading-system support with configurable grade scales` |
+| Phase 17 | `Add dark mode, timer feedback toggles, and About section to Settings` |
+| Phase 18 | `Add course reminders and offline snackbar` |
+| Polish | `fix: prevent note editor keyboard overflow` / `fix: improve dark mode readability` |
+| Polish | `Clean up: remove old dev docs, polish UI across screens` |
+| Polish | `Update app launcher icon` |
+| Polish | `Fix Pomodoro default migration` / `Polish insights and review sheet UI` / `Refine MVP AI scope` |
 
 ---
 
-## What Comes Next (Post Pre-Release Audit)
+## What Comes Next
 
-The codebase is now stabilised. CWA flow gaps are closed, dead features are removed, and production hardening (error states, data-loss guards, Isar write safety) is complete. The next phase is Play Store preparation.
+The codebase is now stabilised with onboarding, dark mode, multi-grading-system support, course reminders, and production hardening. CWA flow gaps are closed, dead features are removed, and all Isar write safety guards are in place. The next phase is Play Store preparation.
 
 ### Immediate — Before Beta Release
 
@@ -1243,7 +1408,7 @@ The codebase is now stabilised. CWA flow gaps are closed, dead features are remo
 |---|---|
 | **Build APK** | `flutter build apk --debug` or `--release` |
 | **Install on real device** | Physical Android device (not just emulator) |
-| **Run updated E2E test checklist** | `_dev/E2E_TEST_CHECKLIST.md` — work through all sections including new CWA flow tests |
+| **Run updated E2E test checklist** | `_dev/E2E_TEST_CHECKLIST.md` — work through all sections including onboarding, course reminders, dark mode, and grading system tests |
 | **Send APK to friend/tester** | Collect fresh-eyes feedback on UX, bugs, and performance |
 | **Fix critical issues** | Any crash, major overflow, or broken flow found during device testing |
 
@@ -1251,17 +1416,17 @@ The codebase is now stabilised. CWA flow gaps are closed, dead features are remo
 
 | Feature | Notes |
 |---|---|
-| **Phase 16 — Play Store Release** | App signing (`upload-keystore.jks`), `build.gradle` production config (minify, shrink, version codes), store listing assets (screenshots, icon, short description, privacy policy URL) |
+| **Play Store Release** | App signing (`upload-keystore.jks`), `build.gradle` production config (minify, shrink, version codes), store listing assets (screenshots, icon, short description, privacy policy URL) |
 | **Vercel API Proxy** | Move API keys off-device; add rate limiting; update DeepSeek client endpoints (see `_dev/PRE_LAUNCH_CHECKLIST.md` for full 27-item checklist) |
-| Onboarding flow | University + programme picker, initial target CWA setup (5 screens — see pre-launch checklist) |
 | Premium payment integration | Replace `SubscribeScreenStub` with RevenueCat-powered paywall |
 | Sentry + PostHog | Crash logging and analytics (see pre-launch checklist items 2–3) |
+| Additional university logos | Add logos for remaining Ghanaian universities as assets become available |
 
 ### Longer-term
 
 | Feature | Notes |
 |---|---|
-| Multi-university support | Extend beyond KNUST |
 | Cloud sync | Optional backup of Isar data |
 | Push notifications (remote) | Server-triggered alerts via FCM for AI-personalized content |
-| CWA grade scale config | Allow student to set their university's A/B/C/D score bands (currently KNUST defaults) |
+| Additional grading systems | Support for custom/institutional grading scales beyond the 4 built-in systems |
+| Localisation | Twi, Ga, Ewe, and other Ghanaian language support |

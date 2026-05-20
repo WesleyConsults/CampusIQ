@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_slot_model.dart';
 
@@ -37,6 +36,7 @@ class PlanSlotTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final courseName =
         slot.courseName.trim().isEmpty ? 'Planned session' : slot.courseName;
     final reason = slot.reason.trim().isEmpty ? 'Details not set' : slot.reason;
@@ -54,7 +54,7 @@ class PlanSlotTile extends StatelessWidget {
             height: 10,
             margin: const EdgeInsets.only(top: 4, right: 10),
             decoration: BoxDecoration(
-              color: AppTheme.primary,
+              color: colorScheme.primary,
               shape: BoxShape.circle,
             ),
           ),
@@ -67,18 +67,18 @@ class PlanSlotTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         courseName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                     ),
                     Text(
                       _timeRangeLabel(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -86,9 +86,9 @@ class PlanSlotTile extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xxxs),
                 Text(
                   '$durationLabel · $reason',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

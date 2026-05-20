@@ -222,114 +222,118 @@ class CwaScreen extends ConsumerWidget {
         ((gradingSystem.targetMax - gradingSystem.targetMin) / step).round();
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Set Target ${gradingSystem.label}'),
-        content: StatefulBuilder(
-          builder: (ctx, setState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    color: AppTheme.primary,
-                    iconSize: 32,
-                    onPressed: temp > gradingSystem.targetMin
-                        ? () => setState(
-                              () => temp = (temp - step)
-                                  .clamp(
-                                    gradingSystem.targetMin,
-                                    gradingSystem.targetMax,
-                                  )
-                                  .toDouble(),
-                            )
-                        : null,
-                  ),
-                  Text(
-                    gradingSystem.formatScore(temp),
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.primary,
+      builder: (ctx) {
+        final colorScheme = Theme.of(ctx).colorScheme;
+        return AlertDialog(
+          title: Text('Set Target ${gradingSystem.label}'),
+          content: StatefulBuilder(
+            builder: (ctx, setState) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      color: colorScheme.primary,
+                      iconSize: 32,
+                      onPressed: temp > gradingSystem.targetMin
+                          ? () => setState(
+                                () => temp = (temp - step)
+                                    .clamp(
+                                      gradingSystem.targetMin,
+                                      gradingSystem.targetMax,
+                                    )
+                                    .toDouble(),
+                              )
+                          : null,
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
-                    color: AppTheme.primary,
-                    iconSize: 32,
-                    onPressed: temp < gradingSystem.targetMax
-                        ? () => setState(
-                              () => temp = (temp + step)
-                                  .clamp(
-                                    gradingSystem.targetMin,
-                                    gradingSystem.targetMax,
-                                  )
-                                  .toDouble(),
-                            )
-                        : null,
-                  ),
-                ],
-              ),
-              Slider(
-                value: temp,
-                min: gradingSystem.targetMin,
-                max: gradingSystem.targetMax,
-                divisions: targetDivisions,
-                activeColor: AppTheme.primary,
-                onChanged: (v) => setState(() => temp = v),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              final repo = ref.read(cwaPrefsRepositoryProvider);
-              if (repo == null) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Your target settings are not ready yet. Please try again.',
+                    Text(
+                      gradingSystem.formatScore(temp),
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.primary,
                       ),
                     ),
-                  );
-                }
-                Navigator.pop(ctx);
-                return;
-              }
-
-              try {
-                await repo.setTargetCwa(
-                  temp,
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      color: colorScheme.primary,
+                      iconSize: 32,
+                      onPressed: temp < gradingSystem.targetMax
+                          ? () => setState(
+                                () => temp = (temp + step)
+                                    .clamp(
+                                      gradingSystem.targetMin,
+                                      gradingSystem.targetMax,
+                                    )
+                                    .toDouble(),
+                              )
+                          : null,
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: temp,
                   min: gradingSystem.targetMin,
                   max: gradingSystem.targetMax,
-                );
-                if (ctx.mounted) Navigator.pop(ctx);
-              } catch (e) {
-                debugPrint('🔴 CwaScreen _showTargetDialog failed: $e');
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Could not save your target. Please try again.',
-                      ),
-                    ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
+                  divisions: targetDivisions,
+                  activeColor: colorScheme.primary,
+                  onChanged: (v) => setState(() => temp = v),
+                ),
+              ],
             ),
-            child: const Text('Set'),
           ),
-        ],
-      ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                final repo = ref.read(cwaPrefsRepositoryProvider);
+                if (repo == null) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Your target settings are not ready yet. Please try again.',
+                        ),
+                      ),
+                    );
+                  }
+                  Navigator.pop(ctx);
+                  return;
+                }
+
+                try {
+                  await repo.setTargetCwa(
+                    temp,
+                    min: gradingSystem.targetMin,
+                    max: gradingSystem.targetMax,
+                  );
+                  if (ctx.mounted) Navigator.pop(ctx);
+                } catch (e) {
+                  debugPrint('🔴 CwaScreen _showTargetDialog failed: $e');
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Could not save your target. Please try again.',
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+              ),
+              child: const Text('Set'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1917,10 +1921,10 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                     ),
                     child: Text(
                       cwa.toStringAsFixed(1),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
-                        color: AppTheme.primary,
+                        color: colorScheme.primary,
                       ),
                     ),
                   ),
@@ -1951,10 +1955,10 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                       children: [
                         Expanded(
                           child: Text(c.courseCode,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.primary,
+                                  color: colorScheme.primary,
                                   letterSpacing: 0.4)),
                         ),
                         _ScorePill(mark: c.mark, score: c.score),
@@ -2018,10 +2022,10 @@ class _CurrentCourseRow extends StatelessWidget {
               children: [
                 Text(
                   course.code,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.primary,
+                    color: colorScheme.primary,
                     letterSpacing: 0.4,
                   ),
                 ),
@@ -2058,10 +2062,10 @@ class _CurrentCourseRow extends StatelessWidget {
             ),
             child: Text(
               '${course.expectedScore.toInt()}%',
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
-                color: AppTheme.primary,
+                color: colorScheme.primary,
               ),
             ),
           ),
@@ -2083,6 +2087,10 @@ class _ScorePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isApprox = mark == null;
+    final colorScheme = Theme.of(context).colorScheme;
+    final warningColor = colorScheme.brightness == Brightness.dark
+        ? const Color(0xFFFFB05C)
+        : const Color(0xFFF57F17);
     return Tooltip(
       message: isApprox
           ? 'Estimated from grade — enter the exact mark in Result History for accuracy'
@@ -2091,12 +2099,12 @@ class _ScorePill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
         decoration: BoxDecoration(
           color: isApprox
-              ? const Color(0xFFF57F17).withValues(alpha: 0.10)
-              : AppTheme.primary.withValues(alpha: 0.08),
+              ? warningColor.withValues(alpha: 0.14)
+              : colorScheme.primary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(5),
           border: Border.all(
             color: isApprox
-                ? const Color(0xFFF57F17).withValues(alpha: 0.35)
+                ? warningColor.withValues(alpha: 0.38)
                 : Colors.transparent,
           ),
         ),
@@ -2108,13 +2116,12 @@ class _ScorePill extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: isApprox ? const Color(0xFFF57F17) : AppTheme.primary,
+                color: isApprox ? warningColor : colorScheme.primary,
               ),
             ),
             if (isApprox) ...[
               const SizedBox(width: AppSpacing.xxxs),
-              const Icon(Icons.warning_amber_rounded,
-                  size: 10, color: Color(0xFFF57F17)),
+              Icon(Icons.warning_amber_rounded, size: 10, color: warningColor),
             ],
           ],
         ),
@@ -2140,8 +2147,12 @@ class _GradePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _colors[grade.toUpperCase()] ??
-        Theme.of(context).colorScheme.onSurfaceVariant;
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = _gradeAccentColor(
+      grade,
+      colorScheme.brightness == Brightness.dark,
+      colorScheme.onSurfaceVariant,
+    );
     return Container(
       constraints: const BoxConstraints(minWidth: 28),
       padding: const EdgeInsets.symmetric(
@@ -2162,5 +2173,17 @@ class _GradePill extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _gradeAccentColor(String grade, bool isDark, Color fallback) {
+    if (!isDark) return _colors[grade.toUpperCase()] ?? fallback;
+    return switch (grade.toUpperCase()) {
+      'A' => const Color(0xFF63D28A),
+      'B' => const Color(0xFF8DB5FF),
+      'C' => const Color(0xFFFFC15E),
+      'D' => const Color(0xFFFFA05A),
+      'F' => const Color(0xFFFF7A7A),
+      _ => fallback,
+    };
   }
 }

@@ -228,7 +228,7 @@ class CourseRemindersScreen extends ConsumerWidget {
                 CampusSectionHeader(
                   title: 'Always-on class alerts',
                   subtitle:
-                      'Pick a course once and CampusIQ will remind you before every matching timetable class.',
+                      'Pick a course once and UniMate will remind you before every matching timetable class.',
                   trailing: IconButton.filled(
                     tooltip: 'Add reminder',
                     icon: const Icon(LucideIcons.plus),
@@ -673,7 +673,7 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'CampusIQ will remind you before every scheduled class for this course.',
+                'UniMate will remind you before every scheduled class for this course.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),

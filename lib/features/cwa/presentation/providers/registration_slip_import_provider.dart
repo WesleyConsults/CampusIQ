@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -148,16 +147,7 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
 
     state = state.copyWith(step: SlipImportStep.parsing);
     try {
-      final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
-      if (apiKey.isEmpty) {
-        state = state.copyWith(
-          step: SlipImportStep.error,
-          errorMessage: 'OpenAI API key not configured. Check your .env file.',
-        );
-        return;
-      }
-      final model = dotenv.env['OPENAI_MODEL'] ?? 'gpt-4o';
-      final parser = RegistrationSlipParser(apiKey: apiKey, model: model);
+      const parser = RegistrationSlipParser();
       final parseResult = await parser.parse(bytes, mimeType);
       final gradingSystem = ref.read(gradingSystemProvider);
       final courses = parseResult.courses.map((course) {

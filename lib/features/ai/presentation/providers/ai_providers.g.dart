@@ -6,7 +6,7 @@ part of 'ai_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$deepseekClientHash() => r'c83e3020d1f64610dece33229c1577eec2614278';
+String _$deepseekClientHash() => r'75d38872222d2b2f9d3ecfc2e59541b7e2973338';
 
 /// See also [deepseekClient].
 @ProviderFor(deepseekClient)

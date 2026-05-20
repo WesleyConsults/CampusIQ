@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:isar/isar.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:campusiq/app.dart';
@@ -32,7 +31,6 @@ void callbackDispatcher() {
 /// for a personalised message, then fires notification ID 200.
 Future<void> _handleStreakRiskCheck() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
 
   final isar = await openCampusIqIsar();
 
@@ -56,35 +54,25 @@ Future<void> _handleStreakRiskCheck() async {
     if (streak.currentStreak <= 0) return;
 
     // Ask DeepSeek for a personalised 1-sentence motivational message
-    final apiKey = dotenv.env['DEEPSEEK_API_KEY'] ?? '';
     String body;
-    if (apiKey.isNotEmpty) {
-      try {
-        final client = DeepSeekClient(
-          apiKey: apiKey,
-          model: dotenv.env['DEEPSEEK_MODEL'] ?? 'deepseek-chat',
-        );
-        body = await client.complete(
-          systemPrompt:
-              'You write short motivational push notification messages.',
-          messages: [
-            {
-              'role': 'user',
-              'content':
-                  'Write a 1-sentence motivational notification for a student '
-                      'whose study streak of ${streak.currentStreak} days is at risk. '
-                      "They haven't studied yet today. Be warm and direct. "
-                      'No markdown. Under 15 words.',
-            }
-          ],
-          maxTokens: 40,
-        );
-        body = body.trim();
-      } catch (_) {
-        body =
-            "Your ${streak.currentStreak}-day streak ends at midnight — keep it alive!";
-      }
-    } else {
+    try {
+      const client = DeepSeekClient();
+      body = await client.complete(
+        systemPrompt:
+            'You write short motivational push notification messages.',
+        messages: [
+          {
+            'role': 'user',
+            'content': 'Write a 1-sentence motivational notification for a student '
+                'whose study streak of ${streak.currentStreak} days is at risk. '
+                "They haven't studied yet today. Be warm and direct. "
+                'No markdown. Under 15 words.',
+          }
+        ],
+        maxTokens: 40,
+      );
+      body = body.trim();
+    } catch (_) {
       body =
           "Your ${streak.currentStreak}-day streak ends at midnight — keep it alive!";
     }
@@ -112,7 +100,6 @@ void main() async {
     debugPrint('${details.stack}');
   };
 
-  await dotenv.load(fileName: '.env');
   await NotificationService.instance.init();
   await Workmanager().initialize(callbackDispatcher);
   await NotificationScheduler.scheduleStreakRiskCheck();

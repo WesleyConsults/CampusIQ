@@ -20,6 +20,24 @@ Color gradeColor(String grade, Color fallback) {
   return kGradeColors[grade.trim().toUpperCase()] ?? fallback;
 }
 
+Color accessibleGradeColor(
+  String grade,
+  Color fallback, {
+  required bool isDark,
+}) {
+  if (!isDark) return gradeColor(grade, fallback);
+
+  return switch (grade.trim().toUpperCase()) {
+    'A+' || 'A' => const Color(0xFF63D28A),
+    'B+' || 'B' => const Color(0xFF8DB5FF),
+    'C+' || 'C' => const Color(0xFFFFC15E),
+    'D+' || 'D' => const Color(0xFFFFA05A),
+    'E' => const Color(0xFFD8B9A6),
+    'F' => const Color(0xFFFF7A7A),
+    _ => fallback,
+  };
+}
+
 String normalizedGradeForSystem(String grade, GradingSystem gradingSystem) {
   final available = gradingSystem.gradeScale?.availableGrades;
   if (available == null || available.isEmpty) {
@@ -54,6 +72,7 @@ class GradeValueDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
     final grades = gradingSystem.gradeScale?.availableGrades ??
         const ['A', 'B', 'C', 'D', 'F'];
     final selectedGrade = normalizedGradeForSystem(
@@ -68,7 +87,11 @@ class GradeValueDropdown extends StatelessWidget {
       decoration: InputDecoration(labelText: label),
       items: grades.map((grade) {
         final points = scoreForGrade(grade, gradingSystem);
-        final color = gradeColor(grade, colorScheme.primary);
+        final color = accessibleGradeColor(
+          grade,
+          colorScheme.primary,
+          isDark: isDark,
+        );
         return DropdownMenuItem<String>(
           value: grade,
           child: Row(
@@ -124,10 +147,15 @@ class CompactGradeDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
     final grades = gradingSystem.gradeScale?.availableGrades ??
         const ['A', 'B', 'C', 'D', 'F'];
     final selectedGrade = normalizedGradeForSystem(grade, gradingSystem);
-    final color = gradeColor(selectedGrade, colorScheme.primary);
+    final color = accessibleGradeColor(
+      selectedGrade,
+      colorScheme.primary,
+      isDark: isDark,
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -147,7 +175,11 @@ class CompactGradeDropdown extends StatelessWidget {
           ),
           dropdownColor: colorScheme.surface,
           items: grades.map((item) {
-            final itemColor = gradeColor(item, colorScheme.primary);
+            final itemColor = accessibleGradeColor(
+              item,
+              colorScheme.primary,
+              isDark: isDark,
+            );
             return DropdownMenuItem(
               value: item,
               child: Text(
