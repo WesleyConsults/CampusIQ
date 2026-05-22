@@ -11,11 +11,18 @@ import 'package:campusiq/core/services/crash_reporting_service.dart';
 enum OnboardingStep {
   welcome,
   university,
-  programme,
-  gradingSystem,
   target,
+  gradesImport,
+  timetableImport,
   notifications,
 }
+
+enum OnboardingStartAction {
+  importCourses,
+  addTimetable,
+}
+
+const _unset = Object();
 
 class OnboardingState {
   final OnboardingStep step;
@@ -23,6 +30,7 @@ class OnboardingState {
   final String programme;
   final String gradingSystemId;
   final double target;
+  final OnboardingStartAction? startAction;
   final bool notifyStudyReminders;
   final bool notifyStreakAlerts;
   final bool notifyMilestoneAlerts;
@@ -35,6 +43,7 @@ class OnboardingState {
     this.programme = '',
     this.gradingSystemId = 'cwa',
     this.target = 70,
+    this.startAction,
     this.notifyStudyReminders = true,
     this.notifyStreakAlerts = true,
     this.notifyMilestoneAlerts = true,
@@ -48,6 +57,7 @@ class OnboardingState {
     String? programme,
     String? gradingSystemId,
     double? target,
+    Object? startAction = _unset,
     bool? notifyStudyReminders,
     bool? notifyStreakAlerts,
     bool? notifyMilestoneAlerts,
@@ -60,6 +70,9 @@ class OnboardingState {
       programme: programme ?? this.programme,
       gradingSystemId: gradingSystemId ?? this.gradingSystemId,
       target: target ?? this.target,
+      startAction: startAction == _unset
+          ? this.startAction
+          : startAction as OnboardingStartAction?,
       notifyStudyReminders: notifyStudyReminders ?? this.notifyStudyReminders,
       notifyStreakAlerts: notifyStreakAlerts ?? this.notifyStreakAlerts,
       notifyMilestoneAlerts:
@@ -77,11 +90,11 @@ class OnboardingState {
         return true;
       case OnboardingStep.university:
         return university != null;
-      case OnboardingStep.programme:
-        return true;
-      case OnboardingStep.gradingSystem:
-        return true;
       case OnboardingStep.target:
+        return true;
+      case OnboardingStep.gradesImport:
+        return true;
+      case OnboardingStep.timetableImport:
         return true;
       case OnboardingStep.notifications:
         return true;
@@ -137,6 +150,16 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
   void setTarget(double target) {
     state = state.copyWith(target: target);
+  }
+
+  void setStartAction(OnboardingStartAction action) {
+    state = state.copyWith(startAction: action);
+  }
+
+  void toggleStartAction(OnboardingStartAction action) {
+    state = state.copyWith(
+      startAction: state.startAction == action ? null : action,
+    );
   }
 
   void setNotifyStudyReminders(bool v) {

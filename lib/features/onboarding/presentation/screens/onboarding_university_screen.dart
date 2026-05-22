@@ -18,6 +18,7 @@ class OnboardingUniversityScreen extends ConsumerStatefulWidget {
 class _OnboardingUniversityScreenState
     extends ConsumerState<OnboardingUniversityScreen> {
   final _searchController = TextEditingController();
+  final _programmeController = TextEditingController();
   String _query = '';
 
   List<University> get _filtered {
@@ -84,6 +85,7 @@ class _OnboardingUniversityScreenState
   @override
   void dispose() {
     _searchController.dispose();
+    _programmeController.dispose();
     super.dispose();
   }
 
@@ -92,6 +94,12 @@ class _OnboardingUniversityScreenState
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final state = ref.watch(onboardingProvider);
+    if (_programmeController.text != state.programme) {
+      _programmeController.value = TextEditingValue(
+        text: state.programme,
+        selection: TextSelection.collapsed(offset: state.programme.length),
+      );
+    }
 
     return Scaffold(
       body: SafeArea(
@@ -125,13 +133,61 @@ class _OnboardingUniversityScreenState
                 padding:
                     const EdgeInsets.only(left: AppSpacing.xl + AppSpacing.xs),
                 child: Text(
-                  'We\'ll set up your grading system automatically.',
+                  'We\'ll set your grading system automatically. Programme is optional.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
+              if (state.university != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                    border: Border.all(
+                      color: colorScheme.primary.withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.circleCheck,
+                        color: colorScheme.primary,
+                        size: AppIconSizes.xl,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          '${state.university!.shortName ?? state.university!.name} · ${state.gradingSystem.plannerTitle}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              TextField(
+                controller: _programmeController,
+                onChanged: (v) =>
+                    ref.read(onboardingProvider.notifier).setProgramme(v),
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  labelText: 'Programme (optional)',
+                  hintText: 'e.g. Computer Science',
+                  prefixIcon: const Icon(LucideIcons.bookOpen),
+                  border: OutlineInputBorder(
+                    borderRadius: AppRadii.pill,
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
               TextField(
                 controller: _searchController,
                 onChanged: (v) => setState(() => _query = v),
@@ -201,12 +257,26 @@ class _OnboardingUniversityScreenState
                         ref
                             .read(onboardingProvider.notifier)
                             .setUniversity(uni);
-                        ref.read(onboardingProvider.notifier).goNext();
                       },
                     );
                   },
                 ),
               ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: FilledButton(
+                  onPressed: state.canAdvance
+                      ? () => ref.read(onboardingProvider.notifier).goNext()
+                      : null,
+                  child: const Text(
+                    'Continue',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),

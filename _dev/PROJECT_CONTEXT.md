@@ -3,7 +3,7 @@
 This document provides a concise technical overview of UniMate for AI agents and developers.
 
 ## 1. Overview
-UniMate is an Android-first academic productivity app for Ghanaian university students. It includes a 6-step university onboarding flow (with 20+ universities and configurable grading systems), academic target planning (CWA/GPA/CGPA), timetable management with per-course reminders, study session tracking (Normal + Pomodoro) with timer feedback, streak/insights/review systems, and focused AI assistance for import, weekly review, and study planning.
+UniMate is an Android-first academic productivity app for Ghanaian university students. It includes a 6-step university onboarding flow (with 20+ universities, optional programme capture, configurable grading systems, CWA/GPA and timetable import education, and optional setup shortcuts), academic target planning (CWA/GPA/CGPA), timetable management with per-course reminders, study session tracking (Normal + Pomodoro) with timer feedback, streak/insights/review systems, and focused AI assistance for import, weekly review, and study planning.
 
 ## 2. Tech Stack
 - **Framework:** Flutter (Material 3)
@@ -21,7 +21,7 @@ Strict three-layer structure per feature:
 - `presentation/`: Riverpod providers, screens, and widgets.
 
 ## 4. Core Features (v1.0)
-1.  **University Onboarding:** 6-step first-run flow (welcome → university → programme → grading system → target → notifications). University picker with 20+ Ghanaian institutions and logos. GoRouter redirect guard blocks all routes until completed or skipped.
+1.  **University Onboarding:** 6-step first-run flow (welcome → university + optional programme → target/grading system → grades import preview → timetable import preview → reminders + optional setup shortcut). University picker with 20+ Ghanaian institutions and logos. The selected university auto-selects the default grading system, and the target step still allows manual grading-system override. Final setup cards can open registration-slip import or timetable import on top of Today; cards are optional and can be deselected. GoRouter redirect guard blocks all routes until completed or skipped.
 2.  **Multi-Grading-System:** CWA (0–100, KNUST/UMaT), GPA 4.0 (0.0–4.0, Legon/UCC/UEW/UDS etc.), GPA 4.0 GIMPA (A+/A/B+/B/C+/C/D+/D/F), CGPA 5.0 (0.0–5.0, UPSA/UniMAC etc.). Grade scales are configurable and drive all score displays, grade dropdowns, and target dialogs. Can be changed from Settings.
 3.  **Academic Planner (CWA/GPA/CGPA):** Manual entry + registration slip import (AI Vision). Supports Semester and Cumulative tracking. Includes Complete Semester flow, active semester picker, persisted target, grade-first cumulative entry, duplicate semester detection, draft auto-save, and semester progression view. Tab label adapts to active grading system.
 4.  **Timetable:** Single-layer class grid with a compact day summary, full-page daily timeline, image import (AI Vision), free-time detection, and per-course reminders.
@@ -50,7 +50,7 @@ Strict three-layer structure per feature:
 - **Timer Logic:** Stores a `DateTime` anchor (`startTime`). Elapsed time is `now.difference(startTime)` to survive app pauses. Pomodoro uses `phaseEndsAt` DateTime anchor with `_lastFiredPhaseEnd` guard to prevent double-fire.
 - **AI Proxy Architecture:** All AI requests go through the Vercel proxy at `campusiq-api.vercel.app` (configured in `lib/core/config/ai_proxy_config.dart`). `DeepSeekClient` is parameterless (`const DeepSeekClient()`) — no API keys, model names, or auth headers in the client. Vision parsers (`TimetableVisionParser`, `RegistrationSlipParser`, `ResultSlipParser`) use the same proxy pattern. The `flutter_dotenv` package has been removed. Internet permissions (`INTERNET` + `ACCESS_NETWORK_STATE`) are declared in `AndroidManifest.xml` for release builds.
 - **AI Scope:** MVP keeps focused AI surfaces only: CWA import via OpenAI Vision (through proxy), AI Weekly Review, AI Study Plan, and AI-generated streak notification text. The global chatbot and CWA Coach were removed. No `/ai` route, no AI FAB.
-- **Onboarding Guard:** GoRouter redirect checks `hasCompletedOnboardingProvider` — if `false`, all non-`/onboarding` routes redirect to `/onboarding`. Once completed, stored in `UserPrefsModel.hasCompletedOnboarding`.
+- **Onboarding Guard:** GoRouter redirect checks `hasCompletedOnboardingProvider` — if `false`, all non-`/onboarding` routes redirect to `/onboarding`. Once completed, stored in `UserPrefsModel.hasCompletedOnboarding`. The final onboarding action completes onboarding, goes to Today, then optionally pushes registration-slip import or timetable import so Android Back returns to Today instead of closing the app.
 - **Grading System:** Active grading system drives dynamic UI labels (bottom nav tab, CWA/GPA screen title, grade dropdowns). All grading systems are defined in `lib/core/domain/grading_system.dart`. University defaults in `lib/core/domain/university_defaults.dart`. Grade scale with colour-coded letter grades in `lib/core/domain/grade_scale.dart`.
 - **Dark Mode:** Theme mode persisted as index (0=system, 1=light, 2=dark) in `UserPrefsModel.themeModeIndex`. `themeModeProvider` reads it and `app.dart` passes `themeMode` to `MaterialApp.router`. Full dark theme defined alongside light theme in `app_theme.dart`.
 - **Course Hub Scope:** Course Hub Files, per-course AI chat, and the Course Hub context builder were removed from the launch build and deferred to a later version.
@@ -80,7 +80,7 @@ Strict three-layer structure per feature:
 - Full-screen routes outside the shell intentionally do not show the bottom nav.
 
 ### Main top-level screens a user can reach
-- `Onboarding` at `/onboarding`: 6-step first-run flow (welcome → university → programme → grading system → target → notifications). Skip available on welcome screen.
+- `Onboarding` at `/onboarding`: 6-step first-run flow (welcome → university + optional programme → target/grading system → grades import preview → timetable import preview → reminders + optional setup shortcut). Skip available on welcome screen.
 - `Today` at `/plan`: the daily hub and main landing screen.
 - `Grades` at `/cwa`: course management, target planning (persisted), active semester picker, import bottom sheet, semester/cumulative toggle, Complete Semester flow, semester progression card, and workspace entry point. All labels adapt to grading system.
 - `Timetable` at `/timetable`: class timetable with compact day summary, slot detail sheet, timetable import entry point, course reminders entry point, and workspace entry point.
@@ -170,11 +170,12 @@ Strict three-layer structure per feature:
 - On 2026-05-22, `flutter test test/ui_redesign_regression_test.dart` passed. The active-session mini timer regression now asserts the `FloatingMiniTimer` widget is present, matching the compact timer behaviour on non-Sessions shell tabs.
 - Dark mode is tested on all screens — cards, sheets, dialogs, input fields all adapt correctly.
 - Grading system dynamic labels are verified across bottom nav, CWA screen, and all grade dropdowns.
-- Onboarding flow is verified end-to-end including redirect guard behaviour.
+- Onboarding flow is verified end-to-end including redirect guard behaviour, optional final setup cards, import/timetable back-to-Today behavior, and small-screen overflow checks for the preview cards.
 - A small-screen dropdown overflow issue in manual entry was fixed during regression cleanup.
 
-### Navigation back-button behaviour (updated 2026-05-19)
+### Navigation back-button behaviour (updated 2026-05-22)
 - Onboarding: GoRouter redirect guard blocks all routes until completed.
+- Onboarding final setup shortcuts first complete onboarding and land on Today, then push import/setup routes so Back from registration import or timetable import returns to Today.
 - Shell tab switches use `context.go()` — pressing Back from a tab exits the app (expected).
 - Detail/drill-down screens (Streak, Insights, Settings, Course Hub, Weekly Review, etc.) use `context.push()` — pressing Back returns to the previous screen inside the app.
 
@@ -193,7 +194,7 @@ Strict three-layer structure per feature:
 - `lib/firebase_options.dart`: Generated Android-only FlutterFire options for Firebase project `unimate-69516`.
 - `android/app/google-services.json`: Android Firebase app configuration for package `com.wesleyconsults.campusiq`.
 - `firebase.json`: FlutterFire platform mapping; currently Android-only plus Dart options.
-- `lib/features/onboarding/`: 6-step onboarding flow with `OnboardingNotifier` and `hasCompletedOnboardingProvider`.
+- `lib/features/onboarding/`: 6-step onboarding flow with `OnboardingNotifier`, optional `OnboardingStartAction`, clean UI preview screens, and `hasCompletedOnboardingProvider`.
 - `lib/features/`: Feature-specific code.
 - `lib/shared/`: Reusable widgets and extensions.
 - `assets/images/universities/`: 20+ university logo PNGs.

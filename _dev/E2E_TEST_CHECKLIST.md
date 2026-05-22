@@ -2,7 +2,7 @@
 
 Use this document to manually test the app as a real user would, from first launch through every major feature. Work through each section in order.
 
-**This checklist has been updated for v1.0 production polish (2026-05-22).** The app now uses a floating pill-shaped bottom nav (Home | CWA/GPA/CGPA | Table | Sessions) with dynamic grading system labels, 6-step university onboarding, multi-grading-system support (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0), dark mode (System/Light/Dark), timer feedback toggles (vibrate/sound), course reminders, Android-only Firebase Crashlytics, and a restructured Settings with About section. All AI requests route through a Vercel proxy (`campusiq-api.vercel.app`) — no API keys live on-device. The AI FAB, AI Chat (`/ai`), CWA AI Coach, and What-If AI feature have all been removed. No `/subscribe` route exists in the current build.
+**This checklist has been updated for v1.0 production polish (2026-05-22).** The app now uses a floating pill-shaped bottom nav (Home | CWA/GPA/CGPA | Table | Sessions) with dynamic grading system labels, redesigned 6-step university onboarding, multi-grading-system support (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0), dark mode (System/Light/Dark), timer feedback toggles (vibrate/sound), course reminders, Android-only Firebase Crashlytics, and a restructured Settings with About section. All AI requests route through a Vercel proxy (`campusiq-api.vercel.app`) — no API keys live on-device. The AI FAB, AI Chat (`/ai`), CWA AI Coach, and What-If AI feature have all been removed. No `/subscribe` route exists in the current build.
 
 Mark each item `[x]` as you confirm it works.
 
@@ -24,43 +24,59 @@ Mark each item `[x]` as you confirm it works.
 
 ### 1.1 Welcome screen
 - [ ] App opens to onboarding welcome screen (not Today)
-- [ ] App logo and tagline visible
+- [ ] Clean UniMate dashboard preview visible (Projected CWA, classes, focus)
+- [ ] Headline and supportive academic-control-room copy visible
 - [ ] "Get Started" button visible
-- [ ] "Skip" button visible in the top-right
-- [ ] Progress dots at the bottom show 6 steps
+- [ ] "Skip for now" button visible
+- [ ] Progress dots show 6 steps
 
-### 1.2 University selection
+### 1.2 University + optional programme
 - [ ] Tap "Get Started" → university selection screen
-- [ ] Grid of university cards with logos visible
+- [ ] Searchable university list with logos visible
 - [ ] Scrollable — 20+ universities shown
 - [ ] Tap a university (e.g. KNUST) → university is selected (highlighted)
-- [ ] Tap "Next" → programme screen
+- [ ] Selected university summary shows the auto-selected grading system
+- [ ] Programme input is visible and optional
+- [ ] Can leave programme blank without issue
+- [ ] Enter a programme (e.g. "Computer Engineering") → persists
+- [ ] Continue button is disabled until a university is selected
+- [ ] Tap "Continue" → target screen
 - [ ] Back arrow returns to welcome screen
 
-### 1.3 Programme
-- [ ] Text input for programme name visible
-- [ ] Can skip (leave blank) without issue
-- [ ] Enter a programme (e.g. "Computer Engineering") → persists
-- [ ] Tap "Next" → grading system screen
-
-### 1.4 Grading system
-- [ ] 4 grading systems shown: CWA, GPA 4.0, GPA 4.0 (GIMPA), CGPA 5.0
-- [ ] Each shows score range and default target
-- [ ] The university's default is pre-selected (e.g. KNUST → CWA)
-- [ ] Tap a different system → selection updates
-- [ ] Tap "Next" → target screen
-
-### 1.5 Target score
+### 1.3 Target score + grading system
 - [ ] Target slider shown with the grading system's range
 - [ ] Default target matches the grading system's default
+- [ ] Grading-system summary visible and matches selected university default
+- [ ] Tap grading-system summary → picker opens with CWA, GPA 4.0, GPA 4.0 (GIMPA), CGPA 5.0
+- [ ] Select a different grading system → target range and label update
 - [ ] Drag slider → value updates
-- [ ] Tap "Next" → notifications screen
+- [ ] Tap "Continue" → grades import preview screen
 
-### 1.6 Notifications
+### 1.4 Grades import preview
+- [ ] Screen explains registration-slip import and live CWA/GPA planning
+- [ ] Clean preview card shows projected/target metrics and sample courses
+- [ ] Preview does not overflow on small screens or dark mode
+- [ ] Tap "Continue" → timetable import preview screen
+
+### 1.5 Timetable import preview
+- [ ] Screen explains timetable image import, daily plan, free blocks, and reminders
+- [ ] Clean timetable preview card shows Monday, classes, free block, and import flow
+- [ ] "Import image -> Review -> Save" text wraps/ellipsizes safely; no pixel overflow
+- [ ] Tap "Continue" → reminders/start-choice screen
+
+### 1.6 Reminders + optional setup shortcut
 - [ ] 4 toggles shown, all default to on: Study reminders, Streak alerts, Milestone alerts, Weekly review prompt
 - [ ] Toggle one off → switch flips
-- [ ] Tap "Complete" → loading state, then navigates to Today (`/plan`)
-- [ ] Bottom nav now visible with 4 tabs
+- [ ] "Import my courses" and "Add my timetable" setup cards visible; neither is selected by default
+- [ ] Tap "Import my courses" → card selected; tap again → card deselected
+- [ ] Tap "Add my timetable" → card selected; tap again → card deselected
+- [ ] Only one setup card can be selected at a time
+- [ ] With no card selected, button reads "Finish and go to Today"
+- [ ] With a card selected, button reads "Finish and open setup"
+- [ ] Finish with no card selected → loading state, then navigates to Today (`/plan`)
+- [ ] Finish with "Import my courses" selected → navigates to registration-slip import on top of Today; Android Back returns to Today
+- [ ] Finish with "Add my timetable" selected → navigates to timetable import on top of Today; Android Back returns to Today
+- [ ] After returning to Today, bottom nav is visible with 4 tabs
 
 ### 1.7 Skip and redirect guard
 - [ ] Clear app data → relaunch → onboarding shown again

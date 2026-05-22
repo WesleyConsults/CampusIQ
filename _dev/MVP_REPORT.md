@@ -8,7 +8,7 @@
 
 ## Overview
 
-UniMate is a Flutter-based academic planning app built Android-first for Ghanaian university students. The v1.0 build covers: 6-step University Onboarding (welcome → university → programme → grading system → target → notifications), Multi-Grading-System Support (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0 with configurable grade scales for 20+ Ghanaian universities), CWA/GPA Target Planner (semester + cumulative with complete-semester flow), Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes) with vibrate/sound timer feedback, Streak System, Smart Notifications, Insights System, Weekly Review, AI Weekly Review, AI Study Plan, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import, Cumulative Result Slip Import, Course Reminders (per-course notification scheduling), Dark Mode (system/light/dark), Firebase Core/Analytics/Crashlytics for Android crash monitoring, a polished Settings screen with About section, Vercel AI Proxy (keyless architecture routing all AI requests through campusiq-api.vercel.app), and internet permissions for release builds. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the global AI chatbot, CWA AI Coach, AI chat history/usage quotas, markdown/math chat rendering dependencies, the Course Hub Flashcards tab, the Course Hub Files tab, the Course Hub per-course AI chat, the What-If AI feature, and the flutter_dotenv package (replaced by the keyless proxy) — all cut to reduce complexity and improve stability for launch.
+UniMate is a Flutter-based academic planning app built Android-first for Ghanaian university students. The v1.0 build covers: redesigned 6-step University Onboarding (welcome → university + optional programme → target/grading system → grades import preview → timetable import preview → reminders + optional setup shortcut), Multi-Grading-System Support (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0 with configurable grade scales for 20+ Ghanaian universities), CWA/GPA Target Planner (semester + cumulative with complete-semester flow), Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes) with vibrate/sound timer feedback, Streak System, Smart Notifications, Insights System, Weekly Review, AI Weekly Review, AI Study Plan, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import, Cumulative Result Slip Import, Course Reminders (per-course notification scheduling), Dark Mode (system/light/dark), Firebase Core/Analytics/Crashlytics for Android crash monitoring, a polished Settings screen with About section, Vercel AI Proxy (keyless architecture routing all AI requests through campusiq-api.vercel.app), and internet permissions for release builds. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the global AI chatbot, CWA AI Coach, AI chat history/usage quotas, markdown/math chat rendering dependencies, the Course Hub Flashcards tab, the Course Hub Files tab, the Course Hub per-course AI chat, the What-If AI feature, and the flutter_dotenv package (replaced by the keyless proxy) — all cut to reduce complexity and improve stability for launch.
 
 ### Current MVP AI Scope Update
 
@@ -232,7 +232,7 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 ### Current Navigation Summary
 
 **Onboarding (shown before shell when first-run):**
-- `/onboarding` — 6-step university onboarding flow; GoRouter redirect guard blocks all other routes until completed
+- `/onboarding` — redesigned 6-step university onboarding flow; GoRouter redirect guard blocks all other routes until completed
 
 **Shell route (bottom nav):**
 - `Home` at `/plan` — user-facing Today dashboard
@@ -255,6 +255,7 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 
 **Navigation behaviour:**
 - Onboarding guard: if `hasCompletedOnboarding == false`, all routes redirect to `/onboarding`
+- Final onboarding setup shortcuts complete onboarding, go to Today, then optionally push registration-slip import or timetable import so Android Back returns to Today
 - Tab switches use `context.go()` — back from a tab exits the app
 - Drill-down screens use `context.push()` — back returns to the previous screen
 - Today screen has a local drawer (hamburger menu) with links to Today, Streak, Insights, Weekly Review, Settings, and Subscribe
@@ -484,16 +485,16 @@ lib/
 │   │   └── presentation/
 │   │       ├── providers/settings_provider.dart    — notificationPrefsProvider + themeModeProvider
 │   │       └── screens/settings_screen.dart       — Academic, Timer Feedback, Notifications, Appearance, About, Dev sections; dark mode picker; grading system picker; about dialog; privacy/terms/feedback links; reset onboarding
-│   ├── onboarding/                                — Phase 16: 6-step first-run flow
+│   ├── onboarding/                                — Phase 16: redesigned 6-step first-run flow
 │   │   └── presentation/
-│   │       ├── providers/onboarding_provider.dart  — OnboardingNotifier (StateNotifier) + hasCompletedOnboardingProvider (redirect guard)
+│   │       ├── providers/onboarding_provider.dart  — OnboardingNotifier (StateNotifier), optional OnboardingStartAction + hasCompletedOnboardingProvider (redirect guard)
 │   │       ├── screens/
-│   │       │   ├── onboarding_screen.dart          — PageView shell with progress dots
+│   │       │   ├── onboarding_screen.dart          — Step switcher with progress dots
 │   │       │   ├── onboarding_welcome_screen.dart
-│   │       │   ├── onboarding_university_screen.dart  — searchable grid of 20+ universities
-│   │       │   ├── onboarding_programme_screen.dart
-│   │       │   ├── onboarding_grading_system_screen.dart
+│   │       │   ├── onboarding_university_screen.dart  — searchable list of 20+ universities + optional programme
 │   │       │   ├── onboarding_target_screen.dart
+│   │       │   ├── onboarding_grades_import_screen.dart
+│   │       │   ├── onboarding_timetable_import_screen.dart
 │   │       │   └── onboarding_notifications_screen.dart
 │   │       └── widgets/onboarding_progress_dots.dart
 │   └── ai/                                        — focused AI: DeepSeek review/planning + smart alerts
@@ -548,7 +549,7 @@ lib/
 
 | Route | Screen | Phase |
 |---|---|---|
-| `/onboarding` | University Onboarding (6 steps) | 16 |
+| `/onboarding` | Redesigned University Onboarding (6 steps) | 16 |
 | `/plan` | Today — Home Dashboard (initial route after onboarding) | 15 + redesign |
 | `/cwa` | Academic Target Planner | 1, 13 + redesign |
 | `/timetable` | Class Timetable (single-layer, full-page scroll) | 2 + redesign |
@@ -1145,24 +1146,26 @@ The MVP AI surface was reduced to features with a narrow, reviewable job. CWA im
 
 **Route:** `/onboarding` (GoRouter redirect guard, shown before shell routes when `hasCompletedOnboarding == false`)
 
-A 6-step onboarding flow that collects university, programme, grading system, target score, and notification preferences before the student reaches the main app.
+A redesigned 6-step onboarding flow that personalizes the app and teaches the student's first useful actions before they reach the main app. The tone is calm senior student + premium academic coach, with clean in-app UI previews instead of illustrations or real photos.
 
 | Step | Screen | Description |
 |---|---|---|
-| Welcome | `OnboardingWelcomeScreen` | App logo, tagline, "Get Started" button |
-| University | `OnboardingUniversityScreen` | Searchable grid of 20+ Ghanaian universities with logos; tapping a university auto-selects its default grading system |
-| Programme | `OnboardingProgrammeScreen` | Text input for programme/major name |
-| Grading System | `OnboardingGradingSystemScreen` | Choose from CWA, GPA 4.0, GPA 4.0 (GIMPA), or CGPA 5.0; each shows score range and default target |
-| Target | `OnboardingTargetScreen` | Slider to set personal target score; default comes from the selected grading system |
-| Notifications | `OnboardingNotificationsScreen` | Toggles for study reminders, streak alerts, milestone alerts, and weekly review prompt; all default to on |
+| Welcome | `OnboardingWelcomeScreen` | Clean dashboard preview, UniMate positioning, "Get Started" button, and skip option |
+| University | `OnboardingUniversityScreen` | Searchable list of 20+ Ghanaian universities with logos; selecting a university auto-selects its default grading system; programme is optional on the same step |
+| Target | `OnboardingTargetScreen` | Slider to set personal target score; default comes from the selected grading system; grading-system summary can be tapped to override the default |
+| Grades Import | `OnboardingGradesImportScreen` | Clean CWA/GPA planner preview that sells registration-slip import, projected performance, and target planning |
+| Timetable Import | `OnboardingTimetableImportScreen` | Clean timetable preview that sells timetable image import, daily classes, free blocks, and reminders; compacted to avoid small-screen overflow |
+| Notifications + Start | `OnboardingNotificationsScreen` | Toggles for study reminders, streak alerts, milestone alerts, and weekly review prompt; optional setup shortcut cards for registration-slip import or timetable import |
 
-**State management:** `OnboardingNotifier` (`StateNotifierProvider`) holds `OnboardingState` with fields for university, programme, gradingSystemId, target, and notification prefs. On completion, all values are persisted to `UserPrefsModel` and `hasCompletedOnboarding` is set to `true`.
+**State management:** `OnboardingNotifier` (`StateNotifierProvider`) holds `OnboardingState` with fields for university, optional programme, gradingSystemId, target, optional `OnboardingStartAction`, and notification prefs. On completion, all values are persisted to `UserPrefsModel` and `hasCompletedOnboarding` is set to `true`.
 
 **Navigation guard:** `app_router.dart` redirect guard checks `hasCompletedOnboardingProvider` — if `false`, any non-`/onboarding` route redirects to `/onboarding`. Once completed, `/onboarding` redirects to `/plan`.
 
+**Final setup shortcuts:** The final cards are optional and deselectable. With no card selected, the finish button goes to Today. With a card selected, onboarding completes, the router goes to Today first, then pushes `/cwa/import/registration` or `/timetable/import` so Android Back returns to Today rather than closing the app.
+
 **Skip:** Skip button on welcome screen calls `skip()` — sets `hasCompletedOnboarding = true` with default values.
 
-**New files:** `lib/features/onboarding/presentation/providers/onboarding_provider.dart`, 6 screen files, `onboarding_screen.dart` (PageView controller), `onboarding_progress_dots.dart`, `onboarding_welcome_screen.dart`
+**New files:** `lib/features/onboarding/presentation/providers/onboarding_provider.dart`, `onboarding_screen.dart`, `onboarding_progress_dots.dart`, `onboarding_welcome_screen.dart`, `onboarding_university_screen.dart`, `onboarding_target_screen.dart`, `onboarding_grades_import_screen.dart`, `onboarding_timetable_import_screen.dart`, `onboarding_notifications_screen.dart`
 
 **Modified files:** `app_router.dart` (redirect guard + `/onboarding` route), `app.dart` (themeMode), `user_prefs_model.dart` (new fields)
 

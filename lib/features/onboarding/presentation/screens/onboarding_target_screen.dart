@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:campusiq/features/onboarding/presentation/widgets/onboarding_progress_dots.dart';
@@ -42,16 +43,70 @@ class OnboardingTargetScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Set your target',
+                        'Set your academic target',
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        'What ${system.label} are you aiming for this semester?',
+                        'UniMate will use this to show the scores you need to protect your ${system.label}.',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(AppRadii.md),
+                        onTap: () => _showGradingSystemPicker(
+                          context,
+                          ref,
+                          state.gradingSystem,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surface,
+                            borderRadius: BorderRadius.circular(AppRadii.md),
+                            border: Border.all(
+                              color: colorScheme.outlineVariant,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                LucideIcons.graduationCap,
+                                color: colorScheme.primary,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      system.plannerTitle,
+                                      style:
+                                          theme.textTheme.bodyLarge?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Text(
+                                      state.university == null
+                                          ? 'Detected from your school'
+                                          : 'Detected from ${state.university!.shortName ?? state.university!.name}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          theme.textTheme.labelMedium?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(LucideIcons.chevronRight),
+                            ],
+                          ),
                         ),
                       ),
                       const Spacer(),
@@ -143,6 +198,53 @@ class OnboardingTargetScreen extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showGradingSystemPicker(
+    BuildContext context,
+    WidgetRef ref,
+    GradingSystem current,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.md,
+            AppSpacing.lg,
+          ),
+          children: [
+            Text(
+              'Choose grading system',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            for (final system in GradingSystem.all)
+              ListTile(
+                leading: Icon(
+                  system.id == current.id
+                      ? LucideIcons.circleCheck
+                      : LucideIcons.circle,
+                ),
+                title: Text(system.plannerTitle),
+                subtitle: Text(
+                  '${system.minScore.toStringAsFixed(0)}-${system.maxScore.toStringAsFixed(0)} ${system.scoreUnit == '%' ? '%' : 'pts'}',
+                ),
+                onTap: () {
+                  ref
+                      .read(onboardingProvider.notifier)
+                      .setGradingSystemId(system.id);
+                  Navigator.of(sheetContext).pop();
+                },
+              ),
+          ],
         ),
       ),
     );
