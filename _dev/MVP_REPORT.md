@@ -1,23 +1,66 @@
 # UniMate — MVP Completion Report
 
-**Date:** 2026-05-19
+**Date:** 2026-05-22
 **Package:** com.wesleyconsults.campusiq
-**Status:** v1.0 Lean Build — University Onboarding, Multi-Grading-System, Dark Mode, Course Reminders, and Production Polish Complete. Runtime device testing required before beta release.
+**Status:** v1.0 Lean Build — University Onboarding, Multi-Grading-System, Dark Mode, Course Reminders, AI Proxy Architecture, and Production Polish Complete. Runtime device testing required before beta release.
 
 ---
 
 ## Overview
 
-UniMate is a Flutter-based academic planning app built Android-first for Ghanaian university students. The v1.0 build covers: 6-step University Onboarding (welcome → university → programme → grading system → target → notifications), Multi-Grading-System Support (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0 with configurable grade scales for 20+ Ghanaian universities), CWA/GPA Target Planner (semester + cumulative with complete-semester flow), Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes) with vibrate/sound timer feedback, Streak System, Smart Notifications, Insights System, Weekly Review, AI Weekly Review, AI Study Plan, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import, Cumulative Result Slip Import, Course Reminders (per-course notification scheduling), Dark Mode (system/light/dark), and a polished Settings screen with About section. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the global AI chatbot, CWA AI Coach, AI chat history/usage quotas, markdown/math chat rendering dependencies, the Course Hub Flashcards tab, the Course Hub Files tab, the Course Hub per-course AI chat, and the What-If AI feature — all cut to reduce complexity and improve stability for launch.
+UniMate is a Flutter-based academic planning app built Android-first for Ghanaian university students. The v1.0 build covers: 6-step University Onboarding (welcome → university → programme → grading system → target → notifications), Multi-Grading-System Support (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0 with configurable grade scales for 20+ Ghanaian universities), CWA/GPA Target Planner (semester + cumulative with complete-semester flow), Class Timetable (single-layer), Study Session Tracking (Normal + Pomodoro modes) with vibrate/sound timer feedback, Streak System, Smart Notifications, Insights System, Weekly Review, AI Weekly Review, AI Study Plan, Daily Study Plan, Course Hub Workspace (per-course overview, sessions, and notes), Timetable Image Import (OpenAI Vision), Registration Slip Import, Cumulative Result Slip Import, Course Reminders (per-course notification scheduling), Dark Mode (system/light/dark), Firebase Core/Analytics/Crashlytics for Android crash monitoring, a polished Settings screen with About section, Vercel AI Proxy (keyless architecture routing all AI requests through campusiq-api.vercel.app), and internet permissions for release builds. **Removed in v1.0:** Personal Timetable (Layer 2), Exam Prep Generator, Exam Mode, the global AI chatbot, CWA AI Coach, AI chat history/usage quotas, markdown/math chat rendering dependencies, the Course Hub Flashcards tab, the Course Hub Files tab, the Course Hub per-course AI chat, the What-If AI feature, and the flutter_dotenv package (replaced by the keyless proxy) — all cut to reduce complexity and improve stability for launch.
 
 ### Current MVP AI Scope Update
 
-The May 2026 MVP scope keeps only focused AI features that perform a specific job:
+The May 2026 MVP scope keeps only focused AI features that perform a specific job. All AI requests are routed through the Vercel proxy at `campusiq-api.vercel.app` — no API keys live on-device.
 
-- **Kept:** CWA registration/result slip import via OpenAI Vision, AI Weekly Review, AI Study Plan, and AI-generated streak notification text.
-- **Removed:** global AI Assistant FAB, `/ai` chatbot route, chat UI/history, chat storage models, chat usage limits, CWA Coach, and chatbot-only markdown/math packages.
+- **Kept:** CWA registration/result slip import via OpenAI Vision (through proxy), AI Weekly Review, AI Study Plan, and AI-generated streak notification text.
+- **Removed:** global AI Assistant FAB, `/ai` chatbot route, chat UI/history, chat storage models, chat usage limits, CWA Coach, chatbot-only markdown/math packages, and the `flutter_dotenv` package (replaced by keyless proxy).
 - **Storage kept:** `StudyPlanModel`, `StudyPlanSlotModel`, and `WeeklyReviewModel`.
 - **Storage removed:** `AiMessageModel`, `AiChatSessionModel`, and `AiUsageModel`.
+
+### Firebase Crashlytics Update
+
+**Completed:** 2026-05-22  
+**Scope:** Android only for Firebase project `unimate-69516` and Android package `com.wesleyconsults.campusiq`.
+
+- Added `firebase_core`, `firebase_crashlytics`, and `firebase_analytics`.
+- Ran `flutterfire configure --project=unimate-69516 --platforms=android`.
+- Generated `lib/firebase_options.dart`, `firebase.json`, and `android/app/google-services.json`.
+- Added Google Services and Firebase Crashlytics Gradle plugins to the Android project.
+- Initialized Firebase before `runApp` using `DefaultFirebaseOptions.currentPlatform`.
+- Added Crashlytics handlers for Flutter framework errors, platform dispatcher errors, and guarded-zone uncaught errors.
+- Preserved existing startup logic: `ProviderScope`, Riverpod, Isar access, notification setup, Workmanager setup, router/theme setup, and Vercel AI proxy architecture.
+- Added a debug-only Settings → Dev → `Test Crashlytics crash` action that calls `FirebaseCrashlytics.instance.crash()`.
+- Confirmed a test crash appears in Firebase Console under Crashlytics for the Android app.
+- Fixed a startup `Zone mismatch` Crashlytics issue by moving Flutter binding initialization and the full app startup sequence inside `runZonedGuarded`.
+- Removed accidental iOS `GoogleService-Info.plist` generated during an all-platform FlutterFire CLI run; Firebase remains Android-only for now.
+
+### Analytics and Non-Fatal Reporting Update
+
+**Completed:** 2026-05-22  
+**Scope:** Privacy-safe launch health and product-flow observability for Android Firebase.
+
+- Added `AnalyticsService` as a central Firebase Analytics wrapper.
+- Added `CrashReportingService` as a central Firebase Crashlytics wrapper for fatal and non-fatal reports.
+- Added `TrackedScreen` wrapper to record screen views without scattering raw Firebase calls through screens.
+- Screen views tracked: onboarding, Today, planner, timetable, sessions, weekly review, streak, insights, settings, course hub, timetable import, course reminders, manual entry, past semesters, registration import, and result import.
+- Product events tracked:
+  - `onboarding_started`, `onboarding_completed`, `onboarding_skipped`
+  - `grading_system_selected`
+  - `settings_theme_changed`
+  - `course_added`, `course_updated`
+  - `course_import_started`, `course_import_succeeded`, `course_import_failed`
+  - `timetable_slot_added`, `timetable_slot_updated`
+  - `timetable_import_started`, `timetable_import_succeeded`, `timetable_import_failed`
+  - `study_session_started`, `study_session_completed`
+  - `pomodoro_started`, `pomodoro_completed`
+  - `weekly_review_generated`, `weekly_review_failed`
+  - `ai_study_plan_generated`, `ai_study_plan_failed`
+- Anonymous user properties tracked: `grading_system`, `theme_mode`, `notifications_enabled`, `onboarding_completed`, and `university_set`.
+- Non-fatal Crashlytics reports added for caught import/parser failures, AI generation failures, notification scheduling failures, Workmanager background task failures, Isar open/write failures in key repositories, and session/course/timetable save failures.
+- Privacy rule: no course names, exact grades/scores, timetable venues, notes, AI prompts/responses, uploaded file contents, programme names, or personal identifiers are tracked.
+- Services skip Firebase calls when Firebase is not initialized, keeping widget tests clean.
 
 ---
 
@@ -180,8 +223,10 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 - Unused imports removed
 - Bottom nav and safe-area approach inspected and hardened
 - Keyboard safety inspected across all form screens
-- No new analyzer issues introduced
-- Remaining analyzer warnings classified as pre-existing (generated Riverpod deprecations, experimental Isar API warnings)
+- Handwritten-source analyzer issues cleaned up: removed an unused import, added missing `const`, added braces to flagged `if` statements, and fixed an async `BuildContext` usage in timetable delete feedback
+- Generated `**/*.g.dart` files excluded from analyzer so Riverpod/Isar generated warnings do not obscure maintained-code issues
+- `flutter analyze` now passes with no issues
+- `test/ui_redesign_regression_test.dart` updated to assert compact active-session timer presence via `FloatingMiniTimer` instead of expecting expanded course text on non-Sessions shell tabs
 - App ready for on-device beta testing
 
 ### Current Navigation Summary
@@ -218,12 +263,16 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 
 ### Validation Summary
 
-- `dart format .` — passed
-- `flutter test` — passed (23+ tests including grading system tests and Pomodoro defaults test)
-- `flutter analyze` — pre-existing baseline of ~56 warnings/info items (generated Riverpod deprecations, experimental Isar API warnings), no new issues introduced
+- `dart format` — passed on edited source/test files
+- `flutter analyze` — passed with no issues
+- `flutter test test/ui_redesign_regression_test.dart` — passed (shell navigation, CWA import sheet, small-display manual entry, compact active-session mini timer)
+- `flutter test` — passed after Firebase/Crashlytics setup and after the Crashlytics zone fix (9 tests)
+- `flutter build apk --debug` — passed after Firebase/Crashlytics setup
+- Firebase Console Crashlytics — Android debug test crash received for `com.wesleyconsults.campusiq`
+- After adding AnalyticsService and CrashReportingService instrumentation: `flutter analyze` passed with no issues and `flutter test` passed with all 9 tests
 - `flutter run -d macos` — not tested (xcodebuild unavailable in this environment)
 - `flutter run -d chrome` — not tested (pre-existing Isar JS compile errors unrelated to redesign)
-- **On-device Android testing:** not yet performed — required before beta release
+- **On-device Android testing:** Crashlytics debug crash flow confirmed; broader beta device testing still required before release
 
 ---
 
@@ -238,6 +287,8 @@ Reusable shared widgets delivered: cards, buttons, chips, section headers, modal
 | Navigation | GoRouter with shell + full-screen push routes |
 | Fonts | Google Fonts — Inter |
 | Code generation | build_runner + isar_generator + riverpod_generator |
+| Crash monitoring | Firebase Crashlytics (Android-only, project `unimate-69516`) |
+| Analytics | Firebase Analytics dependency added for Android Firebase setup |
 
 ---
 
@@ -293,6 +344,8 @@ lib/
 ├── app.dart
 ├── core/
 │   ├── constants/app_constants.dart              — app name "UniMate", default semester, pass/distinction thresholds
+│   ├── config/
+│   │   └── ai_proxy_config.dart                  — Phase 20: static proxy URLs (deepseek + openai-vision endpoints)
 │   ├── data/
 │   │   ├── models/user_prefs_model.dart          — single-row key/value Isar store; 17: +gradingSystemId, universityName, programmeName, themeModeIndex, vibrateOnTimerEnd, playSoundOnTimerEnd, hasCompletedOnboarding
 │   │   ├── models/subscription_model.dart        — premium status + subscription details
@@ -505,7 +558,7 @@ lib/
 | `/ai/weekly-review` | AI-powered Weekly Review (full screen) | 15 |
 | `/settings` | Settings (Academic, Timer Feedback, Notifications, Appearance, About, Dev) | 14 + redesign + 18 |
 | `/course/:courseCode` | Course Hub Workspace (3-tab: Overview, Sessions, Notes) | 15.1 + redesign |
-| `/timetable/import` | Timetable Image Import (full-screen, no bottom nav) | 15.2 |
+| `/timetable/import` | Timetable Image Import via AI proxy (full-screen, no bottom nav) | 15.2 + 20 |
 | `/timetable/reminders` | Course Reminders (full-screen, no bottom nav) | 19 |
 | `/cwa/manual-entry` | Manual Course Entry (full-screen, no bottom nav) | redesign |
 | `/cwa/history` | Past Semesters History (full-screen, no bottom nav) | 15.6 |
@@ -755,7 +808,7 @@ The CWA AI Coach bottom sheet and What-If Explainer were removed to keep the MVP
 |---|---|
 | Image picker | `image_picker` package — student picks from device camera or gallery; `imageQuality: 85` to balance quality and payload size |
 | Size guard | Rejects images over 4 MB before sending to the API — shows a user-friendly error with a retry prompt |
-| TimetableVisionParser | Pure Dart; base64-encodes the image bytes and POSTs a vision-format request to the OpenAI Chat Completions API (`/v1/chat/completions`); model name loaded from `.env`; strips markdown code fences from the response before JSON decoding; detects token-limit truncation (`finish_reason: "length"`) and surfaces a user-friendly crop-and-retry message |
+| TimetableVisionParser | Pure Dart; base64-encodes the image bytes and POSTs to the Vercel AI proxy (`/api/openai-vision`); no API key or model name needed client-side; strips markdown code fences from the response before JSON decoding; detects token-limit truncation (`finishReason: "length"`) and surfaces a user-friendly crop-and-retry message |
 | TimetableSlotImport | Pure Dart value object; `fromJson` normalises day strings ("Monday", "Mon", "MON", int 0–5), parses 24-hour `HH:MM` time strings to minutes, defaults missing `slot_type` to "Lecture", skips malformed entries silently |
 | Import state machine | `TimetableImportNotifier` (Riverpod `@riverpod` class notifier) drives 7 states: `idle → picking → parsing → reviewing → saving → done → error`; each state renders a different UI body automatically |
 | Review screen | After parsing, shows all extracted slots in a checklist — student can toggle individual slots on/off, or select/deselect all; slot count chip updates live |
@@ -766,7 +819,7 @@ The CWA AI Coach bottom sheet and What-If Explainer were removed to keep the MVP
 
 **New files:** `domain/timetable_slot_import.dart`, `domain/timetable_vision_parser.dart`, `presentation/providers/timetable_import_provider.dart`, `presentation/screens/timetable_import_screen.dart`, `presentation/widgets/import_slot_review_tile.dart`
 
-**Modified files:** `timetable_screen.dart` (scanner icon), `app_router.dart` (new route), `pubspec.yaml` (`image_picker` dependency)
+**Modified files:** `timetable_screen.dart` (scanner icon), `app_router.dart` (new route), `pubspec.yaml` (`image_picker` dependency). Note: the vision parser now uses the Vercel AI proxy instead of direct OpenAI API calls (see Phase 20).
 
 **Isar schemas:** None (imports directly into existing `TimetableSlotModel`)
 
@@ -782,7 +835,7 @@ The CWA AI Coach bottom sheet and What-If Explainer were removed to keep the MVP
 |---|---|
 | Entry point | Document scanner icon in CWA AppBar (visible in Semester view only) → opens `RegistrationSlipImportScreen` |
 | 3 input options | Camera (take photo), Gallery (pick JPG/PNG), PDF (file picker) |
-| AI extraction | `RegistrationSlipParser` base64-encodes the image/PDF page and calls OpenAI vision with a course-extraction prompt; returns a list of `RegistrationCourseImport` value objects (courseCode, courseName, creditHours) |
+| AI extraction | `RegistrationSlipParser` base64-encodes the image/PDF page and calls the Vercel AI proxy with a course-extraction prompt; returns a list of `RegistrationCourseImport` value objects (courseCode, courseName, creditHours) |
 | State machine | `RegistrationSlipImportNotifier` drives 6 states: `idle → picking → parsing → reviewing → saving → done → error` |
 | Review screen | Lists all extracted courses with checkboxes; each selected course shows an inline credit-hours stepper (1–6); student can adjust before importing |
 | Select / Deselect All | Header TextButton toggles all checkboxes |
@@ -807,7 +860,7 @@ The CWA AI Coach bottom sheet and What-If Explainer were removed to keep the MVP
 | CwaSummaryBar update | In cumulative mode shows: Cumulative CWA, total credit hours, semester count |
 | Result Slip Import flow | Full 7-state machine (`idle → picking → parsing → labelling → reviewing → saving → done → error`) |
 | 3 input options | Camera, Gallery (JPG/PNG), PDF — consistent with Registration Slip Import |
-| AI extraction | `ResultSlipParser` calls OpenAI vision; extracts course code, course name, credit hours, grade, mark (if visible), plus slip-level `reportedSemesterCwa` and `reportedCumulativeCwa` if printed on the slip |
+| AI extraction | `ResultSlipParser` calls the Vercel AI proxy; extracts course code, course name, credit hours, grade, mark (if visible), plus slip-level `reportedSemesterCwa` and `reportedCumulativeCwa` if printed on the slip |
 | Label step | After AI parsing, student names the semester (text input + quick-pick chips: "Year 1 Sem 1" through "Year 4 Sem 2") |
 | Review screen | Shows courses found, reported CWA chips; each selected course shows inline grade dropdown (A/B/C/D/F, colour-coded), mark input field, and credit-hours stepper; all corrections auto-save as you edit |
 | Confirm & save | Selected courses are packaged into a `PastSemesterModel` and written to `PastResultRepository` |
@@ -846,8 +899,8 @@ The CWA AI Coach bottom sheet and What-If Explainer were removed to keep the MVP
 |---|---|
 | `runZonedGuarded` in `main.dart` | Wraps the entire `runApp` call; all uncaught Dart errors are logged with `🔴 UNCAUGHT ERROR:` prefix |
 | `FlutterError.onError` in `main.dart` | Captures Flutter framework errors (layout overflow, null widget, etc.) before they silently disappear |
-| DeepSeek client timeout | `.timeout(Duration(seconds: 10))` on every `http.post()` in `deepseek_client.dart`; `TimeoutException`, `SocketException`, and generic `Exception` all map to typed `DeepSeekException` with human-readable messages |
-| Vision parser timeouts | `timetable_vision_parser.dart`, `registration_slip_parser.dart`, `result_slip_parser.dart` all have 15-second timeouts and typed error results (not bare throws) |
+| DeepSeek client timeout | `.timeout(Duration(seconds: 60))` on every `http.post()` in `deepseek_client.dart`; `TimeoutException`, `SocketException`, and generic `Exception` all map to typed `DeepSeekException` with human-readable messages |
+| Vision parser timeouts | `timetable_vision_parser.dart` (90s), `registration_slip_parser.dart`, `result_slip_parser.dart` (15s) all use the Vercel proxy and return typed error results (not bare throws) |
 | DeepSeek call site audit | All call sites confirmed to route `DeepSeekException` to provider error state — none swallow silently |
 
 #### Session 2 — Offline Detection + Isar Write Safety + Provider Audit
@@ -1197,6 +1250,29 @@ Per-course notification reminders that alert students before their scheduled cla
 
 ---
 
+---
+
+### Phase 20 — AI Proxy Architecture (Keyless Client)
+
+**No new routes. No new Isar collections.** All AI requests are routed through a Vercel-hosted serverless proxy at `https://campusiq-api.vercel.app`. No API keys, model names, or auth headers exist in the client app.
+
+| Feature | Description |
+|---|---|
+| `AiProxyConfig` | Centralised static config in `lib/core/config/ai_proxy_config.dart`; exposes `deepseekEndpoint` (`/api/deepseek`) for text AI and `openaiVisionEndpoint` (`/api/openai-vision`) for image/PDF AI |
+| `DeepSeekClient` | Simplified to `const DeepSeekClient()` with zero constructor parameters; calls the proxy instead of directly hitting DeepSeek API; parses the flattened `data['reply']` response format; timeout raised to 60s |
+| `TimetableVisionParser` | POSTs base64 image to proxy endpoint instead of directly to OpenAI; sends `prompt`, `base64Image`, `maxTokens`, `temperature` in a simplified JSON body; parses `data['reply']` |
+| `RegistrationSlipParser` | Same proxy pattern for registration slip images/PDFs |
+| `ResultSlipParser` | Same proxy pattern for result slip images/PDFs |
+| `flutter_dotenv` removed | Package and `.env` asset bundle removed from `pubspec.yaml`; no API keys remain in the client app |
+| Internet permissions | `INTERNET` and `ACCESS_NETWORK_STATE` permissions added to `AndroidManifest.xml` for release builds (debug builds receive these automatically) |
+| Security model | API keys live only on Vercel server-side environment variables; the proxy can enforce rate limiting and change models without an app update; extracting the APK reveals no secrets |
+
+**New files:** `lib/core/config/ai_proxy_config.dart`
+
+**Modified files:** `deepseek_client.dart` (parameterless constructor, proxy endpoint, 60s timeout, simplified response parsing), `timetable_vision_parser.dart` (proxy endpoint, simplified request/response), `registration_slip_parser.dart` (proxy endpoint), `result_slip_parser.dart` (proxy endpoint), `ai_providers.dart` (removed dotenv dependency), `pubspec.yaml` (removed `flutter_dotenv`, removed `.env` from assets), `AndroidManifest.xml` (added INTERNET + ACCESS_NETWORK_STATE permissions)
+
+**Deleted files:** None (`.env` remains on disk but is no longer bundled or referenced)
+
 ### Production Polish (Ongoing)
 
 | Change | Description |
@@ -1250,8 +1326,7 @@ Per-course notification reminders that alert students before their scheduled cla
 | google_fonts | ^6.2.1 | Inter typeface |
 | flutter_animate | ^4.5.0 | Animation utilities |
 | intl | ^0.19.0 | Number / date formatting |
-| http | ^1.2.0 | DeepSeek API integration |
-| flutter_dotenv | ^5.1.0 | Environment Variables / API Key isolation |
+| http | ^1.2.0 | HTTP client (AI proxy, no direct API calls) |
 | flutter_local_notifications | ^21.0.0 | Local push notifications |
 | flutter_timezone | ^5.0.2 | Device timezone detection |
 | timezone | ^0.11.0 | Timezone data for scheduling |
@@ -1320,6 +1395,9 @@ dart run build_runner build --delete-conflicting-outputs   # after ANY model cha
 flutter analyze
 flutter run
 ```
+
+No `.env` file or API keys are needed — all AI requests route through the Vercel proxy.
+Generated `*.g.dart` files are intentionally excluded from analyzer checks; regenerate them through build_runner rather than editing them manually.
 
 ---
 
@@ -1395,6 +1473,8 @@ flutter run
 | Polish | `Clean up: remove old dev docs, polish UI across screens` |
 | Polish | `Update app launcher icon` |
 | Polish | `Fix Pomodoro default migration` / `Polish insights and review sheet UI` / `Refine MVP AI scope` |
+| AI proxy | `Route AI requests through Vercel proxy` |
+| AI proxy fix | `Route AI through proxy and fix release internet permissions` |
 
 ---
 
@@ -1417,7 +1497,7 @@ The codebase is now stabilised with onboarding, dark mode, multi-grading-system 
 | Feature | Notes |
 |---|---|
 | **Play Store Release** | App signing (`upload-keystore.jks`), `build.gradle` production config (minify, shrink, version codes), store listing assets (screenshots, icon, short description, privacy policy URL) |
-| **Vercel API Proxy** | Move API keys off-device; add rate limiting; update DeepSeek client endpoints (see `_dev/PRE_LAUNCH_CHECKLIST.md` for full 27-item checklist) |
+| **Vercel API Proxy (server-side)** | Client-side proxy integration is complete; remaining server-side work: deploy Vercel functions with rate limiting, configure environment variables for API keys (see `_dev/PRE_LAUNCH_CHECKLIST.md`) |
 | Premium payment integration | Replace `SubscribeScreenStub` with RevenueCat-powered paywall |
 | Sentry + PostHog | Crash logging and analytics (see pre-launch checklist items 2–3) |
 | Additional university logos | Add logos for remaining Ghanaian universities as assets become available |

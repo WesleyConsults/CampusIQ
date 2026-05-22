@@ -9,6 +9,8 @@ import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 import 'package:campusiq/features/timetable/domain/timetable_vision_parser.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 import 'package:campusiq/core/services/connectivity_service.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 
@@ -49,6 +51,9 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
   TimetableImportState build() => const TimetableImportState();
 
   Future<void> pickAndParse(ImageSource source) async {
+    final sourceLabel = source == ImageSource.camera ? 'camera' : 'gallery';
+    await AnalyticsService.instance
+        .logTimetableImportStarted(source: sourceLabel);
     state = state.copyWith(step: ImportStep.picking);
 
     try {
@@ -62,6 +67,10 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
 
       final isOnline = await ConnectivityService.isOnline();
       if (!isOnline) {
+        await AnalyticsService.instance.logTimetableImportFailed(
+          source: sourceLabel,
+          reason: 'offline',
+        );
         state = state.copyWith(
           step: ImportStep.error,
           errorMessage: "You're offline. Connect to use features.",
@@ -75,6 +84,10 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
       final bytes = await file.readAsBytes();
 
       if (bytes.length > 4 * 1024 * 1024) {
+        await AnalyticsService.instance.logTimetableImportFailed(
+          source: sourceLabel,
+          reason: 'file_too_large',
+        );
         state = state.copyWith(
           step: ImportStep.error,
           errorMessage: 'Image too large. Try a lower-resolution photo.',
@@ -87,6 +100,10 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
       final slots = await parser.parse(base64Image);
 
       if (slots.isEmpty) {
+        await AnalyticsService.instance.logTimetableImportFailed(
+          source: sourceLabel,
+          reason: 'empty_parse_result',
+        );
         state = state.copyWith(
           step: ImportStep.error,
           errorMessage:
@@ -100,7 +117,17 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
         slots: slots,
         selectedIndexes: Set<int>.from(List.generate(slots.length, (i) => i)),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'timetable_import_failed',
+        context: {'source': sourceLabel},
+      );
+      await AnalyticsService.instance.logTimetableImportFailed(
+        source: sourceLabel,
+        reason: 'parse_failed',
+      );
       state = state.copyWith(
         step: ImportStep.error,
         errorMessage: e.toString().replaceFirst('Exception: ', ''),
@@ -169,7 +196,21 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
       }
 
       state = state.copyWith(step: ImportStep.done);
-    } catch (e) {
+      await AnalyticsService.instance.logTimetableImportSucceeded(
+        source: 'review',
+        count: ordered.length,
+      );
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'timetable_import_save_failed',
+        context: {'selected_count': state.selectedIndexes.length},
+      );
+      await AnalyticsService.instance.logTimetableImportFailed(
+        source: 'review',
+        reason: 'save_failed',
+      );
       state = state.copyWith(
         step: ImportStep.error,
         errorMessage: 'Failed to save: ${e.toString()}',

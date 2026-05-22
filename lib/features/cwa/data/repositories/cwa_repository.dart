@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 
 class CwaRepository {
@@ -17,8 +18,14 @@ class CwaRepository {
   Future<void> addCourse(CourseModel course) async {
     try {
       await _isar.writeTxn(() => _isar.courseModels.put(course));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {'repository': 'cwa', 'operation': 'add_course'},
+      );
       rethrow;
     }
   }
@@ -26,8 +33,14 @@ class CwaRepository {
   Future<void> updateCourse(CourseModel course) async {
     try {
       await _isar.writeTxn(() => _isar.courseModels.put(course));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {'repository': 'cwa', 'operation': 'update_course'},
+      );
       rethrow;
     }
   }
@@ -35,8 +48,14 @@ class CwaRepository {
   Future<void> deleteCourse(Id id) async {
     try {
       await _isar.writeTxn(() => _isar.courseModels.delete(id));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {'repository': 'cwa', 'operation': 'delete_course'},
+      );
       rethrow;
     }
   }

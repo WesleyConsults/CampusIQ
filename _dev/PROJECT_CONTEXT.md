@@ -10,8 +10,9 @@ UniMate is an Android-first academic productivity app for Ghanaian university st
 - **State Management:** Riverpod (Generator-based)
 - **Database:** Isar (Local-only, NoSQL)
 - **Navigation:** GoRouter
-- **AI:** DeepSeek (API via HTTP), OpenAI Vision (for image parsing)
+- **AI:** Vercel serverless proxy (`campusiq-api.vercel.app`) — keyless architecture, no API keys on-device. Routes to DeepSeek (text) and OpenAI Vision (image parsing) server-side.
 - **Background Tasks:** Workmanager
+- **Firebase:** Android-only Firebase Core, Analytics, and Crashlytics configured for project `unimate-69516` and package `com.wesleyconsults.campusiq`.
 
 ## 3. Architecture Pattern
 Strict three-layer structure per feature:
@@ -47,7 +48,8 @@ Strict three-layer structure per feature:
 
 ## 6. Critical Implementation Notes
 - **Timer Logic:** Stores a `DateTime` anchor (`startTime`). Elapsed time is `now.difference(startTime)` to survive app pauses. Pomodoro uses `phaseEndsAt` DateTime anchor with `_lastFiredPhaseEnd` guard to prevent double-fire.
-- **AI Scope:** MVP keeps focused AI surfaces only: CWA import via OpenAI Vision, AI Weekly Review, AI Study Plan, and AI-generated streak notification text. The global chatbot and CWA Coach were removed. No `/ai` route, no AI FAB.
+- **AI Proxy Architecture:** All AI requests go through the Vercel proxy at `campusiq-api.vercel.app` (configured in `lib/core/config/ai_proxy_config.dart`). `DeepSeekClient` is parameterless (`const DeepSeekClient()`) — no API keys, model names, or auth headers in the client. Vision parsers (`TimetableVisionParser`, `RegistrationSlipParser`, `ResultSlipParser`) use the same proxy pattern. The `flutter_dotenv` package has been removed. Internet permissions (`INTERNET` + `ACCESS_NETWORK_STATE`) are declared in `AndroidManifest.xml` for release builds.
+- **AI Scope:** MVP keeps focused AI surfaces only: CWA import via OpenAI Vision (through proxy), AI Weekly Review, AI Study Plan, and AI-generated streak notification text. The global chatbot and CWA Coach were removed. No `/ai` route, no AI FAB.
 - **Onboarding Guard:** GoRouter redirect checks `hasCompletedOnboardingProvider` — if `false`, all non-`/onboarding` routes redirect to `/onboarding`. Once completed, stored in `UserPrefsModel.hasCompletedOnboarding`.
 - **Grading System:** Active grading system drives dynamic UI labels (bottom nav tab, CWA/GPA screen title, grade dropdowns). All grading systems are defined in `lib/core/domain/grading_system.dart`. University defaults in `lib/core/domain/university_defaults.dart`. Grade scale with colour-coded letter grades in `lib/core/domain/grade_scale.dart`.
 - **Dark Mode:** Theme mode persisted as index (0=system, 1=light, 2=dark) in `UserPrefsModel.themeModeIndex`. `themeModeProvider` reads it and `app.dart` passes `themeMode` to `MaterialApp.router`. Full dark theme defined alongside light theme in `app_theme.dart`.
@@ -59,6 +61,10 @@ Strict three-layer structure per feature:
 - **Credit Hours Cap:** Raised from 6 to 12 across all entry points to accommodate project work and industrial attachment courses.
 - **Draft Auto-Save:** Manual entry form state is persisted to `UserPrefsModel.manualCwaDraftJson` on every change and restored on next open.
 - **App Name:** Display name changed to "UniMate" (`AppConstants.appName`). Package ID remains `com.wesleyconsults.campusiq`.
+- **Analyzer Baseline:** As of 2026-05-22, `flutter analyze` reports no issues. `analysis_options.yaml` excludes generated `**/*.g.dart` files so Riverpod/Isar generator warnings do not obscure handwritten-code issues.
+- **Firebase Crashlytics:** Android-only setup completed on 2026-05-22 using `flutterfire configure --project=unimate-69516 --platforms=android`. Generated files: `lib/firebase_options.dart`, `firebase.json`, and `android/app/google-services.json`. Android Gradle applies Google Services and Firebase Crashlytics plugins. `main.dart` initializes Firebase before app startup and records Flutter, platform, and guarded-zone fatal errors with Crashlytics. Startup initialization runs inside `runZonedGuarded` to avoid Flutter zone mismatch reports. Settings → Dev includes a debug-only `Test Crashlytics crash` action using `FirebaseCrashlytics.instance.crash()`.
+- **Analytics & Non-Fatal Reporting:** Added 2026-05-22 through `AnalyticsService` and `CrashReportingService`. Tracked screen views: onboarding, Today, planner, timetable, sessions, weekly review, streak, insights, settings, course hub, timetable import, course reminders, manual entry, past semesters, registration import, and result import. Tracked product events: onboarding started/completed/skipped, grading system selection, theme change, course add/update, course import start/success/failure, timetable slot add/update, timetable import start/success/failure, study session/pomodoro start and completion, weekly review generation, and AI study plan generation. Tracked user properties are anonymous only: `grading_system`, `theme_mode`, `notifications_enabled`, `onboarding_completed`, and `university_set`. Non-fatal Crashlytics reports cover caught import/parser failures, AI generation failures, notification scheduling failures, Workmanager background task failures, Isar open/write failures in key repositories, and session/course/timetable save failures.
+- **Analytics Privacy Rules:** Do not track course names, exact grades/scores, timetable venues, note contents, AI prompts/responses, uploaded image/PDF content, programme names, or personally identifying details. Use counts, modes, sources, and coarse error reasons only.
 
 ## 7. UI Structure & Navigation
 ### App shell
@@ -157,6 +163,11 @@ Strict three-layer structure per feature:
 
 ### Regression and stability notes
 - A widget regression suite exists at `test/ui_redesign_regression_test.dart` covering: shell navigation presence, CWA import-sheet options, manual-entry rendering on small screens, active-session mini timer visibility.
+- On 2026-05-22, `flutter analyze` passed with no issues after source lint cleanup and generated-file analyzer exclusion.
+- On 2026-05-22, Firebase Crashlytics Android test crash was confirmed visible in Firebase Console for `com.wesleyconsults.campusiq`. A startup zone mismatch issue caused by initializing Flutter bindings outside `runZonedGuarded` was fixed the same session.
+- On 2026-05-22, after the Crashlytics zone fix, `flutter analyze` passed with no issues and `flutter test` passed with all 9 tests.
+- On 2026-05-22, after adding analytics and non-fatal Crashlytics instrumentation, `flutter analyze` passed with no issues and `flutter test` passed with all 9 tests.
+- On 2026-05-22, `flutter test test/ui_redesign_regression_test.dart` passed. The active-session mini timer regression now asserts the `FloatingMiniTimer` widget is present, matching the compact timer behaviour on non-Sessions shell tabs.
 - Dark mode is tested on all screens — cards, sheets, dialogs, input fields all adapt correctly.
 - Grading system dynamic labels are verified across bottom nav, CWA screen, and all grade dropdowns.
 - Onboarding flow is verified end-to-end including redirect guard behaviour.
@@ -176,7 +187,12 @@ Strict three-layer structure per feature:
 
 ## 8. Key File Locations
 - `lib/core/domain/`: Pure Dart domain classes — `grading_system.dart`, `grade_scale.dart`, `university_defaults.dart`.
-- `lib/core/`: Providers (Isar, connectivity, notification), Router (with onboarding guard), Theme (light + dark), and centralised Isar schema (`lib/core/data/isar_database.dart` — 12 schemas).
+- `lib/core/`: Providers (Isar, connectivity, notification), Router (with onboarding guard), Theme (light + dark), AI proxy config (`lib/core/config/ai_proxy_config.dart`), and centralised Isar schema (`lib/core/data/isar_database.dart` — 12 schemas).
+- `lib/core/services/analytics_service.dart`: Firebase Analytics wrapper plus `TrackedScreen` helper. Skips calls safely when Firebase is not initialized during tests.
+- `lib/core/services/crash_reporting_service.dart`: Firebase Crashlytics wrapper for fatal and non-fatal error reporting. Skips calls safely when Firebase is not initialized during tests.
+- `lib/firebase_options.dart`: Generated Android-only FlutterFire options for Firebase project `unimate-69516`.
+- `android/app/google-services.json`: Android Firebase app configuration for package `com.wesleyconsults.campusiq`.
+- `firebase.json`: FlutterFire platform mapping; currently Android-only plus Dart options.
 - `lib/features/onboarding/`: 6-step onboarding flow with `OnboardingNotifier` and `hasCompletedOnboardingProvider`.
 - `lib/features/`: Feature-specific code.
 - `lib/shared/`: Reusable widgets and extensions.

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:campusiq/core/services/notification_service.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 
@@ -111,6 +114,12 @@ class SettingsScreen extends ConsumerWidget {
                 onChanged: (v) async {
                   final repo = ref.read(userPrefsRepositoryProvider);
                   await repo?.setNotifyStudyReminders(v);
+                  await AnalyticsService.instance.setCoreUserProperties(
+                    notificationsEnabled: v ||
+                        prefs.notifyStreakAlerts ||
+                        prefs.notifyMilestoneAlerts ||
+                        prefs.notifyWeeklyReview,
+                  );
                   if (!v) {
                     for (int i = 100; i < 200; i++) {
                       await NotificationService.instance.cancelNotification(i);
@@ -128,6 +137,12 @@ class SettingsScreen extends ConsumerWidget {
                 onChanged: (v) async {
                   final repo = ref.read(userPrefsRepositoryProvider);
                   await repo?.setNotifyStreakAlerts(v);
+                  await AnalyticsService.instance.setCoreUserProperties(
+                    notificationsEnabled: prefs.notifyStudyReminders ||
+                        v ||
+                        prefs.notifyMilestoneAlerts ||
+                        prefs.notifyWeeklyReview,
+                  );
                   if (!v) {
                     await NotificationService.instance.cancelNotification(200);
                   }
@@ -142,6 +157,12 @@ class SettingsScreen extends ConsumerWidget {
                 onChanged: (v) async {
                   final repo = ref.read(userPrefsRepositoryProvider);
                   await repo?.setNotifyMilestoneAlerts(v);
+                  await AnalyticsService.instance.setCoreUserProperties(
+                    notificationsEnabled: prefs.notifyStudyReminders ||
+                        prefs.notifyStreakAlerts ||
+                        v ||
+                        prefs.notifyWeeklyReview,
+                  );
                   if (!v) {
                     await NotificationService.instance.cancelNotification(300);
                   }
@@ -156,6 +177,12 @@ class SettingsScreen extends ConsumerWidget {
                 onChanged: (v) async {
                   final repo = ref.read(userPrefsRepositoryProvider);
                   await repo?.setNotifyWeeklyReview(v);
+                  await AnalyticsService.instance.setCoreUserProperties(
+                    notificationsEnabled: prefs.notifyStudyReminders ||
+                        prefs.notifyStreakAlerts ||
+                        prefs.notifyMilestoneAlerts ||
+                        v,
+                  );
                   if (!v) {
                     await NotificationService.instance.cancelNotification(400);
                   }
@@ -288,6 +315,15 @@ class SettingsScreen extends ConsumerWidget {
                   }
                 },
               ),
+              if (kDebugMode) ...[
+                const Divider(height: 1),
+                _RowTile(
+                  leading: LucideIcons.bug,
+                  title: 'Test Crashlytics crash',
+                  subtitle: 'Force a debug crash report',
+                  onTap: FirebaseCrashlytics.instance.crash,
+                ),
+              ],
             ]),
 
             const SizedBox(height: AppSpacing.xxl),
@@ -345,6 +381,12 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () async {
                   final repo = ref.read(userPrefsRepositoryProvider);
                   await repo?.setGradingSystemId(system.id);
+                  await AnalyticsService.instance.logGradingSystemSelected(
+                    system.id,
+                  );
+                  await AnalyticsService.instance.setCoreUserProperties(
+                    gradingSystem: system.id,
+                  );
                   if (sheetContext.mounted) {
                     Navigator.of(sheetContext).pop();
                   }
@@ -427,10 +469,25 @@ Future<void> _saveThemeMode(
     BuildContext context, WidgetRef ref, int value) async {
   final repo = ref.read(userPrefsRepositoryProvider);
   await repo?.setThemeModeIndex(value);
+  await AnalyticsService.instance.logThemeChanged(_themeModeKey(value));
+  await AnalyticsService.instance.setCoreUserProperties(
+    themeMode: _themeModeKey(value),
+  );
   ref.invalidate(notificationPrefsProvider);
   ref.invalidate(themeModeProvider);
   if (!context.mounted) return;
   Navigator.of(context).pop();
+}
+
+String _themeModeKey(int index) {
+  switch (index) {
+    case 1:
+      return 'light';
+    case 2:
+      return 'dark';
+    default:
+      return 'system';
+  }
 }
 
 // ── Shared bottom sheet wrapper ────────────────────────────────────────────

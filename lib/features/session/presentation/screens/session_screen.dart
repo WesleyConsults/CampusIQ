@@ -1,4 +1,6 @@
 import 'package:campusiq/core/layout/shell_overlay_padding.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
@@ -95,6 +97,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           vibrateOnTimerEnd: vibrate,
           playSoundOnTimerEnd: playSound,
         );
+    await AnalyticsService.instance.logStudySessionStarted(
+      mode: isPomodoroMode ? 'pomodoro' : 'normal',
+      source: picked.source,
+    );
   }
 
   Future<void> _stopSession(String semesterKey) async {
@@ -156,7 +162,16 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
     try {
       await repo.saveSession(session);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'study_session_save_failed',
+        context: {
+          'mode': completed.isPomodoroMode ? 'pomodoro' : 'normal',
+          'duration_minutes': durationMins,
+        },
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -169,6 +184,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     }
 
     await NotificationService.instance.cancelStudiedTodayAlerts();
+    await AnalyticsService.instance.logStudySessionCompleted(
+      mode: completed.isPomodoroMode ? 'pomodoro' : 'normal',
+      durationMinutes: durationMins,
+      wasPlanned: wasPlanned,
+      roundsCompleted:
+          completed.isPomodoroMode ? completed.pomodoroRoundsCompleted : null,
+    );
 
     if (!hadSessionToday) {
       final streak = ref.read(studyStreakProvider);

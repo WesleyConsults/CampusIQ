@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:campusiq/core/data/models/user_prefs_model.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 
@@ -32,8 +33,9 @@ class PastResultRepository {
   Future<void> add(PastSemesterModel model) async {
     try {
       await _isar.writeTxn(() => _isar.pastSemesterModels.put(model));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await _reportWriteFailure(e, stackTrace, 'add_past_semester');
       rethrow;
     }
   }
@@ -41,8 +43,9 @@ class PastResultRepository {
   Future<void> update(PastSemesterModel model) async {
     try {
       await _isar.writeTxn(() => _isar.pastSemesterModels.put(model));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await _reportWriteFailure(e, stackTrace, 'update_past_semester');
       rethrow;
     }
   }
@@ -71,8 +74,9 @@ class PastResultRepository {
         }
         await _isar.pastSemesterModels.put(model);
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar replaceForSemesterKey failed: $e');
+      await _reportWriteFailure(e, stackTrace, 'replace_past_semester');
       rethrow;
     }
   }
@@ -80,8 +84,9 @@ class PastResultRepository {
   Future<void> delete(Id id) async {
     try {
       await _isar.writeTxn(() => _isar.pastSemesterModels.delete(id));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await _reportWriteFailure(e, stackTrace, 'delete_past_semester');
       rethrow;
     }
   }
@@ -122,9 +127,23 @@ class PastResultRepository {
         await _isar.courseModels.deleteAll(courseIds);
         await _isar.userPrefsModels.put(prefs);
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar transitionSemester failed: $e');
+      await _reportWriteFailure(e, stackTrace, 'transition_semester');
       rethrow;
     }
+  }
+
+  Future<void> _reportWriteFailure(
+    Object error,
+    StackTrace stackTrace,
+    String operation,
+  ) async {
+    await CrashReportingService.instance.recordNonFatalError(
+      error,
+      stackTrace,
+      reason: 'isar_write_failed',
+      context: {'repository': 'past_result', 'operation': operation},
+    );
   }
 }

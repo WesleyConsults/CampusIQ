@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_model.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_slot_model.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
@@ -75,7 +77,12 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
         });
       state = state.copyWith(
           plan: plan, slots: slots, isGenerated: true, clearError: true);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'study_plan_load_failed',
+      );
       state = state.copyWith(error: 'Failed to load study plan.');
     }
   }
@@ -83,6 +90,10 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
   Future<void> generatePlan() async {
     final isOnline = await _ref.read(isOnlineProvider.future);
     if (!isOnline) {
+      await AnalyticsService.instance.logAiGenerationFailed(
+        feature: 'ai_study_plan',
+        reason: 'offline',
+      );
       state = state.copyWith(
         isLoading: false,
         error: "You're offline. Connect to use features.",
@@ -133,13 +144,34 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
       });
 
       await loadPlan();
-    } catch (e) {
+      await AnalyticsService.instance.logAiGenerationSucceeded(
+        feature: 'ai_study_plan',
+        itemCount: newSlots.length,
+      );
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'study_plan_generate_failed',
+      );
+      await AnalyticsService.instance.logAiGenerationFailed(
+        feature: 'ai_study_plan',
+        reason: _aiFailureReason(e),
+      );
       state = state.copyWith(
         isLoading: false,
         error:
             'Could not generate plan. ${e.toString().contains('JSON') ? 'AI returned unexpected format — try again.' : 'Check your connection and try again.'}',
       );
     }
+  }
+
+  String _aiFailureReason(Object error) {
+    final message = error.toString();
+    if (message.contains('JSON') || message.contains('FormatException')) {
+      return 'invalid_ai_response';
+    }
+    return 'request_failed';
   }
 
   List<StudyPlanSlotModel> _parseSlots(String jsonString) {

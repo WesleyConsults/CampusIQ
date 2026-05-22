@@ -3,7 +3,6 @@ import 'package:campusiq/features/plan/domain/plan_task.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
-import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
 /// Pure Dart class — no Flutter imports.
 /// Generates a prioritised list of [PlanTask] for a given day.
@@ -128,5 +127,4 @@ class PlanGenerator {
       for (int i = 0; i < tasks.length; i++) tasks[i].copyWith(sortOrder: i),
     ];
   }
-
 }

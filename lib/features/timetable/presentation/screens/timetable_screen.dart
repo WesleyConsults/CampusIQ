@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/layout/shell_overlay_padding.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
@@ -92,7 +94,16 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       } else {
         await repo.updateSlot(result);
       }
-    } catch (e) {
+      await AnalyticsService.instance.logTimetableSlotSaved(
+        action: existing == null ? 'created' : 'updated',
+      );
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'timetable_slot_save_failed',
+        context: {'action': existing == null ? 'created' : 'updated'},
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -114,10 +125,11 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
         slot: slot,
         onEdit: () => _openAddClassSheet(existing: slot),
         onDelete: () async {
+          final messenger = ScaffoldMessenger.of(context);
           final repo = ref.read(timetableRepositoryProvider);
           if (repo == null) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
+            if (mounted) {
+              messenger.showSnackBar(
                 const SnackBar(
                   content: Text('Could not delete slot. Please try again.'),
                   behavior: SnackBarBehavior.floating,
@@ -129,8 +141,8 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
           try {
             await repo.deleteSlot(slot.id);
           } catch (e) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
+            if (mounted) {
+              messenger.showSnackBar(
                 const SnackBar(
                   content: Text('Could not delete slot. Please try again.'),
                   behavior: SnackBarBehavior.floating,

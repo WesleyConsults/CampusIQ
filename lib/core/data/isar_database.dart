@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/core/data/models/subscription_model.dart';
 import 'package:campusiq/core/data/models/user_prefs_model.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_model.dart';
@@ -40,6 +41,11 @@ Future<Isar> openCampusIqIsar() async {
   } catch (error, stackTrace) {
     debugPrint('🔴 Failed to open Isar: $error');
     debugPrint('$stackTrace');
+    await CrashReportingService.instance.recordNonFatalError(
+      error,
+      stackTrace,
+      reason: 'isar_open_failed',
+    );
     Error.throwWithStackTrace(error, stackTrace);
   }
 }

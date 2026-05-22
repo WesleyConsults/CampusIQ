@@ -30,8 +30,7 @@ class CourseHubScreen extends ConsumerWidget {
         ),
       ),
       data: (courses) {
-        final course =
-            courses.where((c) => c.code == courseCode).firstOrNull;
+        final course = courses.where((c) => c.code == courseCode).firstOrNull;
 
         if (course == null) {
           return Scaffold(
@@ -43,7 +42,8 @@ class CourseHubScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(LucideIcons.bookOpen,
-                        size: AppIconSizes.alert, color: AppColors.textSecondary),
+                        size: AppIconSizes.alert,
+                        color: AppColors.textSecondary),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       'Course not found',
@@ -53,8 +53,7 @@ class CourseHubScreen extends ConsumerWidget {
                     const Text(
                       'Add this course in the CWA tab first.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: AppColors.textSecondary),
+                      style: TextStyle(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -86,10 +85,10 @@ class CourseHubScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              bottom: TabBar(
+              bottom: const TabBar(
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
-                tabs: const [
+                tabs: [
                   Tab(
                     icon: Icon(LucideIcons.layoutDashboard,
                         size: AppIconSizes.lg),

@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/data/repositories/user_prefs_repository.dart';
 import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/domain/university_defaults.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 
 enum OnboardingStep {
   welcome,
@@ -88,7 +92,9 @@ class OnboardingState {
 class OnboardingNotifier extends StateNotifier<OnboardingState> {
   final UserPrefsRepository _repo;
 
-  OnboardingNotifier(this._repo) : super(const OnboardingState());
+  OnboardingNotifier(this._repo) : super(const OnboardingState()) {
+    unawaited(AnalyticsService.instance.logOnboardingStarted());
+  }
 
   void goNext() {
     if (!state.canAdvance) return;
@@ -126,6 +132,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       gradingSystemId: system.id,
       target: system.defaultTarget,
     );
+    unawaited(AnalyticsService.instance.logGradingSystemSelected(system.id));
   }
 
   void setTarget(double target) {
@@ -150,27 +157,81 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
   Future<void> skip() async {
     state = state.copyWith(isLoading: true);
-    await _repo.setHasCompletedOnboarding(true);
-    if (mounted) {
-      state = state.copyWith(isLoading: false);
+    try {
+      await _repo.setHasCompletedOnboarding(true);
+      await AnalyticsService.instance.logOnboardingCompleted(
+        gradingSystem: state.gradingSystemId,
+        universitySet: state.university != null,
+        notificationsEnabled: state.notifyStudyReminders ||
+            state.notifyStreakAlerts ||
+            state.notifyMilestoneAlerts ||
+            state.notifyWeeklyReview,
+        skipped: true,
+      );
+      await AnalyticsService.instance.setCoreUserProperties(
+        gradingSystem: state.gradingSystemId,
+        notificationsEnabled: state.notifyStudyReminders ||
+            state.notifyStreakAlerts ||
+            state.notifyMilestoneAlerts ||
+            state.notifyWeeklyReview,
+        onboardingCompleted: true,
+        universitySet: state.university != null,
+      );
+      if (mounted) {
+        state = state.copyWith(isLoading: false);
+      }
+    } catch (error, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        error,
+        stackTrace,
+        reason: 'onboarding_skip_failed',
+      );
+      rethrow;
     }
   }
 
   Future<void> complete() async {
     state = state.copyWith(isLoading: true);
-    await _repo.setUniversityName(state.university?.name);
-    await _repo.setProgrammeName(
-      state.programme.trim().isEmpty ? null : state.programme.trim(),
-    );
-    await _repo.setGradingSystemId(state.gradingSystemId);
-    await _repo.setTargetCwa(state.target);
-    await _repo.setNotifyStudyReminders(state.notifyStudyReminders);
-    await _repo.setNotifyStreakAlerts(state.notifyStreakAlerts);
-    await _repo.setNotifyMilestoneAlerts(state.notifyMilestoneAlerts);
-    await _repo.setNotifyWeeklyReview(state.notifyWeeklyReview);
-    await _repo.setHasCompletedOnboarding(true);
-    if (mounted) {
-      state = state.copyWith(isLoading: false);
+    try {
+      await _repo.setUniversityName(state.university?.name);
+      await _repo.setProgrammeName(
+        state.programme.trim().isEmpty ? null : state.programme.trim(),
+      );
+      await _repo.setGradingSystemId(state.gradingSystemId);
+      await _repo.setTargetCwa(state.target);
+      await _repo.setNotifyStudyReminders(state.notifyStudyReminders);
+      await _repo.setNotifyStreakAlerts(state.notifyStreakAlerts);
+      await _repo.setNotifyMilestoneAlerts(state.notifyMilestoneAlerts);
+      await _repo.setNotifyWeeklyReview(state.notifyWeeklyReview);
+      await _repo.setHasCompletedOnboarding(true);
+      await AnalyticsService.instance.logOnboardingCompleted(
+        gradingSystem: state.gradingSystemId,
+        universitySet: state.university != null,
+        notificationsEnabled: state.notifyStudyReminders ||
+            state.notifyStreakAlerts ||
+            state.notifyMilestoneAlerts ||
+            state.notifyWeeklyReview,
+        skipped: false,
+      );
+      await AnalyticsService.instance.setCoreUserProperties(
+        gradingSystem: state.gradingSystemId,
+        notificationsEnabled: state.notifyStudyReminders ||
+            state.notifyStreakAlerts ||
+            state.notifyMilestoneAlerts ||
+            state.notifyWeeklyReview,
+        onboardingCompleted: true,
+        universitySet: state.university != null,
+      );
+      if (mounted) {
+        state = state.copyWith(isLoading: false);
+      }
+    } catch (error, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        error,
+        stackTrace,
+        reason: 'onboarding_complete_failed',
+      );
+      rethrow;
     }
   }
 }

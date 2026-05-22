@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "796338316529",
+    "project_id": "unimate-69516",
+    "storage_bucket": "unimate-69516.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:796338316529:android:a8e523b52360f724953550",
+        "android_client_info": {
+          "package_name": "com.wesleyconsults.campusiq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwpdfvnjXGu3Hd_lJx_qlSqydvJDwiRjo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

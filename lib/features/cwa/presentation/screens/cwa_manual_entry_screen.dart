@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/domain/grading_system.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
@@ -315,11 +317,28 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
       ref.invalidate(totalCreditsProvider);
       ref.invalidate(cumulativeGapProvider);
       await ref.read(cwaPrefsRepositoryProvider)?.clearManualCwaDraft();
+      await AnalyticsService.instance.logCourseSaved(
+        action: 'created',
+        source: _mode == CwaViewMode.semester
+            ? 'manual_entry_semester'
+            : 'manual_entry_cumulative',
+        gradingSystem: ref.read(gradingSystemProvider).id,
+        count: _courses.length,
+      );
       _showMessage('Courses saved successfully.');
       _closeToCwa();
     } on StateError catch (e) {
       _showMessage(e.message);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'manual_entry_save_failed',
+        context: {
+          'mode': _mode.name,
+          'course_count': _courses.length,
+        },
+      );
       _showMessage('Could not save courses. Please try again.');
     } finally {
       if (mounted) {

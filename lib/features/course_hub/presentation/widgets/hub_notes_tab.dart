@@ -39,8 +39,7 @@ class HubNotesTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ErrorRetryWidget(
         message: 'We could not load your notes right now.',
-        onRetry: () =>
-            ref.invalidate(courseNotesProvider(courseCode)),
+        onRetry: () => ref.invalidate(courseNotesProvider(courseCode)),
       ),
       data: (notes) {
         return Scaffold(
@@ -51,8 +50,7 @@ class HubNotesTab extends ConsumerWidget {
             icon: const Icon(LucideIcons.plus),
             label: const Text('Add note'),
           ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.endFloat,
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           body: notes.isEmpty
               ? ListView(
                   padding: EdgeInsets.fromLTRB(
@@ -113,8 +111,7 @@ class HubNotesTab extends ConsumerWidget {
                       },
                       background: Container(
                         alignment: Alignment.centerRight,
-                        margin: const EdgeInsets.only(
-                            bottom: AppSpacing.md),
+                        margin: const EdgeInsets.only(bottom: AppSpacing.md),
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.lg,
                         ),
@@ -122,8 +119,7 @@ class HubNotesTab extends ConsumerWidget {
                           color: AppColors.surfaceMuted,
                           borderRadius: AppRadii.card,
                           border: Border.all(
-                            color: AppTheme.warning
-                                .withValues(alpha: 0.18),
+                            color: AppTheme.warning.withValues(alpha: 0.18),
                           ),
                         ),
                         child: Container(
@@ -132,8 +128,7 @@ class HubNotesTab extends ConsumerWidget {
                             vertical: AppSpacing.xs,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.warning
-                                .withValues(alpha: 0.1),
+                            color: AppTheme.warning.withValues(alpha: 0.1),
                             borderRadius: AppRadii.pill,
                           ),
                           child: const Row(
@@ -234,11 +229,9 @@ class _NoteTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final dateLabel =
-        DateFormat('dd MMM · HH:mm').format(note.updatedAt);
-    final preview = note.body.isNotEmpty
-        ? note.body.replaceAll('\n', ' ')
-        : 'Empty note';
+    final dateLabel = DateFormat('dd MMM · HH:mm').format(note.updatedAt);
+    final preview =
+        note.body.isNotEmpty ? note.body.replaceAll('\n', ' ') : 'Empty note';
 
     final cs = Theme.of(context).colorScheme;
 

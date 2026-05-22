@@ -2,7 +2,7 @@
 
 Use this document to manually test the app as a real user would, from first launch through every major feature. Work through each section in order.
 
-**This checklist has been updated for v1.0 production polish (2026-05-19).** The app now uses a floating pill-shaped bottom nav (Home | CWA/GPA/CGPA | Table | Sessions) with dynamic grading system labels, 6-step university onboarding, multi-grading-system support (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0), dark mode (System/Light/Dark), timer feedback toggles (vibrate/sound), course reminders, and a restructured Settings with About section. The AI FAB, AI Chat (`/ai`), CWA AI Coach, and What-If AI feature have all been removed. No `/subscribe` route exists in the current build.
+**This checklist has been updated for v1.0 production polish (2026-05-22).** The app now uses a floating pill-shaped bottom nav (Home | CWA/GPA/CGPA | Table | Sessions) with dynamic grading system labels, 6-step university onboarding, multi-grading-system support (CWA, GPA 4.0, GPA 4.0 GIMPA, CGPA 5.0), dark mode (System/Light/Dark), timer feedback toggles (vibrate/sound), course reminders, Android-only Firebase Crashlytics, and a restructured Settings with About section. All AI requests route through a Vercel proxy (`campusiq-api.vercel.app`) — no API keys live on-device. The AI FAB, AI Chat (`/ai`), CWA AI Coach, and What-If AI feature have all been removed. No `/subscribe` route exists in the current build.
 
 Mark each item `[x]` as you confirm it works.
 
@@ -13,6 +13,8 @@ Mark each item `[x]` as you confirm it works.
 - Fresh install **or** cleared app data (Settings → Apps → UniMate → Clear Data)
 - Device/emulator has internet access (needed for AI features)
 - Notifications are NOT yet granted (test the permission dialog)
+- Firebase project `unimate-69516` is open in Firebase Console when testing Crashlytics.
+- Crashlytics tests must run on an Android emulator/device, not Chrome.
 
 ---
 
@@ -456,7 +458,7 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Tapping open timetable space still opens the add flow without crashing
 
 ### 6.6 Bottom-nav / overflow
-- [ ] Final timetable content scrolls above the floating bottom nav and AI FAB
+- [ ] Final timetable content scrolls above the floating bottom nav
 - [ ] No persistent blank band remains above the navbar
 - [ ] Bottom nav does not hide the last timetable entry
 
@@ -662,7 +664,6 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Course Picker sheet — lists courses, selection works
 - [ ] Import Options sheet — four options, each navigates correctly
 - [ ] Slot Detail sheet — details visible, edit works, Open Workspace works
-- [ ] CWA Coach sheet — AI advice loads, dismisses on back/swipe
 - [ ] Note Editor sheet — opens in create and edit modes
 - [ ] All sheets have a drag handle
 - [ ] All sheets dismiss on swipe down
@@ -729,9 +730,32 @@ Mark each item `[x]` as you confirm it works.
 
 ### 11.1f Settings — Dev
 - [ ] **Dev** section visible with Reset onboarding
+- [ ] In debug builds only, **Test Crashlytics crash** is visible in Settings → Dev
+- [ ] In release builds, **Test Crashlytics crash** is not visible
 - [ ] Tap Reset onboarding → confirmation
 - [ ] Confirm → app navigates to onboarding flow
 - [ ] No overflow on the settings screen
+
+### 11.1g Settings — Dev Crashlytics test
+- [ ] Run the app on Android in debug mode (`flutter run -d <android-device-id>`)
+- [ ] Go to Settings → Dev → Test Crashlytics crash
+- [ ] Tap the test crash row — the app closes/crashes immediately
+- [ ] Reopen the app after the crash so Crashlytics can upload the report
+- [ ] In Firebase Console → `unimate-69516` → Crashlytics, select Android app `com.wesleyconsults.campusiq`
+- [ ] A crash issue appears within a few minutes
+- [ ] No new `Zone mismatch` issue appears after the startup zone fix; previously recorded historical issues may remain visible
+
+### 11.1h Analytics and non-fatal reporting smoke test
+- [ ] In Firebase Console → Analytics → DebugView, confirm screen views appear while navigating: Today, planner, timetable, sessions, settings
+- [ ] Complete onboarding on a fresh install → `onboarding_completed` appears with anonymous parameters only
+- [ ] Change grading system in Settings → `grading_system_selected` appears
+- [ ] Change theme in Settings → `settings_theme_changed` appears
+- [ ] Add or edit a course → `course_added` or `course_updated` appears
+- [ ] Add or edit a timetable slot → `timetable_slot_added` or `timetable_slot_updated` appears
+- [ ] Start and save a normal study session → `study_session_started` and `study_session_completed` appear
+- [ ] Start and save a Pomodoro session → `pomodoro_started` and `pomodoro_completed` appear
+- [ ] Trigger an offline import or AI generation failure → matching failure event appears and, where applicable, a non-fatal Crashlytics report appears
+- [ ] Confirm analytics parameters do not include course names, exact grades/scores, venues, notes, uploaded file contents, AI prompt/response text, programme name, or personal identifiers
 
 ### 11.2 Streak
 - [ ] Streak screen opens (via drawer from Today)
@@ -779,7 +803,6 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Many sessions (20+) — History scrolls smoothly
 - [ ] Long course names (30+ chars) — cards render without overflow
 - [ ] Long locations — timetable slot cards do not overflow
-- [ ] Long AI response — chat scrolls smoothly, no crash
 
 ### 12.3 Screen size extremes
 - [ ] Small Android screen (~360dp) — no overflow on any major screen
@@ -795,7 +818,6 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Scroll to bottom of CWA screen — all courses visible
 - [ ] Scroll to bottom of Table screen — full timetable visible
 - [ ] Scroll to bottom of Sessions History — all sessions visible
-- [ ] Scroll to bottom of AI Chat — all messages visible
 - [ ] Scroll to bottom of Course Hub tabs — all content visible
 
 ### 12.6 No internet — AI features
@@ -830,6 +852,12 @@ Mark each item `[x]` as you confirm it works.
 - [ ] `flutter analyze` — no new issues (pre-existing baseline acceptable)
 - [ ] `dart run build_runner build --delete-conflicting-outputs` — completes
 - [ ] `flutter test` — all tests pass
+- [ ] `lib/firebase_options.dart` exists and contains only Android options for project `unimate-69516`
+- [ ] `firebase.json` maps FlutterFire to Android app `1:796338316529:android:a8e523b52360f724953550`
+- [ ] `android/app/google-services.json` exists
+- [ ] No `ios/Runner/GoogleService-Info.plist` is present while Firebase scope remains Android-only
+- [ ] `flutter analyze` remains clean after analytics instrumentation
+- [ ] `flutter test` remains clean after analytics instrumentation
 
 ### 13.2 Build APK
 - [ ] `flutter build apk --debug` — builds successfully
@@ -839,6 +867,7 @@ Mark each item `[x]` as you confirm it works.
 
 ### 13.3 Device testing
 - [ ] Installed APK on real Android device
+- [ ] Crashlytics test crash uploaded from Android debug build
 - [ ] Sent APK to at least one friend/tester
 - [ ] Tester feedback collected
 - [ ] Critical crashes documented and fixed
@@ -846,10 +875,13 @@ Mark each item `[x]` as you confirm it works.
 
 ### 13.4 Pre-store checks
 - [ ] Privacy policy reviewed for Play Store compliance
-- [ ] App permissions reviewed (notifications, camera, storage)
+- [ ] App permissions reviewed (notifications, camera, storage, internet)
 - [ ] App icon and name correct
 - [ ] No test/debug data visible to users
-- [ ] API keys in `.env` (not hardcoded)
+- [ ] Debug-only Crashlytics test crash row is hidden in release builds
+- [ ] AI proxy configured (no API keys on-device; requests route through `campusiq-api.vercel.app`)
+- [ ] Firebase Crashlytics configured for Android only (`com.wesleyconsults.campusiq`)
+- [ ] Analytics and non-fatal Crashlytics tracking remain privacy-safe: counts/modes/sources/error reasons only
 
 ---
 
@@ -867,7 +899,7 @@ Mark each item `[x]` as you confirm it works.
 | 8. Sessions (Normal + Pomodoro + timer feedback) | | |
 | 9. Course Hub | | |
 | 10. Modals / Bottom Sheets / Dialogs | | |
-| 11. Settings / Streak / Insights / Weekly Review (incl. dark mode, timer feedback, about, grading system picker) | | |
+| 11. Settings / Streak / Insights / Weekly Review (incl. dark mode, timer feedback, about, grading system picker, debug Crashlytics test) | | |
 | 12. Edge Case Testing (incl. dark mode edge cases) | | |
 | 13. Release / Beta Readiness | | |
 

@@ -23,6 +23,7 @@ import 'package:campusiq/features/cwa/presentation/screens/registration_slip_imp
 import 'package:campusiq/features/cwa/presentation/screens/result_slip_import_screen.dart';
 import 'package:campusiq/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:campusiq/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 
@@ -43,7 +44,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/onboarding',
       name: 'onboarding',
-      builder: (context, state) => const OnboardingScreen(),
+      builder: (context, state) => const TrackedScreen(
+        screenName: 'onboarding',
+        child: OnboardingScreen(),
+      ),
     ),
     ShellRoute(
       builder: (context, state, child) => _AppShell(child: child),
@@ -51,44 +55,68 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/plan',
           name: 'plan',
-          builder: (context, state) => const PlanScreen(),
+          builder: (context, state) => const TrackedScreen(
+            screenName: 'today',
+            child: PlanScreen(),
+          ),
         ),
         GoRoute(
           path: '/cwa',
           name: 'cwa',
-          builder: (context, state) => const CwaScreen(),
+          builder: (context, state) => const TrackedScreen(
+            screenName: 'planner',
+            child: CwaScreen(),
+          ),
         ),
         GoRoute(
           path: '/timetable',
           name: 'timetable',
-          builder: (context, state) => const TimetableScreen(),
+          builder: (context, state) => const TrackedScreen(
+            screenName: 'timetable',
+            child: TimetableScreen(),
+          ),
         ),
         GoRoute(
           path: '/sessions',
           name: 'sessions',
-          builder: (context, state) => const SessionScreen(),
+          builder: (context, state) => const TrackedScreen(
+            screenName: 'sessions',
+            child: SessionScreen(),
+          ),
         ),
       ],
     ),
     GoRoute(
       path: '/ai/weekly-review',
       name: 'weekly-review',
-      builder: (context, state) => const WeeklyReviewScreen(),
+      builder: (context, state) => const TrackedScreen(
+        screenName: 'weekly_review',
+        child: WeeklyReviewScreen(),
+      ),
     ),
     GoRoute(
       path: '/streak',
       name: 'streak',
-      builder: (context, state) => const StreakScreen(),
+      builder: (context, state) => const TrackedScreen(
+        screenName: 'streak',
+        child: StreakScreen(),
+      ),
     ),
     GoRoute(
       path: '/insights',
       name: 'insights',
-      builder: (context, state) => const InsightsScreen(),
+      builder: (context, state) => const TrackedScreen(
+        screenName: 'insights',
+        child: InsightsScreen(),
+      ),
     ),
     GoRoute(
       path: '/settings',
       name: 'settings',
-      builder: (context, state) => const SettingsScreen(),
+      builder: (context, state) => const TrackedScreen(
+        screenName: 'settings',
+        child: SettingsScreen(),
+      ),
     ),
     GoRoute(
       path: '/course/:courseCode',
@@ -104,38 +132,56 @@ final appRouter = GoRouter(
           });
           return const Scaffold(body: SizedBox.shrink());
         }
-        return CourseHubScreen(courseCode: courseCode);
+        return TrackedScreen(
+          screenName: 'course_hub',
+          child: CourseHubScreen(courseCode: courseCode),
+        );
       },
     ),
     GoRoute(
       path: '/timetable/import',
       name: 'timetable-import',
-      builder: (context, state) => const TimetableImportScreen(),
+      builder: (context, state) => const TrackedScreen(
+        screenName: 'timetable_import',
+        child: TimetableImportScreen(),
+      ),
     ),
     GoRoute(
       path: '/timetable/reminders',
       name: 'course-reminders',
-      builder: (context, state) => const CourseRemindersScreen(),
+      builder: (context, state) => const TrackedScreen(
+        screenName: 'course_reminders',
+        child: CourseRemindersScreen(),
+      ),
     ),
     GoRoute(
       path: '/cwa/manual-entry',
       name: 'cwa-manual-entry',
       builder: (context, state) {
         final mode = state.uri.queryParameters['mode'] ?? 'semester';
-        return CwaManualEntryScreen(mode: mode);
+        return TrackedScreen(
+          screenName: 'manual_entry',
+          child: CwaManualEntryScreen(mode: mode),
+        );
       },
     ),
     GoRoute(
       path: '/cwa/history',
       name: 'cwa-history',
-      builder: (context, state) => const PastSemestersScreen(),
+      builder: (context, state) => const TrackedScreen(
+        screenName: 'past_semesters',
+        child: PastSemestersScreen(),
+      ),
     ),
     GoRoute(
       path: '/cwa/import/registration',
       name: 'cwa-import-registration',
       builder: (context, state) {
         final source = state.uri.queryParameters['source'];
-        return RegistrationSlipImportScreen(initialSource: source);
+        return TrackedScreen(
+          screenName: 'registration_import',
+          child: RegistrationSlipImportScreen(initialSource: source),
+        );
       },
     ),
     GoRoute(
@@ -143,7 +189,10 @@ final appRouter = GoRouter(
       name: 'cwa-import-results',
       builder: (context, state) {
         final source = state.uri.queryParameters['source'];
-        return ResultSlipImportScreen(initialSource: source);
+        return TrackedScreen(
+          screenName: 'result_import',
+          child: ResultSlipImportScreen(initialSource: source),
+        );
       },
     ),
   ],

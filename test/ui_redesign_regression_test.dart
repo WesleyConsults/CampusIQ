@@ -6,6 +6,7 @@ import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/screens/cwa_manual_entry_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/cwa_screen.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
+import 'package:campusiq/features/session/presentation/widgets/floating_mini_timer.dart';
 import 'package:campusiq/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -143,7 +144,7 @@ void main() {
     appRouter.go('/cwa');
     await _pumpFrames(tester);
 
-    expect(find.text('MATH101'), findsOneWidget);
+    expect(find.byType(FloatingMiniTimer), findsOneWidget);
   });
 }
 

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/layout/shell_overlay_padding.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
@@ -56,7 +58,18 @@ class CwaScreen extends ConsumerWidget {
       existing == null
           ? await repo.addCourse(result)
           : await repo.updateCourse(result);
-    } catch (e) {
+      await AnalyticsService.instance.logCourseSaved(
+        action: existing == null ? 'created' : 'updated',
+        source: 'planner_sheet',
+        gradingSystem: selectedSystem.id,
+      );
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'course_save_failed',
+        context: {'source': 'planner_sheet'},
+      );
       debugPrint('🔴 CwaScreen _openAddSheet failed: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

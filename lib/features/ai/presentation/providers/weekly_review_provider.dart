@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/features/ai/data/models/weekly_review_model.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
@@ -74,7 +76,12 @@ class WeeklyReviewNotifier extends StateNotifier<WeeklyReviewState> {
       }
 
       await _generateReview();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'weekly_review_load_failed',
+      );
       state = state.copyWith(
         isLoading: false,
         error: 'Could not load weekly review.',
@@ -85,6 +92,10 @@ class WeeklyReviewNotifier extends StateNotifier<WeeklyReviewState> {
   Future<void> _generateReview() async {
     final isOnline = await _ref.read(isOnlineProvider.future);
     if (!isOnline) {
+      await AnalyticsService.instance.logAiGenerationFailed(
+        feature: 'weekly_review',
+        reason: 'offline',
+      );
       state = state.copyWith(
         isLoading: false,
         error: "You're offline. Connect to use features.",
@@ -118,12 +129,32 @@ class WeeklyReviewNotifier extends StateNotifier<WeeklyReviewState> {
         hasReviewThisWeek: true,
         hasViewedReview: false,
       );
-    } catch (e) {
+      await AnalyticsService.instance.logAiGenerationSucceeded(
+        feature: 'weekly_review',
+      );
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'weekly_review_generate_failed',
+      );
+      await AnalyticsService.instance.logAiGenerationFailed(
+        feature: 'weekly_review',
+        reason: _aiFailureReason(e),
+      );
       state = state.copyWith(
         isLoading: false,
         error: 'Could not generate your weekly review. Try again later.',
       );
     }
+  }
+
+  String _aiFailureReason(Object error) {
+    final message = error.toString();
+    if (message.contains('JSON') || message.contains('FormatException')) {
+      return 'invalid_ai_response';
+    }
+    return 'request_failed';
   }
 
   Future<void> markViewed() async {

@@ -71,8 +71,9 @@ class TimetableSlotImport {
 
   static String _parseSlotType(String raw) {
     final lower = raw.toLowerCase();
-    if (lower.contains('practical') || lower.contains('lab'))
+    if (lower.contains('practical') || lower.contains('lab')) {
       return 'Practical';
+    }
     if (lower.contains('tutorial') || lower.contains('tut')) return 'Tutorial';
     return 'Lecture';
   }

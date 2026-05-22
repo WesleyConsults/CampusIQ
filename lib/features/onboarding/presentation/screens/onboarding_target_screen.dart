@@ -71,8 +71,7 @@ class OnboardingTargetScreen extends ConsumerWidget {
                               child: Text(
                                 system.formatScore(state.target,
                                     includeUnit: true),
-                                style:
-                                    theme.textTheme.displayMedium?.copyWith(
+                                style: theme.textTheme.displayMedium?.copyWith(
                                   fontWeight: FontWeight.w800,
                                   color: colorScheme.primary,
                                 ),
@@ -113,8 +112,8 @@ class OnboardingTargetScreen extends ConsumerWidget {
                           min: system.targetMin.toDouble(),
                           max: system.targetMax.toDouble(),
                           divisions: system.sliderDivisions,
-                          label: system
-                              .formatScore(state.target, includeUnit: true),
+                          label: system.formatScore(state.target,
+                              includeUnit: true),
                           onChanged: notifier.setTarget,
                         ),
                       ),
@@ -134,8 +133,7 @@ class OnboardingTargetScreen extends ConsumerWidget {
                           onPressed: () => notifier.goNext(),
                           child: const Text('Continue',
                               style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600)),
+                                  fontSize: 16, fontWeight: FontWeight.w600)),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.lg),

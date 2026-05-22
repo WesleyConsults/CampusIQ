@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/features/timetable/data/models/course_reminder_model.dart';
 
 class CourseReminderRepository {
@@ -38,8 +39,17 @@ class CourseReminderRepository {
     try {
       reminder.updatedAt = DateTime.now();
       await _isar.writeTxn(() => _isar.courseReminderModels.put(reminder));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {
+          'repository': 'course_reminder',
+          'operation': 'save_reminder',
+        },
+      );
       rethrow;
     }
   }
@@ -47,8 +57,17 @@ class CourseReminderRepository {
   Future<void> deleteReminder(Id id) async {
     try {
       await _isar.writeTxn(() => _isar.courseReminderModels.delete(id));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {
+          'repository': 'course_reminder',
+          'operation': 'delete_reminder',
+        },
+      );
       rethrow;
     }
   }

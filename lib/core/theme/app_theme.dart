@@ -145,7 +145,8 @@ class AppTheme {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: baseTextTheme.titleLarge,
-        iconTheme: const IconThemeData(color: textPrimary, size: AppIconSizes.xxl),
+        iconTheme:
+            const IconThemeData(color: textPrimary, size: AppIconSizes.xxl),
       ),
       cardTheme: const CardThemeData(
         color: cardBg,
@@ -409,7 +410,8 @@ class AppTheme {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: baseTextTheme.titleLarge,
-        iconTheme: const IconThemeData(color: _darkTextPrimary, size: AppIconSizes.xxl),
+        iconTheme: const IconThemeData(
+            color: _darkTextPrimary, size: AppIconSizes.xxl),
       ),
       cardTheme: const CardThemeData(
         color: _darkSurface,
@@ -466,7 +468,8 @@ class AppTheme {
             vertical: AppSpacing.md,
           ),
           shape: const RoundedRectangleBorder(borderRadius: AppRadii.button),
-          textStyle: baseTextTheme.labelLarge?.copyWith(color: const Color(0xFF14213D)),
+          textStyle: baseTextTheme.labelLarge
+              ?.copyWith(color: const Color(0xFF14213D)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(

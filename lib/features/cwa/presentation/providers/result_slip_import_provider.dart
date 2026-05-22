@@ -9,6 +9,8 @@ import 'package:campusiq/features/cwa/domain/past_course_result.dart';
 import 'package:campusiq/features/cwa/domain/result_slip_parser.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/core/services/connectivity_service.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 
 part 'result_slip_import_provider.g.dart';
 
@@ -107,6 +109,11 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
   ResultImportState build() => const ResultImportState();
 
   Future<void> pickFromCamera() async {
+    const source = 'camera';
+    await AnalyticsService.instance.logCourseImportStarted(
+      importType: 'result',
+      source: source,
+    );
     state = state.copyWith(step: ResultImportStep.picking);
     try {
       final picker = ImagePicker();
@@ -117,16 +124,23 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
         return;
       }
       final bytes = await picked.readAsBytes();
-      await _parse(bytes, 'image/jpeg');
-    } catch (e) {
-      state = state.copyWith(
-        step: ResultImportStep.error,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+      await _parse(bytes, 'image/jpeg', source: source);
+    } catch (e, stackTrace) {
+      await _handleFailure(
+        e,
+        stackTrace,
+        source: source,
+        reason: 'image_picker_failed',
       );
     }
   }
 
   Future<void> pickFromGallery() async {
+    const source = 'gallery';
+    await AnalyticsService.instance.logCourseImportStarted(
+      importType: 'result',
+      source: source,
+    );
     state = state.copyWith(step: ResultImportStep.picking);
     try {
       final picker = ImagePicker();
@@ -137,16 +151,23 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
         return;
       }
       final bytes = await picked.readAsBytes();
-      await _parse(bytes, 'image/jpeg');
-    } catch (e) {
-      state = state.copyWith(
-        step: ResultImportStep.error,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+      await _parse(bytes, 'image/jpeg', source: source);
+    } catch (e, stackTrace) {
+      await _handleFailure(
+        e,
+        stackTrace,
+        source: source,
+        reason: 'image_picker_failed',
       );
     }
   }
 
   Future<void> pickFromFile() async {
+    const source = 'pdf';
+    await AnalyticsService.instance.logCourseImportStarted(
+      importType: 'result',
+      source: source,
+    );
     state = state.copyWith(step: ResultImportStep.picking);
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -161,6 +182,11 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
       final file = result.files.first;
       final bytes = file.bytes;
       if (bytes == null) {
+        await AnalyticsService.instance.logCourseImportFailed(
+          importType: 'result',
+          source: source,
+          reason: 'file_read_failed',
+        );
         state = state.copyWith(
           step: ResultImportStep.error,
           errorMessage: 'Could not read file.',
@@ -170,17 +196,28 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
       final mime = (file.extension ?? '').toLowerCase() == 'pdf'
           ? 'application/pdf'
           : 'image/jpeg';
-      await _parse(bytes, mime);
-    } catch (e) {
-      state = state.copyWith(
-        step: ResultImportStep.error,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+      await _parse(bytes, mime, source: source);
+    } catch (e, stackTrace) {
+      await _handleFailure(
+        e,
+        stackTrace,
+        source: source,
+        reason: 'file_picker_failed',
       );
     }
   }
 
-  Future<void> _parse(Uint8List bytes, String mimeType) async {
+  Future<void> _parse(
+    Uint8List bytes,
+    String mimeType, {
+    required String source,
+  }) async {
     if (bytes.length > 10 * 1024 * 1024) {
+      await AnalyticsService.instance.logCourseImportFailed(
+        importType: 'result',
+        source: source,
+        reason: 'file_too_large',
+      );
       state = state.copyWith(
         step: ResultImportStep.error,
         errorMessage: 'File too large (max 10 MB). Try compressing it first.',
@@ -190,6 +227,11 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
 
     final isOnline = await ConnectivityService.isOnline();
     if (!isOnline) {
+      await AnalyticsService.instance.logCourseImportFailed(
+        importType: 'result',
+        source: source,
+        reason: 'offline',
+      );
       state = state.copyWith(
         step: ResultImportStep.error,
         errorMessage: "You're offline. Connect to use features.",
@@ -203,6 +245,11 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
       final parseResult = await parser.parse(bytes, mimeType);
 
       if (parseResult.courses.isEmpty) {
+        await AnalyticsService.instance.logCourseImportFailed(
+          importType: 'result',
+          source: source,
+          reason: 'empty_parse_result',
+        );
         state = state.copyWith(
           step: ResultImportStep.error,
           errorMessage:
@@ -226,10 +273,12 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
         parsedLevel: parseResult.level,
         parsedProgramme: parseResult.programme,
       );
-    } catch (e) {
-      state = state.copyWith(
-        step: ResultImportStep.error,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+    } catch (e, stackTrace) {
+      await _handleFailure(
+        e,
+        stackTrace,
+        source: source,
+        reason: 'result_import_failed',
       );
     }
   }
@@ -333,7 +382,24 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
       }
 
       state = state.copyWith(step: ResultImportStep.done);
-    } catch (e) {
+      await AnalyticsService.instance.logCourseImportSucceeded(
+        importType: 'result',
+        source: 'review',
+        count: entries.length,
+        skippedCount: state.skippedCourseCount,
+      );
+    } catch (e, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'result_import_save_failed',
+        context: {'selected_count': state.selectedIndexes.length},
+      );
+      await AnalyticsService.instance.logCourseImportFailed(
+        importType: 'result',
+        source: 'review',
+        reason: 'save_failed',
+      );
       state = state.copyWith(
         step: ResultImportStep.error,
         errorMessage: 'Failed to save: ${e.toString()}',
@@ -342,4 +408,27 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
   }
 
   void reset() => state = const ResultImportState();
+
+  Future<void> _handleFailure(
+    Object error,
+    StackTrace stackTrace, {
+    required String source,
+    required String reason,
+  }) async {
+    await CrashReportingService.instance.recordNonFatalError(
+      error,
+      stackTrace,
+      reason: reason,
+      context: {'import_type': 'result', 'source': source},
+    );
+    await AnalyticsService.instance.logCourseImportFailed(
+      importType: 'result',
+      source: source,
+      reason: reason,
+    );
+    state = state.copyWith(
+      step: ResultImportStep.error,
+      errorMessage: error.toString().replaceFirst('Exception: ', ''),
+    );
+  }
 }

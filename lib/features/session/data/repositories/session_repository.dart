@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
 
 class SessionRepository {
@@ -10,8 +11,14 @@ class SessionRepository {
   Future<void> saveSession(StudySessionModel session) async {
     try {
       await _isar.writeTxn(() => _isar.studySessionModels.put(session));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {'repository': 'session', 'operation': 'save_session'},
+      );
       rethrow;
     }
   }
@@ -50,8 +57,14 @@ class SessionRepository {
   Future<void> deleteSession(Id id) async {
     try {
       await _isar.writeTxn(() => _isar.studySessionModels.delete(id));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {'repository': 'session', 'operation': 'delete_session'},
+      );
       rethrow;
     }
   }

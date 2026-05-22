@@ -102,11 +102,11 @@ class AppSpacing {
 /// Semantic layout tokens — prefer these over raw AppSpacing values in screens.
 class AppLayout {
   // Screen structure
-  static const double screenGutter = AppSpacing.xl;    // 24
-  static const double sectionGap = AppSpacing.lg;      // 20
-  static const double cardGap = AppSpacing.md;         // 16
-  static const double compactGap = AppSpacing.sm;      // 12
-  static const double inlineGap = AppSpacing.xs;       // 8
+  static const double screenGutter = AppSpacing.xl; // 24
+  static const double sectionGap = AppSpacing.lg; // 20
+  static const double cardGap = AppSpacing.md; // 16
+  static const double compactGap = AppSpacing.sm; // 12
+  static const double inlineGap = AppSpacing.xs; // 8
 
   // Convenience paddings
   static const EdgeInsets screenPadding = AppSpacing.screenPadding;
@@ -181,12 +181,12 @@ class AppIconSizes {
   static const double error = 56;
 
   // Semantic aliases — prefer these in widget code
-  static const double chip = md;       // 16 — chip trailing icons
-  static const double list = lg;       // 18 — list tile chevrons / leading
-  static const double nav = xl;        // 20 — bottom nav destinations
-  static const double appBar = xxl;    // 22 — app bar actions
-  static const double feature = xxxl;  // 24 — feature cards, option tiles
-  static const double fab = lg;        // 18 — floating action button
+  static const double chip = md; // 16 — chip trailing icons
+  static const double list = lg; // 18 — list tile chevrons / leading
+  static const double nav = xl; // 20 — bottom nav destinations
+  static const double appBar = xxl; // 22 — app bar actions
+  static const double feature = xxxl; // 24 — feature cards, option tiles
+  static const double fab = lg; // 18 — floating action button
 }
 
 /// Hard safety limits. Scaling must not push values below these floors.

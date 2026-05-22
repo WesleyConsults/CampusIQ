@@ -187,10 +187,12 @@ class PlannedActualAnalyser {
       return 'You studied $timeStr today — great spontaneous effort!';
     }
 
-    if (rate >= 1.0)
+    if (rate >= 1.0) {
       return 'You hit your study target today. $timeStr studied. Keep it up!';
-    if (rate >= 0.7)
+    }
+    if (rate >= 0.7) {
       return 'Almost there — $timeStr studied, ${((1 - rate) * 100).toInt()}% left to hit your plan.';
+    }
 
     // Find most under-studied course
     final worst = analytics.perCourse

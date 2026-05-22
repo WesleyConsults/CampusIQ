@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 
 class TimetableRepository {
@@ -28,8 +29,14 @@ class TimetableRepository {
   Future<void> addSlot(TimetableSlotModel slot) async {
     try {
       await _isar.writeTxn(() => _isar.timetableSlotModels.put(slot));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {'repository': 'timetable', 'operation': 'add_slot'},
+      );
       rethrow;
     }
   }
@@ -37,8 +44,14 @@ class TimetableRepository {
   Future<void> updateSlot(TimetableSlotModel slot) async {
     try {
       await _isar.writeTxn(() => _isar.timetableSlotModels.put(slot));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {'repository': 'timetable', 'operation': 'update_slot'},
+      );
       rethrow;
     }
   }
@@ -46,8 +59,14 @@ class TimetableRepository {
   Future<void> deleteSlot(Id id) async {
     try {
       await _isar.writeTxn(() => _isar.timetableSlotModels.delete(id));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {'repository': 'timetable', 'operation': 'delete_slot'},
+      );
       rethrow;
     }
   }

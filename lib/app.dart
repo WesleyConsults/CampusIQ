@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/router/app_router.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
+import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/constants/app_constants.dart';
 import 'package:campusiq/core/services/notification_service.dart';
@@ -86,6 +88,16 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
     if (prefsRepo == null) return;
 
     final prefs = await prefsRepo.getPrefs();
+    await AnalyticsService.instance.setCoreUserProperties(
+      gradingSystem: prefs.gradingSystemId,
+      themeMode: _themeModeKey(prefs.themeModeIndex),
+      notificationsEnabled: prefs.notifyStudyReminders ||
+          prefs.notifyStreakAlerts ||
+          prefs.notifyMilestoneAlerts ||
+          prefs.notifyWeeklyReview,
+      onboardingCompleted: prefs.hasCompletedOnboarding,
+      universitySet: (prefs.universityName ?? '').trim().isNotEmpty,
+    );
     final streak = ref.read(studyStreakProvider);
     final now = DateTime.now();
 
@@ -97,40 +109,97 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
           allSlots.where((s) => s.dayIndex == todayIndex).toList();
       final freeBlocks =
           FreeTimeDetector.detect(dayIndex: todayIndex, slots: todaySlots);
-      await NotificationService.instance.scheduleFreeBlockReminders(freeBlocks);
+      try {
+        await NotificationService.instance
+            .scheduleFreeBlockReminders(freeBlocks);
+      } catch (error, stackTrace) {
+        await CrashReportingService.instance.recordNonFatalError(
+          error,
+          stackTrace,
+          reason: 'free_block_notification_schedule_failed',
+        );
+      }
 
       // Daily "haven't studied" alert at user's chosen time
-      await NotificationService.instance.scheduleHaventStudiedAlert(
-        hour: prefs.dailyReminderHour,
-        minute: prefs.dailyReminderMinute,
-      );
+      try {
+        await NotificationService.instance.scheduleHaventStudiedAlert(
+          hour: prefs.dailyReminderHour,
+          minute: prefs.dailyReminderMinute,
+        );
+      } catch (error, stackTrace) {
+        await CrashReportingService.instance.recordNonFatalError(
+          error,
+          stackTrace,
+          reason: 'daily_reminder_notification_schedule_failed',
+        );
+      }
     }
 
     try {
       await refreshCourseReminderNotifications(ref);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      await CrashReportingService.instance.recordNonFatalError(
+        error,
+        stackTrace,
+        reason: 'course_reminder_notification_schedule_failed',
+      );
       // Course reminders are best-effort and should not block app startup.
     }
 
     // Streak at-risk alert
     if (prefs.notifyStreakAlerts && !streak.studiedToday) {
-      await NotificationService.instance
-          .scheduleStreakAtRiskAlert(streak.currentStreak);
+      try {
+        await NotificationService.instance
+            .scheduleStreakAtRiskAlert(streak.currentStreak);
+      } catch (error, stackTrace) {
+        await CrashReportingService.instance.recordNonFatalError(
+          error,
+          stackTrace,
+          reason: 'streak_notification_schedule_failed',
+        );
+      }
     } else {
       await NotificationService.instance.cancelNotification(200);
     }
 
     // Milestone alert
     if (prefs.notifyMilestoneAlerts && streak.nextMilestone != null) {
-      await NotificationService.instance.scheduleMilestoneAlert(
-        streak.daysToNextMilestone,
-        streak.nextMilestone!.days,
-      );
+      try {
+        await NotificationService.instance.scheduleMilestoneAlert(
+          streak.daysToNextMilestone,
+          streak.nextMilestone!.days,
+        );
+      } catch (error, stackTrace) {
+        await CrashReportingService.instance.recordNonFatalError(
+          error,
+          stackTrace,
+          reason: 'milestone_notification_schedule_failed',
+        );
+      }
     }
 
     // Weekly review prompt — schedule on Mondays
     if (prefs.notifyWeeklyReview && now.weekday == DateTime.monday) {
-      await NotificationService.instance.scheduleWeeklyReviewPrompt();
+      try {
+        await NotificationService.instance.scheduleWeeklyReviewPrompt();
+      } catch (error, stackTrace) {
+        await CrashReportingService.instance.recordNonFatalError(
+          error,
+          stackTrace,
+          reason: 'weekly_review_notification_schedule_failed',
+        );
+      }
+    }
+  }
+
+  String _themeModeKey(int index) {
+    switch (index) {
+      case 1:
+        return 'light';
+      case 2:
+        return 'dark';
+      default:
+        return 'system';
     }
   }
 
