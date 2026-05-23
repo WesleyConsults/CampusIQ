@@ -19,8 +19,8 @@ import 'package:campusiq/features/settings/presentation/providers/settings_provi
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 
 // ── Static URLs ────────────────────────────────────────────────────────────
-const _privacyUrl = 'https://campusiq.app/privacy';
-const _termsUrl = 'https://campusiq.app/terms';
+const _privacyUrl = 'https://uni-mate-privacy-policy.vercel.app/privacy';
+const _termsUrl = 'https://uni-mate-privacy-policy.vercel.app/terms';
 const _feedbackEmail = 'hello@campusiq.app';
 
 class SettingsScreen extends ConsumerWidget {
