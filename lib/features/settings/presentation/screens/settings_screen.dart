@@ -21,7 +21,7 @@ import 'package:campusiq/features/streak/presentation/providers/streak_provider.
 // ── Static URLs ────────────────────────────────────────────────────────────
 const _privacyUrl = 'https://uni-mate-privacy-policy.vercel.app/privacy';
 const _termsUrl = 'https://uni-mate-privacy-policy.vercel.app/terms';
-const _feedbackEmail = 'hello@campusiq.app';
+const _feedbackEmail = 'wesleyconsults@gmail.com';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
