@@ -19,8 +19,8 @@ import 'package:campusiq/features/settings/presentation/providers/settings_provi
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 
 // ── Static URLs ────────────────────────────────────────────────────────────
-const _privacyUrl = 'https://uni-mate-privacy-policy.vercel.app/privacy';
-const _termsUrl = 'https://uni-mate-privacy-policy.vercel.app/terms';
+const _privacyUrl = 'https://uni-mate-privacy-policy.vercel.app/privacy.html';
+const _termsUrl = 'https://uni-mate-privacy-policy.vercel.app/terms.html';
 const _feedbackEmail = 'wesleyconsults@gmail.com';
 
 class SettingsScreen extends ConsumerWidget {
@@ -649,9 +649,12 @@ class _SwitchTile extends StatelessWidget {
 
 Future<void> _launchUrl(BuildContext context, String url) async {
   final uri = Uri.parse(url);
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  } else {
+  final didLaunch = await launchUrl(
+    uri,
+    mode: LaunchMode.externalApplication,
+  );
+
+  if (!didLaunch) {
     await Clipboard.setData(ClipboardData(text: url));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
