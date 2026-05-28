@@ -92,7 +92,7 @@ class GradingSystem {
     targetMax: 100,
     defaultTarget: 70,
     sliderDivisions: 100,
-    displayDecimals: 1,
+    displayDecimals: 2,
     scoreUnit: '%',
     usesLetterGrades: false,
     gradeScale: GradeScale([
@@ -145,7 +145,7 @@ class GradingSystem {
     targetMax: 4,
     defaultTarget: 3.6,
     sliderDivisions: 40,
-    displayDecimals: 1,
+    displayDecimals: 2,
     scoreUnit: 'pts',
     usesLetterGrades: true,
     gradeScale: GradeScale([
@@ -217,7 +217,7 @@ class GradingSystem {
     targetMax: 4,
     defaultTarget: 3.6,
     sliderDivisions: 40,
-    displayDecimals: 1,
+    displayDecimals: 2,
     scoreUnit: 'pts',
     usesLetterGrades: true,
     gradeScale: GradeScale([
@@ -289,7 +289,7 @@ class GradingSystem {
     targetMax: 5,
     defaultTarget: 4,
     sliderDivisions: 50,
-    displayDecimals: 1,
+    displayDecimals: 2,
     scoreUnit: 'pts',
     usesLetterGrades: true,
     gradeScale: GradeScale([

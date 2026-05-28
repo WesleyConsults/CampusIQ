@@ -9,14 +9,14 @@ void main() {
     });
 
     test('formats CWA and GPA scores with the right scale', () {
-      expect(GradingSystem.cwa.formatScore(72.25, includeUnit: true), '72.3%');
+      expect(GradingSystem.cwa.formatScore(72.25, includeUnit: true), '72.25%');
       expect(
         GradingSystem.ghanaFourPoint.formatScore(3.55, includeUnit: true),
-        '3.5 pts',
+        '3.55 pts',
       );
       expect(
         GradingSystem.ghanaFivePoint.formatScore(4.25, includeUnit: true),
-        '4.3 pts',
+        '4.25 pts',
       );
     });
 

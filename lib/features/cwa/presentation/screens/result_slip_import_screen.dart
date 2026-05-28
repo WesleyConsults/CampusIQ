@@ -575,6 +575,7 @@ class _ReviewView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selected = state.selectedIndexes.length;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       children: [
@@ -588,16 +589,18 @@ class _ReviewView extends StatelessWidget {
                   children: [
                     Text(
                       state.semesterLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.primary,
+                        color: colorScheme.primary,
                       ),
                     ),
                     Text(
                       '${state.courses.length} courses found',
-                      style: const TextStyle(
-                          fontSize: 13, color: AppTheme.textSecondary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     if (state.reportedSemesterCwa != null ||
                         state.reportedCumulativeCwa != null) ...[
@@ -611,16 +614,17 @@ class _ReviewView extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppTheme.primary.withValues(alpha: 0.1),
+                                color:
+                                    colorScheme.primary.withValues(alpha: 0.12),
                                 borderRadius:
                                     BorderRadius.circular(AppRadii.xxs),
                               ),
                               child: Text(
                                 'Reported Sem ${gradingSystem.label}: ${state.reportedSemesterCwa?.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.primary),
+                                    color: colorScheme.primary),
                               ),
                             ),
                           if (state.reportedCumulativeCwa != null)
@@ -628,16 +632,17 @@ class _ReviewView extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppTheme.primary.withValues(alpha: 0.1),
+                                color:
+                                    colorScheme.primary.withValues(alpha: 0.12),
                                 borderRadius:
                                     BorderRadius.circular(AppRadii.xxs),
                               ),
                               child: Text(
                                 'Reported Cum ${gradingSystem.cumulativeLabel}: ${state.reportedCumulativeCwa?.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.primary),
+                                    color: colorScheme.primary),
                               ),
                             ),
                         ],
@@ -654,17 +659,20 @@ class _ReviewView extends StatelessWidget {
                   selected == state.courses.length
                       ? 'Deselect all'
                       : 'Select all',
-                  style: const TextStyle(color: AppTheme.primary, fontSize: 13),
+                  style: TextStyle(color: colorScheme.primary, fontSize: 13),
                 ),
               ),
             ],
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'Correct any grade or credit hours, then tap Import.',
-            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+            style: TextStyle(
+              fontSize: 12,
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         if (state.skippedCourseCount > 0) ...[
@@ -797,6 +805,7 @@ class _ParseWarningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
@@ -817,10 +826,10 @@ class _ParseWarningCard extends StatelessWidget {
           Expanded(
             child: Text(
               '$skippedCount course row${skippedCount == 1 ? '' : 's'} could not be read cleanly. Compare this list with your slip and add any missing course before saving.',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 height: 1.35,
-                color: AppTheme.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
           ),
@@ -879,18 +888,20 @@ class _ReviewCourseCard extends StatelessWidget {
                   children: [
                     Text(
                       course.courseCode.toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
-                        color: AppTheme.primary,
+                        color: colorScheme.primary,
                         letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxxs),
                     Text(
                       course.courseName,
-                      style: const TextStyle(
-                          fontSize: 14, color: AppTheme.textPrimary),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
                     if (isSelected) ...[
                       const SizedBox(height: AppSpacing.xs2),
@@ -898,8 +909,10 @@ class _ReviewCourseCard extends StatelessWidget {
                         children: [
                           Text(
                             gradingSystem.usesLetterGrades ? 'Points' : 'Mark',
-                            style: const TextStyle(
-                                fontSize: 12, color: AppTheme.textSecondary),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(width: AppSpacing.xxs2),
                           if (gradingSystem.usesLetterGrades)
@@ -912,10 +925,10 @@ class _ReviewCourseCard extends StatelessWidget {
                                     ),
                                 includeUnit: true,
                               ),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
-                                color: AppTheme.primary,
+                                color: colorScheme.primary,
                               ),
                             )
                           else
@@ -925,10 +938,12 @@ class _ReviewCourseCard extends StatelessWidget {
                             ),
                           const Spacer(),
                           // Grade picker
-                          const Text(
+                          Text(
                             'Grade',
                             style: TextStyle(
-                                fontSize: 12, color: AppTheme.textSecondary),
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           CompactGradeDropdown(
@@ -942,10 +957,12 @@ class _ReviewCourseCard extends StatelessWidget {
                       Row(
                         children: [
                           // Credit hours stepper
-                          const Text(
+                          Text(
                             'Credits',
                             style: TextStyle(
-                                fontSize: 12, color: AppTheme.textSecondary),
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           _CreditStepper(
@@ -1007,22 +1024,23 @@ class _MarkInputState extends State<_MarkInput> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SizedBox(
       width: 50,
       height: 32,
       child: TextField(
         controller: _controller,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w700,
-          color: AppTheme.primary,
+          color: colorScheme.primary,
         ),
         textAlign: TextAlign.center,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.zero,
           filled: true,
-          fillColor: AppTheme.primary.withValues(alpha: 0.1),
+          fillColor: colorScheme.primary.withValues(alpha: 0.12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSpacing.xs),
             borderSide: BorderSide.none,
@@ -1046,6 +1064,7 @@ class _CreditStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         _StepButton(
@@ -1056,10 +1075,10 @@ class _CreditStepper extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Text(
             '${value.toInt()}',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 15,
-              color: AppTheme.primary,
+              color: colorScheme.primary,
             ),
           ),
         ),
@@ -1080,6 +1099,7 @@ class _StepButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1087,14 +1107,16 @@ class _StepButton extends StatelessWidget {
         height: 28,
         decoration: BoxDecoration(
           color: onTap != null
-              ? AppTheme.primary.withValues(alpha: 0.1)
-              : Colors.grey.shade100,
+              ? colorScheme.primary.withValues(alpha: 0.12)
+              : colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(AppRadii.xxs),
         ),
         child: Icon(
           icon,
           size: AppIconSizes.md,
-          color: onTap != null ? AppTheme.primary : AppTheme.textSecondary,
+          color: onTap != null
+              ? colorScheme.primary
+              : colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -1138,6 +1160,7 @@ class _AddResultCourseSheetState extends State<_AddResultCourseSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -1151,12 +1174,12 @@ class _AddResultCourseSheetState extends State<_AddResultCourseSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Add missing result',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -1225,9 +1248,9 @@ class _AddResultCourseSheetState extends State<_AddResultCourseSheet> {
               widget.gradingSystem.usesLetterGrades
                   ? 'The selected grade point will be used in the cumulative calculation.'
                   : 'Grade will be derived from the mark.',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -1291,6 +1314,7 @@ class _DoneView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -1310,24 +1334,29 @@ class _DoneView extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               '$label saved',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               '$count course${count == 1 ? '' : 's'} added to your history.',
               textAlign: TextAlign.center,
-              style:
-                  const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: TextStyle(
+                fontSize: 14,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.xxs2),
-            const Text(
+            Text(
               'Switch to Cumulative view on the CWA screen to see your true CWA.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style: TextStyle(
+                fontSize: 13,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.xxl),
             SizedBox(

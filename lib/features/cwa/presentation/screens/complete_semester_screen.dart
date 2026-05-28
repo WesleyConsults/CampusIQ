@@ -580,7 +580,7 @@ class _SummaryCard extends StatelessWidget {
               Expanded(
                 child: _MiniStat(
                   label: 'Preview CWA',
-                  value: previewCwa.toStringAsFixed(1),
+                  value: previewCwa.toStringAsFixed(2),
                 ),
               ),
             ],

@@ -195,7 +195,7 @@ class CwaScreen extends ConsumerWidget {
               AppSpacing.xl,
               AppSpacing.xs,
               AppSpacing.xl,
-              0,
+              AppSpacing.md,
             ),
             child: _ViewToggle(
               mode: viewMode,
@@ -687,7 +687,10 @@ class _SupportCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return CampusCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm2,
+        vertical: AppSpacing.sm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -731,13 +734,378 @@ class _SupportCard extends StatelessWidget {
   }
 }
 
+class _CumulativeSnapshotCard extends StatelessWidget {
+  final double cumulative;
+  final double totalCredits;
+  final double gap;
+  final GradingSystem gradingSystem;
+  final bool hasData;
+
+  const _CumulativeSnapshotCard({
+    required this.cumulative,
+    required this.totalCredits,
+    required this.gap,
+    required this.gradingSystem,
+    required this.hasData,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isOnTrack = gap <= 0;
+
+    return CampusCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm2,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: Icon(
+              LucideIcons.trendingUp,
+              color: colorScheme.primary,
+              size: AppIconSizes.xl,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  gradingSystem.cumulativeMetricLabel,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                hasData ? gradingSystem.formatScore(cumulative) : '--',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: colorScheme.primary,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                hasData
+                    ? '${totalCredits.toInt()} cr • ${isOnTrack ? 'On track' : 'Gap ${gradingSystem.formatDelta(gap)}'}'
+                    : 'No data yet',
+                textAlign: TextAlign.end,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SemesterSummaryHeaderDelegate extends SliverPersistentHeaderDelegate {
+  static const double _collapsedHeight = 96;
+  static const double _expandedHeight = 308;
+
+  final double projected;
+  final double target;
+  final double gap;
+  final double cumulative;
+  final double cumulativeCredits;
+  final double cumulativeGap;
+  final double semesterCredits;
+  final int courseCount;
+  final GradingSystem gradingSystem;
+  final bool hasCourses;
+  final bool hasCumulativeData;
+
+  const _SemesterSummaryHeaderDelegate({
+    required this.projected,
+    required this.target,
+    required this.gap,
+    required this.cumulative,
+    required this.cumulativeCredits,
+    required this.cumulativeGap,
+    required this.semesterCredits,
+    required this.courseCount,
+    required this.gradingSystem,
+    required this.hasCourses,
+    required this.hasCumulativeData,
+  });
+
+  @override
+  double get minExtent => _collapsedHeight;
+
+  @override
+  double get maxExtent => _expandedHeight;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final progress =
+        (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0).toDouble();
+    final expandedOpacity = (1 - (progress * 1.7)).clamp(0.0, 1.0).toDouble();
+    final collapsedOpacity =
+        ((progress - 0.38) / 0.62).clamp(0.0, 1.0).toDouble();
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: overlapsContent
+            ? [
+                BoxShadow(
+                  color: colorScheme.shadow.withValues(alpha: 0.12),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          IgnorePointer(
+            ignoring: progress > 0.45,
+            child: Opacity(
+              opacity: expandedOpacity,
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    AppSpacing.xxs,
+                    AppSpacing.xl,
+                    AppSpacing.xxs,
+                  ),
+                  child: Column(
+                    children: [
+                      _CwaOverviewPanel(
+                        projected: projected,
+                        target: target,
+                        gap: gap,
+                        gradingSystem: gradingSystem,
+                        label: gradingSystem.projectedLabel,
+                        eyebrow: 'Current semester',
+                        hasData: hasCourses,
+                        stats: [
+                          _QuickStatItem(
+                            label: 'Courses',
+                            value: '$courseCount',
+                            icon: LucideIcons.bookOpen,
+                          ),
+                          _QuickStatItem(
+                            label: 'Credits',
+                            value: '${semesterCredits.toInt()} cr',
+                            icon: LucideIcons.chartColumn,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      _CumulativeSnapshotCard(
+                        cumulative: cumulative,
+                        totalCredits: cumulativeCredits,
+                        gap: cumulativeGap,
+                        gradingSystem: gradingSystem,
+                        hasData: hasCumulativeData,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          IgnorePointer(
+            ignoring: collapsedOpacity == 0,
+            child: Opacity(
+              opacity: collapsedOpacity,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.xxs2,
+                  AppSpacing.xl,
+                  AppSpacing.xxs2,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _PinnedSummaryMetricCard(
+                        label: gradingSystem.label,
+                        value: hasCourses
+                            ? gradingSystem.formatScore(projected)
+                            : '--',
+                        detail: hasCourses
+                            ? _gapLabel(gap, gradingSystem)
+                            : '$courseCount courses',
+                        icon: LucideIcons.gauge,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs2),
+                    Expanded(
+                      child: _PinnedSummaryMetricCard(
+                        label: gradingSystem.cumulativeLabel,
+                        value: hasCumulativeData
+                            ? gradingSystem.formatScore(cumulative)
+                            : '--',
+                        detail: hasCumulativeData
+                            ? _gapLabel(cumulativeGap, gradingSystem)
+                            : 'No data yet',
+                        icon: LucideIcons.trendingUp,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _gapLabel(double value, GradingSystem gradingSystem) {
+    if (value <= 0) return 'On track';
+    return 'Gap ${gradingSystem.formatDelta(value)}';
+  }
+
+  @override
+  bool shouldRebuild(covariant _SemesterSummaryHeaderDelegate oldDelegate) {
+    return projected != oldDelegate.projected ||
+        target != oldDelegate.target ||
+        gap != oldDelegate.gap ||
+        cumulative != oldDelegate.cumulative ||
+        cumulativeCredits != oldDelegate.cumulativeCredits ||
+        cumulativeGap != oldDelegate.cumulativeGap ||
+        semesterCredits != oldDelegate.semesterCredits ||
+        courseCount != oldDelegate.courseCount ||
+        gradingSystem != oldDelegate.gradingSystem ||
+        hasCourses != oldDelegate.hasCourses ||
+        hasCumulativeData != oldDelegate.hasCumulativeData;
+  }
+}
+
+class _PinnedSummaryMetricCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final String detail;
+  final IconData icon;
+
+  const _PinnedSummaryMetricCard({
+    required this.label,
+    required this.value,
+    required this.detail,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return CampusCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xs,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppRadii.xs2),
+            ),
+            child:
+                Icon(icon, color: colorScheme.primary, size: AppIconSizes.md),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxxs),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                      height: 1,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxxs),
+                Text(
+                  detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.primary,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _QuickStatsGrid extends StatelessWidget {
   final List<_QuickStatItem> items;
 
   const _QuickStatsGrid({required this.items});
 
   /// Scales with profile — reduce for compact, increase for comfortable.
-  static const double _quickStatCardHeight = 88;
+  static const double _quickStatCardHeight = 80;
 
   @override
   Widget build(BuildContext context) {
@@ -825,8 +1193,9 @@ class _QuickStatCard extends StatelessWidget {
 class _CwaOverviewPanel extends StatelessWidget {
   static const double _wideLayoutMinWidth = 320;
   static const double _wideLayoutGap = AppSpacing.xs2;
+  static const double _wideQuickStatCardHeight = 84;
   static const double _wideLayoutHeight =
-      (_QuickStatsGrid._quickStatCardHeight * 2) + _wideLayoutGap;
+      (_wideQuickStatCardHeight * 2) + _wideLayoutGap;
 
   final double projected;
   final double target;
@@ -903,12 +1272,12 @@ class _CwaOverviewPanel extends StatelessWidget {
                 child: Column(
                   children: [
                     SizedBox(
-                      height: _QuickStatsGrid._quickStatCardHeight,
+                      height: _wideQuickStatCardHeight,
                       child: _QuickStatCard(item: stats[0]),
                     ),
                     const SizedBox(height: _wideLayoutGap),
                     SizedBox(
-                      height: _QuickStatsGrid._quickStatCardHeight,
+                      height: _wideQuickStatCardHeight,
                       child: _QuickStatCard(item: stats[1]),
                     ),
                   ],
@@ -1107,6 +1476,11 @@ class _SemesterView extends ConsumerWidget {
     final coursesAsync = ref.watch(coursesProvider);
     final selectedGradingSystem = ref.watch(gradingSystemProvider);
     final projected = ref.watch(projectedCwaProvider);
+    final cumulativeCwa = ref.watch(cumulativeCwaProvider);
+    final cumulativeCredits = ref.watch(totalCreditsProvider);
+    final cumulativeGap = ref.watch(cumulativeGapProvider);
+    final pastSemestersAsync = ref.watch(pastSemestersProvider);
+    final activeSemesterKey = ref.watch(activeSemesterProvider);
     final target = ref.watch(targetCwaProvider);
     final gap = ref.watch(cwaGapProvider);
     final colorScheme = Theme.of(context).colorScheme;
@@ -1131,45 +1505,36 @@ class _SemesterView extends ConsumerWidget {
         final totalCredits =
             courses.fold<double>(0, (sum, course) => sum + course.creditHours);
         final hasCourses = courses.isNotEmpty;
-
+        final pastSemesters = pastSemestersAsync.valueOrNull ?? [];
+        final activeSemesterAlreadyRecorded = pastSemesters
+            .any((semester) => semester.semesterKey == activeSemesterKey);
+        final currentCoursesCounted =
+            hasCourses && !activeSemesterAlreadyRecorded;
+        final hasCumulativeData =
+            pastSemesters.isNotEmpty || currentCoursesCounted;
         return CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  AppSpacing.xs2,
-                  AppSpacing.xl,
-                  0,
-                ),
-                child: _CwaOverviewPanel(
-                  projected: projected,
-                  target: target,
-                  gap: gap,
-                  gradingSystem: gradingSystem,
-                  label: gradingSystem.projectedLabel,
-                  eyebrow: 'Current semester',
-                  hasData: hasCourses,
-                  stats: [
-                    _QuickStatItem(
-                      label: 'Courses',
-                      value: '${courses.length}',
-                      icon: LucideIcons.bookOpen,
-                    ),
-                    _QuickStatItem(
-                      label: 'Credits',
-                      value: '${totalCredits.toInt()} cr',
-                      icon: LucideIcons.chartColumn,
-                    ),
-                  ],
-                ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SemesterSummaryHeaderDelegate(
+                projected: projected,
+                target: target,
+                gap: gap,
+                cumulative: cumulativeCwa,
+                cumulativeCredits: cumulativeCredits,
+                cumulativeGap: cumulativeGap,
+                semesterCredits: totalCredits,
+                courseCount: courses.length,
+                gradingSystem: gradingSystem,
+                hasCourses: hasCourses,
+                hasCumulativeData: hasCumulativeData,
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.xs,
+                  AppSpacing.xxs,
                   AppSpacing.xl,
                   0,
                 ),
@@ -1693,7 +2058,7 @@ class _ProgressionSparkBars extends StatelessWidget {
               padding: const EdgeInsets.only(right: AppSpacing.xs),
               child: Tooltip(
                 message:
-                    '${entry.semester.semesterLabel}: ${entry.semesterCwa.toStringAsFixed(1)}',
+                    '${entry.semester.semesterLabel}: ${entry.semesterCwa.toStringAsFixed(2)}',
                 child: Container(
                   width: 28,
                   height: height,
@@ -1771,7 +2136,7 @@ class _ProgressionRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Sem ${entry.semesterCwa.toStringAsFixed(1)}',
+                'Sem ${entry.semesterCwa.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -1780,7 +2145,7 @@ class _ProgressionRow extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xxxs),
               Text(
-                'Cum ${entry.cumulativeCwa.toStringAsFixed(1)}',
+                'Cum ${entry.cumulativeCwa.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontSize: 11,
                   color: colorScheme.onSurfaceVariant,
@@ -1851,7 +2216,7 @@ Color _deltaColor(double? delta) {
 
 String _signed(double value) {
   final prefix = value > 0 ? '+' : '';
-  return '$prefix${value.toStringAsFixed(1)}';
+  return '$prefix${value.toStringAsFixed(2)}';
 }
 
 // ─── Past semester summary card (read-only, collapsible) ─────────────────────
@@ -1933,7 +2298,7 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      cwa.toStringAsFixed(1),
+                      cwa.toStringAsFixed(2),
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 12,

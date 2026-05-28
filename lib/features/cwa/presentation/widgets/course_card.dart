@@ -77,9 +77,12 @@ class _CourseCardState extends State<CourseCard> {
 
     return Padding(
       padding:
-          const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 2),
+          const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 5),
       child: CampusCard(
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs2,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -104,18 +107,18 @@ class _CourseCardState extends State<CourseCard> {
                             ),
                           ),
                           if (widget.isHighImpact) ...[
-                            const SizedBox(width: AppSpacing.xs),
+                            const SizedBox(width: AppSpacing.xxs2),
                             const _ImpactPill(),
                           ],
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.xxs2),
+                      const SizedBox(height: AppSpacing.xxxs),
                       Text(
                         widget.course.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: colorScheme.onSurface,
                           height: 1.25,
@@ -124,47 +127,11 @@ class _CourseCardState extends State<CourseCard> {
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    PopupMenuButton<String>(
-                      tooltip: 'Course options',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: AppFloors.minTapTarget,
-                        minHeight: AppFloors.minTapTarget,
-                      ),
-                      icon: Icon(
-                        Icons.more_horiz,
-                        size: AppIconSizes.xl,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      onSelected: (v) {
-                        if (v == 'edit') {
-                          widget.onEdit();
-                        } else if (v == 'delete') {
-                          widget.onDelete();
-                        } else if (v == 'workspace') {
-                          context.push('/course/${widget.course.code}');
-                        }
-                      },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(
-                          value: 'workspace',
-                          child: Row(
-                            children: [
-                              Icon(LucideIcons.bookOpen, size: AppIconSizes.md),
-                              SizedBox(width: AppSpacing.xs),
-                              Text('Open Workspace'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      ],
-                    ),
-                  ],
+                const SizedBox(width: AppSpacing.xs),
+                _CourseOptionsMenu(
+                  courseCode: widget.course.code,
+                  onEdit: widget.onEdit,
+                  onDelete: widget.onDelete,
                 ),
               ],
             ),
@@ -172,55 +139,59 @@ class _CourseCardState extends State<CourseCard> {
             Row(
               children: [
                 Expanded(
-                  child: _CompactInfoBlock(
+                  child: _InlineCourseMetric(
                     label: widget.gradingSystem.scoreInputLabel,
                     value: scoreLabel,
                     valueColor: gradeColor,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.xs2),
                 Expanded(
-                  child: _CompactInfoBlock(
+                  child: _InlineCourseMetric(
                     label: 'Credits',
                     value: '${widget.course.creditHours.toInt()} cr',
                     valueColor: colorScheme.primary,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xxs2),
-            Row(
-              children: [
-                TextButton.icon(
-                  onPressed: () => setState(() => _expanded = !_expanded),
-                  icon: Icon(
-                    _expanded ? Icons.expand_less : Icons.tune,
-                    size: AppIconSizes.md,
-                  ),
-                  label: Text(_expanded ? 'Hide control' : 'Adjust'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: colorScheme.primary,
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(0, 30),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-                const Spacer(),
-                if (_isAdjusted)
-                  const Text(
-                    'Projection updated',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.success,
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: IconButton(
+                      onPressed: () => setState(() => _expanded = !_expanded),
+                      icon: Icon(
+                        _expanded ? Icons.expand_less : Icons.tune,
+                        size: AppIconSizes.md,
+                      ),
+                      tooltip: _expanded ? 'Hide adjustment' : 'Adjust score',
+                      color: colorScheme.primary,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
                     ),
                   ),
+                ),
               ],
             ),
+            if (_isAdjusted) ...[
+              const SizedBox(height: AppSpacing.xxxs),
+              const Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  'Projection updated',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.success,
+                  ),
+                ),
+              ),
+            ],
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
               secondChild: Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xs),
+                padding: const EdgeInsets.only(top: AppSpacing.xxs2),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -305,12 +276,12 @@ class _CourseCardState extends State<CourseCard> {
   }
 }
 
-class _CompactInfoBlock extends StatelessWidget {
+class _InlineCourseMetric extends StatelessWidget {
   final String label;
   final String value;
   final Color valueColor;
 
-  const _CompactInfoBlock({
+  const _InlineCourseMetric({
     required this.label,
     required this.value,
     required this.valueColor,
@@ -319,43 +290,99 @@ class _CompactInfoBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Container(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 9,
+            color: colorScheme.onSurfaceVariant,
+            height: 1.05,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xxxs),
+        Text(
+          value,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: valueColor,
+            height: 1.05,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CourseOptionsMenu extends StatelessWidget {
+  final String courseCode;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _CourseOptionsMenu({
+    required this.courseCode,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return PopupMenuButton<String>(
+      tooltip: 'Course options',
+      padding: EdgeInsets.zero,
       constraints: const BoxConstraints(
-        minWidth: 128,
-        minHeight: 48,
+        minWidth: AppFloors.minTapTarget,
+        minHeight: AppFloors.minTapTarget,
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppRadii.md),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 10,
-              color: colorScheme.onSurfaceVariant,
-              height: 1.15,
-            ),
+      onSelected: (value) {
+        if (value == 'edit') {
+          onEdit();
+        } else if (value == 'delete') {
+          onDelete();
+        } else if (value == 'workspace') {
+          context.push('/course/$courseCode');
+        }
+      },
+      itemBuilder: (_) => const [
+        PopupMenuItem(
+          value: 'workspace',
+          child: Row(
+            children: [
+              Icon(LucideIcons.bookOpen, size: AppIconSizes.md),
+              SizedBox(width: AppSpacing.xs),
+              Text('Open Workspace'),
+            ],
           ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: valueColor,
-            ),
+        ),
+        PopupMenuItem(value: 'edit', child: Text('Edit')),
+        PopupMenuItem(value: 'delete', child: Text('Delete')),
+      ],
+      child: Container(
+        width: 36,
+        height: 36,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: colorScheme.primary.withValues(alpha: 0.65),
           ),
-        ],
+          color: colorScheme.primary.withValues(alpha: 0.08),
+        ),
+        child: Icon(
+          Icons.more_horiz,
+          size: AppIconSizes.lg,
+          color: colorScheme.primary,
+        ),
       ),
     );
   }

@@ -137,6 +137,7 @@ class _IdleView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
@@ -150,9 +151,12 @@ class _IdleView extends StatelessWidget {
                 ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
+          Text(
             'Upload your course registration slip and the AI will extract your courses automatically.',
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            style: TextStyle(
+              fontSize: 14,
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: AppSpacing.xxl),
           _OptionTile(
@@ -176,11 +180,14 @@ class _IdleView extends StatelessWidget {
             onTap: onPdf,
           ),
           const Spacer(),
-          const Center(
+          Center(
             child: Text(
               'Credit hours are read from the slip.\nYou can adjust them before saving.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -264,6 +271,7 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -272,9 +280,9 @@ class _LoadingView extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Text(
             message,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -299,6 +307,7 @@ class _ReviewView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selected = state.selectedIndexes.length;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       children: [
@@ -310,10 +319,10 @@ class _ReviewView extends StatelessWidget {
               Expanded(
                 child: Text(
                   '${state.courses.length} courses found',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -325,17 +334,20 @@ class _ReviewView extends StatelessWidget {
                   selected == state.courses.length
                       ? 'Deselect all'
                       : 'Select all',
-                  style: const TextStyle(color: AppTheme.primary, fontSize: 13),
+                  style: TextStyle(color: colorScheme.primary, fontSize: 13),
                 ),
               ),
             ],
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'Adjust expected scores and credit hours if needed, then tap Import.',
-            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+            style: TextStyle(
+              fontSize: 12,
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         if (state.skippedCourseCount > 0) ...[
@@ -442,6 +454,7 @@ class _ParseWarningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
@@ -462,10 +475,10 @@ class _ParseWarningCard extends StatelessWidget {
           Expanded(
             child: Text(
               '$skippedCount course row${skippedCount == 1 ? '' : 's'} could not be read cleanly. Compare this list with your slip and add any missing course before saving.',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 height: 1.35,
-                color: AppTheme.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
           ),
@@ -522,30 +535,30 @@ class _ReviewCourseCard extends StatelessWidget {
                   children: [
                     Text(
                       course.courseCode.toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
-                        color: AppTheme.primary,
+                        color: colorScheme.primary,
                         letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxxs),
                     Text(
                       course.courseName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     if (isSelected) ...[
                       const SizedBox(height: AppSpacing.xs2),
                       Row(
                         children: [
-                          const Text(
+                          Text(
                             'Credit hours',
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textSecondary,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const Spacer(),
@@ -560,9 +573,9 @@ class _ReviewCourseCard extends StatelessWidget {
                         children: [
                           Text(
                             gradingSystem.scoreInputLabel,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textSecondary,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const Spacer(),
@@ -571,10 +584,10 @@ class _ReviewCourseCard extends StatelessWidget {
                               course.expectedScore,
                               includeUnit: true,
                             ),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: AppTheme.primary,
+                              color: colorScheme.primary,
                             ),
                           ),
                         ],
@@ -617,6 +630,7 @@ class _CreditStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         _StepButton(
@@ -627,10 +641,10 @@ class _CreditStepper extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Text(
             '${value.toInt()}',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 15,
-              color: AppTheme.primary,
+              color: colorScheme.primary,
             ),
           ),
         ),
@@ -651,6 +665,7 @@ class _StepButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -658,14 +673,16 @@ class _StepButton extends StatelessWidget {
         height: 28,
         decoration: BoxDecoration(
           color: onTap != null
-              ? AppTheme.primary.withValues(alpha: 0.1)
-              : Colors.grey.shade100,
+              ? colorScheme.primary.withValues(alpha: 0.12)
+              : colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(AppRadii.xxs),
         ),
         child: Icon(
           icon,
           size: AppIconSizes.md,
-          color: onTap != null ? AppTheme.primary : AppTheme.textSecondary,
+          color: onTap != null
+              ? colorScheme.primary
+              : colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -710,6 +727,7 @@ class _AddRegistrationCourseSheetState
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -723,12 +741,12 @@ class _AddRegistrationCourseSheetState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Add missing course',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -854,6 +872,7 @@ class _DoneView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -873,10 +892,10 @@ class _DoneView extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               '$count course${count == 1 ? '' : 's'} added to CWA',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
             if (duplicateCount > 0) ...[
@@ -885,15 +904,20 @@ class _DoneView extends StatelessWidget {
                 '$duplicateCount already existed and w'
                 '${duplicateCount == 1 ? 'as' : 'ere'} skipped.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 13, color: AppTheme.textSecondary),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
             const SizedBox(height: AppSpacing.xs),
-            const Text(
+            Text(
               'You can update expected scores and credit hours from the CWA screen.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: TextStyle(
+                fontSize: 14,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.xxl),
             SizedBox(
@@ -928,6 +952,7 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.xxl),
       child: Column(
@@ -936,21 +961,21 @@ class _ErrorView extends StatelessWidget {
           const Icon(LucideIcons.circleAlert,
               size: 56, color: AppTheme.warning),
           const SizedBox(height: AppSpacing.md),
-          const Text(
+          Text(
             'Something went wrong',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: AppSpacing.xs2),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 28),

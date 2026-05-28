@@ -236,7 +236,7 @@ class _SemesterCardState extends State<_SemesterCard> {
                           borderRadius: BorderRadius.circular(AppRadii.md2),
                         ),
                         child: Text(
-                          cwa.toStringAsFixed(1),
+                          cwa.toStringAsFixed(2),
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 13,
