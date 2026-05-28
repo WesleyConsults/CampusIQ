@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -315,15 +313,6 @@ class SettingsScreen extends ConsumerWidget {
                   }
                 },
               ),
-              if (kDebugMode) ...[
-                const Divider(height: 1),
-                _RowTile(
-                  leading: LucideIcons.bug,
-                  title: 'Test Crashlytics crash',
-                  subtitle: 'Force a debug crash report',
-                  onTap: FirebaseCrashlytics.instance.crash,
-                ),
-              ],
             ]),
 
             const SizedBox(height: AppSpacing.xxl),
