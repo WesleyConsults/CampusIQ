@@ -92,7 +92,7 @@ class NotificationService {
         android: _androidDetails(channelId, channelName,
             vibrate: vibrate, playSound: playSound),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
   }
 
@@ -300,7 +300,7 @@ class NotificationService {
               'Course Reminders',
             ),
           ),
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
         );
         notifId++;
