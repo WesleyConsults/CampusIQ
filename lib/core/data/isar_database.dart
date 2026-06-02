@@ -30,22 +30,71 @@ const List<CollectionSchema<dynamic>> kCampusIqIsarSchemas = [
   CourseReminderModelSchema,
 ];
 
+const _isarOpenRetryDelays = [
+  Duration(milliseconds: 100),
+  Duration(milliseconds: 250),
+  Duration(milliseconds: 500),
+];
+
+class CampusIqIsarHandle {
+  const CampusIqIsarHandle({
+    required this.isar,
+    required this.shouldClose,
+  });
+
+  final Isar isar;
+  final bool shouldClose;
+}
+
 Future<Isar> openCampusIqIsar() async {
+  final handle = await openCampusIqIsarHandle();
+  return handle.isar;
+}
+
+Future<CampusIqIsarHandle> openCampusIqIsarHandle() async {
+  final existing = Isar.getInstance();
+  if (existing != null) {
+    return CampusIqIsarHandle(isar: existing, shouldClose: false);
+  }
+
   final dir = await getApplicationDocumentsDirectory();
 
-  try {
-    return await Isar.open(
-      kCampusIqIsarSchemas,
-      directory: dir.path,
-    );
-  } catch (error, stackTrace) {
-    debugPrint('🔴 Failed to open Isar: $error');
-    debugPrint('$stackTrace');
-    await CrashReportingService.instance.recordNonFatalError(
-      error,
-      stackTrace,
-      reason: 'isar_open_failed',
-    );
-    Error.throwWithStackTrace(error, stackTrace);
+  Object? lastError;
+  StackTrace? lastStackTrace;
+
+  for (var attempt = 0; attempt <= _isarOpenRetryDelays.length; attempt++) {
+    try {
+      final isar = await Isar.open(
+        kCampusIqIsarSchemas,
+        directory: dir.path,
+      );
+      return CampusIqIsarHandle(isar: isar, shouldClose: true);
+    } catch (error, stackTrace) {
+      lastError = error;
+      lastStackTrace = stackTrace;
+
+      final canRetry =
+          attempt < _isarOpenRetryDelays.length && _isMdbxTryAgain(error);
+      if (!canRetry) break;
+
+      await Future<void>.delayed(_isarOpenRetryDelays[attempt]);
+    }
   }
+
+  final error = lastError!;
+  final stackTrace = lastStackTrace!;
+
+  debugPrint('🔴 Failed to open Isar: $error');
+  debugPrint('$stackTrace');
+  await CrashReportingService.instance.recordNonFatalError(
+    error,
+    stackTrace,
+    reason: 'isar_open_failed',
+  );
+  Error.throwWithStackTrace(error, stackTrace);
+}
+
+bool _isMdbxTryAgain(Object error) {
+  if (error is! IsarError) return false;
+  return error.toString().contains('MdbxError (11): Try again');
 }

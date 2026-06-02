@@ -53,7 +53,8 @@ void callbackDispatcher() {
 Future<void> _handleStreakRiskCheck() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final isar = await openCampusIqIsar();
+  final isarHandle = await openCampusIqIsarHandle();
+  final isar = isarHandle.isar;
 
   try {
     final now = DateTime.now();
@@ -112,7 +113,9 @@ Future<void> _handleStreakRiskCheck() async {
       channelName: 'Streak Alerts',
     );
   } finally {
-    await isar.close();
+    if (isarHandle.shouldClose) {
+      await isar.close();
+    }
   }
 }
 
