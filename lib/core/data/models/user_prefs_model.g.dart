@@ -141,6 +141,21 @@ const UserPrefsModelSchema = CollectionSchema(
       id: 24,
       name: r'zzVibrateOnTimerEnd',
       type: IsarType.bool,
+    ),
+    r'zzzManualBaselineCredits': PropertySchema(
+      id: 25,
+      name: r'zzzManualBaselineCredits',
+      type: IsarType.double,
+    ),
+    r'zzzManualBaselineCwa': PropertySchema(
+      id: 26,
+      name: r'zzzManualBaselineCwa',
+      type: IsarType.double,
+    ),
+    r'zzzManualBaselineGradingSystemId': PropertySchema(
+      id: 27,
+      name: r'zzzManualBaselineGradingSystemId',
+      type: IsarType.string,
     )
   },
   estimateSize: _userPrefsModelEstimateSize,
@@ -181,6 +196,12 @@ int _userPrefsModelEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.manualBaselineGradingSystemId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -215,6 +236,9 @@ void _userPrefsModelSerialize(
   writer.writeLong(offsets[22], object.themeModeIndex);
   writer.writeString(offsets[23], object.universityName);
   writer.writeBool(offsets[24], object.vibrateOnTimerEnd);
+  writer.writeDouble(offsets[25], object.manualBaselineCredits);
+  writer.writeDouble(offsets[26], object.manualBaselineCwa);
+  writer.writeString(offsets[27], object.manualBaselineGradingSystemId);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -250,6 +274,9 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.themeModeIndex = reader.readLong(offsets[22]);
   object.universityName = reader.readStringOrNull(offsets[23]);
   object.vibrateOnTimerEnd = reader.readBool(offsets[24]);
+  object.manualBaselineCredits = reader.readDoubleOrNull(offsets[25]);
+  object.manualBaselineCwa = reader.readDoubleOrNull(offsets[26]);
+  object.manualBaselineGradingSystemId = reader.readStringOrNull(offsets[27]);
   return object;
 }
 
@@ -310,6 +337,12 @@ P _userPrefsModelDeserializeProp<P>(
       return (reader.readStringOrNull(offset)) as P;
     case 24:
       return (reader.readBool(offset)) as P;
+    case 25:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 26:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 27:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -2201,6 +2234,330 @@ extension UserPrefsModelQueryFilter
       ));
     });
   }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCreditsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'zzzManualBaselineCredits',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCreditsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'zzzManualBaselineCredits',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCreditsEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzzManualBaselineCredits',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCreditsGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzzManualBaselineCredits',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCreditsLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzzManualBaselineCredits',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCreditsBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzzManualBaselineCredits',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCwaIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'zzzManualBaselineCwa',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCwaIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'zzzManualBaselineCwa',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCwaEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzzManualBaselineCwa',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCwaGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzzManualBaselineCwa',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCwaLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzzManualBaselineCwa',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineCwaBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzzManualBaselineCwa',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'zzzManualBaselineGradingSystemId',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'zzzManualBaselineGradingSystemId',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzzManualBaselineGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzzManualBaselineGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzzManualBaselineGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzzManualBaselineGradingSystemId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'zzzManualBaselineGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'zzzManualBaselineGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdContains(String value,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'zzzManualBaselineGradingSystemId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'zzzManualBaselineGradingSystemId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzzManualBaselineGradingSystemId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      manualBaselineGradingSystemIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'zzzManualBaselineGradingSystemId',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension UserPrefsModelQueryObject
@@ -2557,6 +2914,48 @@ extension UserPrefsModelQuerySortBy
       sortByVibrateOnTimerEndDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzVibrateOnTimerEnd', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByManualBaselineCredits() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineCredits', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByManualBaselineCreditsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineCredits', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByManualBaselineCwa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineCwa', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByManualBaselineCwaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineCwa', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByManualBaselineGradingSystemId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineGradingSystemId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByManualBaselineGradingSystemIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineGradingSystemId', Sort.desc);
     });
   }
 }
@@ -2923,6 +3322,48 @@ extension UserPrefsModelQuerySortThenBy
       return query.addSortBy(r'zzVibrateOnTimerEnd', Sort.desc);
     });
   }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByManualBaselineCredits() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineCredits', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByManualBaselineCreditsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineCredits', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByManualBaselineCwa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineCwa', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByManualBaselineCwaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineCwa', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByManualBaselineGradingSystemId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineGradingSystemId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByManualBaselineGradingSystemIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzzManualBaselineGradingSystemId', Sort.desc);
+    });
+  }
 }
 
 extension UserPrefsModelQueryWhereDistinct
@@ -3109,6 +3550,28 @@ extension UserPrefsModelQueryWhereDistinct
       return query.addDistinctBy(r'zzVibrateOnTimerEnd');
     });
   }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByManualBaselineCredits() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzzManualBaselineCredits');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByManualBaselineCwa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzzManualBaselineCwa');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByManualBaselineGradingSystemId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzzManualBaselineGradingSystemId',
+          caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension UserPrefsModelQueryProperty
@@ -3289,6 +3752,27 @@ extension UserPrefsModelQueryProperty
       vibrateOnTimerEndProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'zzVibrateOnTimerEnd');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, double?, QQueryOperations>
+      manualBaselineCreditsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzzManualBaselineCredits');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, double?, QQueryOperations>
+      manualBaselineCwaProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzzManualBaselineCwa');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, String?, QQueryOperations>
+      manualBaselineGradingSystemIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzzManualBaselineGradingSystemId');
     });
   }
 }

@@ -30,6 +30,7 @@ class SlotDetailSheet extends StatelessWidget {
       title: slot.courseCode,
       subtitle: slot.courseName,
       leading: _SlotIcon(color: color),
+      dismissOnBackdropTap: true,
       trailing: IconButton(
         onPressed: () => Navigator.of(context).pop(),
         icon: const Icon(LucideIcons.x, size: AppIconSizes.xl),

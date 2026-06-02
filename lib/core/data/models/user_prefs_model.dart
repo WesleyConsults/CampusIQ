@@ -47,6 +47,19 @@ class UserPrefsModel {
   @Name('zzManualCwaDraftJson')
   String manualCwaDraftJson = '';
 
+  /// Optional manually entered cumulative score used when past results have not
+  /// been imported yet.
+  @Name('zzzManualBaselineCwa')
+  double? manualBaselineCwa;
+
+  /// Completed credits paired with [manualBaselineCwa].
+  @Name('zzzManualBaselineCredits')
+  double? manualBaselineCredits;
+
+  /// Grading system used when [manualBaselineCwa] was entered.
+  @Name('zzzManualBaselineGradingSystemId')
+  String? manualBaselineGradingSystemId;
+
   /// Selected grading system for new academic records.
   @Name('zzGradingSystemId')
   String gradingSystemId = 'cwa';

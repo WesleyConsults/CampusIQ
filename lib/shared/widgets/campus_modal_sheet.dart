@@ -17,6 +17,7 @@ class CampusModalSheet extends StatelessWidget {
   final bool showHandle;
   final bool scrollable;
   final bool expandBody;
+  final bool dismissOnBackdropTap;
   final double maxHeightFactor;
 
   const CampusModalSheet({
@@ -31,6 +32,7 @@ class CampusModalSheet extends StatelessWidget {
     this.showHandle = true,
     this.scrollable = false,
     this.expandBody = false,
+    this.dismissOnBackdropTap = false,
     this.maxHeightFactor = 0.92,
   });
 
@@ -53,12 +55,10 @@ class CampusModalSheet extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final theme = Theme.of(context);
-        return AnimatedPadding(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOut,
-          padding: EdgeInsets.only(bottom: bottomInset),
-          child: Align(
-            alignment: Alignment.bottomCenter,
+        final sheet = Align(
+          alignment: Alignment.bottomCenter,
+          child: GestureDetector(
+            onTap: () {},
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxHeight: constraints.maxHeight * maxHeightFactor,
@@ -124,6 +124,19 @@ class CampusModalSheet extends StatelessWidget {
               ),
             ),
           ),
+        );
+
+        return AnimatedPadding(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          padding: EdgeInsets.only(bottom: bottomInset),
+          child: dismissOnBackdropTap
+              ? GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => Navigator.of(context).maybePop(),
+                  child: sheet,
+                )
+              : sheet,
         );
       },
     );

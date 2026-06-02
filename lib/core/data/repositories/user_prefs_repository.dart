@@ -488,6 +488,37 @@ class UserPrefsRepository {
 
   Future<void> clearManualCwaDraft() => setManualCwaDraftJson('');
 
+  Future<void> setManualAcademicBaseline({
+    required double score,
+    required double credits,
+    required String gradingSystemId,
+  }) async {
+    final prefs = await _getOrCreate();
+    prefs.manualBaselineCwa = score;
+    prefs.manualBaselineCredits = credits;
+    prefs.manualBaselineGradingSystemId =
+        GradingSystem.byId(gradingSystemId).id;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> clearManualAcademicBaseline() async {
+    final prefs = await _getOrCreate();
+    prefs.manualBaselineCwa = null;
+    prefs.manualBaselineCredits = null;
+    prefs.manualBaselineGradingSystemId = null;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
   // ── Weekly Review helpers ─────────────────────────────────────────────────
 
   Future<String?> getWeeklyNote(String weekKey) async {

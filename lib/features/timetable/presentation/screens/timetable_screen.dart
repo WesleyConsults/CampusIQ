@@ -119,7 +119,10 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       useSafeArea: true,
+      isDismissible: true,
+      enableDrag: true,
       backgroundColor: Colors.transparent,
       builder: (_) => SlotDetailSheet(
         slot: slot,

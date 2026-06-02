@@ -25,6 +25,8 @@ import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
+const String _legacyManualCwaBaselineKey = '__manual_cwa_baseline__';
+
 class CwaScreen extends ConsumerWidget {
   static const double _compactSectionGap = AppSpacing.md;
   static const double _compactListGap = AppSpacing.xs2;
@@ -177,12 +179,12 @@ class CwaScreen extends ConsumerWidget {
               ),
               const PopupMenuItem(
                 value: _CwaMenuAction.target,
-                child: Text('Set target'),
+                child: Text('Set target CWA'),
               ),
               if (viewMode == CwaViewMode.cumulative)
                 const PopupMenuItem(
                   value: _CwaMenuAction.history,
-                  child: Text('Manage result history'),
+                  child: Text('Manage saved semesters'),
                 ),
             ],
           ),
@@ -195,10 +197,11 @@ class CwaScreen extends ConsumerWidget {
               AppSpacing.xl,
               AppSpacing.xs,
               AppSpacing.xl,
-              AppSpacing.md,
+              AppSpacing.sm,
             ),
             child: _ViewToggle(
               mode: viewMode,
+              gradingSystem: gradingSystem,
               onChanged: (m) =>
                   ref.read(cwaViewModeProvider.notifier).state = m,
             ),
@@ -444,9 +447,14 @@ GradingSystem _gradingSystemForCourses(
 
 class _ViewToggle extends StatelessWidget {
   final CwaViewMode mode;
+  final GradingSystem gradingSystem;
   final ValueChanged<CwaViewMode> onChanged;
 
-  const _ViewToggle({required this.mode, required this.onChanged});
+  const _ViewToggle({
+    required this.mode,
+    required this.gradingSystem,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -463,12 +471,12 @@ class _ViewToggle extends StatelessWidget {
       child: Row(
         children: [
           _ToggleTab(
-            label: 'Semester',
+            label: 'This Semester',
             active: mode == CwaViewMode.semester,
             onTap: () => onChanged(CwaViewMode.semester),
           ),
           _ToggleTab(
-            label: 'Cumulative',
+            label: 'Overall ${gradingSystem.cumulativeLabel}',
             active: mode == CwaViewMode.cumulative,
             onTap: () => onChanged(CwaViewMode.cumulative),
           ),
@@ -1530,16 +1538,47 @@ class _SemesterView extends ConsumerWidget {
                 hasCumulativeData: hasCumulativeData,
               ),
             ),
+            if (!hasCourses)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    AppSpacing.xs2,
+                    AppSpacing.xl,
+                    0,
+                  ),
+                  child: _SupportCard(
+                    icon: LucideIcons.bookOpen,
+                    title: 'Next step',
+                    subtitle:
+                        'Start by adding your current semester courses. You can type them in or import a registration slip if you have one.',
+                    actions: [
+                      _InlineActionButton(
+                        label: 'Add Course',
+                        icon: LucideIcons.plus,
+                        onPressed: () => onOpenAddSheet(context, ref),
+                      ),
+                      _InlineActionButton(
+                        label: 'Import Courses',
+                        primary: false,
+                        icon: LucideIcons.fileUp,
+                        onPressed: () =>
+                            context.pushNamed('cwa-import-registration'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
-                  AppSpacing.xxs,
+                  CwaScreen._compactSectionGap,
                   AppSpacing.xl,
                   0,
                 ),
                 child: CampusSectionHeader(
-                  title: 'Course performance',
+                  title: 'Your courses this semester',
                   subtitle: hasCourses
                       ? '${courses.length} course${courses.length == 1 ? '' : 's'}'
                       : 'No courses yet',
@@ -1558,6 +1597,8 @@ class _SemesterView extends ConsumerWidget {
                   child: _StateCard(
                     icon: LucideIcons.bookOpen,
                     title: 'No courses added yet',
+                    subtitle:
+                        'Courses are what CampusIQ uses to calculate your projected ${gradingSystem.label}.',
                     action: _BottomCta(
                       label: 'Add Course',
                       icon: LucideIcons.plus,
@@ -1624,21 +1665,22 @@ class _SemesterView extends ConsumerWidget {
                   childCount: courses.length,
                 ),
               ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  CwaScreen._compactListGap,
-                  AppSpacing.xl,
-                  AppSpacing.xs2,
-                ),
-                child: _BottomCta(
-                  label: 'Add Course',
-                  icon: LucideIcons.plus,
-                  onPressed: () => onOpenAddSheet(context, ref),
+            if (hasCourses)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    CwaScreen._compactListGap,
+                    AppSpacing.xl,
+                    AppSpacing.xs2,
+                  ),
+                  child: _BottomCta(
+                    label: 'Add Course',
+                    icon: LucideIcons.plus,
+                    onPressed: () => onOpenAddSheet(context, ref),
+                  ),
                 ),
               ),
-            ),
             if (hasCourses)
               SliverToBoxAdapter(
                 child: Padding(
@@ -1652,7 +1694,7 @@ class _SemesterView extends ConsumerWidget {
                     onPressed: () =>
                         onOpenCompleteSemester(context, ref, courses),
                     icon: const Icon(LucideIcons.badgeCheck),
-                    label: const Text('Finish Semester'),
+                    label: const Text('Save Final Results'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(52),
                       foregroundColor: colorScheme.primary,
@@ -1673,6 +1715,148 @@ class _SemesterView extends ConsumerWidget {
   }
 }
 
+class _ManualAcademicBaselineSheet extends StatefulWidget {
+  final GradingSystem gradingSystem;
+  final ManualAcademicBaseline? existingBaseline;
+
+  const _ManualAcademicBaselineSheet({
+    required this.gradingSystem,
+    required this.existingBaseline,
+  });
+
+  @override
+  State<_ManualAcademicBaselineSheet> createState() =>
+      _ManualAcademicBaselineSheetState();
+}
+
+class _ManualAcademicBaselineSheetState
+    extends State<_ManualAcademicBaselineSheet> {
+  late final TextEditingController _scoreController;
+  late final TextEditingController _creditsController;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    final baseline = widget.existingBaseline;
+    _scoreController = TextEditingController(
+      text: baseline == null
+          ? ''
+          : widget.gradingSystem.formatScore(baseline.score),
+    );
+    _creditsController = TextEditingController(
+      text: baseline == null || baseline.credits <= 0
+          ? ''
+          : baseline.credits.toStringAsFixed(
+              baseline.credits == baseline.credits.roundToDouble() ? 0 : 1,
+            ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scoreController.dispose();
+    _creditsController.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final score = double.tryParse(_scoreController.text.trim());
+    final credits = double.tryParse(_creditsController.text.trim());
+    final gradingSystem = widget.gradingSystem;
+
+    if (score == null ||
+        score < gradingSystem.minScore ||
+        score > gradingSystem.maxScore) {
+      setState(() {
+        _errorText =
+            'Enter a ${gradingSystem.label} between ${gradingSystem.formatScore(gradingSystem.minScore)} and ${gradingSystem.formatScore(gradingSystem.maxScore)}.';
+      });
+      return;
+    }
+
+    if (credits == null || credits <= 0) {
+      setState(() {
+        _errorText = 'Enter the credits you have completed so far.';
+      });
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    Navigator.of(context).pop((score: score, credits: credits));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final gradingSystem = widget.gradingSystem;
+
+    return CampusModalSheet(
+      title: 'Enter current ${gradingSystem.cumulativeLabel}',
+      subtitle:
+          'Use this if you already know your current cumulative ${gradingSystem.label} but have not imported past results.',
+      trailing: IconButton(
+        onPressed: () => Navigator.of(context).pop(),
+        icon: const Icon(LucideIcons.x, size: AppIconSizes.xl),
+        tooltip: 'Close',
+      ),
+      bottomBar: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: FilledButton(
+              onPressed: _save,
+              child: const Text('Save'),
+            ),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _scoreController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: 'Current ${gradingSystem.cumulativeLabel}',
+              hintText: gradingSystem.formatScore(
+                gradingSystem.defaultTarget,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _creditsController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Completed credits so far',
+              hintText: '72',
+            ),
+          ),
+          if (_errorText != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _errorText!,
+              style: TextStyle(
+                color: colorScheme.error,
+                fontSize: 12,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 // ─── Cumulative view ──────────────────────────────────────────────────────────
 
 class _CumulativeView extends ConsumerWidget {
@@ -1683,6 +1867,46 @@ class _CumulativeView extends ConsumerWidget {
     required this.onOpenHistory,
     required this.bottomContentPadding,
   });
+
+  Future<void> _openManualBaselineDialog({
+    required BuildContext context,
+    required WidgetRef ref,
+    required GradingSystem gradingSystem,
+    required ManualAcademicBaseline? existingBaseline,
+  }) async {
+    final repo = ref.read(cwaPrefsRepositoryProvider);
+    if (repo == null) return;
+
+    final result = await showModalBottomSheet<({double score, double credits})>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ManualAcademicBaselineSheet(
+        gradingSystem: gradingSystem,
+        existingBaseline: existingBaseline,
+      ),
+    );
+
+    if (result == null) return;
+
+    try {
+      await repo.setManualAcademicBaseline(
+        score: result.score,
+        credits: result.credits,
+        gradingSystemId: gradingSystem.id,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save your starting point. Try again.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1697,6 +1921,8 @@ class _CumulativeView extends ConsumerWidget {
     final gap = ref.watch(cumulativeGapProvider);
     final activeSemesterKey = ref.watch(activeSemesterProvider);
     final progression = ref.watch(semesterProgressionProvider);
+    final manualBaseline =
+        ref.watch(manualAcademicBaselineProvider).valueOrNull;
 
     return semestersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -1712,12 +1938,15 @@ class _CumulativeView extends ConsumerWidget {
         final pendingCount = pendingSemesters.length;
 
         final hasPast = semesters.isNotEmpty;
+        final hasManualBaseline = manualBaseline != null;
+        final hasImportedPast = hasPast;
         final hasCurrent = currentCourses.isNotEmpty;
         final activeSemesterAlreadyRecorded = semesters
             .any((semester) => semester.semesterKey == activeSemesterKey);
         final currentCoursesCounted =
             hasCurrent && !activeSemesterAlreadyRecorded;
-        final hasAnyData = hasPast || currentCoursesCounted;
+        final hasAnyData =
+            hasPast || hasManualBaseline || currentCoursesCounted;
         final hasPending = pendingCount > 0;
 
         return CustomScrollView(
@@ -1736,9 +1965,11 @@ class _CumulativeView extends ConsumerWidget {
                   gap: gap,
                   gradingSystem: gradingSystem,
                   label: gradingSystem.cumulativeMetricLabel,
-                  eyebrow: currentCoursesCounted || hasPending
-                      ? 'Estimated with current + pending data'
-                      : 'From recorded semesters',
+                  eyebrow: hasManualBaseline && !hasImportedPast
+                      ? 'From your saved starting point'
+                      : currentCoursesCounted || hasPending
+                          ? 'Estimated with current + pending data'
+                          : 'From recorded semesters',
                   hasData: hasAnyData,
                   emptyStateMessage:
                       'Import past result slips to build your academic history and unlock your cumulative ${gradingSystem.cumulativeLabel}.',
@@ -1753,6 +1984,68 @@ class _CumulativeView extends ConsumerWidget {
                       value: '${totalCredits.toInt()} cr',
                       icon: LucideIcons.chartColumn,
                     ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  CwaScreen._compactSectionGap,
+                  AppSpacing.xl,
+                  0,
+                ),
+                child: _SupportCard(
+                  icon: hasPast ? LucideIcons.bookOpen : LucideIcons.fileUp,
+                  title: 'Next step',
+                  subtitle: hasManualBaseline && !hasImportedPast
+                      ? 'Your current ${gradingSystem.cumulativeLabel} is saved as a starting point. CampusIQ can now combine it with this semester projection.'
+                      : hasPast
+                          ? 'Review your saved semesters when you want to correct results, add missing credits, or compare your progress over time.'
+                          : 'Import past results or enter your current ${gradingSystem.cumulativeLabel} and completed credits so this page can project your overall result.',
+                  actions: [
+                    if (hasManualBaseline && !hasImportedPast) ...[
+                      _InlineActionButton(
+                        label: 'Edit Starting ${gradingSystem.cumulativeLabel}',
+                        icon: LucideIcons.plus,
+                        onPressed: () => _openManualBaselineDialog(
+                          context: context,
+                          ref: ref,
+                          gradingSystem: gradingSystem,
+                          existingBaseline: manualBaseline,
+                        ),
+                      ),
+                      _InlineActionButton(
+                        label: 'Import Results',
+                        primary: false,
+                        icon: LucideIcons.fileUp,
+                        onPressed: () =>
+                            context.pushNamed('cwa-import-results'),
+                      ),
+                    ] else ...[
+                      _InlineActionButton(
+                        label: hasPast ? 'Open History' : 'Import Results',
+                        icon:
+                            hasPast ? LucideIcons.bookOpen : LucideIcons.fileUp,
+                        onPressed: hasPast
+                            ? () => onOpenHistory(context)
+                            : () => context.pushNamed('cwa-import-results'),
+                      ),
+                      if (!hasPast)
+                        _InlineActionButton(
+                          label:
+                              'Enter Current ${gradingSystem.cumulativeLabel}',
+                          primary: false,
+                          icon: LucideIcons.plus,
+                          onPressed: () => _openManualBaselineDialog(
+                            context: context,
+                            ref: ref,
+                            gradingSystem: gradingSystem,
+                            existingBaseline: manualBaseline,
+                          ),
+                        ),
+                    ],
                   ],
                 ),
               ),
@@ -1794,36 +2087,38 @@ class _CumulativeView extends ConsumerWidget {
                   ),
                 ),
               ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  CwaScreen._compactSectionGap,
-                  AppSpacing.xl,
-                  0,
-                ),
-                child: _SupportCard(
-                  icon: LucideIcons.fileUp,
-                  title: 'Build academic history',
-                  subtitle:
-                      'Import past result slips or open your saved semester records to understand your full academic picture.',
-                  actions: [
-                    _InlineActionButton(
-                      label: 'Open History',
-                      primary: false,
-                      icon: LucideIcons.bookOpen,
-                      onPressed: () => onOpenHistory(context),
-                    ),
-                    _InlineActionButton(
-                      label: 'Import',
-                      icon: LucideIcons.fileUp,
-                      onPressed: () => context.pushNamed('cwa-import-results'),
-                    ),
-                  ],
+            if (hasPast)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    CwaScreen._compactSectionGap,
+                    AppSpacing.xl,
+                    0,
+                  ),
+                  child: _SupportCard(
+                    icon: LucideIcons.fileUp,
+                    title: 'Build academic history',
+                    subtitle:
+                        'Import missing result slips or open your saved semester records to keep your full academic picture accurate.',
+                    actions: [
+                      _InlineActionButton(
+                        label: 'Open History',
+                        primary: false,
+                        icon: LucideIcons.bookOpen,
+                        onPressed: () => onOpenHistory(context),
+                      ),
+                      _InlineActionButton(
+                        label: 'Import',
+                        icon: LucideIcons.fileUp,
+                        onPressed: () =>
+                            context.pushNamed('cwa-import-results'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (!hasPast)
+            if (!hasPast && !hasManualBaseline)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -1833,14 +2128,34 @@ class _CumulativeView extends ConsumerWidget {
                     0,
                   ),
                   child: _StateCard(
-                    icon: LucideIcons.fileUp,
+                    icon: LucideIcons.calculator,
                     title: 'No cumulative history yet',
                     subtitle:
-                        'Import your previous result slips to see your true cumulative ${gradingSystem.cumulativeLabel} across all semesters.',
-                    action: _InlineActionButton(
-                      label: 'Import Results',
-                      icon: LucideIcons.fileUp,
-                      onPressed: () => context.pushNamed('cwa-import-results'),
+                        'Import result slips for full history, or enter your current ${gradingSystem.cumulativeLabel} and credits as a starting point.',
+                    action: Wrap(
+                      spacing: AppSpacing.xs2,
+                      runSpacing: AppSpacing.xs2,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _InlineActionButton(
+                          label: 'Import Results',
+                          icon: LucideIcons.fileUp,
+                          onPressed: () =>
+                              context.pushNamed('cwa-import-results'),
+                        ),
+                        _InlineActionButton(
+                          label:
+                              'Enter Current ${gradingSystem.cumulativeLabel}',
+                          primary: false,
+                          icon: LucideIcons.plus,
+                          onPressed: () => _openManualBaselineDialog(
+                            context: context,
+                            ref: ref,
+                            gradingSystem: gradingSystem,
+                            existingBaseline: manualBaseline,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -2085,6 +2400,14 @@ class _ProgressionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final pending = entry.semester.isPendingResults;
+    final isManualBaseline =
+        entry.semester.semesterKey == _legacyManualCwaBaselineKey;
+    final credits = entry.semester.cumulativeCreditsCalc;
+    final detail = isManualBaseline
+        ? 'Manual starting point'
+            '${credits != null ? ' • ${credits.toInt()} credits completed' : ''}'
+        : '${entry.semester.courses.length} courses'
+            '${pending ? ' • Pending official marks' : ''}';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs2),
@@ -2121,8 +2444,7 @@ class _ProgressionRow extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xxxs),
                 Text(
-                  '${entry.semester.courses.length} courses'
-                  '${pending ? ' • Pending official marks' : ''}',
+                  detail,
                   style: TextStyle(
                     fontSize: 11,
                     color: colorScheme.onSurfaceVariant,
@@ -2136,7 +2458,7 @@ class _ProgressionRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Sem ${entry.semesterCwa.toStringAsFixed(2)}',
+                '${isManualBaseline ? 'Start' : 'Sem'} ${entry.semesterCwa.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -2233,7 +2555,19 @@ class _PastSemesterSummaryCard extends StatefulWidget {
 class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
   bool _expanded = false;
 
+  bool get _isManualBaseline =>
+      widget.semester.semesterKey == _legacyManualCwaBaselineKey;
+
   double get _semCwa {
+    if (_isManualBaseline) {
+      return widget.semester.reportedCumulativeCwa ??
+          (widget.semester.cumulativeWeightedMarks != null &&
+                  widget.semester.cumulativeCreditsCalc != null &&
+                  widget.semester.cumulativeCreditsCalc! > 0
+              ? widget.semester.cumulativeWeightedMarks! /
+                  widget.semester.cumulativeCreditsCalc!
+              : 0);
+    }
     if (widget.semester.courses.isEmpty) return 0;
     double w = 0, cr = 0;
     for (final c in widget.semester.courses) {
@@ -2247,6 +2581,12 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
   Widget build(BuildContext context) {
     final cwa = _semCwa;
     final colorScheme = Theme.of(context).colorScheme;
+    final baselineCredits = widget.semester.cumulativeCreditsCalc;
+    final subtitle = _isManualBaseline
+        ? 'Manual starting point'
+            '${baselineCredits != null ? ' • ${baselineCredits.toInt()} credits completed' : ''}'
+        : '${widget.semester.courses.length} courses'
+            '${widget.semester.reportedSemesterCwa != null ? ' • Slip: ${widget.semester.reportedSemesterCwa!.toStringAsFixed(2)}' : ''}';
 
     return CampusCard(
       padding: EdgeInsets.zero,
@@ -2278,8 +2618,7 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
                         ),
                         const SizedBox(height: AppSpacing.xxs),
                         Text(
-                          '${widget.semester.courses.length} courses'
-                          '${widget.semester.reportedSemesterCwa != null ? ' • Slip: ${widget.semester.reportedSemesterCwa!.toStringAsFixed(2)}' : ''}',
+                          subtitle,
                           style: TextStyle(
                             fontSize: 12,
                             color: colorScheme.onSurfaceVariant,
@@ -2318,57 +2657,75 @@ class _PastSemesterSummaryCardState extends State<_PastSemesterSummaryCard> {
           ),
           if (_expanded) ...[
             const Divider(height: 1, indent: 20, endIndent: 20),
-            ...widget.semester.courses.map(
-              (c) => Padding(
+            if (_isManualBaseline)
+              Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md,
                   AppSpacing.xs2,
                   AppSpacing.md,
-                  2,
+                  AppSpacing.sm,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(c.courseCode,
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: colorScheme.primary,
-                                  letterSpacing: 0.4)),
-                        ),
-                        _ScorePill(mark: c.mark, score: c.score),
-                        const SizedBox(width: AppSpacing.xxs),
-                        _GradePill(grade: c.grade),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xxxs),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(c.courseName,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: colorScheme.onSurface,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis),
-                        ),
-                        Text(
-                          '${c.creditHours.toInt()} cr',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colorScheme.onSurfaceVariant,
+                child: Text(
+                  'CampusIQ uses this starting point with your current semester courses to estimate your updated overall CWA.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              )
+            else
+              ...widget.semester.courses.map(
+                (c) => Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.xs2,
+                    AppSpacing.md,
+                    2,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(c.courseCode,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: colorScheme.primary,
+                                    letterSpacing: 0.4)),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          _ScorePill(mark: c.mark, score: c.score),
+                          const SizedBox(width: AppSpacing.xxs),
+                          _GradePill(grade: c.grade),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xxxs),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(c.courseName,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: colorScheme.onSurface,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis),
+                          ),
+                          Text(
+                            '${c.creditHours.toInt()} cr',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
             const SizedBox(height: AppSpacing.sm),
           ],
         ],

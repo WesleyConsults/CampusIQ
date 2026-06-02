@@ -9,6 +9,8 @@ import 'package:campusiq/features/cwa/data/repositories/cwa_repository.dart';
 import 'package:campusiq/features/cwa/data/repositories/past_result_repository.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
 
+const String _manualCwaBaselineLegacyKey = '__manual_cwa_baseline__';
+
 enum CwaViewMode { semester, cumulative }
 
 /// User preference repository for CWA semester settings.
@@ -68,7 +70,7 @@ final coursesProvider = StreamProvider<List<CourseModel>>((ref) async* {
   yield* CwaRepository(isar).watchCourses(semester);
 });
 
-/// Persisted target CWA preference.
+/// Persisted target score preference for the active grading system.
 final targetCwaPrefsProvider = StreamProvider<double>((ref) async* {
   final gradingSystem = ref.watch(gradingSystemProvider);
   final isar = await ref.watch(isarProvider.future);
@@ -83,7 +85,7 @@ final targetCwaPrefsProvider = StreamProvider<double>((ref) async* {
   }
 });
 
-/// Current target CWA used by gap calculations.
+/// Current target score used by gap calculations.
 final targetCwaProvider = Provider<double>((ref) {
   final gradingSystem = ref.watch(gradingSystemProvider);
   final target = ref.watch(targetCwaPrefsProvider).valueOrNull;
@@ -97,7 +99,7 @@ final targetCwaProvider = Provider<double>((ref) {
 final inFlightScoreAdjustmentsProvider =
     StateProvider<Map<int, double>>((ref) => {});
 
-/// Computed projected CWA from current courses, factoring in any in-flight
+/// Computed projected score from current courses, factoring in any in-flight
 /// slider adjustments for instant UI feedback.
 final projectedCwaProvider = Provider<double>((ref) {
   final courses = ref.watch(coursesProvider).valueOrNull ?? [];
@@ -128,7 +130,12 @@ final pastResultRepositoryProvider = Provider<PastResultRepository?>((ref) {
 final pastSemestersProvider =
     StreamProvider<List<PastSemesterModel>>((ref) async* {
   final isar = await ref.watch(isarProvider.future);
-  yield* PastResultRepository(isar).watchAll();
+  yield* PastResultRepository(isar).watchAll().map(
+        (semesters) => semesters
+            .where((semester) =>
+                semester.semesterKey != _manualCwaBaselineLegacyKey)
+            .toList(),
+      );
 });
 
 final pendingPastSemestersProvider = Provider<List<PastSemesterModel>>((ref) {
@@ -139,6 +146,45 @@ final pendingPastSemestersProvider = Provider<List<PastSemesterModel>>((ref) {
 final officialPastSemestersProvider = Provider<List<PastSemesterModel>>((ref) {
   final all = ref.watch(pastSemestersProvider).valueOrNull ?? [];
   return all.where((semester) => !semester.isPendingResults).toList();
+});
+
+class ManualAcademicBaseline {
+  final double score;
+  final double credits;
+  final String gradingSystemId;
+
+  const ManualAcademicBaseline({
+    required this.score,
+    required this.credits,
+    required this.gradingSystemId,
+  });
+}
+
+final manualAcademicBaselineProvider =
+    StreamProvider<ManualAcademicBaseline?>((ref) async* {
+  final activeGradingSystem = ref.watch(gradingSystemProvider);
+  final isar = await ref.watch(isarProvider.future);
+  final repo = UserPrefsRepository(isar);
+  await repo.getPrefs();
+
+  await for (final prefs in repo.watchPrefs()) {
+    final cwa = prefs?.manualBaselineCwa;
+    final credits = prefs?.manualBaselineCredits;
+    final baselineSystemId = GradingSystem.byId(
+      prefs?.manualBaselineGradingSystemId ?? GradingSystem.cwa.id,
+    ).id;
+    if (cwa == null || credits == null || credits <= 0) {
+      yield null;
+    } else if (baselineSystemId != activeGradingSystem.id) {
+      yield null;
+    } else {
+      yield ManualAcademicBaseline(
+        score: cwa,
+        credits: credits,
+        gradingSystemId: baselineSystemId,
+      );
+    }
+  }
 });
 
 class SemesterProgressionEntry {
@@ -186,7 +232,7 @@ final cwaViewModeProvider =
 
 // ─── Cumulative providers ─────────────────────────────────────────────────────
 
-/// Cumulative CWA across all past semesters + current semester.
+/// Cumulative score across all past semesters + current semester.
 ///
 /// Strategy (in priority order):
 /// 1. If the most recently imported semester has slip-reported cumulative totals
@@ -196,6 +242,7 @@ final cwaViewModeProvider =
 /// 2. Otherwise fall back to reconstructing from individual course marks.
 final cumulativeCwaProvider = Provider<double>((ref) {
   final pastSemesters = ref.watch(pastSemestersProvider).valueOrNull ?? [];
+  final manualBaseline = ref.watch(manualAcademicBaselineProvider).valueOrNull;
   final currentCourses = ref.watch(coursesProvider).valueOrNull ?? [];
   final activeSemesterKey = ref.watch(activeSemesterProvider);
   final shouldIncludeCurrentCourses =
@@ -206,6 +253,21 @@ final cumulativeCwaProvider = Provider<double>((ref) {
           .map((c) => (creditHours: c.creditHours, score: c.expectedScore))
           .toList()
       : <({double creditHours, double score})>[];
+
+  if (pastSemesters.isEmpty && manualBaseline != null) {
+    var currentWeighted = 0.0;
+    var currentCredits = 0.0;
+    for (final c in currentPairs) {
+      currentWeighted += c.creditHours * c.score;
+      currentCredits += c.creditHours;
+    }
+
+    final totalCredits = manualBaseline.credits + currentCredits;
+    if (totalCredits == 0) return 0.0;
+    final totalWeighted =
+        (manualBaseline.score * manualBaseline.credits) + currentWeighted;
+    return totalWeighted / totalCredits;
+  }
 
   // Find the most recently imported semester that has slip cumulative totals.
   // pastSemestersProvider is ordered by createdAt asc, so last = most recent.
@@ -253,6 +315,10 @@ final cumulativeCwaProvider = Provider<double>((ref) {
 /// Recorded cumulative CWA from official result history only.
 final officialRecordedCwaProvider = Provider<double>((ref) {
   final pastSemesters = ref.watch(officialPastSemestersProvider);
+  final manualBaseline = ref.watch(manualAcademicBaselineProvider).valueOrNull;
+  if (pastSemesters.isEmpty && manualBaseline != null) {
+    return manualBaseline.score;
+  }
   if (pastSemesters.isEmpty) return 0.0;
 
   PastSemesterModel? anchor;
@@ -285,6 +351,7 @@ final officialRecordedCwaProvider = Provider<double>((ref) {
 /// Total credit hours across all history (past + current semester).
 final totalCreditsProvider = Provider<double>((ref) {
   final pastSemesters = ref.watch(pastSemestersProvider).valueOrNull ?? [];
+  final manualBaseline = ref.watch(manualAcademicBaselineProvider).valueOrNull;
   final currentCourses = ref.watch(coursesProvider).valueOrNull ?? [];
   final activeSemesterKey = ref.watch(activeSemesterProvider);
   final shouldIncludeCurrentCourses =
@@ -302,6 +369,10 @@ final totalCreditsProvider = Provider<double>((ref) {
   final double currentCredits = shouldIncludeCurrentCourses
       ? currentCourses.fold(0.0, (sum, c) => sum + c.creditHours)
       : 0.0;
+
+  if (pastSemesters.isEmpty && manualBaseline != null) {
+    return manualBaseline.credits + currentCredits;
+  }
 
   if (anchor != null) {
     return anchor.cumulativeCreditsCalc! + currentCredits;
