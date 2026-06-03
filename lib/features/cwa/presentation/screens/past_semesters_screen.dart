@@ -7,6 +7,7 @@ import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
+import 'package:campusiq/features/cwa/domain/academic_term.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
@@ -180,6 +181,10 @@ class _SemesterCardState extends State<_SemesterCard> {
   Widget build(BuildContext context) {
     final cwa = _semCwa;
     final courseCount = widget.semester.courses.length;
+    final isSupplementary = ActiveSemesterSelection.fromKey(
+          widget.semester.semesterKey ?? '',
+        ).termType ==
+        AcademicTermType.supplementarySemester;
 
     return Material(
       color: Colors.white,
@@ -222,6 +227,10 @@ class _SemesterCardState extends State<_SemesterCard> {
                                 color: AppTheme.textSecondary,
                               ),
                             ),
+                            if (isSupplementary) ...[
+                              const SizedBox(height: AppSpacing.xxs),
+                              const _SupplementaryBadge(),
+                            ],
                           ],
                         ),
                       ),
@@ -704,6 +713,33 @@ class _FinalizeBlockedBanner extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SupplementaryBadge extends StatelessWidget {
+  const _SupplementaryBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: 3,
+      ),
+      decoration: BoxDecoration(
+        color: colorScheme.tertiaryContainer.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadii.xxs),
+      ),
+      child: Text(
+        'Supplementary',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: colorScheme.onTertiaryContainer,
+        ),
       ),
     );
   }

@@ -1,55 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/features/cwa/domain/academic_term.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 
-class ActiveSemesterSelection {
-  final int startYear;
-  final int semesterNumber;
-
-  const ActiveSemesterSelection({
-    required this.startYear,
-    required this.semesterNumber,
-  });
-
-  factory ActiveSemesterSelection.fromKey(String key) {
-    final match = RegExp(r'^(\d{4})-Sem([12])$').firstMatch(key.trim());
-    if (match == null) {
-      return const ActiveSemesterSelection(startYear: 2024, semesterNumber: 2);
-    }
-
-    return ActiveSemesterSelection(
-      startYear: int.parse(match.group(1)!),
-      semesterNumber: int.parse(match.group(2)!),
-    );
-  }
-
-  String get key => '$startYear-Sem$semesterNumber';
-
-  String get academicYearLabel => '$startYear/${startYear + 1}';
-
-  String get semesterLabel =>
-      semesterNumber == 1 ? 'First Semester' : 'Second Semester';
-
-  String get displayLabel => '$academicYearLabel • $semesterLabel';
-
-  ActiveSemesterSelection get next {
-    if (semesterNumber == 1) {
-      return ActiveSemesterSelection(
-        startYear: startYear,
-        semesterNumber: 2,
-      );
-    }
-
-    return ActiveSemesterSelection(
-      startYear: startYear + 1,
-      semesterNumber: 1,
-    );
-  }
-}
+export 'package:campusiq/features/cwa/domain/academic_term.dart';
 
 String formatActiveSemesterLabel(String semesterKey) {
-  return ActiveSemesterSelection.fromKey(semesterKey).displayLabel;
+  return formatAcademicTermLabel(semesterKey);
 }
 
 Future<void> showActiveSemesterDialog(

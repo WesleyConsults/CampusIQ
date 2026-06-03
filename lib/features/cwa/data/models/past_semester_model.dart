@@ -10,7 +10,8 @@ class PastSemesterModel {
   /// Human-readable label the student assigns e.g. "Year 1 Sem 1".
   late String semesterLabel;
 
-  /// Stable identifier shared with current courses e.g. "2024-Sem2".
+  /// Stable identifier shared with current courses e.g. "2024-Sem2" or
+  /// "2024-Supp".
   @Name('zzSemesterKey')
   String? semesterKey;
 

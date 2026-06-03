@@ -11,7 +11,7 @@ class CourseModel {
   late double creditHours;
   late double expectedScore;
 
-  /// Semester this course belongs to e.g. "2024-Sem2"
+  /// Semester this course belongs to e.g. "2024-Sem2" or "2024-Supp".
   late String semesterKey;
 
   /// Grading system used when this course projection was created.

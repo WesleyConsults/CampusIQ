@@ -11,6 +11,7 @@ import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
+import 'package:campusiq/features/cwa/domain/academic_term.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
@@ -60,6 +61,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
   static const _semesters = [
     'First Semester',
     'Second Semester',
+    'Supplementary Semester',
   ];
 
   static const _levels = ['100', '200', '300', '400', '500'];
@@ -262,24 +264,14 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
   }
 
   void _syncSemesterMetadataFromActiveKey(String semesterKey) {
-    final match = RegExp(r'^(\d{4})-Sem([12])$').firstMatch(semesterKey.trim());
-    if (match == null) return;
-
-    final startYear = int.parse(match.group(1)!);
-    final semesterNumber = int.parse(match.group(2)!);
+    final selection = ActiveSemesterSelection.fromKey(semesterKey);
+    final startYear = selection.startYear;
     _academicYear = '$startYear/${startYear + 1}';
-    _semesterLabel = semesterNumber == 1 ? _semesters.first : _semesters.last;
+    _semesterLabel = selection.semesterLabel;
   }
 
   String _formatSemesterKey(String semesterKey) {
-    final match = RegExp(r'^(\d{4})-Sem([12])$').firstMatch(semesterKey.trim());
-    if (match == null) return semesterKey;
-
-    final startYear = int.parse(match.group(1)!);
-    final semesterNumber = int.parse(match.group(2)!);
-    final semesterLabel =
-        semesterNumber == 1 ? _semesters.first : _semesters.last;
-    return '$startYear/${startYear + 1} • $semesterLabel';
+    return formatAcademicTermLabel(semesterKey);
   }
 
   Future<void> _saveCourses() async {
@@ -432,8 +424,11 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
 
   String _buildSemesterKey() {
     final year = int.parse(_academicYear.split('/').first);
-    final semesterNumber = _semesterLabel == _semesters.first ? 1 : 2;
-    return '$year-Sem$semesterNumber';
+    final termType = AcademicTermType.fromLabel(_semesterLabel);
+    return ActiveSemesterSelection(
+      startYear: year,
+      termType: termType,
+    ).key;
   }
 
   String _buildSemesterLabel() {
@@ -612,6 +607,21 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                                     onChanged: (value) =>
                                         setState(() => _semesterLabel = value),
                                   ),
+                                  if (_semesterLabel ==
+                                      AcademicTermType
+                                          .supplementarySemester.label) ...[
+                                    const SizedBox(height: AppSpacing.xs),
+                                    Text(
+                                      'Use this for resits, failed courses, deferred papers, or missing-credit results.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                            height: 1.35,
+                                          ),
+                                    ),
+                                  ],
                                   const SizedBox(height: AppSpacing.sm),
                                   TextFormField(
                                     initialValue: _programme,

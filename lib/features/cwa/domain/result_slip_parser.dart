@@ -20,7 +20,7 @@ class ResultSlipParseResult {
   /// Start year parsed from the slip header, e.g. 2024 for "2024/2025".
   final int? academicYearStart;
 
-  /// 1 or 2, parsed from the slip header.
+  /// 1, 2, or 3 (supplementary/resit), parsed from the slip header.
   final int? semesterNumber;
 
   /// e.g. 300, parsed from the slip header.
@@ -57,7 +57,7 @@ class ResultSlipParser {
       '1. HEADER METADATA — look near the top of the slip for:\n'
       '   - academic_year_start: the starting year of the academic year (e.g. 2024 for "2024/2025 Academic Year").'
       ' null if not visible.\n'
-      '   - semester_number: 1 for "First Semester", 2 for "Second Semester". null if not visible.\n'
+      '   - semester_number: 1 for "First Semester", 2 for "Second Semester", 3 for "Supplementary Semester", "Resit Semester", or supplementary/resit results. null if not visible.\n'
       '   - level: the student level number only (e.g. 300 for "Level 300", "L300", or "300"). null if not visible.\n'
       '   - programme: the programme name (e.g. "Computer Engineering", "BSc Computer Science"). null if not visible.\n\n'
       '2. COURSE TABLE — every row in the course table:\n'
@@ -178,7 +178,7 @@ class ResultSlipParser {
         cumulativeWeightedMarks:
             (parsedObj['cumulative_weighted_marks'] as num?)?.toDouble(),
         academicYearStart: (parsedObj['academic_year_start'] as num?)?.toInt(),
-        semesterNumber: (parsedObj['semester_number'] as num?)?.toInt(),
+        semesterNumber: _parseSemesterNumber(parsedObj['semester_number']),
         level: (parsedObj['level'] as num?)?.toInt(),
         programme: parsedObj['programme'] as String?,
         skippedCourseCount: skippedCourseCount,
@@ -196,5 +196,21 @@ class ResultSlipParser {
         'Received an unexpected response. Please try again.',
       );
     }
+  }
+
+  int? _parseSemesterNumber(Object? value) {
+    if (value is num) return value.toInt();
+    if (value is! String) return null;
+    final normalized = value.trim().toLowerCase();
+    if (normalized.isEmpty) return null;
+    if (normalized == '1' || normalized.contains('first')) return 1;
+    if (normalized == '2' || normalized.contains('second')) return 2;
+    if (normalized == '3' ||
+        normalized.contains('supp') ||
+        normalized.contains('resit') ||
+        normalized.contains('re-sit')) {
+      return 3;
+    }
+    return null;
   }
 }

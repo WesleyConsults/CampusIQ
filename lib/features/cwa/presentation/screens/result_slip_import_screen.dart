@@ -321,7 +321,7 @@ class _LabelView extends StatefulWidget {
 
 class _LabelViewState extends State<_LabelView> {
   late int _selectedStartYear;
-  late int _selectedSemesterNumber;
+  late AcademicTermType _selectedTermType;
   final _levelController = TextEditingController();
   final _programmeController = TextEditingController();
 
@@ -330,8 +330,9 @@ class _LabelViewState extends State<_LabelView> {
     super.initState();
     _selectedStartYear =
         widget.parsedAcademicYearStart ?? widget.initialSelection.startYear;
-    _selectedSemesterNumber =
-        widget.parsedSemesterNumber ?? widget.initialSelection.semesterNumber;
+    _selectedTermType = widget.parsedSemesterNumber == null
+        ? widget.initialSelection.termType
+        : AcademicTermType.fromSemesterNumber(widget.parsedSemesterNumber!);
 
     final parsedLevel = widget.parsedLevel;
     if (parsedLevel != null) {
@@ -356,7 +357,7 @@ class _LabelViewState extends State<_LabelView> {
     final yearOptions = _academicYearOptions(_selectedStartYear);
     final selection = ActiveSemesterSelection(
       startYear: _selectedStartYear,
-      semesterNumber: _selectedSemesterNumber,
+      termType: _selectedTermType,
     );
     final previewLabel = _buildSemesterLabel(selection);
 
@@ -405,8 +406,8 @@ class _LabelViewState extends State<_LabelView> {
           },
         ),
         const SizedBox(height: AppSpacing.sm),
-        DropdownButtonFormField<int>(
-          initialValue: _selectedSemesterNumber,
+        DropdownButtonFormField<AcademicTermType>(
+          initialValue: _selectedTermType,
           decoration: InputDecoration(
             labelText: 'Semester',
             filled: true,
@@ -419,20 +420,35 @@ class _LabelViewState extends State<_LabelView> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
           items: const [
-            DropdownMenuItem<int>(
-              value: 1,
+            DropdownMenuItem<AcademicTermType>(
+              value: AcademicTermType.firstSemester,
               child: Text('First Semester'),
             ),
-            DropdownMenuItem<int>(
-              value: 2,
+            DropdownMenuItem<AcademicTermType>(
+              value: AcademicTermType.secondSemester,
               child: Text('Second Semester'),
+            ),
+            DropdownMenuItem<AcademicTermType>(
+              value: AcademicTermType.supplementarySemester,
+              child: Text('Supplementary Semester'),
             ),
           ],
           onChanged: (value) {
             if (value == null) return;
-            setState(() => _selectedSemesterNumber = value);
+            setState(() => _selectedTermType = value);
           },
         ),
+        if (_selectedTermType == AcademicTermType.supplementarySemester) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Use this for resits, failed courses, deferred papers, or missing-credit results.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.35,
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.sm),
         TextField(
           controller: _levelController,
@@ -550,7 +566,7 @@ class _LabelViewState extends State<_LabelView> {
   void _onContinue() {
     final selection = ActiveSemesterSelection(
       startYear: _selectedStartYear,
-      semesterNumber: _selectedSemesterNumber,
+      termType: _selectedTermType,
     );
     widget.notifier.confirmSemesterIdentity(
       semesterKey: selection.key,

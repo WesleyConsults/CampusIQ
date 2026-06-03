@@ -7,6 +7,7 @@ import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/data/repositories/cwa_repository.dart';
 import 'package:campusiq/features/cwa/data/repositories/past_result_repository.dart';
+import 'package:campusiq/features/cwa/domain/academic_term.dart';
 import 'package:campusiq/features/cwa/domain/cwa_calculator.dart';
 
 const String _manualCwaBaselineLegacyKey = '__manual_cwa_baseline__';
@@ -126,16 +127,20 @@ final pastResultRepositoryProvider = Provider<PastResultRepository?>((ref) {
   return isarAsync.whenOrNull(data: (isar) => PastResultRepository(isar));
 });
 
-/// Live stream of all past semester results, ordered by createdAt.
+/// Live stream of all past semester results, ordered chronologically.
 final pastSemestersProvider =
     StreamProvider<List<PastSemesterModel>>((ref) async* {
   final isar = await ref.watch(isarProvider.future);
   yield* PastResultRepository(isar).watchAll().map(
-        (semesters) => semesters
-            .where((semester) =>
-                semester.semesterKey != _manualCwaBaselineLegacyKey)
-            .toList(),
-      );
+    (semesters) {
+      final filtered = semesters
+          .where(
+              (semester) => semester.semesterKey != _manualCwaBaselineLegacyKey)
+          .toList();
+      filtered.sort(_compareSemestersChronologically);
+      return filtered;
+    },
+  );
 });
 
 final pendingPastSemestersProvider = Provider<List<PastSemesterModel>>((ref) {
@@ -235,7 +240,7 @@ final cwaViewModeProvider =
 /// Cumulative score across all past semesters + current semester.
 ///
 /// Strategy (in priority order):
-/// 1. If the most recently imported semester has slip-reported cumulative totals
+/// 1. If the latest chronological semester has slip-reported cumulative totals
 ///    (cumulativeWeightedMarks + cumulativeCreditsCalc), use those directly as
 ///    the historical baseline and add only the current semester on top.
 ///    This is the most accurate path — KNUST already computed the history.
@@ -269,8 +274,7 @@ final cumulativeCwaProvider = Provider<double>((ref) {
     return totalWeighted / totalCredits;
   }
 
-  // Find the most recently imported semester that has slip cumulative totals.
-  // pastSemestersProvider is ordered by createdAt asc, so last = most recent.
+  // Find the latest chronological semester that has slip cumulative totals.
   PastSemesterModel? anchor;
   if (pastSemesters.isNotEmpty) {
     try {
@@ -469,19 +473,9 @@ int _compareSemestersChronologically(
 }
 
 int _semesterSortValue(PastSemesterModel semester) {
-  final key = semester.semesterKey ?? '';
-  final keyMatch = RegExp(r'(\d{4})-Sem([12])').firstMatch(key);
-  if (keyMatch != null) {
-    final year = int.tryParse(keyMatch.group(1) ?? '') ?? 0;
-    final sem = int.tryParse(keyMatch.group(2) ?? '') ?? 0;
-    return (year * 10) + sem;
-  }
-
-  final label = semester.semesterLabel;
-  final yearMatch = RegExp(r'(\d{4})').firstMatch(label);
-  final year = int.tryParse(yearMatch?.group(1) ?? '') ?? 0;
-  final sem = label.toLowerCase().contains('second') ? 2 : 1;
-  if (year > 0) return (year * 10) + sem;
-
-  return semester.createdAt.millisecondsSinceEpoch;
+  return academicTermSortValue(
+    semesterKey: semester.semesterKey,
+    semesterLabel: semester.semesterLabel,
+    createdAt: semester.createdAt,
+  );
 }
