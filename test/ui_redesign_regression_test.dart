@@ -72,7 +72,11 @@ void main() {
 
     await _pumpFrames(tester);
 
-    await tester.tap(find.widgetWithText(TextButton, 'Import').first);
+    await tester.tap(find.widgetWithText(FloatingActionButton, 'Add'));
+    await _pumpFrames(tester);
+
+    expect(find.text('What do you want to add?'), findsOneWidget);
+    await tester.tap(find.text('Current semester courses'));
     await _pumpFrames(tester);
 
     expect(find.text('Take Photo'), findsOneWidget);
@@ -109,8 +113,8 @@ void main() {
 
     await _pumpFrames(tester);
 
-    expect(find.text('Enter Courses Manually'), findsOneWidget);
-    expect(find.text('Save Courses'), findsOneWidget);
+    expect(find.text('Add current semester courses'), findsWidgets);
+    expect(find.text('One course at a time'), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
     expect(find.byTooltip('AI Assistant'), findsNothing);
     expect(tester.takeException(), isNull);

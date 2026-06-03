@@ -48,6 +48,9 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
   bool _isSaving = false;
   bool _isDraftRestored = false;
   bool _showDuplicateWarning = false;
+  int _activeCourseIndex = 0;
+  int _cumulativeStep = 0;
+  bool _showCourseSavedActions = false;
 
   GradingSystem get _gradingSystem => ref.read(gradingSystemProvider);
 
@@ -79,8 +82,10 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     _initialProgramme = _programme;
     _initialLevel = _level;
     _courses.add(
-      _CourseDraft(defaultScore: _gradingSystem.defaultTarget)
-        ..addListener(_refreshDerivedState),
+      _CourseDraft(
+        defaultScore: _gradingSystem.defaultTarget,
+        startWithScore: false,
+      )..addListener(_refreshDerivedState),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) => _restoreDraft());
   }
@@ -118,24 +123,38 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     return firstCourse.codeController.text.trim().isNotEmpty ||
         firstCourse.titleController.text.trim().isNotEmpty ||
         firstCourse.creditsController.text.trim().isNotEmpty ||
-        firstCourse.scoreController.text.trim() !=
-            _gradingSystem.formatScore(_gradingSystem.defaultTarget);
+        firstCourse.scoreController.text.trim().isNotEmpty;
   }
 
-  int get _coursesAdded => _courses.length;
+  bool get _isSemesterMode => _mode == CwaViewMode.semester;
+
+  List<_CourseDraft> get _savedCourses {
+    return _courses.where((course) {
+      return course.isSaved && course.hasContent && _isCourseComplete(course);
+    }).toList();
+  }
+
+  int get _coursesAdded => _savedCourses.length;
+
+  _CourseDraft get _activeCourse {
+    if (_activeCourseIndex >= _courses.length) {
+      _activeCourseIndex = _courses.length - 1;
+    }
+    return _courses[_activeCourseIndex];
+  }
 
   double get _totalCredits {
-    return _courses.fold<double>(0, (sum, course) {
+    return _savedCourses.fold<double>(0, (sum, course) {
       return sum + (double.tryParse(course.creditsController.text.trim()) ?? 0);
     });
   }
 
   double get _estimatedCwa {
     final pairs = <({double creditHours, double score})>[];
-    for (final course in _courses) {
+    for (final course in _savedCourses) {
       final credits = double.tryParse(course.creditsController.text.trim());
-      final score = double.tryParse(course.scoreController.text.trim());
-      if (credits == null || score == null || credits <= 0) continue;
+      final score = _scoreForCourse(course);
+      if (credits == null || credits <= 0) continue;
       pairs
           .add((creditHours: credits, score: _gradingSystem.clampScore(score)));
     }
@@ -150,12 +169,25 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     });
   }
 
+  void _handleActiveCourseChanged() {
+    if (!mounted) return;
+    setState(() {
+      _activeCourse.isSaved = false;
+      _showCourseSavedActions = false;
+      _showDuplicateWarning = _hasDuplicateCodes;
+    });
+  }
+
   void _addCourse() {
     setState(() {
       _courses.add(
-        _CourseDraft(defaultScore: _gradingSystem.defaultTarget)
-          ..addListener(_refreshDerivedState),
+        _CourseDraft(
+          defaultScore: _gradingSystem.defaultTarget,
+          startWithScore: false,
+        )..addListener(_refreshDerivedState),
       );
+      _activeCourseIndex = _courses.length - 1;
+      _showCourseSavedActions = false;
       _showDuplicateWarning = _hasDuplicateCodes;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -173,6 +205,9 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     setState(() {
       _courses.remove(course);
       course.dispose();
+      if (_activeCourseIndex >= _courses.length) {
+        _activeCourseIndex = _courses.length - 1;
+      }
       _showDuplicateWarning = _hasDuplicateCodes;
     });
   }
@@ -181,6 +216,9 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     if (_mode == mode) return;
     setState(() {
       _mode = mode;
+      _cumulativeStep = mode == CwaViewMode.cumulative ? 0 : 0;
+      _activeCourseIndex = 0;
+      _showCourseSavedActions = false;
     });
   }
 
@@ -238,6 +276,9 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
         final p = decoded['programme'];
         _programme = p is String ? p.trim() : '';
         _level = _validOrDefault(decoded['level'], _levels);
+        _activeCourseIndex = _courses.length - 1;
+        _cumulativeStep = _mode == CwaViewMode.cumulative ? 0 : 0;
+        _showCourseSavedActions = false;
         _showDuplicateWarning = _hasDuplicateCodes;
       });
       _showMessage('Draft restored.');
@@ -276,14 +317,14 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
 
   Future<void> _saveCourses() async {
     FocusScope.of(context).unfocus();
-    final isValid = _formKey.currentState?.validate() ?? false;
+    final isValid = _formKey.currentState?.validate() ?? true;
     final hasDuplicates = _hasDuplicateCodes;
 
     setState(() {
       _showDuplicateWarning = hasDuplicates;
     });
 
-    if (!isValid) return;
+    if (!isValid || !_validateCoursesForSave()) return;
     if (hasDuplicates) {
       _showMessage('Duplicate course codes found. Please fix them first.');
       return;
@@ -315,7 +356,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
             ? 'manual_entry_semester'
             : 'manual_entry_cumulative',
         gradingSystem: ref.read(gradingSystemProvider).id,
-        count: _courses.length,
+        count: _savedCourses.length,
       );
       _showMessage('Courses saved successfully.');
       _closeToCwa();
@@ -328,7 +369,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
         reason: 'manual_entry_save_failed',
         context: {
           'mode': _mode.name,
-          'course_count': _courses.length,
+          'course_count': _savedCourses.length,
         },
       );
       _showMessage('Could not save courses. Please try again.');
@@ -345,7 +386,7 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
 
     final semesterKey = ref.read(activeSemesterProvider);
     final gradingSystem = ref.read(gradingSystemProvider);
-    final normalizedCodes = _courses
+    final normalizedCodes = _savedCourses
         .map((course) => course.codeController.text.trim().toUpperCase())
         .toList();
 
@@ -358,9 +399,9 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
       }
     }
 
-    for (final course in _courses) {
+    for (final course in _savedCourses) {
       final credits = double.parse(course.creditsController.text.trim());
-      final score = double.parse(course.scoreController.text.trim());
+      final score = _scoreForCourse(course);
       await repo.addCourse(
         CourseModel.create(
           name: course.titleController.text.trim(),
@@ -381,9 +422,9 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     final semesterKey = _buildSemesterKey();
     final gradingSystem = ref.read(gradingSystemProvider);
 
-    final entries = _courses.map((course) {
+    final entries = _savedCourses.map((course) {
       final credits = double.parse(course.creditsController.text.trim());
-      final score = double.parse(course.scoreController.text.trim());
+      final score = _scoreForCourse(course);
       return PastCourseEntry.create(
         courseCode: course.codeController.text.trim().toUpperCase(),
         courseName: course.titleController.text.trim(),
@@ -433,6 +474,109 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
 
   String _buildSemesterLabel() {
     return '$_academicYear • $_semesterLabel • L$_level • $_programme';
+  }
+
+  double _scoreForCourse(_CourseDraft course) {
+    final raw = course.scoreController.text.trim();
+    final parsed = double.tryParse(raw);
+    return _gradingSystem.clampScore(parsed ?? _gradingSystem.defaultTarget);
+  }
+
+  bool _validateCoursesForSave() {
+    final validCourses = _savedCourses;
+    if (validCourses.isEmpty) {
+      _showMessage('Add at least one course before saving.');
+      return false;
+    }
+
+    for (final course in validCourses) {
+      if (!_isCourseComplete(course)) {
+        _showMessage('Complete each course before saving.');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _isCourseComplete(_CourseDraft course) {
+    final credits = double.tryParse(course.creditsController.text.trim());
+    final score = double.tryParse(course.scoreController.text.trim());
+    final hasScore = course.scoreController.text.trim().isNotEmpty;
+    final scoreIsValid = _isSemesterMode
+        ? !hasScore ||
+            (score != null &&
+                score >= _gradingSystem.minScore &&
+                score <= _gradingSystem.maxScore)
+        : score != null &&
+            score >= _gradingSystem.minScore &&
+            score <= _gradingSystem.maxScore;
+
+    return course.codeController.text.trim().isNotEmpty &&
+        course.titleController.text.trim().isNotEmpty &&
+        credits != null &&
+        credits > 0 &&
+        scoreIsValid;
+  }
+
+  bool _validateActiveCourse() {
+    final isValid = _formKey.currentState?.validate() ?? true;
+    setState(() {
+      _showDuplicateWarning = _hasDuplicateCodes;
+    });
+    if (!isValid) return false;
+    if (_hasDuplicateCodes) {
+      _showMessage('Duplicate course codes found. Please fix them first.');
+      return false;
+    }
+    if (!_isCourseComplete(_activeCourse)) {
+      _showMessage('Complete this course before continuing.');
+      return false;
+    }
+    return true;
+  }
+
+  void _saveActiveCourseDraft() {
+    FocusScope.of(context).unfocus();
+    if (!_validateActiveCourse()) return;
+    setState(() {
+      _activeCourse.isSaved = true;
+      _showCourseSavedActions = true;
+    });
+  }
+
+  void _addAnotherCourse() {
+    _addCourse();
+  }
+
+  void _editCourse(_CourseDraft course) {
+    setState(() {
+      _activeCourseIndex = _courses.indexOf(course);
+      _cumulativeStep = _mode == CwaViewMode.cumulative ? 1 : 0;
+      _showCourseSavedActions = false;
+    });
+  }
+
+  void _goToCumulativeCoursesStep() {
+    if (_programme.trim().isEmpty) {
+      _showMessage('Add your programme name before continuing.');
+      return;
+    }
+    setState(() {
+      _cumulativeStep = 1;
+      _showCourseSavedActions = false;
+    });
+  }
+
+  void _goToCumulativeReview() {
+    if (!_showCourseSavedActions && !_validateActiveCourse()) return;
+    if (_savedCourses.isEmpty) {
+      _showMessage('Save at least one course before reviewing.');
+      return;
+    }
+    setState(() {
+      _cumulativeStep = 2;
+      _showCourseSavedActions = false;
+    });
   }
 
   Future<void> _saveDraft() async {
@@ -494,11 +638,14 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final activeSemesterKey = ref.watch(activeSemesterProvider);
     final activeSemesterDisplay = _formatSemesterKey(activeSemesterKey);
-    final helperText = _mode == CwaViewMode.semester
-        ? 'Mode: Semester\nAdd your semester courses for $activeSemesterDisplay.'
-        : 'Mode: Cumulative\nAdd courses from a completed semester.';
     final navigator = Navigator.of(context);
     final router = GoRouter.of(context);
+    final title = _isSemesterMode
+        ? 'Add current semester courses'
+        : 'Add past semester results';
+    final helperText = _isSemesterMode
+        ? 'Add the courses you are taking this semester to estimate your ${_gradingSystem.label}.'
+        : 'Save one completed semester at a time so your cumulative ${_gradingSystem.label} stays accurate.';
 
     return PopScope(
       canPop: false,
@@ -517,9 +664,9 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           leading: BackButton(onPressed: _cancel),
-          title: const Text(
-            'Enter Courses Manually',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           actions: [
             TextButton(
@@ -551,176 +698,21 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                         onChanged: _onModeChanged,
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      Text(
-                        helperText,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              height: 1.4,
-                            ),
+                      _IntroCard(
+                        title: title,
+                        body: helperText,
+                        stepLabel: _isSemesterMode
+                            ? 'One course at a time'
+                            : 'Step ${_cumulativeStep + 1} of 3',
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      _SectionCard(
-                        title: _mode == CwaViewMode.semester
-                            ? 'Active Semester'
-                            : 'Semester Information',
-                        child: _mode == CwaViewMode.semester
-                            ? Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    activeSemesterDisplay,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: colorScheme.onSurface,
-                                        ),
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Text(
-                                    'Change this from the CWA screen when you move into a new semester.',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          color: colorScheme.onSurfaceVariant,
-                                          height: 1.4,
-                                        ),
-                                  ),
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  _DropdownField(
-                                    label: 'Academic Year',
-                                    value: _academicYear,
-                                    items: _academicYears,
-                                    onChanged: (value) =>
-                                        setState(() => _academicYear = value),
-                                  ),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  _DropdownField(
-                                    label: 'Semester',
-                                    value: _semesterLabel,
-                                    items: _semesters,
-                                    onChanged: (value) =>
-                                        setState(() => _semesterLabel = value),
-                                  ),
-                                  if (_semesterLabel ==
-                                      AcademicTermType
-                                          .supplementarySemester.label) ...[
-                                    const SizedBox(height: AppSpacing.xs),
-                                    Text(
-                                      'Use this for resits, failed courses, deferred papers, or missing-credit results.',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                            height: 1.35,
-                                          ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: AppSpacing.sm),
-                                  TextFormField(
-                                    initialValue: _programme,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Programme',
-                                      hintText: 'e.g. Civil Engineering',
-                                    ),
-                                    textCapitalization:
-                                        TextCapitalization.words,
-                                    onChanged: (value) => setState(
-                                        () => _programme = value.trim()),
-                                  ),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  _DropdownField(
-                                    label: 'Level',
-                                    value: _level,
-                                    items: _levels,
-                                    onChanged: (value) =>
-                                        setState(() => _level = value),
-                                  ),
-                                ],
-                              ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _SectionCard(
-                        title: 'Courses',
-                        child: Column(
-                          children: [
-                            for (final course in _courses) ...[
-                              _CourseEditorCard(
-                                key: ValueKey(course.id),
-                                course: course,
-                                gradingSystem: _gradingSystem,
-                                canRemove: _courses.length > 1,
-                                hasDuplicateCode: _duplicateCodes
-                                    .contains(course.normalizedCode),
-                                onChanged: _refreshDerivedState,
-                                onRemove: () => _removeCourse(course),
-                              ),
-                              if (course != _courses.last)
-                                const SizedBox(height: AppSpacing.sm),
-                            ],
-                            const SizedBox(height: AppSpacing.sm),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: OutlinedButton.icon(
-                                onPressed: _addCourse,
-                                icon: const Icon(LucideIcons.plus),
-                                label: const Text('Add Another Course'),
-                              ),
-                            ),
-                            if (_showDuplicateWarning) ...[
-                              const SizedBox(height: AppSpacing.xs),
-                              const Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Duplicate course codes detected. Each course code should be unique.',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppTheme.warning,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _SectionCard(
-                        title: 'Live Summary',
-                        child: Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: [
-                            SizedBox(
-                              width: 140,
-                              child: _SummaryStat(
-                                label: 'Courses added',
-                                value: '$_coursesAdded',
-                              ),
-                            ),
-                            SizedBox(
-                              width: 140,
-                              child: _SummaryStat(
-                                label: 'Total credits',
-                                value: _totalCredits.toStringAsFixed(1),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 140,
-                              child: _SummaryStat(
-                                label: 'Estimated ${_gradingSystem.label}',
-                                value:
-                                    _gradingSystem.formatScore(_estimatedCwa),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      if (_isSemesterMode)
+                        _buildSemesterManualFlow(
+                          context,
+                          activeSemesterDisplay,
+                        )
+                      else
+                        _buildCumulativeManualFlow(context),
                     ],
                   ),
                 ),
@@ -739,47 +731,16 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
                         top: BorderSide(color: colorScheme.outlineVariant),
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Semantics(
-                            button: true,
-                            label: 'Cancel manual course entry',
-                            child: OutlinedButton(
-                              onPressed: _isSaving ? null : _cancel,
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(48),
-                              ),
-                              child: const Text('Cancel'),
-                            ),
-                          ),
+                    child: Semantics(
+                      button: true,
+                      label: 'Cancel manual course entry',
+                      child: OutlinedButton(
+                        onPressed: _isSaving ? null : _cancel,
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: Semantics(
-                            button: true,
-                            label: 'Save courses',
-                            child: ElevatedButton(
-                              onPressed: _isSaving ? null : _saveCourses,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: colorScheme.primary,
-                                foregroundColor: colorScheme.onPrimary,
-                                minimumSize: const Size.fromHeight(48),
-                              ),
-                              child: _isSaving
-                                  ? SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: colorScheme.onPrimary,
-                                      ),
-                                    )
-                                  : const Text('Save Courses'),
-                            ),
-                          ),
-                        ),
-                      ],
+                        child: const Text('Cancel'),
+                      ),
                     ),
                   ),
                 ),
@@ -788,6 +749,137 @@ class _CwaManualEntryScreenState extends ConsumerState<CwaManualEntryScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSemesterManualFlow(
+    BuildContext context,
+    String activeSemesterDisplay,
+  ) {
+    return Column(
+      children: [
+        _SectionCard(
+          title: 'Active semester',
+          child: _ActiveSemesterInfo(label: activeSemesterDisplay),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _SectionCard(
+          title: 'Add one course',
+          child: _CourseEntryStep(
+            course: _activeCourse,
+            gradingSystem: _gradingSystem,
+            scoreRequired: false,
+            hasDuplicateCode:
+                _duplicateCodes.contains(_activeCourse.normalizedCode),
+            onChanged: _handleActiveCourseChanged,
+            onSaveCourse: _saveActiveCourseDraft,
+            savedActions: _showCourseSavedActions
+                ? _SavedCourseActions(
+                    primaryLabel: 'Add Another Course',
+                    secondaryLabel: 'Done',
+                    onPrimary: _addAnotherCourse,
+                    onSecondary: _saveCourses,
+                  )
+                : null,
+          ),
+        ),
+        if (_showDuplicateWarning) ...[
+          const SizedBox(height: AppSpacing.xs),
+          const _DuplicateWarning(),
+        ],
+        const SizedBox(height: AppSpacing.md),
+        _SectionCard(
+          title: 'Current summary',
+          child: _ManualSummary(
+            coursesAdded: _coursesAdded,
+            totalCredits: _totalCredits,
+            estimatedLabel: 'Projected ${_gradingSystem.label}',
+            estimatedValue: _gradingSystem.formatScore(_estimatedCwa),
+          ),
+        ),
+        if (_coursesAdded > 0) ...[
+          const SizedBox(height: AppSpacing.md),
+          _SectionCard(
+            title: 'Added courses',
+            child: _CompactCourseList(
+              courses: _savedCourses,
+              gradingSystem: _gradingSystem,
+              onEdit: _editCourse,
+              onRemove: _courses.length > 1 ? _removeCourse : null,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildCumulativeManualFlow(BuildContext context) {
+    return Column(
+      children: [
+        _StepIndicator(currentStep: _cumulativeStep),
+        const SizedBox(height: AppSpacing.md),
+        if (_cumulativeStep == 0)
+          _SectionCard(
+            title: 'Semester information',
+            child: _SemesterInfoStep(
+              academicYear: _academicYear,
+              semesterLabel: _semesterLabel,
+              programme: _programme,
+              level: _level,
+              academicYears: _academicYears,
+              semesters: _semesters,
+              levels: _levels,
+              onAcademicYearChanged: (value) =>
+                  setState(() => _academicYear = value),
+              onSemesterChanged: (value) =>
+                  setState(() => _semesterLabel = value),
+              onProgrammeChanged: (value) =>
+                  setState(() => _programme = value.trim()),
+              onLevelChanged: (value) => setState(() => _level = value),
+              onContinue: _goToCumulativeCoursesStep,
+            ),
+          )
+        else if (_cumulativeStep == 1)
+          _SectionCard(
+            title: 'Add course results',
+            child: _CourseEntryStep(
+              course: _activeCourse,
+              gradingSystem: _gradingSystem,
+              scoreRequired: true,
+              hasDuplicateCode:
+                  _duplicateCodes.contains(_activeCourse.normalizedCode),
+              onChanged: _handleActiveCourseChanged,
+              onSaveCourse: _saveActiveCourseDraft,
+              savedActions: _showCourseSavedActions
+                  ? _SavedCourseActions(
+                      primaryLabel: 'Add Another Course',
+                      secondaryLabel: 'Review Semester',
+                      onPrimary: _addAnotherCourse,
+                      onSecondary: _goToCumulativeReview,
+                    )
+                  : null,
+            ),
+          )
+        else
+          _SectionCard(
+            title: 'Review and save',
+            child: _ReviewStep(
+              semesterLabel: _buildSemesterLabel(),
+              courses: _savedCourses,
+              gradingSystem: _gradingSystem,
+              coursesAdded: _coursesAdded,
+              totalCredits: _totalCredits,
+              estimatedValue: _gradingSystem.formatScore(_estimatedCwa),
+              onEdit: _editCourse,
+              onRemove: _courses.length > 1 ? _removeCourse : null,
+              onSave: _saveCourses,
+            ),
+          ),
+        if (_showDuplicateWarning && _cumulativeStep != 2) ...[
+          const SizedBox(height: AppSpacing.xs),
+          const _DuplicateWarning(),
+        ],
+      ],
     );
   }
 
@@ -920,6 +1012,570 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
+class _IntroCard extends StatelessWidget {
+  final String title;
+  final String body;
+  final String stepLabel;
+
+  const _IntroCard({
+    required this.title,
+    required this.body,
+    required this.stepLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      color: colorScheme.primary,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.18),
+                borderRadius: AppRadii.pill,
+              ),
+              child: Text(
+                stepLabel,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              body,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onPrimary.withValues(alpha: 0.78),
+                    height: 1.4,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActiveSemesterInfo extends StatelessWidget {
+  final String label;
+
+  const _ActiveSemesterInfo({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
+              ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Change this from the CWA dashboard when you move into a new semester.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StepIndicator extends StatelessWidget {
+  final int currentStep;
+
+  const _StepIndicator({required this.currentStep});
+
+  static const _labels = [
+    'Semester info',
+    'Add courses',
+    'Review',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        for (var index = 0; index < _labels.length; index++) ...[
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: index == currentStep
+                    ? colorScheme.primary
+                    : colorScheme.surface,
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+                border: Border.all(
+                  color: index == currentStep
+                      ? colorScheme.primary
+                      : colorScheme.outlineVariant,
+                ),
+              ),
+              child: Text(
+                _labels[index],
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: index == currentStep
+                          ? colorScheme.onPrimary
+                          : colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ),
+          ),
+          if (index != _labels.length - 1) const SizedBox(width: AppSpacing.xs),
+        ],
+      ],
+    );
+  }
+}
+
+class _SemesterInfoStep extends StatelessWidget {
+  final String academicYear;
+  final String semesterLabel;
+  final String programme;
+  final String level;
+  final List<String> academicYears;
+  final List<String> semesters;
+  final List<String> levels;
+  final ValueChanged<String> onAcademicYearChanged;
+  final ValueChanged<String> onSemesterChanged;
+  final ValueChanged<String> onProgrammeChanged;
+  final ValueChanged<String> onLevelChanged;
+  final VoidCallback onContinue;
+
+  const _SemesterInfoStep({
+    required this.academicYear,
+    required this.semesterLabel,
+    required this.programme,
+    required this.level,
+    required this.academicYears,
+    required this.semesters,
+    required this.levels,
+    required this.onAcademicYearChanged,
+    required this.onSemesterChanged,
+    required this.onProgrammeChanged,
+    required this.onLevelChanged,
+    required this.onContinue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        _DropdownField(
+          label: 'Academic Year',
+          value: academicYear,
+          items: academicYears,
+          onChanged: onAcademicYearChanged,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _DropdownField(
+          label: 'Semester type',
+          value: semesterLabel,
+          items: semesters,
+          onChanged: onSemesterChanged,
+        ),
+        if (semesterLabel == AcademicTermType.supplementarySemester.label) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Use this for resits, failed courses, deferred papers, or results released outside the normal semester.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.35,
+                ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.sm),
+        TextFormField(
+          initialValue: programme,
+          decoration: const InputDecoration(
+            labelText: 'Programme name',
+            hintText: 'e.g. Civil Engineering',
+          ),
+          textCapitalization: TextCapitalization.words,
+          onChanged: onProgrammeChanged,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _DropdownField(
+          label: 'Level',
+          value: level,
+          items: levels,
+          onChanged: onLevelChanged,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            child: const Text('Continue'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CourseEntryStep extends StatelessWidget {
+  final _CourseDraft course;
+  final GradingSystem gradingSystem;
+  final bool scoreRequired;
+  final bool hasDuplicateCode;
+  final VoidCallback onChanged;
+  final VoidCallback onSaveCourse;
+  final Widget? savedActions;
+
+  const _CourseEntryStep({
+    required this.course,
+    required this.gradingSystem,
+    required this.scoreRequired,
+    required this.hasDuplicateCode,
+    required this.onChanged,
+    required this.onSaveCourse,
+    this.savedActions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _CourseEditorCard(
+          key: ValueKey(course.id),
+          course: course,
+          gradingSystem: gradingSystem,
+          scoreRequired: scoreRequired,
+          canRemove: false,
+          hasDuplicateCode: hasDuplicateCode,
+          onChanged: onChanged,
+          onRemove: () {},
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (savedActions == null)
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onSaveCourse,
+              icon: const Icon(LucideIcons.check),
+              label: const Text('Save Course'),
+            ),
+          )
+        else
+          savedActions!,
+      ],
+    );
+  }
+}
+
+class _SavedCourseActions extends StatelessWidget {
+  final String primaryLabel;
+  final String secondaryLabel;
+  final VoidCallback onPrimary;
+  final VoidCallback onSecondary;
+
+  const _SavedCourseActions({
+    required this.primaryLabel,
+    required this.secondaryLabel,
+    required this.onPrimary,
+    required this.onSecondary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: onPrimary,
+            icon: const Icon(LucideIcons.plus),
+            label: Text(primaryLabel),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: onSecondary,
+            child: Text(secondaryLabel),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ManualSummary extends StatelessWidget {
+  final int coursesAdded;
+  final double totalCredits;
+  final String estimatedLabel;
+  final String estimatedValue;
+
+  const _ManualSummary({
+    required this.coursesAdded,
+    required this.totalCredits,
+    required this.estimatedLabel,
+    required this.estimatedValue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        SizedBox(
+          width: 140,
+          child: _SummaryStat(
+            label: 'Courses added',
+            value: '$coursesAdded',
+          ),
+        ),
+        SizedBox(
+          width: 140,
+          child: _SummaryStat(
+            label: 'Total credits',
+            value: totalCredits.toStringAsFixed(1),
+          ),
+        ),
+        SizedBox(
+          width: 140,
+          child: _SummaryStat(
+            label: estimatedLabel,
+            value: estimatedValue,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CompactCourseList extends StatelessWidget {
+  final List<_CourseDraft> courses;
+  final GradingSystem gradingSystem;
+  final ValueChanged<_CourseDraft> onEdit;
+  final ValueChanged<_CourseDraft>? onRemove;
+
+  const _CompactCourseList({
+    required this.courses,
+    required this.gradingSystem,
+    required this.onEdit,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (courses.isEmpty) {
+      return Text(
+        'Saved courses will appear here as you add them.',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+      );
+    }
+    return Column(
+      children: [
+        for (final course in courses) ...[
+          _CompactCourseTile(
+            course: course,
+            gradingSystem: gradingSystem,
+            onEdit: () => onEdit(course),
+            onRemove: onRemove == null ? null : () => onRemove!(course),
+          ),
+          if (course != courses.last) const SizedBox(height: AppSpacing.sm),
+        ],
+      ],
+    );
+  }
+}
+
+class _CompactCourseTile extends StatelessWidget {
+  final _CourseDraft course;
+  final GradingSystem gradingSystem;
+  final VoidCallback onEdit;
+  final VoidCallback? onRemove;
+
+  const _CompactCourseTile({
+    required this.course,
+    required this.gradingSystem,
+    required this.onEdit,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final score = double.tryParse(course.scoreController.text.trim());
+    final scoreText = score == null
+        ? 'Uses target ${gradingSystem.formatScore(gradingSystem.defaultTarget)}'
+        : gradingSystem.formatScore(gradingSystem.clampScore(score));
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(AppRadii.sm2),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  course.normalizedCode.isEmpty
+                      ? 'Course code'
+                      : course.normalizedCode,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.xxs2),
+                Text(
+                  course.titleController.text.trim().isEmpty
+                      ? 'Course title'
+                      : course.titleController.text.trim(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.xxs2),
+                Text(
+                  '${course.creditsController.text.trim()} credits • $scoreText',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: onEdit,
+            child: const Text('Edit'),
+          ),
+          if (onRemove != null)
+            IconButton(
+              tooltip: 'Remove course',
+              onPressed: onRemove,
+              icon: const Icon(LucideIcons.trash2),
+              color: AppTheme.warning,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewStep extends StatelessWidget {
+  final String semesterLabel;
+  final List<_CourseDraft> courses;
+  final GradingSystem gradingSystem;
+  final int coursesAdded;
+  final double totalCredits;
+  final String estimatedValue;
+  final ValueChanged<_CourseDraft> onEdit;
+  final ValueChanged<_CourseDraft>? onRemove;
+  final VoidCallback onSave;
+
+  const _ReviewStep({
+    required this.semesterLabel,
+    required this.courses,
+    required this.gradingSystem,
+    required this.coursesAdded,
+    required this.totalCredits,
+    required this.estimatedValue,
+    required this.onEdit,
+    required this.onRemove,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          semesterLabel,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Check the courses before saving this semester.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _ManualSummary(
+          coursesAdded: coursesAdded,
+          totalCredits: totalCredits,
+          estimatedLabel: 'Semester ${gradingSystem.label}',
+          estimatedValue: estimatedValue,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _CompactCourseList(
+          courses: courses,
+          gradingSystem: gradingSystem,
+          onEdit: onEdit,
+          onRemove: onRemove,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: onSave,
+            icon: const Icon(LucideIcons.save),
+            label: const Text('Save Semester'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DuplicateWarning extends StatelessWidget {
+  const _DuplicateWarning();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        'Duplicate course codes detected. Each course code should be unique.',
+        style: TextStyle(
+          fontSize: 12,
+          color: AppTheme.warning,
+        ),
+      ),
+    );
+  }
+}
+
 class _DropdownField extends StatelessWidget {
   final String label;
   final String value;
@@ -963,6 +1619,7 @@ class _DropdownField extends StatelessWidget {
 class _CourseEditorCard extends StatelessWidget {
   final _CourseDraft course;
   final GradingSystem gradingSystem;
+  final bool scoreRequired;
   final bool canRemove;
   final bool hasDuplicateCode;
   final VoidCallback onChanged;
@@ -972,6 +1629,7 @@ class _CourseEditorCard extends StatelessWidget {
     super.key,
     required this.course,
     required this.gradingSystem,
+    required this.scoreRequired,
     required this.canRemove,
     required this.hasDuplicateCode,
     required this.onChanged,
@@ -994,7 +1652,7 @@ class _CourseEditorCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Course',
+                  'Course details',
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
@@ -1035,11 +1693,11 @@ class _CourseEditorCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           TextFormField(
             controller: course.titleController,
-            decoration: const InputDecoration(labelText: 'Course Title'),
+            decoration: const InputDecoration(labelText: 'Course name'),
             onChanged: (_) => onChanged(),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Course title cannot be empty.';
+                return 'Course name cannot be empty.';
               }
               return null;
             },
@@ -1065,7 +1723,7 @@ class _CourseEditorCard extends StatelessWidget {
             },
           ),
           const SizedBox(height: AppSpacing.sm),
-          if (gradingSystem.usesLetterGrades)
+          if (gradingSystem.usesLetterGrades) ...[
             GradeValueDropdown(
               gradingSystem: gradingSystem,
               value: gradingSystem.clampScore(
@@ -1076,18 +1734,27 @@ class _CourseEditorCard extends StatelessWidget {
                 course.scoreController.text = gradingSystem.formatScore(value);
                 onChanged();
               },
-            )
-          else
+            ),
+            const SizedBox(height: AppSpacing.xxs2),
+            _ScoreHelperText(
+              text: scoreRequired
+                  ? 'Choose the grade from your result slip.'
+                  : 'This starts at your default target. Change it if you expect a different grade.',
+            ),
+          ] else ...[
             TextFormField(
               controller: course.scoreController,
               decoration: InputDecoration(
-                labelText: gradingSystem.scoreInputLabel,
+                labelText: scoreRequired
+                    ? gradingSystem.scoreInputLabel
+                    : '${gradingSystem.scoreInputLabel}, optional',
               ),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               onChanged: (_) => onChanged(),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
+                  if (!scoreRequired) return null;
                   return 'Score must be numeric.';
                 }
                 final score = double.tryParse(value.trim());
@@ -1101,7 +1768,34 @@ class _CourseEditorCard extends StatelessWidget {
                 return null;
               },
             ),
+            const SizedBox(height: AppSpacing.xxs2),
+            _ScoreHelperText(
+              text: scoreRequired
+                  ? 'Enter the mark from your result slip.'
+                  : 'Leave this blank to estimate with your default target of ${gradingSystem.formatScore(gradingSystem.defaultTarget)}.',
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _ScoreHelperText extends StatelessWidget {
+  final String text;
+
+  const _ScoreHelperText({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.35,
+            ),
       ),
     );
   }
@@ -1146,13 +1840,17 @@ class _SummaryStat extends StatelessWidget {
 }
 
 class _CourseDraft {
-  _CourseDraft({required double defaultScore})
-      : id = UniqueKey().toString(),
+  _CourseDraft({
+    required double defaultScore,
+    bool startWithScore = true,
+  })  : id = UniqueKey().toString(),
         codeController = TextEditingController(),
         titleController = TextEditingController(),
         creditsController = TextEditingController(),
-        scoreController =
-            TextEditingController(text: defaultScore.toStringAsFixed(1)) {
+        scoreController = TextEditingController(
+          text: startWithScore ? defaultScore.toStringAsFixed(1) : '',
+        ),
+        isSaved = false {
     codeController.addListener(_notify);
     titleController.addListener(_notify);
     creditsController.addListener(_notify);
@@ -1176,7 +1874,8 @@ class _CourseDraft {
           text: json['score'] is String
               ? json['score'] as String
               : defaultScore.toStringAsFixed(1),
-        ) {
+        ),
+        isSaved = json['isSaved'] == true {
     codeController.addListener(_notify);
     titleController.addListener(_notify);
     creditsController.addListener(_notify);
@@ -1189,8 +1888,15 @@ class _CourseDraft {
   final TextEditingController creditsController;
   final TextEditingController scoreController;
   final List<VoidCallback> _listeners = [];
+  bool isSaved;
 
   String get normalizedCode => codeController.text.trim().toUpperCase();
+
+  bool get hasContent {
+    return codeController.text.trim().isNotEmpty ||
+        titleController.text.trim().isNotEmpty ||
+        creditsController.text.trim().isNotEmpty;
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -1198,6 +1904,7 @@ class _CourseDraft {
       'title': titleController.text,
       'credits': creditsController.text,
       'score': scoreController.text,
+      'isSaved': isSaved,
     };
   }
 
