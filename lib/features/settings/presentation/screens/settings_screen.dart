@@ -29,6 +29,7 @@ class SettingsScreen extends ConsumerWidget {
     final prefsAsync = ref.watch(notificationPrefsProvider);
     final activeSemesterKey = ref.watch(activeSemesterProvider);
     final gradingSystem = ref.watch(gradingSystemProvider);
+    final layoutIndex = ref.watch(timetableGridLayoutProvider).valueOrNull ?? 0;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -246,6 +247,14 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () =>
                     _showThemePicker(context, ref, prefs.themeModeIndex),
               ),
+              const Divider(height: 1),
+              _RowTile(
+                leading: LucideIcons.calendarDays,
+                title: 'Timetable grid layout',
+                subtitle: _layoutLabel(layoutIndex),
+                onTap: () =>
+                    _showLayoutPicker(context, ref, layoutIndex),
+              ),
             ]),
 
             const SizedBox(height: AppSpacing.lg),
@@ -411,6 +420,7 @@ Future<void> _showThemePicker(
   await showModalBottomSheet(
     context: context,
     useSafeArea: true,
+    isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) {
       return StatefulBuilder(
@@ -438,7 +448,7 @@ Future<void> _showThemePicker(
                         children: [
                           Icon(entry.icon, size: AppIconSizes.lg),
                           const SizedBox(width: AppSpacing.sm),
-                          Text(entry.label),
+                          Expanded(child: Text(entry.label)),
                         ],
                       ),
                       activeColor: Theme.of(ctx).colorScheme.primary,
@@ -479,6 +489,78 @@ String _themeModeKey(int index) {
   }
 }
 
+String _layoutLabel(int index) {
+  switch (index) {
+    case 1:
+      return 'Weekly Grid (Horizontal)';
+    default:
+      return 'Daily Grid (Vertical)';
+  }
+}
+
+Future<void> _showLayoutPicker(
+  BuildContext context,
+  WidgetRef ref,
+  int currentIndex,
+) async {
+  int selected = currentIndex;
+
+  await showModalBottomSheet(
+    context: context,
+    useSafeArea: true,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) {
+      return StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return _CampusBottomSheet(
+            title: 'Timetable grid layout',
+            child: RadioGroup<int>(
+              groupValue: selected,
+              onChanged: (v) {
+                if (v == null) return;
+                setSheetState(() => selected = v);
+                unawaited(_saveLayoutMode(ctx, ref, v));
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final entry in [
+                    (index: 0, icon: LucideIcons.calendarDays, label: 'Daily Grid (Vertical)'),
+                    (index: 1, icon: LucideIcons.calendarRange, label: 'Weekly Grid (Horizontal)'),
+                  ])
+                    RadioListTile<int>(
+                      value: entry.index,
+                      title: Row(
+                        children: [
+                          Icon(entry.icon, size: AppIconSizes.lg),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(child: Text(entry.label)),
+                        ],
+                      ),
+                      activeColor: Theme.of(ctx).colorScheme.primary,
+                    ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+Future<void> _saveLayoutMode(
+    BuildContext context, WidgetRef ref, int value) async {
+  final repo = ref.read(userPrefsRepositoryProvider);
+  await repo?.setTimetableGridLayoutIndex(value);
+  ref.invalidate(notificationPrefsProvider);
+  ref.invalidate(timetableGridLayoutProvider);
+  if (!context.mounted) return;
+  Navigator.of(context).pop();
+}
+
 // ── Shared bottom sheet wrapper ────────────────────────────────────────────
 
 class _CampusBottomSheet extends StatelessWidget {
@@ -502,28 +584,30 @@ class _CampusBottomSheet extends StatelessWidget {
         AppSpacing.xl,
         AppSpacing.md,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          child,
-        ],
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            child,
+          ],
+        ),
       ),
     );
   }
