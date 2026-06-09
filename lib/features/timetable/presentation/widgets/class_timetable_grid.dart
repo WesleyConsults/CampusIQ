@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/timetable_slot_card.dart';
-import 'package:campusiq/features/timetable/presentation/widgets/free_block_indicator.dart';
+import 'package:campusiq/features/timetable/presentation/providers/course_reminder_provider.dart';
 
 /// Renders the class timetable grid.
-class ClassTimetableGrid extends StatelessWidget {
+class ClassTimetableGrid extends ConsumerWidget {
   final List<TimetableSlotModel> classSlots;
   final List<FreeBlock> freeBlocks;
   final void Function(TimetableSlotModel) onClassSlotTap;
@@ -25,8 +26,10 @@ class ClassTimetableGrid extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final reminders = ref.watch(courseRemindersProvider).valueOrNull ?? [];
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -57,23 +60,22 @@ class ClassTimetableGrid extends StatelessWidget {
                   child: Stack(
                     children: [
                       const _HourLines(),
-                      ...freeBlocks.map(
-                        (b) => FreeBlockIndicator(
-                          block: b,
-                          onTap: () => onFreeBlockTap(b),
-                        ),
-                      ),
                       ...classSlots.map((s) {
                         const laneGap = 8.0;
                         final pos =
                             classPositions[s.id] ?? const _OverlapPos(0, 1);
                         final laneWidth = totalWidth / pos.totalColumns;
                         final cardWidth = laneWidth - laneGap;
+                        final hasAlarm = reminders.any((r) =>
+                            r.courseCode.toUpperCase() == s.courseCode.toUpperCase() &&
+                            r.isEnabled &&
+                            r.isAlarm);
 
                         return TimetableSlotCard(
                           slot: s,
                           left: (pos.columnIndex * laneWidth) + (laneGap / 2),
                           width: cardWidth,
+                          hasAlarm: hasAlarm,
                           onTap: () => onClassSlotTap(s),
                           onLongPress: () => onClassSlotTap(s),
                         );

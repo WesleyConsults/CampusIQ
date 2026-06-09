@@ -11,6 +11,7 @@ class TimetableSlotCard extends StatelessWidget {
   final TimetableSlotModel slot;
   final double left;
   final double width;
+  final bool hasAlarm;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -19,6 +20,7 @@ class TimetableSlotCard extends StatelessWidget {
     required this.slot,
     required this.left,
     required this.width,
+    required this.hasAlarm,
     required this.onTap,
     required this.onLongPress,
   });
@@ -75,14 +77,28 @@ class TimetableSlotCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        slot.courseCode,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ).copyWith(color: primaryText),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              slot.courseCode,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ).copyWith(color: primaryText),
+                            ),
+                          ),
+                          if (hasAlarm) ...[
+                            const SizedBox(width: 2),
+                            Icon(
+                              Icons.alarm,
+                              size: 10,
+                              color: accent,
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: AppSpacing.xxxs),
                       Text(
@@ -99,14 +115,28 @@ class TimetableSlotCard extends StatelessWidget {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        slot.courseCode,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ).copyWith(color: primaryText),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              slot.courseCode,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ).copyWith(color: primaryText),
+                            ),
+                          ),
+                          if (hasAlarm) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.alarm,
+                              size: 12,
+                              color: accent,
+                            ),
+                          ],
+                        ],
                       ),
                       if (showCourseName) ...[
                         const SizedBox(height: AppSpacing.xxxs),

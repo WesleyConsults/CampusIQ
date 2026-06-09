@@ -62,10 +62,12 @@ class CourseRemindersScreen extends ConsumerWidget {
             courseCode: result.course.courseCode,
             courseName: result.course.courseName,
             offsetMinutes: result.offsetMinutes,
+            isAlarm: result.isAlarm,
           );
       reminder.courseCode = result.course.courseCode;
       reminder.courseName = result.course.courseName;
       reminder.offsetMinutes = result.offsetMinutes;
+      reminder.isAlarm = result.isAlarm;
       reminder.isEnabled = true;
 
       await repo.saveReminder(reminder);
@@ -338,7 +340,7 @@ class _ReminderTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: Icon(
-                  LucideIcons.bell,
+                  reminder.isAlarm ? LucideIcons.alarmClock : LucideIcons.bell,
                   color: reminder.isEnabled
                       ? colorScheme.onSecondaryContainer
                       : colorScheme.onSurfaceVariant,
@@ -375,7 +377,7 @@ class _ReminderTile extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            '${reminder.offsetLabel} every class',
+            '${reminder.offsetLabel} every class ${reminder.isAlarm ? "(Alarm)" : "(Notification)"}',
             style: textTheme.bodyMedium,
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -608,6 +610,7 @@ class _CourseReminderSheet extends StatefulWidget {
 class _CourseReminderSheetState extends State<_CourseReminderSheet> {
   late _CourseOption? _selectedCourse;
   late int _offsetMinutes;
+  late bool _isAlarm;
 
   @override
   void initState() {
@@ -627,6 +630,7 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
             ),
           );
     _offsetMinutes = existing?.offsetMinutes ?? 30;
+    _isAlarm = existing?.isAlarm ?? false;
   }
 
   @override
@@ -741,6 +745,33 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
                     ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Alarm Mode',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Play continuous sound when class starts',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _isAlarm,
+                    onChanged: (value) => setState(() => _isAlarm = value),
+                  ),
+                ],
+              ),
               const SizedBox(height: AppSpacing.xl),
               SizedBox(
                 width: double.infinity,
@@ -751,6 +782,7 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
                             _ReminderDraft(
                               course: _selectedCourse!,
                               offsetMinutes: _offsetMinutes,
+                              isAlarm: _isAlarm,
                             ),
                           ),
                   icon: const Icon(LucideIcons.bell),
@@ -826,10 +858,12 @@ class _EmptyReminderState extends StatelessWidget {
 class _ReminderDraft {
   final _CourseOption course;
   final int offsetMinutes;
+  final bool isAlarm;
 
   const _ReminderDraft({
     required this.course,
     required this.offsetMinutes,
+    required this.isAlarm,
   });
 }
 

@@ -33,23 +33,28 @@ const CourseReminderModelSchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'isEnabled': PropertySchema(
+    r'isAlarm': PropertySchema(
       id: 3,
+      name: r'isAlarm',
+      type: IsarType.bool,
+    ),
+    r'isEnabled': PropertySchema(
+      id: 4,
       name: r'isEnabled',
       type: IsarType.bool,
     ),
     r'offsetMinutes': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'offsetMinutes',
       type: IsarType.long,
     ),
     r'semesterKey': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'semesterKey',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -116,10 +121,11 @@ void _courseReminderModelSerialize(
   writer.writeString(offsets[0], object.courseCode);
   writer.writeString(offsets[1], object.courseName);
   writer.writeDateTime(offsets[2], object.createdAt);
-  writer.writeBool(offsets[3], object.isEnabled);
-  writer.writeLong(offsets[4], object.offsetMinutes);
-  writer.writeString(offsets[5], object.semesterKey);
-  writer.writeDateTime(offsets[6], object.updatedAt);
+  writer.writeBool(offsets[3], object.isAlarm);
+  writer.writeBool(offsets[4], object.isEnabled);
+  writer.writeLong(offsets[5], object.offsetMinutes);
+  writer.writeString(offsets[6], object.semesterKey);
+  writer.writeDateTime(offsets[7], object.updatedAt);
 }
 
 CourseReminderModel _courseReminderModelDeserialize(
@@ -133,10 +139,11 @@ CourseReminderModel _courseReminderModelDeserialize(
   object.courseName = reader.readString(offsets[1]);
   object.createdAt = reader.readDateTime(offsets[2]);
   object.id = id;
-  object.isEnabled = reader.readBool(offsets[3]);
-  object.offsetMinutes = reader.readLong(offsets[4]);
-  object.semesterKey = reader.readString(offsets[5]);
-  object.updatedAt = reader.readDateTime(offsets[6]);
+  object.isAlarm = reader.readBool(offsets[3]);
+  object.isEnabled = reader.readBool(offsets[4]);
+  object.offsetMinutes = reader.readLong(offsets[5]);
+  object.semesterKey = reader.readString(offsets[6]);
+  object.updatedAt = reader.readDateTime(offsets[7]);
   return object;
 }
 
@@ -156,10 +163,12 @@ P _courseReminderModelDeserializeProp<P>(
     case 3:
       return (reader.readBool(offset)) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -737,6 +746,16 @@ extension CourseReminderModelQueryFilter on QueryBuilder<CourseReminderModel,
   }
 
   QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      isAlarmEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isAlarm',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
       isEnabledEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1046,6 +1065,20 @@ extension CourseReminderModelQuerySortBy
   }
 
   QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
+      sortByIsAlarm() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isAlarm', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
+      sortByIsAlarmDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isAlarm', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
       sortByIsEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isEnabled', Sort.asc);
@@ -1161,6 +1194,20 @@ extension CourseReminderModelQuerySortThenBy
   }
 
   QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
+      thenByIsAlarm() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isAlarm', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
+      thenByIsAlarmDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isAlarm', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
       thenByIsEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isEnabled', Sort.asc);
@@ -1241,6 +1288,13 @@ extension CourseReminderModelQueryWhereDistinct
   }
 
   QueryBuilder<CourseReminderModel, CourseReminderModel, QDistinct>
+      distinctByIsAlarm() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isAlarm');
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QDistinct>
       distinctByIsEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isEnabled');
@@ -1295,6 +1349,12 @@ extension CourseReminderModelQueryProperty
       createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, bool, QQueryOperations> isAlarmProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isAlarm');
     });
   }
 

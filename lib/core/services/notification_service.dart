@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
@@ -22,6 +23,7 @@ class NotificationService {
   static const String _channelMilestone = 'milestone_alert';
   static const String _channelWeeklyReview = 'weekly_review';
   static const String _channelCourseReminder = 'course_reminder';
+  static const String _channelCourseAlarm = 'course_alarm';
 
   // ── ID ranges ────────────────────────────────────────────────────────────
   // Free block reminders : 100–199
@@ -71,6 +73,23 @@ class NotificationService {
             : const RawResourceAndroidNotificationSound('silent'),
         vibrationPattern:
             vibrate ? Int64List.fromList([0, 500, 200, 500]) : null,
+      );
+
+  AndroidNotificationDetails _androidAlarmDetails(
+    String channelId,
+    String channelName,
+  ) =>
+      AndroidNotificationDetails(
+        channelId,
+        channelName,
+        importance: Importance.max,
+        priority: Priority.max,
+        playSound: true,
+        ongoing: true,
+        autoCancel: false,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+        category: AndroidNotificationCategory.alarm,
+        vibrationPattern: Int64List.fromList([0, 1000, 500, 1000]),
       );
 
   Future<void> _schedule(
@@ -288,21 +307,57 @@ class NotificationService {
         );
         final day = TimetableConstants.dayLabels[slot.dayIndex];
         final start = TimetableConstants.minutesToLabel(slot.startMinutes);
+        final isAlarm = reminder.isAlarm;
 
-        await _plugin.zonedSchedule(
-          id: notifId,
-          title: '${slot.courseCode} starts soon',
-          body: '${slot.courseName} is at $start on $day.',
-          scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
-          notificationDetails: NotificationDetails(
-            android: _androidDetails(
-              _channelCourseReminder,
-              'Course Reminders',
+        try {
+          await _plugin.zonedSchedule(
+            id: notifId,
+            title: isAlarm ? '${slot.courseCode} Class Starts Soon' : '${slot.courseCode} starts soon',
+            body: isAlarm
+                ? '${slot.courseName} is starting in ${reminder.offsetMinutes} mins. Tap to dismiss.'
+                : '${slot.courseName} is at $start on $day.',
+            scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
+            notificationDetails: NotificationDetails(
+              android: isAlarm
+                  ? _androidAlarmDetails(_channelCourseAlarm, 'Course Alarms')
+                  : _androidDetails(_channelCourseReminder, 'Course Reminders'),
+              iOS: const DarwinNotificationDetails(
+                presentAlert: true,
+                presentSound: true,
+                presentBadge: true,
+              ),
             ),
-          ),
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-        );
+            androidScheduleMode: isAlarm
+                ? AndroidScheduleMode.exactAllowWhileIdle
+                : AndroidScheduleMode.inexactAllowWhileIdle,
+            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+          );
+        } on PlatformException catch (e) {
+          if (e.code == 'exact_alarms_not_permitted') {
+            await _plugin.zonedSchedule(
+              id: notifId,
+              title: isAlarm ? '${slot.courseCode} Class Starts Soon' : '${slot.courseCode} starts soon',
+              body: isAlarm
+                  ? '${slot.courseName} is starting in ${reminder.offsetMinutes} mins. Tap to dismiss.'
+                  : '${slot.courseName} is at $start on $day.',
+              scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
+              notificationDetails: NotificationDetails(
+                android: isAlarm
+                    ? _androidAlarmDetails(_channelCourseAlarm, 'Course Alarms')
+                    : _androidDetails(_channelCourseReminder, 'Course Reminders'),
+                iOS: const DarwinNotificationDetails(
+                  presentAlert: true,
+                  presentSound: true,
+                  presentBadge: true,
+                ),
+              ),
+              androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+              matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+            );
+          } else {
+            rethrow;
+          }
+        }
         notifId++;
       }
     }

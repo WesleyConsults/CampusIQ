@@ -18,6 +18,7 @@ class CourseReminderModel {
   late int offsetMinutes;
 
   late bool isEnabled;
+  late bool isAlarm;
   late DateTime createdAt;
   late DateTime updatedAt;
 
@@ -29,6 +30,7 @@ class CourseReminderModel {
     required this.courseName,
     required this.offsetMinutes,
     this.isEnabled = true,
+    this.isAlarm = false,
   })  : createdAt = DateTime.now(),
         updatedAt = DateTime.now();
 

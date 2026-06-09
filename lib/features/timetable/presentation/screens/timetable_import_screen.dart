@@ -6,6 +6,14 @@ import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_import_provider.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/import_slot_review_tile.dart';
+import 'package:campusiq/features/timetable/data/models/course_reminder_model.dart';
+import 'package:campusiq/features/timetable/data/repositories/course_reminder_repository.dart';
+import 'package:campusiq/features/timetable/data/repositories/timetable_repository.dart';
+import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
+import 'package:campusiq/core/providers/isar_provider.dart';
+import 'package:campusiq/core/services/notification_service.dart';
+import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/shared/widgets/campus_button.dart';
 
 class TimetableImportScreen extends ConsumerWidget {
   const TimetableImportScreen({super.key});
@@ -30,11 +38,10 @@ class TimetableImportScreen extends ConsumerWidget {
       await notifier.pickAndParse(source);
     }
 
-    // Auto-navigate when done
+    // Auto-navigate / show dialog when done
     ref.listen(timetableImportNotifierProvider, (_, next) {
       if (next.step == ImportStep.done) {
-        notifier.reset();
-        context.go('/timetable');
+        _showPostImportAlertsDialog(context, ref, next.slots, next.selectedIndexes, notifier);
       }
     });
 
@@ -384,6 +391,279 @@ class _ErrorBody extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _showPostImportAlertsDialog(
+  BuildContext context,
+  WidgetRef ref,
+  List<TimetableSlotImport> slots,
+  Set<int> selectedIndexes,
+  TimetableImportNotifier notifier,
+) async {
+  final uniqueImportedCourses = <({String code, String name})>[];
+  final seen = <String>{};
+  for (final index in selectedIndexes) {
+    if (index < slots.length) {
+      final slot = slots[index];
+      final code = slot.courseCode.trim().toUpperCase();
+      if (code.isNotEmpty && !seen.contains(code)) {
+        seen.add(code);
+        uniqueImportedCourses.add((code: code, name: slot.courseName));
+      }
+    }
+  }
+
+  if (uniqueImportedCourses.isEmpty) {
+    notifier.reset();
+    if (context.mounted) {
+      context.go('/timetable');
+    }
+    return;
+  }
+
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogCtx) => _PostImportAlertsDialog(
+      uniqueCourses: uniqueImportedCourses,
+      onSkip: () {
+        notifier.reset();
+        Navigator.of(dialogCtx).pop();
+        context.go('/timetable');
+      },
+      onSave: (isAlarm, offsetMinutes) async {
+        try {
+          final isar = await ref.read(isarProvider.future);
+          final semesterKey = ref.read(activeSemesterProvider);
+          final reminderRepo = CourseReminderRepository(isar);
+          final timetableRepo = TimetableRepository(isar);
+
+          for (final course in uniqueImportedCourses) {
+            final existing = await reminderRepo.findByCourse(
+              semesterKey: semesterKey,
+              courseCode: course.code,
+            );
+            final reminder = existing ??
+                CourseReminderModel.create(
+                  semesterKey: semesterKey,
+                  courseCode: course.code,
+                  courseName: course.name,
+                  offsetMinutes: offsetMinutes,
+                );
+            reminder.courseName = course.name;
+            reminder.offsetMinutes = offsetMinutes;
+            reminder.isAlarm = isAlarm;
+            reminder.isEnabled = true;
+            await reminderRepo.saveReminder(reminder);
+          }
+
+          final reminders = await reminderRepo.getReminders(semesterKey);
+          final activeSlots = await timetableRepo.getAllSlotsOnce(semesterKey);
+          await NotificationService.instance.scheduleCourseReminderNotifications(
+            reminders: reminders,
+            slots: activeSlots,
+          );
+        } catch (_) {
+          // Fail silently — import succeeded
+        } finally {
+          notifier.reset();
+          if (dialogCtx.mounted) {
+            Navigator.of(dialogCtx).pop();
+          }
+          if (context.mounted) {
+            context.go('/timetable');
+          }
+        }
+      },
+    ),
+  );
+}
+
+class _PostImportAlertsDialog extends StatefulWidget {
+  final List<({String code, String name})> uniqueCourses;
+  final VoidCallback onSkip;
+  final Future<void> Function(bool isAlarm, int offsetMinutes) onSave;
+
+  const _PostImportAlertsDialog({
+    required this.uniqueCourses,
+    required this.onSkip,
+    required this.onSave,
+  });
+
+  @override
+  State<_PostImportAlertsDialog> createState() => _PostImportAlertsDialogState();
+}
+
+class _PostImportAlertsDialogState extends State<_PostImportAlertsDialog> {
+  bool _isAlarm = false;
+  int _offsetMinutes = 30;
+  bool _saving = false;
+
+  final List<int> _reminderOffsetOptions = const [10, 15, 30, 60, 120];
+
+  String _offsetLabel(int minutes) {
+    if (minutes == 60) return '1 hour';
+    if (minutes == 120) return '2 hours';
+    return '$minutes min';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.md)),
+      backgroundColor: colorScheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check_circle_outline,
+                    color: colorScheme.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    'Timetable Saved!',
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Set up weekly class alerts for the ${widget.uniqueCourses.length} course${widget.uniqueCourses.length == 1 ? '' : 's'} you imported:',
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Alarm Mode',
+                    style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                Switch.adaptive(
+                  value: _isAlarm,
+                  activeThumbColor: colorScheme.secondary,
+                  activeTrackColor: colorScheme.secondaryContainer,
+                  onChanged: _saving
+                      ? null
+                      : (val) => setState(() => _isAlarm = val),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            Text(
+              'Alert offset time',
+              style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [
+                for (final minutes in _reminderOffsetOptions)
+                  ChoiceChip(
+                    label: Text(
+                      _offsetLabel(minutes),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    selected: _offsetMinutes == minutes,
+                    onSelected: _saving
+                        ? null
+                        : (_) => setState(() => _offsetMinutes = minutes),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                      vertical: AppSpacing.xxs,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _saving ? null : widget.onSkip,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
+                      ),
+                    ),
+                    child: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Skip for now',
+                        maxLines: 1,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _saving
+                      ? const SizedBox(
+                          height: 48,
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        )
+                      : CampusButton(
+                          onPressed: () async {
+                            setState(() => _saving = true);
+                            await widget.onSave(_isAlarm, _offsetMinutes);
+                          },
+                          child: const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Set Alerts',
+                              maxLines: 1,
+                            ),
+                          ),
+                        ),
+                ),
+              ],
             ),
           ],
         ),
