@@ -17,12 +17,14 @@ class TimetableVisionParser {
       'course_code (string: the module code, e.g. "CS 101"), '
       'course_name (string: full course name), '
       'venue (string: room or hall, empty string if not visible), '
+      'lecturer_name (string: lecturer or instructor name, empty string if not visible), '
       'start_time (string: 24-hour "HH:MM"), '
       'end_time (string: 24-hour "HH:MM"), '
       'slot_type (string: one of "Lecture","Practical","Tutorial"). '
       'Return nothing except the JSON array. No explanation. No markdown. No code fences. '
       'Example: [{"day":"Monday","course_code":"CS 101","course_name":"Intro to Computing",'
-      '"venue":"LT1","start_time":"08:00","end_time":"10:00","slot_type":"Lecture"}]';
+      '"venue":"LT1","lecturer_name":"Dr. Ama Mensah","start_time":"08:00",'
+      '"end_time":"10:00","slot_type":"Lecture"}]';
 
   const TimetableVisionParser();
 

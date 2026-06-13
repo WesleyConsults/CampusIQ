@@ -58,28 +58,33 @@ const TimetableSlotModelSchema = CollectionSchema(
       name: r'endTimeLabel',
       type: IsarType.string,
     ),
-    r'semesterKey': PropertySchema(
+    r'lecturerName': PropertySchema(
       id: 8,
+      name: r'lecturerName',
+      type: IsarType.string,
+    ),
+    r'semesterKey': PropertySchema(
+      id: 9,
       name: r'semesterKey',
       type: IsarType.string,
     ),
     r'slotType': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'slotType',
       type: IsarType.string,
     ),
     r'startMinutes': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'startMinutes',
       type: IsarType.long,
     ),
     r'startTimeLabel': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'startTimeLabel',
       type: IsarType.string,
     ),
     r'venue': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'venue',
       type: IsarType.string,
     )
@@ -107,6 +112,7 @@ int _timetableSlotModelEstimateSize(
   bytesCount += 3 + object.courseCode.length * 3;
   bytesCount += 3 + object.courseName.length * 3;
   bytesCount += 3 + object.endTimeLabel.length * 3;
+  bytesCount += 3 + object.lecturerName.length * 3;
   bytesCount += 3 + object.semesterKey.length * 3;
   bytesCount += 3 + object.slotType.length * 3;
   bytesCount += 3 + object.startTimeLabel.length * 3;
@@ -128,11 +134,12 @@ void _timetableSlotModelSerialize(
   writer.writeLong(offsets[5], object.durationMinutes);
   writer.writeLong(offsets[6], object.endMinutes);
   writer.writeString(offsets[7], object.endTimeLabel);
-  writer.writeString(offsets[8], object.semesterKey);
-  writer.writeString(offsets[9], object.slotType);
-  writer.writeLong(offsets[10], object.startMinutes);
-  writer.writeString(offsets[11], object.startTimeLabel);
-  writer.writeString(offsets[12], object.venue);
+  writer.writeString(offsets[8], object.lecturerName);
+  writer.writeString(offsets[9], object.semesterKey);
+  writer.writeString(offsets[10], object.slotType);
+  writer.writeLong(offsets[11], object.startMinutes);
+  writer.writeString(offsets[12], object.startTimeLabel);
+  writer.writeString(offsets[13], object.venue);
 }
 
 TimetableSlotModel _timetableSlotModelDeserialize(
@@ -149,10 +156,11 @@ TimetableSlotModel _timetableSlotModelDeserialize(
   object.dayIndex = reader.readLong(offsets[4]);
   object.endMinutes = reader.readLong(offsets[6]);
   object.id = id;
-  object.semesterKey = reader.readString(offsets[8]);
-  object.slotType = reader.readString(offsets[9]);
-  object.startMinutes = reader.readLong(offsets[10]);
-  object.venue = reader.readString(offsets[12]);
+  object.lecturerName = reader.readString(offsets[8]);
+  object.semesterKey = reader.readString(offsets[9]);
+  object.slotType = reader.readString(offsets[10]);
+  object.startMinutes = reader.readLong(offsets[11]);
+  object.venue = reader.readString(offsets[13]);
   return object;
 }
 
@@ -184,10 +192,12 @@ P _timetableSlotModelDeserializeProp<P>(
     case 9:
       return (reader.readString(offset)) as P;
     case 10:
-      return (reader.readLong(offset)) as P;
-    case 11:
       return (reader.readString(offset)) as P;
+    case 11:
+      return (reader.readLong(offset)) as P;
     case 12:
+      return (reader.readString(offset)) as P;
+    case 13:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1035,6 +1045,142 @@ extension TimetableSlotModelQueryFilter
   }
 
   QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      lecturerNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lecturerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      lecturerNameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lecturerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      lecturerNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lecturerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      lecturerNameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lecturerName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      lecturerNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'lecturerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      lecturerNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'lecturerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      lecturerNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'lecturerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      lecturerNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'lecturerName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      lecturerNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lecturerName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      lecturerNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'lecturerName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
       semesterKeyEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1756,6 +1902,20 @@ extension TimetableSlotModelQuerySortBy
   }
 
   QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      sortByLecturerName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lecturerName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      sortByLecturerNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lecturerName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
       sortBySemesterKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.asc);
@@ -1955,6 +2115,20 @@ extension TimetableSlotModelQuerySortThenBy
   }
 
   QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      thenByLecturerName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lecturerName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      thenByLecturerNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lecturerName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
       thenBySemesterKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.asc);
@@ -2084,6 +2258,13 @@ extension TimetableSlotModelQueryWhereDistinct
   }
 
   QueryBuilder<TimetableSlotModel, TimetableSlotModel, QDistinct>
+      distinctByLecturerName({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lecturerName', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QDistinct>
       distinctBySemesterKey({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'semesterKey', caseSensitive: caseSensitive);
@@ -2178,6 +2359,13 @@ extension TimetableSlotModelQueryProperty
       endTimeLabelProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'endTimeLabel');
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, String, QQueryOperations>
+      lecturerNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lecturerName');
     });
   }
 

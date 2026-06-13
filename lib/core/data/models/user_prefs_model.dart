@@ -106,6 +106,10 @@ class UserPrefsModel {
   @Name('zzThemeModeIndex')
   int themeModeIndex = 0;
 
+  /// Timetable grid layout orientation: 0 = Daily Grid (Vertical), 1 = Weekly Grid (Horizontal)
+  @Name('zzTimetableGridLayoutIndex')
+  int timetableGridLayoutIndex = 0;
+
   // ── Weekly Review ─────────────────────────────────────────────────────────
 
   /// JSON map of week key → reflection note. e.g. {"2026_W14": "focus more on maths"}

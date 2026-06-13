@@ -7,6 +7,7 @@ class TimetableSlotImport {
   final String courseCode;
   final String courseName;
   final String venue;
+  final String lecturerName;
   final int startMinutes; // minutes from midnight
   final int endMinutes;
   final String slotType; // "Lecture" | "Practical" | "Tutorial"
@@ -16,6 +17,7 @@ class TimetableSlotImport {
     required this.courseCode,
     required this.courseName,
     required this.venue,
+    required this.lecturerName,
     required this.startMinutes,
     required this.endMinutes,
     required this.slotType,
@@ -32,6 +34,7 @@ class TimetableSlotImport {
       courseCode: (json['course_code'] as String? ?? '').trim(),
       courseName: (json['course_name'] as String? ?? '').trim(),
       venue: (json['venue'] as String? ?? '').trim(),
+      lecturerName: (json['lecturer_name'] as String? ?? '').trim(),
       startMinutes: start,
       endMinutes: end,
       slotType: _parseSlotType(json['slot_type'] as String? ?? 'Lecture'),
@@ -85,6 +88,7 @@ class TimetableSlotImport {
       ..courseCode = courseCode
       ..courseName = courseName
       ..venue = venue
+      ..lecturerName = lecturerName
       ..startMinutes = startMinutes
       ..endMinutes = endMinutes
       ..slotType = slotType

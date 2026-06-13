@@ -132,28 +132,33 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'zzThemeModeIndex',
       type: IsarType.long,
     ),
-    r'zzUniversityName': PropertySchema(
+    r'zzTimetableGridLayoutIndex': PropertySchema(
       id: 23,
+      name: r'zzTimetableGridLayoutIndex',
+      type: IsarType.long,
+    ),
+    r'zzUniversityName': PropertySchema(
+      id: 24,
       name: r'zzUniversityName',
       type: IsarType.string,
     ),
     r'zzVibrateOnTimerEnd': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'zzVibrateOnTimerEnd',
       type: IsarType.bool,
     ),
     r'zzzManualBaselineCredits': PropertySchema(
-      id: 25,
+      id: 26,
       name: r'zzzManualBaselineCredits',
       type: IsarType.double,
     ),
     r'zzzManualBaselineCwa': PropertySchema(
-      id: 26,
+      id: 27,
       name: r'zzzManualBaselineCwa',
       type: IsarType.double,
     ),
     r'zzzManualBaselineGradingSystemId': PropertySchema(
-      id: 27,
+      id: 28,
       name: r'zzzManualBaselineGradingSystemId',
       type: IsarType.string,
     )
@@ -234,11 +239,12 @@ void _userPrefsModelSerialize(
   writer.writeBool(offsets[20], object.playSoundOnTimerEnd);
   writer.writeDouble(offsets[21], object.targetCwa);
   writer.writeLong(offsets[22], object.themeModeIndex);
-  writer.writeString(offsets[23], object.universityName);
-  writer.writeBool(offsets[24], object.vibrateOnTimerEnd);
-  writer.writeDouble(offsets[25], object.manualBaselineCredits);
-  writer.writeDouble(offsets[26], object.manualBaselineCwa);
-  writer.writeString(offsets[27], object.manualBaselineGradingSystemId);
+  writer.writeLong(offsets[23], object.timetableGridLayoutIndex);
+  writer.writeString(offsets[24], object.universityName);
+  writer.writeBool(offsets[25], object.vibrateOnTimerEnd);
+  writer.writeDouble(offsets[26], object.manualBaselineCredits);
+  writer.writeDouble(offsets[27], object.manualBaselineCwa);
+  writer.writeString(offsets[28], object.manualBaselineGradingSystemId);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -272,11 +278,12 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.playSoundOnTimerEnd = reader.readBool(offsets[20]);
   object.targetCwa = reader.readDouble(offsets[21]);
   object.themeModeIndex = reader.readLong(offsets[22]);
-  object.universityName = reader.readStringOrNull(offsets[23]);
-  object.vibrateOnTimerEnd = reader.readBool(offsets[24]);
-  object.manualBaselineCredits = reader.readDoubleOrNull(offsets[25]);
-  object.manualBaselineCwa = reader.readDoubleOrNull(offsets[26]);
-  object.manualBaselineGradingSystemId = reader.readStringOrNull(offsets[27]);
+  object.timetableGridLayoutIndex = reader.readLong(offsets[23]);
+  object.universityName = reader.readStringOrNull(offsets[24]);
+  object.vibrateOnTimerEnd = reader.readBool(offsets[25]);
+  object.manualBaselineCredits = reader.readDoubleOrNull(offsets[26]);
+  object.manualBaselineCwa = reader.readDoubleOrNull(offsets[27]);
+  object.manualBaselineGradingSystemId = reader.readStringOrNull(offsets[28]);
   return object;
 }
 
@@ -334,14 +341,16 @@ P _userPrefsModelDeserializeProp<P>(
     case 22:
       return (reader.readLong(offset)) as P;
     case 23:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 24:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 25:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 26:
       return (reader.readDoubleOrNull(offset)) as P;
     case 27:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 28:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2072,6 +2081,62 @@ extension UserPrefsModelQueryFilter
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      timetableGridLayoutIndexEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzTimetableGridLayoutIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      timetableGridLayoutIndexGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzTimetableGridLayoutIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      timetableGridLayoutIndexLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzTimetableGridLayoutIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      timetableGridLayoutIndexBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzTimetableGridLayoutIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
       universityNameIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -2890,6 +2955,20 @@ extension UserPrefsModelQuerySortBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByTimetableGridLayoutIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzTimetableGridLayoutIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByTimetableGridLayoutIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzTimetableGridLayoutIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       sortByUniversityName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzUniversityName', Sort.asc);
@@ -3296,6 +3375,20 @@ extension UserPrefsModelQuerySortThenBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByTimetableGridLayoutIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzTimetableGridLayoutIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByTimetableGridLayoutIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzTimetableGridLayoutIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       thenByUniversityName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzUniversityName', Sort.asc);
@@ -3537,6 +3630,13 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByTimetableGridLayoutIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzTimetableGridLayoutIndex');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByUniversityName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'zzUniversityName',
@@ -3738,6 +3838,13 @@ extension UserPrefsModelQueryProperty
   QueryBuilder<UserPrefsModel, int, QQueryOperations> themeModeIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'zzThemeModeIndex');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      timetableGridLayoutIndexProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzTimetableGridLayoutIndex');
     });
   }
 

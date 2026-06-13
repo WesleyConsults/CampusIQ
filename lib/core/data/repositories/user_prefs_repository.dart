@@ -89,6 +89,17 @@ class UserPrefsRepository {
       changed = true;
     }
 
+    final gridLayout = _validRangeOrDefault(
+      prefs.timetableGridLayoutIndex,
+      min: 0,
+      max: 1,
+      fallback: 0,
+    );
+    if (gridLayout != prefs.timetableGridLayoutIndex) {
+      prefs.timetableGridLayoutIndex = gridLayout;
+      changed = true;
+    }
+
     final gradingSystem = GradingSystem.byId(prefs.gradingSystemId);
     if (gradingSystem.id != prefs.gradingSystemId) {
       prefs.gradingSystemId = gradingSystem.id;
@@ -555,6 +566,22 @@ class UserPrefsRepository {
   Future<void> setLastReviewShownWeek(String weekKey) async {
     final prefs = await _getOrCreate();
     prefs.lastReviewShownWeek = weekKey;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<int> getTimetableGridLayoutIndex() async {
+    final prefs = await _getOrCreate();
+    return prefs.timetableGridLayoutIndex;
+  }
+
+  Future<void> setTimetableGridLayoutIndex(int value) async {
+    final prefs = await _getOrCreate();
+    prefs.timetableGridLayoutIndex = value.clamp(0, 1).toInt();
     try {
       await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
     } catch (e) {

@@ -15,6 +15,7 @@ class TimetableSlotModel {
   late String courseCode;
   late String courseName;
   late String venue;
+  String lecturerName = '';
 
   /// Minutes from midnight. e.g. 8:30AM = 510
   late int startMinutes;

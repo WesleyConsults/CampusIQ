@@ -47,3 +47,12 @@ final slotCountProvider = FutureProvider<int>((ref) async {
   if (repo == null) return 0;
   return repo.countSlots(semester);
 });
+
+enum TimetableViewMode {
+  grid,
+  agenda,
+}
+
+final timetableViewModeProvider = StateProvider<TimetableViewMode>((ref) {
+  return TimetableViewMode.grid;
+});

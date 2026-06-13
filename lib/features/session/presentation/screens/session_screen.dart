@@ -78,6 +78,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final picked = await showModalBottomSheet<PickedCourse>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const CoursePickerSheet(),
@@ -633,22 +634,13 @@ class _StartCardState extends ConsumerState<_StartCard> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final title = _isPomodoroMode ? 'Pomodoro focus' : 'Normal study session';
-    final description = _isPomodoroMode
-        ? 'Use focused rounds with gentle breaks when you want a clearer rhythm.'
-        : 'Pick a course and track your focus time without extra setup.';
-
     return CampusCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CampusSectionHeader(
-            title: 'Ready to focus?',
-            subtitle: 'Choose a mode and start a calm study session.',
-          ),
-          const SizedBox(height: AppSpacing.md),
+          const CampusSectionHeader(title: 'Ready to focus?'),
+          const SizedBox(height: AppSpacing.sm),
           _ModeToggle(
             isPomodoroMode: _isPomodoroMode,
             onChanged: (value) {
@@ -660,66 +652,8 @@ class _StartCardState extends ConsumerState<_StartCard> {
               });
             },
           ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colorScheme.onSurface,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                ),
-          ),
-          const SizedBox(height: AppSpacing.xxs2),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 13,
-                  height: 1.35,
-                ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.xs2,
-            runSpacing: AppSpacing.xs2,
-            children: _isPomodoroMode
-                ? [
-                    CampusChip(
-                      label: '$_totalRounds rounds',
-                      icon: LucideIcons.repeat,
-                      backgroundColor: AppColors.goldSoft,
-                    ),
-                    CampusChip(
-                      label: '$_focusMinutes min focus',
-                      icon: LucideIcons.timer,
-                      backgroundColor: AppColors.surfaceMuted,
-                    ),
-                    CampusChip(
-                      label: '$_shortBreakMinutes min break',
-                      icon: LucideIcons.coffee,
-                      backgroundColor: AppColors.surfaceMuted,
-                    ),
-                    CampusChip(
-                      label: '$_longBreakMinutes min long break',
-                      icon: LucideIcons.moonStar,
-                      backgroundColor: AppColors.surfaceMuted,
-                    ),
-                  ]
-                : const [
-                    CampusChip(
-                      label: 'Course picker',
-                      icon: LucideIcons.bookOpen,
-                      backgroundColor: AppColors.goldSoft,
-                    ),
-                    CampusChip(
-                      label: 'Tracks real focus time',
-                      icon: LucideIcons.chartColumn,
-                      backgroundColor: AppColors.surfaceMuted,
-                    ),
-                  ],
-          ),
           if (_isPomodoroMode) ...[
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.xs),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
@@ -830,7 +764,7 @@ class _StartCardState extends ConsumerState<_StartCard> {
               duration: const Duration(milliseconds: 180),
             ),
           ],
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           SizedBox(
             width: double.infinity,
             child: CampusButton(

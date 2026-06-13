@@ -14,6 +14,7 @@ import 'package:campusiq/core/providers/isar_provider.dart';
 import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/shared/widgets/campus_button.dart';
+import 'package:campusiq/shared/widgets/import_option_grid.dart';
 
 class TimetableImportScreen extends ConsumerWidget {
   const TimetableImportScreen({super.key});
@@ -41,7 +42,8 @@ class TimetableImportScreen extends ConsumerWidget {
     // Auto-navigate / show dialog when done
     ref.listen(timetableImportNotifierProvider, (_, next) {
       if (next.step == ImportStep.done) {
-        _showPostImportAlertsDialog(context, ref, next.slots, next.selectedIndexes, notifier);
+        _showPostImportAlertsDialog(
+            context, ref, next.slots, next.selectedIndexes, notifier);
       }
     });
 
@@ -101,81 +103,21 @@ class _IdleBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.document_scanner_outlined,
-                size: 40,
-                color: colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Import from Image',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Take a photo or upload an image of your university timetable and we\'ll fill it in automatically.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 36),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                icon: const Icon(Icons.camera_alt_outlined),
-                label: const Text('Take Photo'),
-                onPressed: () => onPick(ImageSource.camera),
-                style: FilledButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.photo_library_outlined),
-                label: const Text('Choose from Gallery'),
-                onPressed: () => onPick(ImageSource.gallery),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colorScheme.primary,
-                  side: BorderSide(color: colorScheme.primary),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: ImportOptionGrid(
+        options: [
+          ImportOptionGridItem(
+            icon: Icons.camera_alt_outlined,
+            label: 'Take Photo',
+            onTap: () => onPick(ImageSource.camera),
+          ),
+          ImportOptionGridItem(
+            icon: Icons.photo_library_outlined,
+            label: 'Upload Image',
+            onTap: () => onPick(ImageSource.gallery),
+          ),
+        ],
       ),
     );
   }
@@ -465,7 +407,8 @@ Future<void> _showPostImportAlertsDialog(
 
           final reminders = await reminderRepo.getReminders(semesterKey);
           final activeSlots = await timetableRepo.getAllSlotsOnce(semesterKey);
-          await NotificationService.instance.scheduleCourseReminderNotifications(
+          await NotificationService.instance
+              .scheduleCourseReminderNotifications(
             reminders: reminders,
             slots: activeSlots,
           );
@@ -497,7 +440,8 @@ class _PostImportAlertsDialog extends StatefulWidget {
   });
 
   @override
-  State<_PostImportAlertsDialog> createState() => _PostImportAlertsDialogState();
+  State<_PostImportAlertsDialog> createState() =>
+      _PostImportAlertsDialogState();
 }
 
 class _PostImportAlertsDialogState extends State<_PostImportAlertsDialog> {
@@ -519,7 +463,8 @@ class _PostImportAlertsDialogState extends State<_PostImportAlertsDialog> {
     final textTheme = Theme.of(context).textTheme;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.md)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.md)),
       backgroundColor: colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -564,30 +509,29 @@ class _PostImportAlertsDialogState extends State<_PostImportAlertsDialog> {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            
             Row(
               children: [
                 Expanded(
                   child: Text(
                     'Alarm Mode',
-                    style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                    style: textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
                 Switch.adaptive(
                   value: _isAlarm,
                   activeThumbColor: colorScheme.secondary,
                   activeTrackColor: colorScheme.secondaryContainer,
-                  onChanged: _saving
-                      ? null
-                      : (val) => setState(() => _isAlarm = val),
+                  onChanged:
+                      _saving ? null : (val) => setState(() => _isAlarm = val),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-
             Text(
               'Alert offset time',
-              style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              style:
+                  textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: AppSpacing.xs),
             Wrap(
@@ -614,7 +558,6 @@ class _PostImportAlertsDialogState extends State<_PostImportAlertsDialog> {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-
             Row(
               children: [
                 Expanded(
@@ -622,7 +565,8 @@ class _PostImportAlertsDialogState extends State<_PostImportAlertsDialog> {
                     onPressed: _saving ? null : widget.onSkip,
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(0, 48),
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadii.sm),
                       ),

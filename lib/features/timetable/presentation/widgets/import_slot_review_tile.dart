@@ -67,6 +67,7 @@ class ImportSlotReviewTile extends ConsumerWidget {
                       dayLabel,
                       '$startLabel – $endLabel',
                       if (slot.venue.isNotEmpty) slot.venue,
+                      if (slot.lecturerName.isNotEmpty) slot.lecturerName,
                     ].join(' · '),
                     style: TextStyle(
                       fontSize: 12,

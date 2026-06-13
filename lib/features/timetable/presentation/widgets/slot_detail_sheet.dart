@@ -136,12 +136,13 @@ class SlotDetailSheet extends StatelessWidget {
                     label: slot.venue,
                   ),
                 ],
-                const SizedBox(height: AppSpacing.sm),
-                const _DetailRow(
-                  icon: LucideIcons.briefcase,
-                  label:
-                      'Open the workspace for notes, sessions, and planning tied to this course.',
-                ),
+                if (slot.lecturerName.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  _DetailRow(
+                    icon: LucideIcons.userRound,
+                    label: slot.lecturerName,
+                  ),
+                ],
               ],
             ),
           ),

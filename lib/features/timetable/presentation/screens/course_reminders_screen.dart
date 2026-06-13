@@ -48,7 +48,11 @@ class CourseRemindersScreen extends ConsumerWidget {
     }
 
     try {
-      await NotificationService.instance.requestPermission();
+      if (result.isAlarm) {
+        await NotificationService.instance.requestAlarmPermission();
+      } else {
+        await NotificationService.instance.requestPermission();
+      }
       final semester = ref.read(activeSemesterProvider);
       final existingForCourse = existing ??
           await repo.findByCourse(
@@ -758,10 +762,11 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Play continuous sound when class starts',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
+                          'Use exact timing with alarm sound and vibration',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                         ),
                       ],
                     ),

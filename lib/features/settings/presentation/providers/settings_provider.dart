@@ -24,3 +24,10 @@ final themeModeProvider = FutureProvider<ThemeMode>((ref) async {
       return ThemeMode.light;
   }
 });
+
+/// Exposes the persistent timetable grid layout setting (0 = Daily Grid, 1 = Weekly Grid)
+final timetableGridLayoutProvider = FutureProvider<int>((ref) async {
+  final repo = ref.watch(userPrefsRepositoryProvider);
+  if (repo == null) return 0;
+  return repo.getTimetableGridLayoutIndex();
+});

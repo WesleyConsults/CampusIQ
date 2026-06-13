@@ -16,6 +16,7 @@ import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
+import 'package:campusiq/shared/widgets/import_option_grid.dart';
 
 class CwaScreen extends ConsumerWidget {
   const CwaScreen({super.key});
@@ -294,23 +295,19 @@ class CwaScreen extends ConsumerWidget {
   void _showImportSheet(BuildContext context, CwaViewMode viewMode) {
     final title =
         viewMode == CwaViewMode.semester ? 'Import Courses' : 'Import Results';
-    final subtitle = viewMode == CwaViewMode.semester
-        ? 'Bring in your current semester courses from a slip, photo, or manual entry.'
-        : 'Add a completed semester from a result slip, image, PDF, or manual entry.';
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => _ImportOptionsSheet(
         title: title,
-        subtitle: subtitle,
         options: [
           _ImportOption(
             icon: LucideIcons.camera,
             label: 'Take Photo',
-            subtitle: 'Capture a registration or result slip now.',
             onTap: () {
               Navigator.of(sheetContext).pop();
               _openImportScreen(context, viewMode, initialSource: 'camera');
@@ -319,7 +316,6 @@ class CwaScreen extends ConsumerWidget {
           _ImportOption(
             icon: LucideIcons.imageUp,
             label: 'Upload Image',
-            subtitle: 'Pick an existing screenshot or scanned slip.',
             onTap: () {
               Navigator.of(sheetContext).pop();
               _openImportScreen(context, viewMode, initialSource: 'gallery');
@@ -328,7 +324,6 @@ class CwaScreen extends ConsumerWidget {
           _ImportOption(
             icon: LucideIcons.fileText,
             label: 'Choose PDF',
-            subtitle: 'Import a PDF copy of your registration or results.',
             onTap: () {
               Navigator.of(sheetContext).pop();
               _openImportScreen(context, viewMode, initialSource: 'pdf');
@@ -337,7 +332,6 @@ class CwaScreen extends ConsumerWidget {
           _ImportOption(
             icon: LucideIcons.squarePen,
             label: 'Enter Manually',
-            subtitle: 'Type the course details in yourself.',
             onTap: () {
               Navigator.of(sheetContext).pop();
               context.push(
@@ -360,6 +354,7 @@ class CwaScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => _AddGoalSheet(
@@ -426,25 +421,21 @@ enum _CwaMenuAction { history, settings }
 class _ImportOption {
   final IconData icon;
   final String label;
-  final String subtitle;
   final VoidCallback onTap;
 
   const _ImportOption({
     required this.icon,
     required this.label,
-    required this.subtitle,
     required this.onTap,
   });
 }
 
 class _ImportOptionsSheet extends StatelessWidget {
   final String title;
-  final String subtitle;
   final List<_ImportOption> options;
 
   const _ImportOptionsSheet({
     required this.title,
-    required this.subtitle,
     required this.options,
   });
 
@@ -452,23 +443,22 @@ class _ImportOptionsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return CampusModalSheet(
       title: title,
-      subtitle: subtitle,
       leading: const _ImportSheetIcon(),
       trailing: IconButton(
         onPressed: () => Navigator.of(context).pop(),
         icon: const Icon(LucideIcons.x, size: AppIconSizes.xl),
         tooltip: 'Close',
       ),
-      scrollable: true,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final option in options) ...[
-            _ImportOptionTile(option: option),
-            if (option != options.last) const SizedBox(height: AppSpacing.xs2),
-          ],
-        ],
+      child: ImportOptionGrid(
+        options: options
+            .map(
+              (option) => ImportOptionGridItem(
+                icon: option.icon,
+                label: option.label,
+                onTap: option.onTap,
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -492,78 +482,6 @@ class _ImportSheetIcon extends StatelessWidget {
         LucideIcons.fileUp,
         color: colorScheme.onSecondaryContainer,
         size: AppIconSizes.xl,
-      ),
-    );
-  }
-}
-
-class _ImportOptionTile extends StatelessWidget {
-  final _ImportOption option;
-
-  const _ImportOptionTile({required this.option});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return CampusCard(
-      padding: EdgeInsets.zero,
-      color: AppColors.surfaceMuted,
-      onTap: option.onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm2,
-          vertical: AppSpacing.sm2,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: AppRadii.button,
-                border: Border.all(color: colorScheme.outlineVariant),
-              ),
-              child: Icon(
-                option.icon,
-                color: colorScheme.primary,
-                size: AppIconSizes.xl,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    option.label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    option.subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              LucideIcons.chevronRight,
-              color: colorScheme.onSurfaceVariant,
-              size: AppIconSizes.lg,
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -925,11 +843,14 @@ class _NextStepCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final title = _title;
-    final subtitle = _subtitle;
     final actions = _actions;
+    final showAcademicHistoryInfo = _showAcademicHistoryInfo;
 
     return CampusCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: showAcademicHistoryInfo ? AppSpacing.sm : AppSpacing.md,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -974,18 +895,37 @@ class _NextStepCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (showAcademicHistoryInfo) ...[
+                const SizedBox(width: AppSpacing.xxs),
+                IconButton(
+                  tooltip: 'About academic history',
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(LucideIcons.info, size: AppIconSizes.md),
+                  color: colorScheme.onSurfaceVariant,
+                  onPressed: () => _showAcademicHistoryInfoDialog(context),
+                ),
+              ],
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 13,
-              color: colorScheme.onSurfaceVariant,
-              height: 1.4,
+          if (!showAcademicHistoryInfo) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _subtitle,
+              style: TextStyle(
+                fontSize: 13,
+                color: colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
             ),
+          ],
+          SizedBox(
+            height: showAcademicHistoryInfo ? AppSpacing.sm : AppSpacing.md,
           ),
-          const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.xs2,
             runSpacing: AppSpacing.xs2,
@@ -996,9 +936,31 @@ class _NextStepCard extends StatelessWidget {
     );
   }
 
+  bool get _showAcademicHistoryInfo =>
+      hasCurrentCourses && !hasHistory && !hasBaseline;
+
+  Future<void> _showAcademicHistoryInfoDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => AlertDialog(
+        content: const Text(
+          'Your current semester projection is ready. Add past results or '
+          'your current CWA so UniMate can show you the bigger picture.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   String get _title {
     if (!hasAnyData) return 'Set up your ${gradingSystem.label}';
-    if (hasCurrentCourses && !hasHistory && !hasBaseline) {
+    if (_showAcademicHistoryInfo) {
       return 'Add your academic history';
     }
     if (hasHistory) return 'Keep your results up to date';
@@ -1008,9 +970,6 @@ class _NextStepCard extends StatelessWidget {
   String get _subtitle {
     if (!hasAnyData) {
       return 'Add current courses for a semester projection, or add past results to calculate your cumulative ${gradingSystem.cumulativeLabel}.';
-    }
-    if (hasCurrentCourses && !hasHistory && !hasBaseline) {
-      return 'Your current semester projection is ready. Add past results or your current ${gradingSystem.cumulativeLabel} so CampusIQ can show the bigger picture.';
     }
     if (hasHistory) {
       return 'Review saved semesters, add missing result slips, or save final results when official marks are released.';
@@ -1167,7 +1126,7 @@ class _AcademicHistorySummaryCard extends StatelessWidget {
         ),
       ],
       note: hasData
-          ? 'Past results help CampusIQ calculate your cumulative result.'
+          ? 'Past results help UniMate calculate your cumulative result.'
           : 'Add past results or enter your current ${gradingSystem.cumulativeLabel} to unlock this.',
       actionLabel: hasHistory ? 'View History' : 'Add Past Results',
       actionIcon: hasHistory ? LucideIcons.bookOpen : LucideIcons.fileUp,

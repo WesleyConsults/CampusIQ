@@ -15,6 +15,9 @@ import 'package:campusiq/features/timetable/presentation/providers/course_remind
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/day_selector.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/class_timetable_grid.dart';
+import 'package:campusiq/features/timetable/presentation/widgets/class_timetable_agenda.dart';
+import 'package:campusiq/features/timetable/presentation/widgets/weekly_horizontal_grid.dart';
+import 'package:campusiq/features/settings/presentation/providers/settings_provider.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/add_slot_sheet.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/slot_detail_sheet.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
@@ -190,12 +193,28 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       hasActiveSession: hasActiveSession,
     );
     final activeReminderCount = ref.watch(activeCourseReminderCountProvider);
+    final viewMode = ref.watch(timetableViewModeProvider);
+    final layoutIndex = ref.watch(timetableGridLayoutProvider).valueOrNull ?? 0;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Table'),
         actions: [
+          IconButton(
+            icon: Icon(viewMode == TimetableViewMode.grid
+                ? LucideIcons.listTodo
+                : LucideIcons.layoutGrid),
+            tooltip: viewMode == TimetableViewMode.grid
+                ? 'List view'
+                : 'Grid view',
+            onPressed: () {
+              ref.read(timetableViewModeProvider.notifier).state =
+                  viewMode == TimetableViewMode.grid
+                      ? TimetableViewMode.agenda
+                      : TimetableViewMode.grid;
+            },
+          ),
           Stack(
             clipBehavior: Clip.none,
             children: [
@@ -238,7 +257,9 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       body: SafeArea(
         top: false,
         child: GestureDetector(
-          onHorizontalDragEnd: _onDaySwipe,
+          onHorizontalDragEnd: (viewMode == TimetableViewMode.grid && layoutIndex == 1)
+              ? null
+              : _onDaySwipe,
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
@@ -305,7 +326,11 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                       );
                     }
 
-                    if (classSlots.isEmpty) {
+                    final allSlots = allSlotsAsync.valueOrNull ?? [];
+                    final isWeeklyGrid = viewMode == TimetableViewMode.grid && layoutIndex == 1;
+                    final showEmpty = isWeeklyGrid ? allSlots.isEmpty : classSlots.isEmpty;
+
+                    if (showEmpty) {
                       return Padding(
                         padding: const EdgeInsets.only(top: AppSpacing.xl),
                         child: _EmptyPage(
@@ -317,13 +342,23 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
 
                     return Padding(
                       padding: EdgeInsets.only(bottom: bottomContentPadding),
-                      child: ClassTimetableGrid(
-                        classSlots: classSlots,
-                        freeBlocks: freeBlocks,
-                        onClassSlotTap: _showClassDetail,
-                        onFreeBlockTap: _onFreeBlockTap,
-                        onEmptyTap: _onEmptyTap,
-                      ),
+                      child: viewMode == TimetableViewMode.grid
+                          ? (layoutIndex == 1
+                              ? WeeklyHorizontalGrid(
+                                  allSlots: allSlots,
+                                  onClassSlotTap: _showClassDetail,
+                                )
+                              : ClassTimetableGrid(
+                                  classSlots: classSlots,
+                                  freeBlocks: freeBlocks,
+                                  onClassSlotTap: _showClassDetail,
+                                  onFreeBlockTap: _onFreeBlockTap,
+                                  onEmptyTap: _onEmptyTap,
+                                ))
+                          : ClassTimetableAgenda(
+                              classSlots: classSlots,
+                              onClassSlotTap: _showClassDetail,
+                            ),
                     );
                   },
                 ),

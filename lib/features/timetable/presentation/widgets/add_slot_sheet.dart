@@ -38,6 +38,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
   final _codeController = TextEditingController();
   final _nameController = TextEditingController();
   final _venueController = TextEditingController();
+  final _lecturerController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   late int _startMinutes;
@@ -53,6 +54,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
       _codeController.text = existing.courseCode;
       _nameController.text = existing.courseName;
       _venueController.text = existing.venue;
+      _lecturerController.text = existing.lecturerName;
       _startMinutes = existing.startMinutes;
       _endMinutes = existing.endMinutes;
       _slotType = existing.slotType;
@@ -71,6 +73,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
     _codeController.dispose();
     _nameController.dispose();
     _venueController.dispose();
+    _lecturerController.dispose();
     super.dispose();
   }
 
@@ -111,6 +114,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
     slot.courseCode = _codeController.text.trim().toUpperCase();
     slot.courseName = _nameController.text.trim();
     slot.venue = _venueController.text.trim();
+    slot.lecturerName = _lecturerController.text.trim();
     slot.startMinutes = _startMinutes;
     slot.endMinutes = _endMinutes;
     slot.slotType = _slotType;
@@ -214,6 +218,15 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
                 labelText: 'Venue',
                 hintText: 'Hall 3',
               ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextFormField(
+              controller: _lecturerController,
+              decoration: const InputDecoration(
+                labelText: 'Lecturer name',
+                hintText: 'Dr. Ama Mensah',
+              ),
+              textCapitalization: TextCapitalization.words,
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(

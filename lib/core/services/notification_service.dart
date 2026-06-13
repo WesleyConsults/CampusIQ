@@ -85,8 +85,7 @@ class NotificationService {
         importance: Importance.max,
         priority: Priority.max,
         playSound: true,
-        ongoing: true,
-        autoCancel: false,
+        autoCancel: true,
         audioAttributesUsage: AudioAttributesUsage.alarm,
         category: AndroidNotificationCategory.alarm,
         vibrationPattern: Int64List.fromList([0, 1000, 500, 1000]),
@@ -123,6 +122,31 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
     return result ?? false;
+  }
+
+  /// Requests both notification delivery and exact-alarm access on Android.
+  ///
+  /// Exact-alarm access is user-controlled on recent Android versions. The
+  /// scheduler still falls back to an inexact alarm if access is unavailable.
+  Future<bool> requestAlarmPermission() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return false;
+
+    final notificationsGranted =
+        await android.requestNotificationsPermission() ?? false;
+    final canScheduleExact =
+        await android.canScheduleExactNotifications() ?? false;
+    if (canScheduleExact) return notificationsGranted;
+
+    final exactGranted = await android.requestExactAlarmsPermission() ?? false;
+    return notificationsGranted && exactGranted;
+  }
+
+  Future<bool> areNotificationsEnabled() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    return await android?.areNotificationsEnabled() ?? false;
   }
 
   // ── Public scheduling methods ─────────────────────────────────────────────
@@ -299,7 +323,7 @@ class NotificationService {
       for (final slot in courseSlots) {
         if (notifId > 999) return;
 
-        final scheduledAt = _nextWeeklyCourseReminderTime(
+        final scheduledAt = nextWeeklyCourseReminderTime(
           now: now,
           dayIndex: slot.dayIndex,
           classStartMinutes: slot.startMinutes,
@@ -312,9 +336,11 @@ class NotificationService {
         try {
           await _plugin.zonedSchedule(
             id: notifId,
-            title: isAlarm ? '${slot.courseCode} Class Starts Soon' : '${slot.courseCode} starts soon',
+            title: isAlarm
+                ? '${slot.courseCode} Class Starts Soon'
+                : '${slot.courseCode} starts soon',
             body: isAlarm
-                ? '${slot.courseName} is starting in ${reminder.offsetMinutes} mins. Tap to dismiss.'
+                ? '${slot.courseName} starts in ${reminder.offsetMinutes} mins. Tap to dismiss.'
                 : '${slot.courseName} is at $start on $day.',
             scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
             notificationDetails: NotificationDetails(
@@ -336,15 +362,18 @@ class NotificationService {
           if (e.code == 'exact_alarms_not_permitted') {
             await _plugin.zonedSchedule(
               id: notifId,
-              title: isAlarm ? '${slot.courseCode} Class Starts Soon' : '${slot.courseCode} starts soon',
+              title: isAlarm
+                  ? '${slot.courseCode} Class Starts Soon'
+                  : '${slot.courseCode} starts soon',
               body: isAlarm
-                  ? '${slot.courseName} is starting in ${reminder.offsetMinutes} mins. Tap to dismiss.'
+                  ? '${slot.courseName} starts in ${reminder.offsetMinutes} mins. Tap to dismiss.'
                   : '${slot.courseName} is at $start on $day.',
               scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
               notificationDetails: NotificationDetails(
                 android: isAlarm
                     ? _androidAlarmDetails(_channelCourseAlarm, 'Course Alarms')
-                    : _androidDetails(_channelCourseReminder, 'Course Reminders'),
+                    : _androidDetails(
+                        _channelCourseReminder, 'Course Reminders'),
                 iOS: const DarwinNotificationDetails(
                   presentAlert: true,
                   presentSound: true,
@@ -361,26 +390,6 @@ class NotificationService {
         notifId++;
       }
     }
-  }
-
-  DateTime _nextWeeklyCourseReminderTime({
-    required DateTime now,
-    required int dayIndex,
-    required int classStartMinutes,
-    required int offsetMinutes,
-  }) {
-    final todayIndex = now.weekday - 1;
-    var daysUntilClass = dayIndex - todayIndex;
-    if (daysUntilClass < 0) daysUntilClass += 7;
-
-    final classDate = DateTime(now.year, now.month, now.day)
-        .add(Duration(days: daysUntilClass))
-        .add(Duration(minutes: classStartMinutes));
-    var reminderTime = classDate.subtract(Duration(minutes: offsetMinutes));
-    if (!reminderTime.isAfter(now)) {
-      reminderTime = reminderTime.add(const Duration(days: 7));
-    }
-    return reminderTime;
   }
 
   Future<void> cancelCourseReminderNotifications() async {
@@ -482,4 +491,24 @@ class NotificationService {
   Future<void> cancelNotification(int id) async {
     await _plugin.cancel(id: id);
   }
+}
+
+DateTime nextWeeklyCourseReminderTime({
+  required DateTime now,
+  required int dayIndex,
+  required int classStartMinutes,
+  required int offsetMinutes,
+}) {
+  final todayIndex = now.weekday - 1;
+  var daysUntilClass = dayIndex - todayIndex;
+  if (daysUntilClass < 0) daysUntilClass += 7;
+
+  final classDate = DateTime(now.year, now.month, now.day)
+      .add(Duration(days: daysUntilClass))
+      .add(Duration(minutes: classStartMinutes));
+  var reminderTime = classDate.subtract(Duration(minutes: offsetMinutes));
+  if (!reminderTime.isAfter(now)) {
+    reminderTime = reminderTime.add(const Duration(days: 7));
+  }
+  return reminderTime;
 }

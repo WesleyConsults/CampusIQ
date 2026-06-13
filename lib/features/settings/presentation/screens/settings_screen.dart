@@ -214,25 +214,27 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ]),
 
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.lg),
 
-            OutlinedButton.icon(
-              onPressed: () async {
-                await NotificationService.instance.cancelAllReminders();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('All notifications cancelled')),
-                  );
-                }
-              },
-              icon: const Icon(LucideIcons.bellOff),
-              label: const Text('Cancel all scheduled notifications'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red,
-                side: const BorderSide(color: Colors.red),
+            // ── Diagnostics ────────────────────────────────────────────────
+            const _SectionLabel(title: 'Diagnostics'),
+            const SizedBox(height: AppSpacing.xs),
+            _Card(children: [
+              _RowTile(
+                leading: LucideIcons.bellOff,
+                title: 'Cancel all notifications',
+                subtitle: 'Cancel all scheduled alarms and reminders',
+                onTap: () async {
+                  await NotificationService.instance.cancelAllReminders();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('All notifications cancelled')),
+                    );
+                  }
+                },
               ),
-            ),
+            ]),
 
             const SizedBox(height: AppSpacing.lg),
 
@@ -252,8 +254,7 @@ class SettingsScreen extends ConsumerWidget {
                 leading: LucideIcons.calendarDays,
                 title: 'Timetable grid layout',
                 subtitle: _layoutLabel(layoutIndex),
-                onTap: () =>
-                    _showLayoutPicker(context, ref, layoutIndex),
+                onTap: () => _showLayoutPicker(context, ref, layoutIndex),
               ),
             ]),
 
@@ -336,6 +337,8 @@ class SettingsScreen extends ConsumerWidget {
     final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
     return '${h.toString()}:${minute.toString().padLeft(2, '0')} $suffix';
   }
+
+
 
   void _showGradingSystemPicker(
     BuildContext context,
@@ -526,8 +529,16 @@ Future<void> _showLayoutPicker(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   for (final entry in [
-                    (index: 0, icon: LucideIcons.calendarDays, label: 'Daily Grid (Vertical)'),
-                    (index: 1, icon: LucideIcons.calendarRange, label: 'Weekly Grid (Horizontal)'),
+                    (
+                      index: 0,
+                      icon: LucideIcons.calendarDays,
+                      label: 'Daily Grid (Vertical)'
+                    ),
+                    (
+                      index: 1,
+                      icon: LucideIcons.calendarRange,
+                      label: 'Weekly Grid (Horizontal)'
+                    ),
                   ])
                     RadioListTile<int>(
                       value: entry.index,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:campusiq/core/domain/grading_system.dart';
@@ -10,6 +11,7 @@ import 'package:campusiq/features/cwa/domain/registration_course_import.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/providers/registration_slip_import_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
+import 'package:campusiq/shared/widgets/import_option_grid.dart';
 
 class RegistrationSlipImportScreen extends ConsumerStatefulWidget {
   final String? initialSource;
@@ -80,7 +82,7 @@ class _RegistrationSlipImportScreenState
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Scan Registration Slip'),
+        title: const Text('Import Courses'),
         leading: BackButton(
           onPressed: () {
             notifier.reset();
@@ -93,6 +95,10 @@ class _RegistrationSlipImportScreenState
             onCamera: () => _runIfOnline(notifier.pickFromCamera),
             onGallery: () => _runIfOnline(notifier.pickFromGallery),
             onPdf: () => _runIfOnline(notifier.pickFromGalleryOrFile),
+            onManual: () {
+              notifier.reset();
+              context.push('/cwa/manual-entry?mode=semester');
+            },
           ),
         SlipImportStep.picking || SlipImportStep.parsing => _LoadingView(
             state.step == SlipImportStep.parsing
@@ -128,136 +134,42 @@ class _IdleView extends StatelessWidget {
   final VoidCallback onCamera;
   final VoidCallback onGallery;
   final VoidCallback onPdf;
+  final VoidCallback onManual;
 
   const _IdleView({
     required this.onCamera,
     required this.onGallery,
     required this.onPdf,
+    required this.onManual,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Import your courses',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Upload your course registration slip and the AI will extract your courses automatically.',
-            style: TextStyle(
-              fontSize: 14,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-          _OptionTile(
+      child: ImportOptionGrid(
+        options: [
+          ImportOptionGridItem(
             icon: LucideIcons.camera,
-            label: 'Take a photo',
-            subtitle: 'Use your camera to capture the slip',
+            label: 'Take Photo',
             onTap: onCamera,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          _OptionTile(
+          ImportOptionGridItem(
             icon: LucideIcons.image,
-            label: 'Upload image from gallery',
-            subtitle: 'Pick a JPG or PNG from your photos',
+            label: 'Upload Image',
             onTap: onGallery,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          _OptionTile(
+          ImportOptionGridItem(
             icon: LucideIcons.fileText,
-            label: 'Choose a PDF',
-            subtitle: 'Upload a PDF registration slip',
+            label: 'Choose PDF',
             onTap: onPdf,
           ),
-          const Spacer(),
-          Center(
-            child: Text(
-              'Credit hours are read from the slip.\nYou can adjust them before saving.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
+          ImportOptionGridItem(
+            icon: LucideIcons.squarePen,
+            label: 'Enter Manually',
+            onTap: onManual,
           ),
-          const SizedBox(height: AppSpacing.md),
         ],
-      ),
-    );
-  }
-}
-
-class _OptionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _OptionTile({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Material(
-      color: Theme.of(context).cardColor,
-      borderRadius: BorderRadius.circular(AppRadii.sm2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadii.sm2),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(alpha: 0.40),
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
-                ),
-                child: Icon(icon,
-                    color: colorScheme.primary, size: AppIconSizes.xxxl),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                          color: colorScheme.onSurface,
-                        )),
-                    const SizedBox(height: AppSpacing.xxxs),
-                    Text(subtitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: colorScheme.onSurfaceVariant,
-                        )),
-                  ],
-                ),
-              ),
-              Icon(LucideIcons.chevronRight,
-                  color: colorScheme.onSurfaceVariant, size: AppIconSizes.xl),
-            ],
-          ),
-        ),
       ),
     );
   }
