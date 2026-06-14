@@ -102,183 +102,212 @@ class _OnboardingUniversityScreenState
     }
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: AppSpacing.md),
-              OnboardingProgressDots(currentStep: state.step),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () =>
-                        ref.read(onboardingProvider.notifier).goBack(),
-                    icon: const Icon(LucideIcons.arrowLeft),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Text(
-                      'Where do you study?',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Padding(
-                padding:
-                    const EdgeInsets.only(left: AppSpacing.xl + AppSpacing.xs),
-                child: Text(
-                  'We\'ll set your grading system automatically. Programme is optional.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              if (state.university != null) ...[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(AppRadii.md),
-                    border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.18),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.circleCheck,
-                        color: colorScheme.primary,
-                        size: AppIconSizes.xl,
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          '${state.university!.shortName ?? state.university!.name} · ${state.gradingSystem.plannerTitle}',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: AppSpacing.md),
+                    OnboardingProgressDots(currentStep: state.step),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () =>
+                              ref.read(onboardingProvider.notifier).goBack(),
+                          icon: Icon(LucideIcons.arrowLeft, color: colorScheme.onSurface),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            'Where do you study?',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurface,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
-              TextField(
-                controller: _programmeController,
-                onChanged: (v) =>
-                    ref.read(onboardingProvider.notifier).setProgramme(v),
-                textInputAction: TextInputAction.done,
-                decoration: InputDecoration(
-                  labelText: 'Programme (optional)',
-                  hintText: 'e.g. Computer Science',
-                  prefixIcon: const Icon(LucideIcons.bookOpen),
-                  border: OutlineInputBorder(
-                    borderRadius: AppRadii.pill,
-                    borderSide: BorderSide(color: colorScheme.outlineVariant),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _searchController,
-                onChanged: (v) => setState(() => _query = v),
-                decoration: InputDecoration(
-                  hintText: 'Search universities...',
-                  prefixIcon: const Icon(LucideIcons.search),
-                  suffixIcon: _query.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(LucideIcons.x, size: 18),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _query = '');
-                          },
-                        )
-                      : null,
-                  border: OutlineInputBorder(
-                    borderRadius: AppRadii.pill,
-                    borderSide: BorderSide(color: colorScheme.outlineVariant),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: _filtered.length,
-                  separatorBuilder: (_, __) =>
-                      const Divider(height: 1, indent: 80),
-                  itemBuilder: (context, index) {
-                    final uni = _filtered[index];
-                    final isSelected = state.university?.name == uni.name;
-                    final isOther = uni.name == 'Other';
-
-                    return ListTile(
-                      leading: _universityLogo(
-                        context,
-                        uni,
-                        isSelected: isSelected,
-                        isOther: isOther,
-                      ),
-                      title: Text(
-                        uni.name,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? colorScheme.primary
-                              : colorScheme.onSurface,
-                        ),
-                      ),
-                      subtitle: Text(
-                        isOther
-                            ? 'My university isn\'t listed'
-                            : [
-                                if (uni.shortName != null) uni.shortName!,
-                                if (uni.location != null) uni.location!,
-                                _systemSummary(uni.gradingSystemId),
-                              ].join(' · '),
-                        style: theme.textTheme.bodySmall?.copyWith(
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 28), // Align with header text offset
+                      child: Text(
+                        'We\'ll set your grading system automatically. Programme is optional.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
+                          height: 1.4,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      trailing: isSelected
-                          ? Icon(LucideIcons.check, color: colorScheme.primary)
-                          : null,
-                      onTap: () {
-                        ref
-                            .read(onboardingProvider.notifier)
-                            .setUniversity(uni);
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    if (state.university != null) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(AppRadii.md),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.18),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              LucideIcons.circleCheck,
+                              color: colorScheme.primary,
+                              size: AppIconSizes.xl,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                '${state.university!.shortName ?? state.university!.name} · ${state.gradingSystem.plannerTitle}',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+                    TextField(
+                      controller: _programmeController,
+                      onChanged: (v) =>
+                          ref.read(onboardingProvider.notifier).setProgramme(v),
+                      textInputAction: TextInputAction.done,
+                      style: TextStyle(color: colorScheme.onSurface),
+                      decoration: InputDecoration(
+                        labelText: 'Programme (optional)',
+                        hintText: 'e.g. Computer Science',
+                        prefixIcon: const Icon(LucideIcons.bookOpen),
+                        border: OutlineInputBorder(
+                          borderRadius: AppRadii.pill,
+                          borderSide: BorderSide(color: colorScheme.outlineVariant),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextField(
+                      controller: _searchController,
+                      onChanged: (v) => setState(() => _query = v),
+                      style: TextStyle(color: colorScheme.onSurface),
+                      decoration: InputDecoration(
+                        hintText: 'Search universities...',
+                        prefixIcon: const Icon(LucideIcons.search),
+                        suffixIcon: _query.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(LucideIcons.x, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _query = '');
+                                },
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: AppRadii.pill,
+                          borderSide: BorderSide(color: colorScheme.outlineVariant),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _filtered.length,
+                      separatorBuilder: (_, __) =>
+                          const Divider(height: 1, indent: 80),
+                      itemBuilder: (context, index) {
+                        final uni = _filtered[index];
+                        final isSelected = state.university?.name == uni.name;
+                        final isOther = uni.name == 'Other';
+
+                        return ListTile(
+                          leading: _universityLogo(
+                            context,
+                            uni,
+                            isSelected: isSelected,
+                            isOther: isOther,
+                          ),
+                          title: Text(
+                            uni.name,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isSelected
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurface,
+                            ),
+                          ),
+                          subtitle: Text(
+                            isOther
+                                ? 'My university isn\'t listed'
+                                : [
+                                    if (uni.shortName != null) uni.shortName!,
+                                    if (uni.location != null) uni.location!,
+                                    _systemSummary(uni.gradingSystemId),
+                                  ].join(' · '),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: isSelected
+                              ? Icon(LucideIcons.check, color: colorScheme.primary)
+                              : null,
+                          onTap: () {
+                            ref
+                                .read(onboardingProvider.notifier)
+                                .setUniversity(uni);
+                          },
+                        );
                       },
-                    );
-                  },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
+            ),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.xl,
+                right: AppSpacing.xl,
+                bottom: AppSpacing.lg,
+                top: AppSpacing.xs,
+              ),
+              child: SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
                   onPressed: state.canAdvance
                       ? () => ref.read(onboardingProvider.notifier).goNext()
                       : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.navy,
+                    shape: const StadiumBorder(),
+                  ),
                   child: const Text(
                     'Continue',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
