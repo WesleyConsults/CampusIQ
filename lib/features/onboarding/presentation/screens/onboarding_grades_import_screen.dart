@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/onboarding/presentation/providers/onboarding_provider.dart';
@@ -13,315 +14,313 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final state = ref.watch(onboardingProvider);
-    final system = state.gradingSystem;
     final notifier = ref.read(onboardingProvider.notifier);
 
+    // Map selection to active visual highlights
+    final isSlipSelected = state.startAction == OnboardingStartAction.importCourses;
+    final isTimetableSelected = state.startAction == OnboardingStartAction.addTimetable;
+    final isSkipSelected = state.startAction == null;
+
+    final setupDestination = switch (state.startAction) {
+      OnboardingStartAction.importCourses => '/cwa/import/registration',
+      OnboardingStartAction.addTimetable => '/timetable/import',
+      null => null,
+    };
+    final hasSetupShortcut = state.startAction != null;
+
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: AppSpacing.md),
-              OnboardingProgressDots(currentStep: state.step),
-              IconButton(
-                onPressed: notifier.goBack,
-                icon: const Icon(LucideIcons.arrowLeft),
+        child: Column(
+          children: [
+            const SizedBox(height: AppSpacing.md),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              child: OnboardingProgressDots(
+                currentStep: state.step,
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xl,
+            ),
+            // Header: Back Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: notifier.goBack,
+                    icon: Icon(LucideIcons.arrowLeft, color: colorScheme.onSurface),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
+                ],
+              ),
+            ),
+            // Scrollable Options List
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: AppSpacing.sm),
+                    // Title
                     Text(
-                      'Know your ${system.label} before results day',
-                      style: theme.textTheme.headlineSmall?.copyWith(
+                      'Let\'s set',
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontSize: 32,
                         fontWeight: FontWeight.w800,
+                        color: colorScheme.onSurface,
+                        height: 1.25,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: 2),
                     Text(
-                      'Import your registration slip or add courses manually. UniMate turns them into a live ${system.label} planner.',
+                      'you up',
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF636AE8), // Brand purple
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    // Subtitle
+                    Text(
+                      'Choose what you\'d like to do first.\nYou can always add more later.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
-                        height: 1.5,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        height: 1.45,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    _GradesPreviewCard(targetLabel: system.targetLabel),
+                    // Option 1: Import Registration Slip
+                    _SetupOptionRow(
+                      icon: LucideIcons.fileSpreadsheet,
+                      iconColor: const Color(0xFF636AE8),
+                      iconBgColor: const Color(0xFFEEF0FF),
+                      title: 'Import Registration Slip',
+                      description: 'Import your courses and current scores.',
+                      isSelected: isSlipSelected,
+                      onTap: () {
+                        notifier.setStartAction(OnboardingStartAction.importCourses);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    // Option 2: Import Timetable
+                    _SetupOptionRow(
+                      icon: LucideIcons.calendarDays,
+                      iconColor: const Color(0xFFE5A93C),
+                      iconBgColor: const Color(0xFFFEF7E8),
+                      title: 'Import Timetable',
+                      description: 'Import your class schedule and find free study time.',
+                      isSelected: isTimetableSelected,
+                      onTap: () {
+                        notifier.setStartAction(OnboardingStartAction.addTimetable);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    // Option 3: Skip for now
+                    _SetupOptionRow(
+                      icon: LucideIcons.star,
+                      iconColor: const Color(0xFF2F8F6B),
+                      iconBgColor: const Color(0xFFE8F8F0),
+                      title: 'Skip for now',
+                      description: 'Explore the app and set things up later.',
+                      isSelected: isSkipSelected,
+                      onTap: () {
+                        // Clear startAction to represent skip path
+                        ref.read(onboardingProvider.notifier).setStartAction(
+                          // Use reflection or standard state modification to unset startAction
+                          // The provider copyWith allows startAction to be unset or set to null
+                          null as dynamic, 
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    // Private & Secure Banner
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          LucideIcons.lock,
+                          size: 15,
+                          color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          'Your data stays private and secure.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: AppSpacing.lg),
-                    const _FeatureRow(
-                      icon: LucideIcons.scanLine,
-                      title: 'Import courses from a slip',
-                      subtitle: 'Camera, image upload, or PDF import.',
-                    ),
-                    const _FeatureRow(
-                      icon: LucideIcons.calculator,
-                      title: 'See projected performance',
-                      subtitle: 'Track course scores against your target.',
-                    ),
-                    const _FeatureRow(
-                      icon: LucideIcons.trendingUp,
-                      title: 'Plan the score you need',
-                      subtitle: 'Spot gaps early instead of guessing later.',
-                    ),
                   ],
                 ),
               ),
-              SizedBox(
+            ),
+            // Bottom Action Button
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.xl,
+                right: AppSpacing.xl,
+                bottom: AppSpacing.lg,
+                top: AppSpacing.xs,
+              ),
+              child: SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  onPressed: notifier.goNext,
-                  child: const Text(
-                    'Continue',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  onPressed: state.isLoading
+                      ? null
+                      : () async {
+                          await notifier.complete();
+                          if (!context.mounted) return;
+                          context.go('/plan');
+                          if (setupDestination == null) return;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (context.mounted) {
+                              context.push(setupDestination);
+                            }
+                          });
+                        },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.navy,
+                    shape: const StadiumBorder(),
                   ),
+                  child: state.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          hasSetupShortcut
+                              ? 'Finish and open setup'
+                              : 'Finish and go to Today',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _GradesPreviewCard extends StatelessWidget {
-  final String targetLabel;
-
-  const _GradesPreviewCard({required this.targetLabel});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: AppRadii.card,
-        border: Border.all(color: colorScheme.outlineVariant),
-        boxShadow: AppShadows.soft,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(LucideIcons.fileUp, color: colorScheme.primary),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Registration slip',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const Spacer(),
-              const _StatusBadge(label: 'Ready'),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              const Expanded(
-                child: _MetricBlock(label: 'Projected', value: '72.4'),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _MetricBlock(label: targetLabel, value: '70.0'),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          const _CoursePreviewRow(code: 'CSM 251', score: '78%', progress: .78),
-          const SizedBox(height: AppSpacing.sm),
-          const _CoursePreviewRow(
-              code: 'MATH 253', score: '71%', progress: .71),
-          const SizedBox(height: AppSpacing.sm),
-          const _CoursePreviewRow(
-              code: 'STAT 255', score: '66%', progress: .66),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeatureRow extends StatelessWidget {
+class _SetupOptionRow extends StatelessWidget {
   final IconData icon;
+  final Color iconColor;
+  final Color iconBgColor;
   final String title;
-  final String subtitle;
+  final String description;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-  const _FeatureRow({
+  const _SetupOptionRow({
     required this.icon,
+    required this.iconColor,
+    required this.iconBgColor,
     required this.title,
-    required this.subtitle,
+    required this.description,
+    required this.isSelected,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(AppRadii.sm),
-            ),
-            child:
-                Icon(icon, color: colorScheme.primary, size: AppIconSizes.xl),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: isDark ? colorScheme.surfaceContainerHighest : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected 
+                ? const Color(0xFF636AE8) 
+                : colorScheme.outlineVariant.withValues(alpha: 0.8),
+            width: isSelected ? 1.8 : 1.0,
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricBlock extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _MetricBlock({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(AppRadii.md),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            value,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CoursePreviewRow extends StatelessWidget {
-  final String code;
-  final String score;
-  final double progress;
-
-  const _CoursePreviewRow({
-    required this.code,
-    required this.score,
-    required this.progress,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Row(
-      children: [
-        SizedBox(
-          width: 72,
-          child: Text(
-            code,
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          ],
         ),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: AppRadii.pill,
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: colorScheme.outlineVariant.withValues(
-                alpha: 0.45,
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: AppIconSizes.feature - 2,
               ),
             ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          score,
-          style: theme.textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String label;
-
-  const _StatusBadge({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xxs2,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.success.withValues(alpha: 0.12),
-        borderRadius: AppRadii.pill,
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.success,
-              fontWeight: FontWeight.w800,
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: colorScheme.onSurface,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(width: AppSpacing.xs),
+            Icon(
+              LucideIcons.chevronRight,
+              color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+

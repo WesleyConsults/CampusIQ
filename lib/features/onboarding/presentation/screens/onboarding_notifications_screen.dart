@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/onboarding/presentation/providers/onboarding_provider.dart';
@@ -15,14 +14,9 @@ class OnboardingNotificationsScreen extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final state = ref.watch(onboardingProvider);
     final notifier = ref.read(onboardingProvider.notifier);
-    final setupDestination = switch (state.startAction) {
-      OnboardingStartAction.importCourses => '/cwa/import/registration',
-      OnboardingStartAction.addTimetable => '/timetable/import',
-      null => null,
-    };
-    final hasSetupShortcut = state.startAction != null;
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
@@ -33,30 +27,37 @@ class OnboardingNotificationsScreen extends ConsumerWidget {
               OnboardingProgressDots(currentStep: state.step),
               IconButton(
                 onPressed: notifier.goBack,
-                icon: const Icon(LucideIcons.arrowLeft),
+                icon: Icon(LucideIcons.arrowLeft, color: colorScheme.onSurface),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.md),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xl,
+                    horizontal: AppSpacing.md,
                   ),
                   children: [
                     Text(
-                      'Stay on track from day one',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                      'Stay on track\nfrom day one',
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: colorScheme.onSurface,
+                        height: 1.25,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.md),
                     Text(
-                      'Choose the reminders you want. You can open a setup step now or add everything later from the app.',
+                      'Choose the reminders you want. You can always change these later in settings.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
-                        height: 1.5,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        height: 1.45,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.xl),
                     _ToggleRow(
                       icon: LucideIcons.bell,
                       title: 'Study reminders',
@@ -88,43 +89,6 @@ class OnboardingNotificationsScreen extends ConsumerWidget {
                       value: state.notifyWeeklyReview,
                       onChanged: notifier.setNotifyWeeklyReview,
                     ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Text(
-                      'Set up now, or do it later',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      'Tap a selected card again to skip setup for now.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    _StartActionTile(
-                      icon: LucideIcons.fileUp,
-                      title: 'Import my courses',
-                      subtitle:
-                          'Open the slip importer and build your planner.',
-                      selected: state.startAction ==
-                          OnboardingStartAction.importCourses,
-                      onTap: () => notifier.toggleStartAction(
-                        OnboardingStartAction.importCourses,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    _StartActionTile(
-                      icon: LucideIcons.calendarPlus,
-                      title: 'Add my timetable',
-                      subtitle: 'Import or create your class schedule.',
-                      selected: state.startAction ==
-                          OnboardingStartAction.addTimetable,
-                      onTap: () => notifier.toggleStartAction(
-                        OnboardingStartAction.addTimetable,
-                      ),
-                    ),
                     const SizedBox(height: AppSpacing.lg),
                   ],
                 ),
@@ -133,129 +97,24 @@ class OnboardingNotificationsScreen extends ConsumerWidget {
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  onPressed: state.isLoading
-                      ? null
-                      : () async {
-                          await notifier.complete();
-                          if (!context.mounted) return;
-                          context.go('/plan');
-                          if (setupDestination == null) return;
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (context.mounted) {
-                              context.push(setupDestination);
-                            }
-                          });
-                        },
-                  child: state.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          hasSetupShortcut
-                              ? 'Finish and open setup'
-                              : 'Finish and go to Today',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                  onPressed: notifier.goNext,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.navy,
+                    shape: const StadiumBorder(),
+                  ),
+                  child: const Text(
+                    'Continue',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StartActionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _StartActionTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppRadii.md),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: selected
-              ? colorScheme.primaryContainer.withValues(alpha: 0.32)
-              : colorScheme.surface,
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          border: Border.all(
-            color: selected ? colorScheme.primary : colorScheme.outlineVariant,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: selected
-                    ? colorScheme.primary.withValues(alpha: 0.12)
-                    : colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.55,
-                      ),
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-              ),
-              child: Icon(
-                icon,
-                color: selected
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              selected ? LucideIcons.circleCheck : LucideIcons.circle,
-              color:
-                  selected ? colorScheme.primary : colorScheme.outlineVariant,
-            ),
-          ],
         ),
       ),
     );

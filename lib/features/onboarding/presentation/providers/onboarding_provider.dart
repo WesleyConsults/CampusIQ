@@ -10,11 +10,11 @@ import 'package:campusiq/core/services/crash_reporting_service.dart';
 
 enum OnboardingStep {
   welcome,
+  about,
   university,
   target,
-  gradesImport,
-  timetableImport,
   notifications,
+  gradesImport,
 }
 
 enum OnboardingStartAction {
@@ -88,13 +88,13 @@ class OnboardingState {
     switch (step) {
       case OnboardingStep.welcome:
         return true;
+      case OnboardingStep.about:
+        return true;
       case OnboardingStep.university:
         return university != null;
       case OnboardingStep.target:
         return true;
       case OnboardingStep.gradesImport:
-        return true;
-      case OnboardingStep.timetableImport:
         return true;
       case OnboardingStep.notifications:
         return true;

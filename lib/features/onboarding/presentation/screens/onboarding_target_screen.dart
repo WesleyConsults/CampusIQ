@@ -9,6 +9,19 @@ import 'package:campusiq/features/onboarding/presentation/widgets/onboarding_pro
 class OnboardingTargetScreen extends ConsumerWidget {
   const OnboardingTargetScreen({super.key});
 
+  List<double> _getScalePoints(GradingSystem system) {
+    if (system.id == 'cwa') {
+      return [50.0, 60.0, 70.0, 80.0, 90.0];
+    } else if (system.maxScore == 4.0) {
+      return [2.0, 2.5, 3.0, 3.5, 4.0];
+    } else if (system.maxScore == 5.0) {
+      return [2.0, 3.0, 3.5, 4.0, 5.0];
+    }
+    final minVal = system.targetMin;
+    final maxVal = system.targetMax;
+    return List.generate(5, (i) => minVal + i * (maxVal - minVal) / 4);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -16,8 +29,22 @@ class OnboardingTargetScreen extends ConsumerWidget {
     final state = ref.watch(onboardingProvider);
     final system = state.gradingSystem;
     final notifier = ref.read(onboardingProvider.notifier);
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Get dynamic scale points for under-slider labels
+    final scalePoints = _getScalePoints(system);
+    int closestIdx = 0;
+    double minDiff = double.infinity;
+    for (int i = 0; i < scalePoints.length; i++) {
+      final diff = (scalePoints[i] - state.target).abs();
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIdx = i;
+      }
+    }
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
@@ -30,170 +57,160 @@ class OnboardingTargetScreen extends ConsumerWidget {
                 children: [
                   IconButton(
                     onPressed: () => notifier.goBack(),
-                    icon: const Icon(LucideIcons.arrowLeft),
+                    icon: Icon(LucideIcons.arrowLeft, color: colorScheme.onSurface),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.md),
               Expanded(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Set your academic target',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      "What's your",
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: colorScheme.onSurface,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'academic target?',
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF636AE8), // Brand purple
+                        height: 1.25,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Centered illustration
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: screenHeight * 0.22,
+                        ),
+                        child: Image.asset(
+                          'assets/What is your academic target on boarding image.png',
+                          fit: BoxFit.contain,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'UniMate will use this to show the scores you need to protect your ${system.label}.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(AppRadii.md),
+                    ),
+                    const Spacer(),
+                    // Big Target Value Display Pill (Double tap/tap to edit grading system system)
+                    Center(
+                      child: InkWell(
                         onTap: () => _showGradingSystemPicker(
                           context,
                           ref,
-                          state.gradingSystem,
+                          system,
                         ),
+                        borderRadius: BorderRadius.circular(24),
                         child: Container(
-                          padding: const EdgeInsets.all(AppSpacing.md),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xxl,
+                            vertical: AppSpacing.md,
+                          ),
                           decoration: BoxDecoration(
-                            color: colorScheme.surface,
-                            borderRadius: BorderRadius.circular(AppRadii.md),
-                            border: Border.all(
-                              color: colorScheme.outlineVariant,
+                            color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Text(
+                            system.formatScore(state.target, includeUnit: true),
+                            style: theme.textTheme.displayMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 48,
+                              color: AppColors.navy,
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                LucideIcons.graduationCap,
-                                color: colorScheme.primary,
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      system.plannerTitle,
-                                      style:
-                                          theme.textTheme.bodyLarge?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    Text(
-                                      state.university == null
-                                          ? 'Detected from your school'
-                                          : 'Detected from ${state.university!.shortName ?? state.university!.name}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style:
-                                          theme.textTheme.labelMedium?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(LucideIcons.chevronRight),
-                            ],
-                          ),
                         ),
                       ),
-                      const Spacer(),
-                      Center(
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.xl,
-                                vertical: AppSpacing.md,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colorScheme.primaryContainer
-                                    .withValues(alpha: 0.3),
-                                borderRadius: AppRadii.card,
-                              ),
-                              child: Text(
-                                system.formatScore(state.target,
-                                    includeUnit: true),
-                                style: theme.textTheme.displayMedium?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
+                    ),
+                    const Spacer(),
+                    // Purple target slider
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: const Color(0xFF636AE8),
+                        inactiveTrackColor: colorScheme.outlineVariant.withValues(alpha: 0.6),
+                        thumbColor: const Color(0xFF636AE8),
+                        overlayColor: const Color(0xFF636AE8).withValues(alpha: 0.12),
+                        trackHeight: 6,
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 14,
+                        ),
+                      ),
+                      child: Slider(
+                        value: state.target,
+                        min: system.targetMin.toDouble(),
+                        max: system.targetMax.toDouble(),
+                        divisions: system.sliderDivisions,
+                        label: system.formatScore(state.target, includeUnit: true),
+                        onChanged: notifier.setTarget,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    // Scale Points Labels
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(scalePoints.length, (i) {
+                          final val = scalePoints[i];
+                          final isSelected = i == closestIdx;
+                          return Text(
+                            system.id == 'cwa'
+                                ? '${val.toStringAsFixed(0)}%'
+                                : val.toStringAsFixed(1),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                              color: isSelected
+                                  ? const Color(0xFF636AE8)
+                                  : colorScheme.onSurfaceVariant,
                             ),
-                            if (system.usesLetterGrades &&
-                                system.letterForScore(state.target) != null)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(top: AppSpacing.xs),
-                                child: Text(
-                                  system.letterForScore(state.target)!,
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                          ],
+                          );
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    // Target CWA label below
+                    Center(
+                      child: Text(
+                        '${system.targetLabel}: ${system.formatScore(state.target, includeUnit: true)}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
                         ),
                       ),
-                      const Spacer(),
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: colorScheme.primary,
-                          inactiveTrackColor:
-                              colorScheme.outlineVariant.withValues(alpha: 0.3),
-                          thumbColor: colorScheme.primary,
-                          overlayColor:
-                              colorScheme.primary.withValues(alpha: 0.12),
-                          trackHeight: 6,
-                          thumbShape: const RoundSliderThumbShape(
-                            enabledThumbRadius: 14,
-                          ),
+                    ),
+                    const Spacer(),
+                    // Continue Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: FilledButton(
+                        onPressed: () => notifier.goNext(),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.navy,
+                          shape: const StadiumBorder(),
                         ),
-                        child: Slider(
-                          value: state.target,
-                          min: system.targetMin.toDouble(),
-                          max: system.targetMax.toDouble(),
-                          divisions: system.sliderDivisions,
-                          label: system.formatScore(state.target,
-                              includeUnit: true),
-                          onChanged: notifier.setTarget,
-                        ),
-                      ),
-                      Center(
-                        child: Text(
-                          '${system.targetLabel}: ${system.formatScore(state.target, includeUnit: true)}',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                        child: const Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                      const Spacer(),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: FilledButton(
-                          onPressed: () => notifier.goNext(),
-                          child: const Text('Continue',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600)),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                 ),
               ),
             ],
