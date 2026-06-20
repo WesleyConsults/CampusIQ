@@ -1,7 +1,7 @@
 name: campusiq
 description: Smart academic companion for Ghanaian university students
 publish_to: 'none'
-version: 1.1.2+12
+version: 1.1.4+14
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -11,16 +11,16 @@ dependencies:
     sdk: flutter
 
   # State management
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
+  flutter_riverpod: 2.6.1
+  riverpod_annotation: 2.6.1
 
   # HTTP and connectivity
   http: ^1.2.0
   connectivity_plus: ^6.0.3
 
   # Local storage
-  isar: ^3.1.0+1
-  isar_flutter_libs: ^3.1.0+1
+  isar_community: 3.3.0-dev.1
+  isar_community_flutter_libs: 3.3.0-dev.1
   path_provider: ^2.1.3
 
   # Navigation
@@ -57,10 +57,10 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^4.0.0
   build_runner: ^2.4.11
-  isar_generator: ^3.1.0+1
-  riverpod_generator: ^2.3.9
+  isar_community_generator: 3.3.0-dev.1
+  riverpod_generator: 2.6.5
   flutter_launcher_icons: ^0.14.4
-  # custom_lint and riverpod_lint removed: incompatible with isar_generator's analyzer constraint
+  # custom_lint and riverpod_lint removed due to generator analyzer constraints
 
 flutter_launcher_icons:
   android: true

@@ -47,8 +47,16 @@ class NotificationService {
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
     await _plugin.initialize(
-      settings: const InitializationSettings(android: androidSettings),
+      settings: const InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      ),
     );
 
     _initialized = true;
@@ -91,6 +99,13 @@ class NotificationService {
         vibrationPattern: Int64List.fromList([0, 1000, 500, 1000]),
       );
 
+  DarwinNotificationDetails _iosDetails({bool playSound = true}) =>
+      DarwinNotificationDetails(
+        presentAlert: true,
+        presentSound: playSound,
+        presentBadge: true,
+      );
+
   Future<void> _schedule(
     int id,
     String title,
@@ -109,6 +124,7 @@ class NotificationService {
       notificationDetails: NotificationDetails(
         android: _androidDetails(channelId, channelName,
             vibrate: vibrate, playSound: playSound),
+        iOS: _iosDetails(playSound: playSound),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
@@ -117,11 +133,17 @@ class NotificationService {
   /// Explicitly request the POST_NOTIFICATIONS permission on Android 13+.
   /// Returns true if granted. Safe to call multiple times.
   Future<bool> requestPermission() async {
-    final result = await _plugin
+    final androidResult = await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
-    return result ?? false;
+    if (androidResult != null) return androidResult;
+
+    final iosResult = await _plugin
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+    return iosResult ?? false;
   }
 
   /// Requests both notification delivery and exact-alarm access on Android.
@@ -419,6 +441,7 @@ class NotificationService {
       body: body,
       notificationDetails: NotificationDetails(
         android: _androidDetails(channelId, channelName),
+        iOS: _iosDetails(),
       ),
     );
   }
@@ -435,6 +458,7 @@ class NotificationService {
       body: message,
       notificationDetails: NotificationDetails(
         android: _androidDetails(_channelStreakAlert, 'Streak Alerts'),
+        iOS: _iosDetails(),
       ),
     );
   }

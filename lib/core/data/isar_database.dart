@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/core/data/models/subscription_model.dart';

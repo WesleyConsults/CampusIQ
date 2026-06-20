@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:campusiq/core/constants/app_constants.dart';
 import 'package:campusiq/core/data/models/user_prefs_model.dart';
 import 'package:campusiq/core/domain/grading_system.dart';

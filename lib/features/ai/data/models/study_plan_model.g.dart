@@ -46,7 +46,7 @@ const StudyPlanModelSchema = CollectionSchema(
   getId: _studyPlanModelGetId,
   getLinks: _studyPlanModelGetLinks,
   attach: _studyPlanModelAttach,
-  version: '3.1.0+1',
+  version: '3.3.0-dev.1',
 );
 
 int _studyPlanModelEstimateSize(

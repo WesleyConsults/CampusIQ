@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
 part 'timetable_slot_model.g.dart';

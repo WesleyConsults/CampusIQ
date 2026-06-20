@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:campusiq/core/services/crash_reporting_service.dart';
 import '../models/course_note_model.dart';
 

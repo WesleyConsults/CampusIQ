@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'study_plan_slot_model.dart';
 part 'study_plan_model.g.dart';
 

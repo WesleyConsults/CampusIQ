@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:campusiq/core/constants/app_constants.dart';
 
 part 'user_prefs_model.g.dart';

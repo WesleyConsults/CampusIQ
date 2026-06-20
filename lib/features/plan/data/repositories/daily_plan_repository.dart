@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 
 class DailyPlanRepository {

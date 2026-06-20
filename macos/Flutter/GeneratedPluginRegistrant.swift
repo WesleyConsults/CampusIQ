@@ -13,7 +13,7 @@ import firebase_core
 import firebase_crashlytics
 import flutter_local_notifications
 import flutter_timezone
-import isar_flutter_libs
+import isar_community_flutter_libs
 import url_launcher_macos
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {

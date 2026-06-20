@@ -54,7 +54,7 @@ const SubscriptionModelSchema = CollectionSchema(
   getId: _subscriptionModelGetId,
   getLinks: _subscriptionModelGetLinks,
   attach: _subscriptionModelAttach,
-  version: '3.1.0+1',
+  version: '3.3.0-dev.1',
 );
 
 int _subscriptionModelEstimateSize(
