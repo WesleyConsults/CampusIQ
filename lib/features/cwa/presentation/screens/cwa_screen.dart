@@ -9,6 +9,7 @@ import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/timetable_course_import_sheet.dart';
 import 'package:campusiq/features/cwa/presentation/screens/complete_semester_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/current_semester_courses_screen.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
@@ -305,6 +306,15 @@ class CwaScreen extends ConsumerWidget {
       builder: (sheetContext) => _ImportOptionsSheet(
         title: title,
         options: [
+          if (viewMode == CwaViewMode.semester)
+            _ImportOption(
+              icon: LucideIcons.calendarDays,
+              label: 'Use Timetable',
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                showTimetableCourseImportSheet(context);
+              },
+            ),
           _ImportOption(
             icon: LucideIcons.camera,
             label: 'Take Photo',

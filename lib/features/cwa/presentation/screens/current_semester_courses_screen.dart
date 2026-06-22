@@ -7,6 +7,7 @@ import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/screens/complete_semester_screen.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/timetable_course_import_sheet.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
@@ -178,6 +179,7 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
               _CourseActionsCard(
                 hasCourses: courses.isNotEmpty,
                 onAddCourse: () => _openAddSheet(context, ref),
+                onUseTimetable: () => showTimetableCourseImportSheet(context),
                 onImportCourses: () =>
                     context.pushNamed('cwa-import-registration'),
                 onSaveFinalResults: courses.isEmpty
@@ -189,6 +191,7 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
                 _EmptyCoursesCard(
                   gradingSystem: gradingSystem,
                   onAddCourse: () => _openAddSheet(context, ref),
+                  onUseTimetable: () => showTimetableCourseImportSheet(context),
                   onImportCourses: () =>
                       context.pushNamed('cwa-import-registration'),
                 )
@@ -352,12 +355,14 @@ class _HeaderStat extends StatelessWidget {
 class _CourseActionsCard extends StatelessWidget {
   final bool hasCourses;
   final VoidCallback onAddCourse;
+  final VoidCallback onUseTimetable;
   final VoidCallback onImportCourses;
   final VoidCallback? onSaveFinalResults;
 
   const _CourseActionsCard({
     required this.hasCourses,
     required this.onAddCourse,
+    required this.onUseTimetable,
     required this.onImportCourses,
     required this.onSaveFinalResults,
   });
@@ -382,7 +387,7 @@ class _CourseActionsCard extends StatelessWidget {
           Text(
             hasCourses
                 ? 'Keep your course list and expected scores up to date.'
-                : 'Add courses manually or import your registration slip.',
+                : 'Add courses manually, from your timetable, or from a registration slip.',
             style: TextStyle(
               fontSize: 12,
               color: colorScheme.onSurfaceVariant,
@@ -398,6 +403,14 @@ class _CourseActionsCard extends StatelessWidget {
                 onPressed: onAddCourse,
                 icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
                 label: const Text('Add Course'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onUseTimetable,
+                icon: const Icon(
+                  LucideIcons.calendarDays,
+                  size: AppIconSizes.md,
+                ),
+                label: const Text('Use Timetable'),
               ),
               OutlinedButton.icon(
                 onPressed: onImportCourses,
@@ -424,11 +437,13 @@ class _CourseActionsCard extends StatelessWidget {
 class _EmptyCoursesCard extends StatelessWidget {
   final GradingSystem gradingSystem;
   final VoidCallback onAddCourse;
+  final VoidCallback onUseTimetable;
   final VoidCallback onImportCourses;
 
   const _EmptyCoursesCard({
     required this.gradingSystem,
     required this.onAddCourse,
+    required this.onUseTimetable,
     required this.onImportCourses,
   });
 
@@ -482,6 +497,14 @@ class _EmptyCoursesCard extends StatelessWidget {
                 onPressed: onAddCourse,
                 icon: const Icon(LucideIcons.plus, size: AppIconSizes.md),
                 label: const Text('Add Course'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onUseTimetable,
+                icon: const Icon(
+                  LucideIcons.calendarDays,
+                  size: AppIconSizes.md,
+                ),
+                label: const Text('Use Timetable'),
               ),
               OutlinedButton.icon(
                 onPressed: onImportCourses,

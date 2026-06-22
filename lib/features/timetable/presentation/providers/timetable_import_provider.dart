@@ -11,7 +11,6 @@ import 'package:campusiq/features/timetable/presentation/providers/timetable_pro
 import 'package:campusiq/core/services/connectivity_service.dart';
 import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/core/services/crash_reporting_service.dart';
-import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 
 part 'timetable_import_provider.g.dart';
@@ -157,7 +156,6 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
     if (repo == null) return;
 
     final semesterKey = ref.read(activeSemesterProvider);
-    final cwaRepo = ref.read(cwaRepositoryProvider);
 
     state = state.copyWith(step: ImportStep.saving);
 
@@ -168,31 +166,6 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
         final color = TimetableConstants.colorForIndex(i);
         await repo
             .addSlot(slot.toModel(colorValue: color, semesterKey: semesterKey));
-      }
-
-      // Populate CWA with unique courses from the import (skip duplicates).
-      if (cwaRepo != null) {
-        final gradingSystem = ref.read(gradingSystemProvider);
-        final seen = <String>{};
-        for (final i in ordered) {
-          final slot = state.slots[i];
-          final code = slot.courseCode.trim().toUpperCase();
-          if (code.isEmpty || seen.contains(code)) continue;
-          seen.add(code);
-          final exists = await cwaRepo.courseExistsByCode(code, semesterKey);
-          if (!exists) {
-            await cwaRepo.addCourse(
-              CourseModel.create(
-                name: slot.courseName,
-                code: code,
-                creditHours: 3.0,
-                expectedScore: gradingSystem.defaultTarget,
-                semesterKey: semesterKey,
-                gradingSystemId: gradingSystem.id,
-              ),
-            );
-          }
-        }
       }
 
       state = state.copyWith(step: ImportStep.done);

@@ -79,6 +79,7 @@ void main() {
     await tester.tap(find.text('Current semester courses'));
     await _pumpFrames(tester);
 
+    expect(find.text('Use Timetable'), findsOneWidget);
     expect(find.text('Take Photo'), findsOneWidget);
     expect(find.text('Upload Image'), findsOneWidget);
     expect(find.text('Choose PDF'), findsOneWidget);

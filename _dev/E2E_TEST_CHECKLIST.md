@@ -482,6 +482,11 @@ Mark each item `[x]` as you confirm it works.
 - [ ] Scanner icon is visible in the Timetable AppBar alongside the reminders and "+" buttons
 - [ ] Tap the scanner icon → navigates to `/timetable/import` (no bottom nav visible)
 - [ ] Back arrow returns to the Timetable screen without saving
+- [ ] Confirm a timetable import → selected slots appear in Timetable, but no CWA/GPA courses are created automatically
+- [ ] Open CWA/GPA → current semester course import options → **Use Timetable**
+- [ ] Timetable courses are deduplicated by course code and existing CWA/GPA courses are excluded
+- [ ] Saving is blocked until every selected course has credit hours from 1–12
+- [ ] Save → selected courses appear in the active-semester CWA/GPA list with the entered credit hours
 
 ### 6.8 Course reminders — entry point
 - [ ] Reminders icon (bell) is visible in the Timetable AppBar
