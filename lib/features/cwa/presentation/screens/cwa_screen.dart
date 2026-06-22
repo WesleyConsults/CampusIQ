@@ -103,8 +103,14 @@ class CwaScreen extends ConsumerWidget {
     );
     final colorScheme = Theme.of(context).colorScheme;
     final currentCourses = ref.watch(coursesProvider).valueOrNull ?? [];
+    final pastSemesters = ref.watch(pastSemestersProvider).valueOrNull ?? [];
     final manualBaseline =
         ref.watch(manualAcademicBaselineProvider).valueOrNull;
+    final targetConfirmed =
+        ref.watch(cwaSetupTargetConfirmedProvider).valueOrNull ?? false;
+    final isSetupComplete = currentCourses.isNotEmpty &&
+        (pastSemesters.isNotEmpty || manualBaseline != null) &&
+        targetConfirmed;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -148,19 +154,21 @@ class CwaScreen extends ConsumerWidget {
         onShowImportSheet: _showImportSheet,
         onShowTargetDialog: _showTargetDialog,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddGoalSheet(
-          context,
-          ref,
-          currentCourses: currentCourses,
-          gradingSystem: gradingSystem,
-          manualBaseline: manualBaseline,
-        ),
-        icon: const Icon(LucideIcons.plus),
-        label: const Text('Add'),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
+      floatingActionButton: isSetupComplete
+          ? FloatingActionButton.extended(
+              onPressed: () => _showAddGoalSheet(
+                context,
+                ref,
+                currentCourses: currentCourses,
+                gradingSystem: gradingSystem,
+                manualBaseline: manualBaseline,
+              ),
+              icon: const Icon(LucideIcons.plus),
+              label: const Text('Add'),
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+            )
+          : null,
     );
   }
 
@@ -267,6 +275,7 @@ class CwaScreen extends ConsumerWidget {
                     min: gradingSystem.targetMin,
                     max: gradingSystem.targetMax,
                   );
+                  await repo.confirmCwaSetupTarget();
                   if (ctx.mounted) Navigator.pop(ctx);
                 } catch (e) {
                   debugPrint('🔴 CwaScreen _showTargetDialog failed: $e');
@@ -535,6 +544,8 @@ class _CwaDashboardView extends ConsumerWidget {
     final cumulative = ref.watch(cumulativeCwaProvider);
     final cumulativeGap = ref.watch(cumulativeGapProvider);
     final target = ref.watch(targetCwaProvider);
+    final targetConfirmed =
+        ref.watch(cwaSetupTargetConfirmedProvider).valueOrNull ?? false;
     final totalCredits = ref.watch(totalCreditsProvider);
     final activeSemesterKey = ref.watch(activeSemesterProvider);
     final manualBaseline =
@@ -580,6 +591,7 @@ class _CwaDashboardView extends ConsumerWidget {
     final hasBaseline = manualBaseline != null;
     final hasCumulativeData = hasHistory || hasBaseline;
     final hasAnyData = hasCumulativeData || hasCurrent;
+    final setupComplete = hasCurrent && hasCumulativeData && targetConfirmed;
     final activeSemesterAlreadyRecorded =
         semesters.any((semester) => semester.semesterKey == activeSemesterKey);
     final moveNextStepToBottom = hasHistory && hasCurrent;
@@ -605,6 +617,33 @@ class _CwaDashboardView extends ConsumerWidget {
           : null,
     );
 
+    if (!setupComplete) {
+      return _CwaSetupView(
+        bottomContentPadding: bottomContentPadding,
+        gradingSystem: gradingSystem,
+        hasCurrentCourses: hasCurrent,
+        hasAcademicHistory: hasCumulativeData,
+        targetConfirmed: targetConfirmed,
+        target: target,
+        onAddCurrentCourses: () =>
+            onShowImportSheet(context, CwaViewMode.semester),
+        onAddPastResults: () =>
+            onShowImportSheet(context, CwaViewMode.cumulative),
+        onEnterCurrentScore: () => onOpenManualBaseline(
+          context: context,
+          ref: ref,
+          gradingSystem: gradingSystem,
+          existingBaseline: manualBaseline,
+        ),
+        onSetTarget: () => onShowTargetDialog(
+          context,
+          ref,
+          target,
+          gradingSystem,
+        ),
+      );
+    }
+
     return ListView(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -624,10 +663,6 @@ class _CwaDashboardView extends ConsumerWidget {
           hasCurrentCourses: hasCurrent,
           hasCumulativeData: hasCumulativeData,
         ),
-        if (!moveNextStepToBottom) ...[
-          const SizedBox(height: AppSpacing.md),
-          nextStepCard,
-        ],
         const SizedBox(height: AppSpacing.md),
         _CurrentSemesterSummaryCard(
           gradingSystem: gradingSystem,
@@ -644,6 +679,10 @@ class _CwaDashboardView extends ConsumerWidget {
             ),
           ),
         ),
+        if (!moveNextStepToBottom) ...[
+          const SizedBox(height: AppSpacing.md),
+          nextStepCard,
+        ],
         const SizedBox(height: AppSpacing.md),
         _AcademicHistorySummaryCard(
           gradingSystem: gradingSystem,
@@ -701,6 +740,539 @@ class _CwaDashboardView extends ConsumerWidget {
             0,
             (courseSum, course) => courseSum + course.creditHours,
           ),
+    );
+  }
+}
+
+class _CwaSetupView extends StatelessWidget {
+  final double bottomContentPadding;
+  final GradingSystem gradingSystem;
+  final bool hasCurrentCourses;
+  final bool hasAcademicHistory;
+  final bool targetConfirmed;
+  final double target;
+  final VoidCallback onAddCurrentCourses;
+  final VoidCallback onAddPastResults;
+  final VoidCallback onEnterCurrentScore;
+  final VoidCallback onSetTarget;
+
+  const _CwaSetupView({
+    required this.bottomContentPadding,
+    required this.gradingSystem,
+    required this.hasCurrentCourses,
+    required this.hasAcademicHistory,
+    required this.targetConfirmed,
+    required this.target,
+    required this.onAddCurrentCourses,
+    required this.onAddPastResults,
+    required this.onEnterCurrentScore,
+    required this.onSetTarget,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final completedCount = [
+      hasCurrentCourses,
+      hasAcademicHistory,
+      targetConfirmed,
+    ].where((complete) => complete).length;
+
+    return ListView(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.sm,
+        AppSpacing.xl,
+        bottomContentPadding + AppSpacing.xxl,
+      ),
+      children: [
+        _SetupHeroCard(gradingSystem: gradingSystem),
+        const SizedBox(height: AppSpacing.md),
+        _SetupProgressCard(
+          completedCount: completedCount,
+          steps: [
+            hasCurrentCourses,
+            hasAcademicHistory,
+            targetConfirmed,
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _SetupStepCard(
+          step: 1,
+          icon: LucideIcons.bookOpen,
+          title: 'Add your current courses',
+          description:
+              'Start your semester projection with the courses you are taking now.',
+          actionLabel: hasCurrentCourses
+              ? 'Current courses added'
+              : 'Start with my courses',
+          complete: hasCurrentCourses,
+          enabled: !hasCurrentCourses,
+          emphasized: !hasCurrentCourses,
+          onPressed: onAddCurrentCourses,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _SetupStepCard(
+          step: 2,
+          icon: LucideIcons.history,
+          title: 'Add academic history',
+          description:
+              'Import past results, or enter your current ${gradingSystem.cumulativeLabel} and completed credits.',
+          actionLabel: hasAcademicHistory
+              ? 'Academic history added'
+              : 'Import past results',
+          secondaryActionLabel: hasAcademicHistory
+              ? null
+              : 'Enter current ${gradingSystem.cumulativeLabel}',
+          complete: hasAcademicHistory,
+          enabled: hasCurrentCourses && !hasAcademicHistory,
+          emphasized: hasCurrentCourses && !hasAcademicHistory,
+          onPressed: onAddPastResults,
+          onSecondaryPressed: onEnterCurrentScore,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _SetupStepCard(
+          step: 3,
+          icon: LucideIcons.goal,
+          title: 'Confirm your target',
+          description: targetConfirmed
+              ? 'Your target is ${gradingSystem.formatScore(target)}.'
+              : 'Review the ${gradingSystem.label} you want to work toward.',
+          actionLabel: targetConfirmed ? 'Target confirmed' : 'Set my target',
+          complete: targetConfirmed,
+          enabled: hasCurrentCourses && hasAcademicHistory && !targetConfirmed,
+          emphasized:
+              hasCurrentCourses && hasAcademicHistory && !targetConfirmed,
+          onPressed: onSetTarget,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        _SetupCalculationCard(gradingSystem: gradingSystem),
+      ],
+    );
+  }
+}
+
+class _SetupHeroCard extends StatelessWidget {
+  final GradingSystem gradingSystem;
+
+  const _SetupHeroCard({required this.gradingSystem});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.lg,
+      ),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.navy, AppColors.navySoft],
+        ),
+        borderRadius: AppRadii.card,
+        boxShadow: AppShadows.card,
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final illustrationWidth =
+              (constraints.maxWidth * 0.43).clamp(108.0, 148.0).toDouble();
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Let’s set up your ${gradingSystem.label}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(
+                    width: illustrationWidth,
+                    child: Image.asset(
+                      'assets/unimate onboarding asset.png',
+                      fit: BoxFit.contain,
+                      alignment: Alignment.centerRight,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.clock3,
+                    color: AppColors.goldSoft,
+                    size: AppIconSizes.lg,
+                  ),
+                  SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Takes about 2 minutes',
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      color: AppColors.goldSoft,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SetupProgressCard extends StatelessWidget {
+  final int completedCount;
+  final List<bool> steps;
+
+  const _SetupProgressCard({
+    required this.completedCount,
+    required this.steps,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return CampusCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Set-up progress',
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '$completedCount/3 completed',
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: List.generate(steps.length * 2 - 1, (index) {
+              if (index.isOdd) {
+                final previousComplete = steps[index ~/ 2];
+                return Expanded(
+                  child: Container(
+                    height: 3,
+                    color: previousComplete
+                        ? AppColors.success
+                        : colorScheme.outlineVariant,
+                  ),
+                );
+              }
+
+              final stepIndex = index ~/ 2;
+              final complete = steps[stepIndex];
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: complete
+                      ? AppColors.success
+                      : colorScheme.surfaceContainerHighest,
+                  border: Border.all(
+                    color: complete ? AppColors.success : colorScheme.outline,
+                    width: 2,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: complete
+                    ? const Icon(
+                        LucideIcons.check,
+                        size: AppIconSizes.sm,
+                        color: Colors.white,
+                      )
+                    : Text(
+                        '${stepIndex + 1}',
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SetupStepCard extends StatelessWidget {
+  final int step;
+  final IconData icon;
+  final String title;
+  final String description;
+  final String actionLabel;
+  final String? secondaryActionLabel;
+  final bool complete;
+  final bool enabled;
+  final bool emphasized;
+  final VoidCallback onPressed;
+  final VoidCallback? onSecondaryPressed;
+
+  const _SetupStepCard({
+    required this.step,
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.actionLabel,
+    required this.complete,
+    required this.enabled,
+    required this.emphasized,
+    required this.onPressed,
+    this.secondaryActionLabel,
+    this.onSecondaryPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 220),
+      opacity: complete || enabled ? 1 : 0.62,
+      child: CampusCard(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: complete
+                    ? AppColors.success.withValues(alpha: 0.12)
+                    : colorScheme.primaryContainer,
+                borderRadius: AppRadii.button,
+              ),
+              child: Icon(
+                complete ? LucideIcons.check : icon,
+                color: complete ? AppColors.success : colorScheme.primary,
+                size: AppIconSizes.xxl,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 27,
+                        height: 27,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: complete
+                              ? AppColors.success
+                              : emphasized
+                                  ? colorScheme.primary
+                                  : colorScheme.surfaceContainerHighest,
+                        ),
+                        child: Text(
+                          '$step',
+                          style: TextStyle(
+                            color: complete || emphasized
+                                ? Colors.white
+                                : colorScheme.onSurfaceVariant,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (!complete) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.sm),
+                  if (complete)
+                    Row(
+                      children: [
+                        const Icon(
+                          LucideIcons.circleCheck,
+                          color: AppColors.success,
+                          size: AppIconSizes.md,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          actionLabel,
+                          style: const TextStyle(
+                            color: AppColors.success,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    )
+                  else ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: enabled ? onPressed : null,
+                        child: Text(actionLabel),
+                      ),
+                    ),
+                    if (secondaryActionLabel != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: enabled ? onSecondaryPressed : null,
+                          child: Text(secondaryActionLabel!),
+                        ),
+                      ),
+                    ],
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SetupCalculationCard extends StatelessWidget {
+  final GradingSystem gradingSystem;
+
+  const _SetupCalculationCard({required this.gradingSystem});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final items = [
+      (
+        icon: LucideIcons.chartNoAxesCombined,
+        label: 'Projected\nsemester ${gradingSystem.label}',
+      ),
+      (
+        icon: LucideIcons.shieldCheck,
+        label: 'Cumulative\n${gradingSystem.cumulativeLabel}',
+      ),
+      (
+        icon: LucideIcons.goal,
+        label: 'Target\nmarks',
+      ),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.65),
+        borderRadius: AppRadii.card,
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'What UniMate will calculate',
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: items
+                .map(
+                  (item) => Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: item == items.last ? 0 : AppSpacing.xs,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                          vertical: AppSpacing.sm,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface,
+                          borderRadius: BorderRadius.circular(AppRadii.sm),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              item.icon,
+                              color: colorScheme.primary,
+                              size: AppIconSizes.xl,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              item.label,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                height: 1.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -26,7 +26,8 @@ class _OnboardingUniversityScreenState
     final q = _query.toLowerCase().trim();
     return universityPickerOptions.where((u) {
       return u.name.toLowerCase().contains(q) ||
-          (u.shortName?.toLowerCase().contains(q) ?? false) ||
+          u.abbreviation.toLowerCase().contains(q) ||
+          u.aliases.any((alias) => alias.toLowerCase().contains(q)) ||
           (u.location?.toLowerCase().contains(q) ?? false);
     }).toList();
   }
@@ -149,37 +150,65 @@ class _OnboardingUniversityScreenState
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     if (state.university != null) ...[
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(AppRadii.md),
-                          border: Border.all(
-                            color: colorScheme.primary.withValues(alpha: 0.18),
+                      if (state.university!.gradingSystemId == 'uncertain') ...[
+                        Text(
+                          'Select your grading system',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              LucideIcons.circleCheck,
-                              color: colorScheme.primary,
-                              size: AppIconSizes.xl,
+                        const SizedBox(height: AppSpacing.xs),
+                        Wrap(
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.sm,
+                          children: GradingSystem.all.map((gs) {
+                            final selected = state.gradingSystemId == gs.id || (state.gradingSystemId == 'uncertain' && gs.id == 'cwa');
+                            return FilterChip(
+                              label: Text(gs.label),
+                              selected: selected,
+                              onSelected: (bool isSelected) {
+                                if (isSelected) {
+                                  ref.read(onboardingProvider.notifier).setGradingSystemId(gs.id);
+                                }
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                      ] else ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
+                            border: Border.all(
+                              color: colorScheme.primary.withValues(alpha: 0.18),
                             ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                '${state.university!.shortName ?? state.university!.name} · ${state.gradingSystem.plannerTitle}',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: colorScheme.onSurface,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                LucideIcons.circleCheck,
+                                color: colorScheme.primary,
+                                size: AppIconSizes.xl,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Text(
+                                  '${state.university!.abbreviation} · ${state.gradingSystem.plannerTitle}',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: colorScheme.onSurface,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
                     ],
                     TextField(
                       controller: _programmeController,
@@ -252,7 +281,7 @@ class _OnboardingUniversityScreenState
                             isOther
                                 ? 'My university isn\'t listed'
                                 : [
-                                    if (uni.shortName != null) uni.shortName!,
+                                    uni.abbreviation,
                                     if (uni.location != null) uni.location!,
                                     _systemSummary(uni.gradingSystemId),
                                   ].join(' · '),

@@ -175,17 +175,6 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
                 courseCount: courses.length,
                 credits: credits,
               ),
-              const SizedBox(height: AppSpacing.md),
-              _CourseActionsCard(
-                hasCourses: courses.isNotEmpty,
-                onAddCourse: () => _openAddSheet(context, ref),
-                onUseTimetable: () => showTimetableCourseImportSheet(context),
-                onImportCourses: () =>
-                    context.pushNamed('cwa-import-registration'),
-                onSaveFinalResults: courses.isEmpty
-                    ? null
-                    : () => _openCompleteSemester(context, ref, courses),
-              ),
               const SizedBox(height: AppSpacing.lg),
               if (courses.isEmpty)
                 _EmptyCoursesCard(
@@ -224,6 +213,17 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.xs2),
                 ],
               ],
+              const SizedBox(height: AppSpacing.lg),
+              _CourseActionsCard(
+                hasCourses: courses.isNotEmpty,
+                onAddCourse: () => _openAddSheet(context, ref),
+                onUseTimetable: () => showTimetableCourseImportSheet(context),
+                onImportCourses: () =>
+                    context.pushNamed('cwa-import-registration'),
+                onSaveFinalResults: courses.isEmpty
+                    ? null
+                    : () => _openCompleteSemester(context, ref, courses),
+              ),
             ],
           );
         },

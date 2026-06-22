@@ -413,6 +413,17 @@ class UserPrefsRepository {
     }
   }
 
+  Future<void> confirmCwaSetupTarget() async {
+    final prefs = await _getOrCreate();
+    prefs.cwaSetupTargetConfirmed = true;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
   Future<String> getGradingSystemId() async {
     final prefs = await _getOrCreate();
     return GradingSystem.byId(prefs.gradingSystemId).id;

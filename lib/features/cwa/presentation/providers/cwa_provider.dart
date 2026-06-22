@@ -94,6 +94,17 @@ final targetCwaProvider = Provider<double>((ref) {
   return target;
 });
 
+/// Whether the target step in the guided CWA setup has been confirmed.
+final cwaSetupTargetConfirmedProvider = StreamProvider<bool>((ref) async* {
+  final isar = await ref.watch(isarProvider.future);
+  final repo = UserPrefsRepository(isar);
+  await repo.getPrefs();
+
+  await for (final prefs in repo.watchPrefs()) {
+    yield prefs?.cwaSetupTargetConfirmed ?? false;
+  }
+});
+
 /// In-flight score adjustments during slider drag (course id → score).
 /// Applied on top of persisted scores so the hero bar updates live during a
 /// drag without writing to Isar on every frame.

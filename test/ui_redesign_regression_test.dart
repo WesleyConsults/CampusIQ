@@ -65,6 +65,12 @@ void main() {
           isarProvider.overrideWith((ref) async => throw UnimplementedError()),
           cwaRepositoryProvider.overrideWithValue(null),
           pastResultRepositoryProvider.overrideWithValue(null),
+          coursesProvider.overrideWith((ref) => Stream.value(const [])),
+          pastSemestersProvider.overrideWith((ref) => Stream.value(const [])),
+          manualAcademicBaselineProvider
+              .overrideWith((ref) => Stream.value(null)),
+          cwaSetupTargetConfirmedProvider
+              .overrideWith((ref) => Stream.value(false)),
         ],
         child: const MaterialApp(home: CwaScreen()),
       ),
@@ -72,11 +78,9 @@ void main() {
 
     await _pumpFrames(tester);
 
-    await tester.tap(find.widgetWithText(FloatingActionButton, 'Add'));
-    await _pumpFrames(tester);
-
-    expect(find.text('What do you want to add?'), findsOneWidget);
-    await tester.tap(find.text('Current semester courses'));
+    expect(find.text('Let’s set up your CWA'), findsOneWidget);
+    expect(find.text('0/3 completed'), findsOneWidget);
+    await tester.tap(find.text('Start with my courses'));
     await _pumpFrames(tester);
 
     expect(find.text('Use Timetable'), findsOneWidget);

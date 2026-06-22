@@ -43,6 +43,11 @@ class UserPrefsModel {
   @Name('zzTargetCwa')
   double targetCwa = AppConstants.distinctionThreshold;
 
+  /// Whether the student has explicitly confirmed the target from the guided
+  /// CWA setup screen. Onboarding's initial target does not complete this step.
+  @Name('zzCwaSetupTargetConfirmed')
+  bool cwaSetupTargetConfirmed = false;
+
   /// JSON snapshot of the in-progress CWA manual entry form.
   @Name('zzManualCwaDraftJson')
   String manualCwaDraftJson = '';
