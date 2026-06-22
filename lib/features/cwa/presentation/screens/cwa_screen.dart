@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -617,34 +619,32 @@ class _CwaDashboardView extends ConsumerWidget {
           : null,
     );
 
-    if (!setupComplete) {
-      return _CwaSetupView(
-        bottomContentPadding: bottomContentPadding,
+    final setupView = _CwaSetupView(
+      bottomContentPadding: bottomContentPadding,
+      gradingSystem: gradingSystem,
+      hasCurrentCourses: hasCurrent,
+      hasAcademicHistory: hasCumulativeData,
+      targetConfirmed: targetConfirmed,
+      target: target,
+      onAddCurrentCourses: () =>
+          onShowImportSheet(context, CwaViewMode.semester),
+      onAddPastResults: () =>
+          onShowImportSheet(context, CwaViewMode.cumulative),
+      onEnterCurrentScore: () => onOpenManualBaseline(
+        context: context,
+        ref: ref,
         gradingSystem: gradingSystem,
-        hasCurrentCourses: hasCurrent,
-        hasAcademicHistory: hasCumulativeData,
-        targetConfirmed: targetConfirmed,
-        target: target,
-        onAddCurrentCourses: () =>
-            onShowImportSheet(context, CwaViewMode.semester),
-        onAddPastResults: () =>
-            onShowImportSheet(context, CwaViewMode.cumulative),
-        onEnterCurrentScore: () => onOpenManualBaseline(
-          context: context,
-          ref: ref,
-          gradingSystem: gradingSystem,
-          existingBaseline: manualBaseline,
-        ),
-        onSetTarget: () => onShowTargetDialog(
-          context,
-          ref,
-          target,
-          gradingSystem,
-        ),
-      );
-    }
+        existingBaseline: manualBaseline,
+      ),
+      onSetTarget: () => onShowTargetDialog(
+        context,
+        ref,
+        target,
+        gradingSystem,
+      ),
+    );
 
-    return ListView(
+    final dashboardView = ListView(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.xl,
         AppSpacing.sm,
@@ -716,6 +716,12 @@ class _CwaDashboardView extends ConsumerWidget {
         ],
       ],
     );
+
+    return _FinalSetupTransition(
+      setupComplete: setupComplete,
+      setupView: setupView,
+      dashboardView: dashboardView,
+    );
   }
 
   double _completedCreditsForHistory(
@@ -740,6 +746,98 @@ class _CwaDashboardView extends ConsumerWidget {
             0,
             (courseSum, course) => courseSum + course.creditHours,
           ),
+    );
+  }
+}
+
+class _FinalSetupTransition extends StatefulWidget {
+  final bool setupComplete;
+  final Widget setupView;
+  final Widget dashboardView;
+
+  const _FinalSetupTransition({
+    required this.setupComplete,
+    required this.setupView,
+    required this.dashboardView,
+  });
+
+  @override
+  State<_FinalSetupTransition> createState() => _FinalSetupTransitionState();
+}
+
+class _FinalSetupTransitionState extends State<_FinalSetupTransition> {
+  static const _completionWindow = Duration(milliseconds: 3000);
+
+  Timer? _completionTimer;
+  late bool _showSetup;
+  bool _transitionPending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _showSetup = !widget.setupComplete;
+  }
+
+  @override
+  void didUpdateWidget(covariant _FinalSetupTransition oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (!oldWidget.setupComplete && widget.setupComplete) {
+      _completionTimer?.cancel();
+      _showSetup = true;
+      if (_routeIsVisible) {
+        _scheduleDashboardTransition();
+      } else {
+        _transitionPending = true;
+      }
+    } else if (oldWidget.setupComplete && !widget.setupComplete) {
+      _completionTimer?.cancel();
+      _transitionPending = false;
+      _showSetup = true;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_transitionPending && _routeIsVisible) {
+      _transitionPending = false;
+      _scheduleDashboardTransition();
+    }
+  }
+
+  bool get _routeIsVisible =>
+      (ModalRoute.of(context)?.isCurrent ?? true) &&
+      TickerMode.valuesOf(context).enabled;
+
+  void _scheduleDashboardTransition() {
+    _completionTimer?.cancel();
+    _completionTimer = Timer(_completionWindow, () {
+      if (mounted) setState(() => _showSetup = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _completionTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 625),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: _showSetup
+          ? KeyedSubtree(
+              key: const ValueKey('cwa-setup'),
+              child: widget.setupView,
+            )
+          : KeyedSubtree(
+              key: const ValueKey('cwa-dashboard'),
+              child: widget.dashboardView,
+            ),
     );
   }
 }
@@ -802,9 +900,8 @@ class _CwaSetupView extends StatelessWidget {
           title: 'Add your current courses',
           description:
               'Start your semester projection with the courses you are taking now.',
-          actionLabel: hasCurrentCourses
-              ? 'Current courses added'
-              : 'Start with my courses',
+          actionLabel: 'Start with my courses',
+          completionLabel: 'Current courses added',
           complete: hasCurrentCourses,
           enabled: !hasCurrentCourses,
           emphasized: !hasCurrentCourses,
@@ -817,9 +914,8 @@ class _CwaSetupView extends StatelessWidget {
           title: 'Add academic history',
           description:
               'Import past results, or enter your current ${gradingSystem.cumulativeLabel} and completed credits.',
-          actionLabel: hasAcademicHistory
-              ? 'Academic history added'
-              : 'Import past results',
+          actionLabel: 'Import past results',
+          completionLabel: 'Academic history added',
           secondaryActionLabel: hasAcademicHistory
               ? null
               : 'Enter current ${gradingSystem.cumulativeLabel}',
@@ -837,7 +933,8 @@ class _CwaSetupView extends StatelessWidget {
           description: targetConfirmed
               ? 'Your target is ${gradingSystem.formatScore(target)}.'
               : 'Review the ${gradingSystem.label} you want to work toward.',
-          actionLabel: targetConfirmed ? 'Target confirmed' : 'Set my target',
+          actionLabel: 'Set my target',
+          completionLabel: 'Target confirmed',
           complete: targetConfirmed,
           enabled: hasCurrentCourses && hasAcademicHistory && !targetConfirmed,
           emphasized:
@@ -936,7 +1033,7 @@ class _SetupHeroCard extends StatelessWidget {
   }
 }
 
-class _SetupProgressCard extends StatelessWidget {
+class _SetupProgressCard extends StatefulWidget {
   final int completedCount;
   final List<bool> steps;
 
@@ -944,6 +1041,77 @@ class _SetupProgressCard extends StatelessWidget {
     required this.completedCount,
     required this.steps,
   });
+
+  @override
+  State<_SetupProgressCard> createState() => _SetupProgressCardState();
+}
+
+class _SetupProgressCardState extends State<_SetupProgressCard>
+    with SingleTickerProviderStateMixin {
+  static const _duration = Duration(milliseconds: 1625);
+
+  late final AnimationController _controller;
+  late List<bool> _previousSteps;
+  late int _displayedCompletedCount;
+  bool _completionPending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _previousSteps = List<bool>.of(widget.steps);
+    _displayedCompletedCount = widget.completedCount;
+    _controller = AnimationController(
+      vsync: this,
+      duration: _duration,
+      value: 1,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _SetupProgressCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_sameSteps(oldWidget.steps, widget.steps)) {
+      if (_routeIsVisible) {
+        _previousSteps = List<bool>.of(oldWidget.steps);
+        _displayedCompletedCount = widget.completedCount;
+        _controller.forward(from: 0);
+      } else {
+        if (!_completionPending) {
+          _previousSteps = List<bool>.of(oldWidget.steps);
+        }
+        _completionPending = true;
+        _controller.value = 0;
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_completionPending && _routeIsVisible) {
+      _completionPending = false;
+      _displayedCompletedCount = widget.completedCount;
+      _controller.forward(from: 0);
+    }
+  }
+
+  bool get _routeIsVisible =>
+      (ModalRoute.of(context)?.isCurrent ?? true) &&
+      TickerMode.valuesOf(context).enabled;
+
+  bool _sameSteps(List<bool> first, List<bool> second) {
+    if (first.length != second.length) return false;
+    for (var index = 0; index < first.length; index++) {
+      if (first[index] != second[index]) return false;
+    }
+    return true;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -964,77 +1132,147 @@ class _SetupProgressCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                '$completedCount/3 completed',
-                style: TextStyle(
-                  color: colorScheme.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 875),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.2),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                ),
+                child: Text(
+                  '$_displayedCompletedCount/3 completed',
+                  key: ValueKey(_displayedCompletedCount),
+                  style: TextStyle(
+                    color: colorScheme.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            children: List.generate(steps.length * 2 - 1, (index) {
-              if (index.isOdd) {
-                final previousComplete = steps[index ~/ 2];
-                return Expanded(
-                  child: Container(
-                    height: 3,
-                    color: previousComplete
-                        ? AppColors.success
-                        : colorScheme.outlineVariant,
-                  ),
-                );
-              }
-
-              final stepIndex = index ~/ 2;
-              final complete = steps[stepIndex];
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: complete
-                      ? AppColors.success
-                      : colorScheme.surfaceContainerHighest,
-                  border: Border.all(
-                    color: complete ? AppColors.success : colorScheme.outline,
-                    width: 2,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: complete
-                    ? const Icon(
-                        LucideIcons.check,
-                        size: AppIconSizes.sm,
-                        color: Colors.white,
-                      )
-                    : Text(
-                        '${stepIndex + 1}',
-                        style: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              final progress = Curves.easeInOutCubic.transform(
+                _controller.value,
               );
-            }),
+
+              return Row(
+                children: List.generate(widget.steps.length * 2 - 1, (index) {
+                  if (index.isOdd) {
+                    final stepIndex = index ~/ 2;
+                    final fill = _animatedCompletion(stepIndex, progress);
+                    return Expanded(
+                      child: Stack(
+                        children: [
+                          Container(
+                            height: 3,
+                            color: colorScheme.outlineVariant,
+                          ),
+                          ClipRect(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              widthFactor: fill,
+                              child: const SizedBox(
+                                width: double.infinity,
+                                child: ColoredBox(
+                                  color: AppColors.success,
+                                  child: SizedBox(height: 3),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final stepIndex = index ~/ 2;
+                  final completion = _animatedCompletion(stepIndex, progress);
+                  return SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color.lerp(
+                              colorScheme.surfaceContainerHighest,
+                              AppColors.success,
+                              completion,
+                            ),
+                            border: Border.all(
+                              color: Color.lerp(
+                                colorScheme.outline,
+                                AppColors.success,
+                                completion,
+                              )!,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        Opacity(
+                          opacity: 1 - completion,
+                          child: Text(
+                            '${stepIndex + 1}',
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        Opacity(
+                          opacity: completion,
+                          child: Transform.scale(
+                            scale: 0.7 + (0.3 * completion),
+                            child: const Icon(
+                              LucideIcons.check,
+                              size: AppIconSizes.sm,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              );
+            },
           ),
         ],
       ),
     );
   }
+
+  double _animatedCompletion(int stepIndex, double progress) {
+    final wasComplete =
+        stepIndex < _previousSteps.length && _previousSteps[stepIndex];
+    final isComplete =
+        stepIndex < widget.steps.length && widget.steps[stepIndex];
+    if (wasComplete == isComplete) return isComplete ? 1 : 0;
+    return isComplete ? progress : 1 - progress;
+  }
 }
 
-class _SetupStepCard extends StatelessWidget {
+class _SetupStepCard extends StatefulWidget {
   final int step;
   final IconData icon;
   final String title;
   final String description;
   final String actionLabel;
+  final String completionLabel;
   final String? secondaryActionLabel;
   final bool complete;
   final bool enabled;
@@ -1048,6 +1286,7 @@ class _SetupStepCard extends StatelessWidget {
     required this.title,
     required this.description,
     required this.actionLabel,
+    required this.completionLabel,
     required this.complete,
     required this.enabled,
     required this.emphasized,
@@ -1057,130 +1296,297 @@ class _SetupStepCard extends StatelessWidget {
   });
 
   @override
+  State<_SetupStepCard> createState() => _SetupStepCardState();
+}
+
+class _SetupStepCardState extends State<_SetupStepCard>
+    with SingleTickerProviderStateMixin {
+  static const _duration = Duration(milliseconds: 1625);
+
+  late final AnimationController _controller;
+  late final Animation<double> _iconTransition;
+  late final Animation<double> _contentTransition;
+  late final Animation<double> _confirmationTransition;
+  bool _completionPending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: _duration,
+      value: widget.complete ? 1 : 0,
+    );
+    _iconTransition = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.08, 0.58, curve: Curves.easeOutBack),
+    );
+    _contentTransition = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0, 0.72, curve: Curves.easeInOutCubic),
+    );
+    _confirmationTransition = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.42, 1, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _SetupStepCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.complete && widget.complete) {
+      if (_routeIsVisible) {
+        _controller.forward(from: 0);
+      } else {
+        _completionPending = true;
+        _controller.value = 0;
+      }
+    } else if (oldWidget.complete && !widget.complete) {
+      _completionPending = false;
+      _controller.reverse(from: 1);
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_completionPending && _routeIsVisible) {
+      _completionPending = false;
+      _controller.forward(from: 0);
+    }
+  }
+
+  bool get _routeIsVisible =>
+      (ModalRoute.of(context)?.isCurrent ?? true) &&
+      TickerMode.valuesOf(context).enabled;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 220),
-      opacity: complete || enabled ? 1 : 0.62,
-      child: CampusCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: complete
-                    ? AppColors.success.withValues(alpha: 0.12)
-                    : colorScheme.primaryContainer,
-                borderRadius: AppRadii.button,
+      duration: const Duration(milliseconds: 550),
+      opacity: widget.complete || widget.enabled ? 1 : 0.62,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final glow = Curves.easeOut.transform(
+            (1 - ((2 * _controller.value) - 1).abs()).clamp(0, 1),
+          );
+          final completion = Curves.easeInOut.transform(_controller.value);
+          final iconTransition =
+              _iconTransition.value.clamp(0.0, 1.0).toDouble();
+
+          return Container(
+            decoration: BoxDecoration(
+              color: Color.lerp(
+                Theme.of(context).cardColor,
+                AppColors.success.withValues(alpha: 0.09),
+                glow,
               ),
-              child: Icon(
-                complete ? LucideIcons.check : icon,
-                color: complete ? AppColors.success : colorScheme.primary,
-                size: AppIconSizes.xxl,
+              borderRadius: AppRadii.card,
+              border: Border.all(
+                color: Color.lerp(
+                  colorScheme.outlineVariant,
+                  AppColors.success.withValues(alpha: 0.45),
+                  glow,
+                )!,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.success.withValues(alpha: 0.16 * glow),
+                  blurRadius: 18 * glow,
+                  spreadRadius: 1.5 * glow,
+                  offset: const Offset(0, 5),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.07),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 27,
-                        height: 27,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: complete
-                              ? AppColors.success
-                              : emphasized
-                                  ? colorScheme.primary
-                                  : colorScheme.surfaceContainerHighest,
-                        ),
-                        child: Text(
-                          '$step',
-                          style: TextStyle(
-                            color: complete || emphasized
-                                ? Colors.white
-                                : colorScheme.onSurfaceVariant,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Color.lerp(
+                        colorScheme.primaryContainer,
+                        AppColors.success.withValues(alpha: 0.12),
+                        completion,
                       ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            color: colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (!complete) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
+                      borderRadius: AppRadii.button,
                     ),
-                  ],
-                  const SizedBox(height: AppSpacing.sm),
-                  if (complete)
-                    Row(
+                    child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        const Icon(
-                          LucideIcons.circleCheck,
-                          color: AppColors.success,
-                          size: AppIconSizes.md,
+                        Opacity(
+                          opacity: 1 - iconTransition,
+                          child: Transform.scale(
+                            scale: 1 - (0.18 * iconTransition),
+                            child: Icon(
+                              widget.icon,
+                              color: colorScheme.primary,
+                              size: AppIconSizes.xxl,
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text(
-                          actionLabel,
-                          style: const TextStyle(
-                            color: AppColors.success,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
+                        Opacity(
+                          opacity: iconTransition,
+                          child: Transform.scale(
+                            scale: 0.72 + (0.28 * iconTransition),
+                            child: const Icon(
+                              LucideIcons.check,
+                              color: AppColors.success,
+                              size: AppIconSizes.xxl,
+                            ),
                           ),
                         ),
                       ],
-                    )
-                  else ...[
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: enabled ? onPressed : null,
-                        child: Text(actionLabel),
-                      ),
                     ),
-                    if (secondaryActionLabel != null) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      SizedBox(
-                        width: double.infinity,
-                        child: TextButton(
-                          onPressed: enabled ? onSecondaryPressed : null,
-                          child: Text(secondaryActionLabel!),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 27,
+                              height: 27,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color.lerp(
+                                  widget.emphasized
+                                      ? colorScheme.primary
+                                      : colorScheme.surfaceContainerHighest,
+                                  AppColors.success,
+                                  completion,
+                                ),
+                              ),
+                              child: Text(
+                                '${widget.step}',
+                                style: TextStyle(
+                                  color: widget.emphasized || completion > 0.5
+                                      ? Colors.white
+                                      : colorScheme.onSurfaceVariant,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                widget.title,
+                                style: TextStyle(
+                                  color: colorScheme.onSurface,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ],
+                        SizeTransition(
+                          key: ValueKey(
+                            'cwa-setup-step-${widget.step}-instructions',
+                          ),
+                          sizeFactor: ReverseAnimation(_contentTransition),
+                          axisAlignment: -1,
+                          child: FadeTransition(
+                            opacity: ReverseAnimation(_contentTransition),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  widget.description,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant,
+                                    fontSize: 13,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: widget.enabled
+                                        ? widget.onPressed
+                                        : null,
+                                    child: Text(widget.actionLabel),
+                                  ),
+                                ),
+                                if (widget.secondaryActionLabel != null) ...[
+                                  const SizedBox(height: AppSpacing.xs),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: TextButton(
+                                      onPressed: widget.enabled
+                                          ? widget.onSecondaryPressed
+                                          : null,
+                                      child: Text(widget.secondaryActionLabel!),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizeTransition(
+                          key: ValueKey(
+                            'cwa-setup-step-${widget.step}-confirmation',
+                          ),
+                          sizeFactor: _confirmationTransition,
+                          axisAlignment: -1,
+                          child: FadeTransition(
+                            opacity: _confirmationTransition,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(top: AppSpacing.sm),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    LucideIcons.circleCheck,
+                                    color: AppColors.success,
+                                    size: AppIconSizes.md,
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Text(
+                                    widget.completionLabel,
+                                    style: const TextStyle(
+                                      color: AppColors.success,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

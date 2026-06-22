@@ -14,6 +14,7 @@ import 'package:campusiq/features/streak/presentation/providers/streak_provider.
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/presentation/providers/course_reminder_provider.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
+import 'package:campusiq/features/session/presentation/providers/session_provider.dart';
 
 class CampusIQApp extends ConsumerStatefulWidget {
   const CampusIQApp({super.key});
@@ -52,6 +53,13 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
     final now = DateTime.now();
     if (now.weekday != DateTime.monday) return;
 
+    final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
+    if (navContext == null || !navContext.mounted) return;
+
+    final currentRoute =
+        appRouter.routerDelegate.currentConfiguration.uri.toString();
+    if (currentRoute.contains('/import')) return;
+
     final prefsRepo = ref.read(userPrefsRepositoryProvider);
     if (prefsRepo == null) return;
 
@@ -59,17 +67,38 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
     final key = weekKey(_mondayOf(now));
     if (prefs.lastReviewShownWeek == key) return;
 
+    // Wait for the first emission of sessions
+    final sessions = await ref.read(allSessionsProvider.future);
+    
+    // Check if the user has study sessions logged in the past week
+    final previousWeekStart = _mondayOf(now).subtract(const Duration(days: 7));
+    final previousWeekEndInclusive = DateTime(
+      previousWeekStart.year,
+      previousWeekStart.month,
+      previousWeekStart.day + 6,
+      23,
+      59,
+      59,
+    );
+
+    final hasSessionsLastWeek = sessions.any((s) {
+      return !s.startTime.isBefore(previousWeekStart) &&
+          !s.startTime.isAfter(previousWeekEndInclusive);
+    });
+
+    if (!hasSessionsLastWeek) return;
+
     await prefsRepo.setLastReviewShownWeek(key);
     if (!mounted) return;
 
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
 
-    final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
-    if (navContext == null || !navContext.mounted) return;
+    final currentNavContext = appRouter.routerDelegate.navigatorKey.currentContext;
+    if (currentNavContext == null || !currentNavContext.mounted) return;
 
     showModalBottomSheet(
-      context: navContext,
+      context: currentNavContext,
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
