@@ -2061,7 +2061,7 @@ class _CurrentSemesterSummaryCard extends StatelessWidget {
       note: alreadyRecorded
           ? 'This active semester already exists in your saved results.'
           : hasCourses
-              ? 'A quick projection based on your current course list.'
+              ? null
               : 'Add your current semester courses to see a projection.',
       actionLabel: hasCourses ? 'View/Edit Courses' : 'Add Courses',
       actionIcon: hasCourses ? LucideIcons.listChecks : LucideIcons.plus,
@@ -2114,7 +2114,7 @@ class _AcademicHistorySummaryCard extends StatelessWidget {
         ),
       ],
       note: hasData
-          ? 'Past results help UniMate calculate your cumulative result.'
+          ? null
           : 'Add past results or enter your current ${gradingSystem.cumulativeLabel} to unlock this.',
       actionLabel: hasHistory ? 'View History' : 'Add Past Results',
       actionIcon: hasHistory ? LucideIcons.bookOpen : LucideIcons.fileUp,
@@ -2325,7 +2325,7 @@ class _DashboardSummaryCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final List<_DashboardMetric> metrics;
-  final String note;
+  final String? note;
   final String actionLabel;
   final IconData actionIcon;
   final VoidCallback onAction;
@@ -2335,7 +2335,7 @@ class _DashboardSummaryCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.metrics,
-    required this.note,
+    this.note,
     required this.actionLabel,
     required this.actionIcon,
     required this.onAction,
@@ -2401,15 +2401,17 @@ class _DashboardSummaryCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            note,
-            style: TextStyle(
-              fontSize: 12,
-              color: colorScheme.onSurfaceVariant,
-              height: 1.35,
+          if (note != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              note!,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+                height: 1.35,
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: AppSpacing.sm),
           OutlinedButton.icon(
             onPressed: onAction,
