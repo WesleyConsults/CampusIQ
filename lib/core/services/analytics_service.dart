@@ -181,6 +181,27 @@ class AnalyticsService {
         parameters: {'source': source, 'reason': reason},
       );
 
+  Future<void> logInitialHomeViewed({required int completedStepCount}) =>
+      logEvent(
+        'initial_home_viewed',
+        parameters: {'completed_step_count': completedStepCount},
+      );
+
+  Future<void> logHomeSetupAction({
+    required String eventName,
+    required String action,
+    required int completedStepCount,
+    required String destination,
+  }) =>
+      logEvent(
+        eventName,
+        parameters: {
+          'action': action,
+          'completed_step_count': completedStepCount,
+          'destination': destination,
+        },
+      );
+
   Future<void> logStudySessionStarted({
     required String mode,
     required String source,

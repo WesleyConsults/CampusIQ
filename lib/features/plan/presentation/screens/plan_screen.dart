@@ -4,10 +4,14 @@ import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/layout/shell_overlay_padding.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
+import 'package:campusiq/features/plan/domain/home_setup_state.dart';
 import 'package:campusiq/features/plan/presentation/providers/plan_provider.dart';
+import 'package:campusiq/features/plan/presentation/providers/home_setup_provider.dart';
 import 'package:campusiq/features/plan/presentation/widgets/add_manual_task_sheet.dart';
+import 'package:campusiq/features/plan/presentation/widgets/initial_home_welcome.dart';
 import 'package:campusiq/features/plan/presentation/widgets/plan_progress_bar.dart';
 import 'package:campusiq/features/plan/presentation/widgets/plan_task_tile.dart';
 import 'package:campusiq/features/session/domain/active_session_state.dart';
@@ -53,6 +57,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
 
   bool _isGenerating = false;
   List<DailyPlanTaskModel> _lastVisibleTasks = const [];
+  bool? _showFirstWelcome;
+  bool _initialWelcomeRecorded = false;
+  bool? _wasInitialHomeSetup;
 
   Future<void> _generatePlan() async {
     setState(() => _isGenerating = true);
@@ -120,6 +127,51 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     return 'Good evening';
   }
 
+  Future<void> _recordInitialWelcome(HomeSetupState setup) async {
+    if (_initialWelcomeRecorded || setup.hasSeenInitialWelcome) return;
+    _initialWelcomeRecorded = true;
+    await AnalyticsService.instance.logInitialHomeViewed(
+      completedStepCount: setup.completedStepCount,
+    );
+    await ref
+        .read(userPrefsRepositoryProvider)
+        ?.setHasSeenInitialHomeWelcome(true);
+  }
+
+  String _routeForSetupStep(HomeSetupStep step) {
+    return switch (step) {
+      HomeSetupStep.university => '/settings',
+      HomeSetupStep.courses => '/cwa',
+      HomeSetupStep.timetable => '/timetable',
+      HomeSetupStep.academicHistory => '/cwa/manual-entry?mode=cumulative',
+    };
+  }
+
+  void _openSetupStep(HomeSetupState setup, HomeSetupStep step) {
+    final destination = _routeForSetupStep(step);
+    AnalyticsService.instance.logHomeSetupAction(
+      eventName: 'home_setup_step_tapped',
+      action: step.name,
+      completedStepCount: setup.completedStepCount,
+      destination: destination,
+    );
+    context.push(destination);
+  }
+
+  void _openQuickAction(
+    HomeSetupState setup, {
+    required String action,
+    required String destination,
+  }) {
+    AnalyticsService.instance.logHomeSetupAction(
+      eventName: 'home_quick_action_tapped',
+      action: action,
+      completedStepCount: setup.completedStepCount,
+      destination: destination,
+    );
+    context.go(destination);
+  }
+
   @override
   Widget build(BuildContext context) {
     final tasksAsync = ref.watch(todayPlanProvider);
@@ -132,6 +184,21 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     final targetCwa = ref.watch(targetCwaProvider);
     final allSlots = ref.watch(allSlotsProvider).valueOrNull ?? [];
     final drawerUniversity = ref.watch(_drawerUniversityProvider).valueOrNull;
+    final homeSetup = ref.watch(homeSetupStateProvider);
+    final wasInitialHomeSetup = _wasInitialHomeSetup;
+    if (homeSetup != null) {
+      _wasInitialHomeSetup = homeSetup.isInitialHomeSetup;
+      if (wasInitialHomeSetup == true && !homeSetup.isInitialHomeSetup) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          AnalyticsService.instance.logHomeSetupAction(
+            eventName: 'home_setup_completed',
+            action: 'required_setup_complete',
+            completedStepCount: homeSetup.completedStepCount,
+            destination: 'today_dashboard',
+          );
+        });
+      }
+    }
 
     final now = DateTime.now();
     final dateLabel = DateFormat('EEEE, d MMMM').format(now);
@@ -206,45 +273,96 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           StreakActionButton(),
         ],
       ),
-      body: tasksAsync.when(
-        loading: () => const _PlanLoadingState(),
-        error: (e, _) => ErrorRetryWidget(
-          message: 'We could not load today\'s plan right now.',
-          onRetry: () => ref.invalidate(todayPlanProvider),
-        ),
-        data: (tasks) {
-          if (tasks.isNotEmpty || !_isGenerating) {
-            _lastVisibleTasks = tasks;
-          }
-          final visibleTasks =
-              _isGenerating && tasks.isEmpty && _lastVisibleTasks.isNotEmpty
-                  ? _lastVisibleTasks
-                  : tasks;
-          final visibleCompleted =
-              visibleTasks.where((t) => t.isCompleted).length;
-          final visibleTotal = visibleTasks.length;
+      body: homeSetup == null
+          ? const _PlanLoadingState()
+          : homeSetup.isInitialHomeSetup
+              ? _buildInitialHome(
+                  setup: homeSetup,
+                  bottomContentPadding: bottomContentPadding,
+                )
+              : tasksAsync.when(
+                  loading: () => const _PlanLoadingState(),
+                  error: (e, _) => ErrorRetryWidget(
+                    message: 'We could not load today\'s plan right now.',
+                    onRetry: () => ref.invalidate(todayPlanProvider),
+                  ),
+                  data: (tasks) {
+                    if (tasks.isNotEmpty || !_isGenerating) {
+                      _lastVisibleTasks = tasks;
+                    }
+                    final visibleTasks = _isGenerating &&
+                            tasks.isEmpty &&
+                            _lastVisibleTasks.isNotEmpty
+                        ? _lastVisibleTasks
+                        : tasks;
+                    final visibleCompleted =
+                        visibleTasks.where((t) => t.isCompleted).length;
+                    final visibleTotal = visibleTasks.length;
 
-          return _buildBody(
-            tasks: visibleTasks,
-            completed: visibleCompleted,
-            total: visibleTotal,
-            isDone: visibleTotal > 0 && visibleCompleted >= visibleTotal,
-            greeting: greeting,
-            dateLabel: dateLabel,
-            activeSession: activeSession,
-            studyStreak: studyStreak,
-            attendanceStreak: attendanceStreak,
-            totalCourseStreaks: perCourseStreaks.values
-                .where((result) => result.currentStreak > 0)
-                .length,
-            projectedCwa: projectedCwa,
-            targetCwa: targetCwa,
-            gradingSystem: gradingSystem,
-            todaySlots: todaySlots,
-            freeBlocks: freeBlocks,
-            bottomContentPadding: bottomContentPadding,
-          );
-        },
+                    return _buildBody(
+                      tasks: visibleTasks,
+                      completed: visibleCompleted,
+                      total: visibleTotal,
+                      isDone:
+                          visibleTotal > 0 && visibleCompleted >= visibleTotal,
+                      greeting: greeting,
+                      dateLabel: dateLabel,
+                      activeSession: activeSession,
+                      studyStreak: studyStreak,
+                      attendanceStreak: attendanceStreak,
+                      totalCourseStreaks: perCourseStreaks.values
+                          .where((result) => result.currentStreak > 0)
+                          .length,
+                      projectedCwa: projectedCwa,
+                      targetCwa: targetCwa,
+                      gradingSystem: gradingSystem,
+                      todaySlots: todaySlots,
+                      freeBlocks: freeBlocks,
+                      bottomContentPadding: bottomContentPadding,
+                    );
+                  },
+                ),
+    );
+  }
+
+  Widget _buildInitialHome({
+    required HomeSetupState setup,
+    required double bottomContentPadding,
+  }) {
+    _showFirstWelcome ??= !setup.hasSeenInitialWelcome;
+    if (_showFirstWelcome == true && !_initialWelcomeRecorded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _recordInitialWelcome(setup);
+      });
+    }
+
+    return InitialHomeWelcome(
+      setup: setup,
+      bottomPadding: bottomContentPadding,
+      animateEntrance: _showFirstWelcome ?? false,
+      onSetupStepTap: (step) => _openSetupStep(setup, step),
+      onExplore: () {
+        AnalyticsService.instance.logHomeSetupAction(
+          eventName: 'home_setup_started',
+          action: 'explore_unimate',
+          completedStepCount: setup.completedStepCount,
+          destination: 'home_quick_actions',
+        );
+      },
+      onCalculateCwa: () => _openQuickAction(
+        setup,
+        action: 'calculate_cwa',
+        destination: '/cwa',
+      ),
+      onFocusSession: () => _openQuickAction(
+        setup,
+        action: 'focus_session',
+        destination: '/sessions',
+      ),
+      onExploreTimetable: () => _openQuickAction(
+        setup,
+        action: 'explore_timetable',
+        destination: '/timetable',
       ),
     );
   }
@@ -296,6 +414,14 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       freeBlocks: freeBlocks,
     );
     final cwaGap = targetCwa - projectedCwa;
+
+    if (todaySlots.isEmpty && tasks.isEmpty && activeSession == null) {
+      return _buildOpenDayBody(
+        greeting: greeting,
+        dateLabel: dateLabel,
+        bottomContentPadding: bottomContentPadding,
+      );
+    }
 
     return CustomScrollView(
       slivers: [
@@ -478,6 +604,34 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           ),
         ),
         SliverToBoxAdapter(child: SizedBox(height: bottomContentPadding)),
+      ],
+    );
+  }
+
+  Widget _buildOpenDayBody({
+    required String greeting,
+    required String dateLabel,
+    required double bottomContentPadding,
+  }) {
+    return CustomScrollView(
+      key: const ValueKey('open-day-home'),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.lg,
+            AppSpacing.xl,
+            0,
+          ),
+          sliver: SliverList.list(
+            children: [
+              _PageHeader(greeting: greeting, dateLabel: dateLabel),
+              const SizedBox(height: AppSpacing.lg),
+              const _OpenDayCard(),
+              SizedBox(height: bottomContentPadding),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -839,6 +993,99 @@ class _HeroCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _OpenDayCard extends StatelessWidget {
+  const _OpenDayCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(AppRadii.xl)),
+        gradient: LinearGradient(
+          colors: [AppColors.navy, AppColors.navySoft],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: AppRadii.pill,
+            ),
+            child: Text(
+              'Your day is open',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: AppColors.goldSoft,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'No classes on the calendar',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Use the quieter pace to revise, plan a focused study session, or prepare for tomorrow.',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: Colors.white.withValues(alpha: 0.86),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              FilledButton.icon(
+                onPressed: () => context.go('/sessions'),
+                icon: const Icon(
+                  LucideIcons.timer,
+                  size: AppIconSizes.md,
+                ),
+                label: const Text('Start a study session'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.gold,
+                  foregroundColor: AppColors.navy,
+                  minimumSize: const Size(0, 46),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => context.go('/timetable'),
+                icon: const Icon(
+                  LucideIcons.calendarDays,
+                  size: AppIconSizes.md,
+                ),
+                label: const Text('View this week'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.36),
+                  ),
+                  minimumSize: const Size(0, 46),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -492,6 +492,18 @@ class UserPrefsRepository {
     }
   }
 
+  Future<void> setHasSeenInitialHomeWelcome(bool value) async {
+    final prefs = await _getOrCreate();
+    if (prefs.hasSeenInitialHomeWelcome == value) return;
+    prefs.hasSeenInitialHomeWelcome = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
   Future<String> getManualCwaDraftJson() async {
     final prefs = await _getOrCreate();
     return prefs.manualCwaDraftJson;

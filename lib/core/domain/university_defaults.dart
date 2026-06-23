@@ -112,6 +112,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'gpa_4pt',
     location: 'Ho',
+    logoAssetPath: 'assets/images/universities/uhas.png',
   ),
   University(
     name: 'University of Energy and Natural Resources',
@@ -129,6 +130,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'gpa_4pt',
     location: 'Somanya',
+    logoAssetPath: 'assets/images/universities/uesd.png',
   ),
   University(
     name: 'University of Media, Arts and Communication',
@@ -158,6 +160,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'uncertain',
     location: 'Accra',
+    logoAssetPath: 'assets/images/universities/gctu.png',
   ),
   University(
     name: 'Akenten Appiah-Menka University of Skills Training and Entrepreneurial Development',
@@ -187,6 +190,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'cgpa_5pt',
     location: 'Accra',
+    logoAssetPath: 'assets/images/universities/atu.png',
   ),
   University(
     name: 'Cape Coast Technical University',
@@ -196,6 +200,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'gpa_4pt',
     location: 'Cape Coast',
+    logoAssetPath: 'assets/images/universities/cctu.png',
   ),
   University(
     name: 'Kumasi Technical University',
@@ -205,6 +210,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'cgpa_5pt',
     location: 'Kumasi',
+    logoAssetPath: 'assets/images/universities/kstu.png',
   ),
   University(
     name: 'Takoradi Technical University',
@@ -214,6 +220,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'cgpa_5pt',
     location: 'Takoradi',
+    logoAssetPath: 'assets/images/universities/takoradi_technical_university.png',
   ),
   University(
     name: 'Sunyani Technical University',
@@ -223,6 +230,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'uncertain',
     location: 'Sunyani',
+    logoAssetPath: 'assets/images/universities/stu.png',
   ),
   University(
     name: 'Ho Technical University',
@@ -232,6 +240,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'uncertain',
     location: 'Ho',
+    logoAssetPath: 'assets/images/universities/htu.png',
   ),
   University(
     name: 'Koforidua Technical University',
@@ -241,6 +250,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'uncertain',
     location: 'Koforidua',
+    logoAssetPath: 'assets/images/universities/ktu.png',
   ),
   University(
     name: 'Tamale Technical University',
@@ -250,6 +260,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'uncertain',
     location: 'Tamale',
+    logoAssetPath: 'assets/images/universities/tatu.png',
   ),
   University(
     name: 'Bolgatanga Technical University',
@@ -259,6 +270,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'uncertain',
     location: 'Bolgatanga',
+    logoAssetPath: 'assets/images/universities/btu.png',
   ),
   University(
     name: 'Dr. Hilla Limann Technical University',
@@ -268,6 +280,7 @@ const ghanaianUniversities = <University>[
     ownership: 'public',
     gradingSystemId: 'uncertain',
     location: 'Wa',
+    logoAssetPath: 'assets/images/universities/dhltu.png',
   ),
   University(
     name: 'Ashesi University',
@@ -305,6 +318,7 @@ const ghanaianUniversities = <University>[
     ownership: 'private',
     gradingSystemId: 'gpa_4pt',
     location: 'Accra',
+    logoAssetPath: 'assets/images/universities/methodist_university_ghana.png',
   ),
   University(
     name: 'Pentecost University',
@@ -324,6 +338,8 @@ const ghanaianUniversities = <University>[
     ownership: 'private',
     gradingSystemId: 'uncertain',
     location: 'Abetifi',
+    logoAssetPath:
+        'assets/images/universities/presbyterian_university_ghana.png',
   ),
   University(
     name: 'Christian Service University',
@@ -333,6 +349,8 @@ const ghanaianUniversities = <University>[
     ownership: 'private',
     gradingSystemId: 'uncertain',
     location: 'Kumasi',
+    logoAssetPath:
+        'assets/images/universities/christian_service_university.png',
   ),
   University(
     name: 'Catholic University of Ghana',
@@ -341,6 +359,7 @@ const ghanaianUniversities = <University>[
     ownership: 'private',
     gradingSystemId: 'gpa_4pt',
     location: 'Fiapre',
+    logoAssetPath: 'assets/images/universities/catholic_university_ghana.png',
   ),
   University(
     name: 'Academic City University College',
@@ -359,6 +378,7 @@ const ghanaianUniversities = <University>[
     ownership: 'private',
     gradingSystemId: 'uncertain',
     location: 'Fetteh Kakraba',
+    logoAssetPath: 'assets/images/universities/kaaf_university.png',
   ),
   University(
     name: 'Ensign Global University',
@@ -368,6 +388,7 @@ const ghanaianUniversities = <University>[
     ownership: 'private',
     gradingSystemId: 'uncertain',
     location: 'Kpong',
+    logoAssetPath: 'assets/images/universities/ensign_global_university.png',
   ),
   University(
     name: 'African University College of Communications and Business',
@@ -377,6 +398,7 @@ const ghanaianUniversities = <University>[
     ownership: 'private',
     gradingSystemId: 'gpa_4pt',
     location: 'Accra',
+    logoAssetPath: 'assets/images/universities/aucb.png',
   ),
   University(
     name: 'Wisconsin International University College, Ghana',
@@ -386,6 +408,7 @@ const ghanaianUniversities = <University>[
     ownership: 'private',
     gradingSystemId: 'uncertain',
     location: 'Accra',
+    logoAssetPath: 'assets/images/universities/wiuc_ghana.png',
   ),
   University(
     name: 'Knutsford University College',
@@ -394,6 +417,7 @@ const ghanaianUniversities = <University>[
     ownership: 'private',
     gradingSystemId: 'gpa_4pt',
     location: 'Accra',
+    logoAssetPath: 'assets/images/universities/knutsford_university.png',
   ),
   University(
     name: 'Regent University College of Science and Technology',
@@ -403,6 +427,7 @@ const ghanaianUniversities = <University>[
     ownership: 'private',
     gradingSystemId: 'uncertain',
     location: 'Accra',
+    logoAssetPath: 'assets/images/universities/regent_university.png',
   ),
   University(
     name: 'All Nations University',

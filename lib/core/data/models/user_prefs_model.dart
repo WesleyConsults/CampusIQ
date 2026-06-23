@@ -83,6 +83,10 @@ class UserPrefsModel {
   @Name('zzProgrammeName')
   String? programmeName;
 
+  /// Whether the one-time welcome entrance on the first Home visit has played.
+  @Name('zzHasSeenInitialHomeWelcome')
+  bool hasSeenInitialHomeWelcome = false;
+
   // ── Pomodoro defaults ──────────────────────────────────────────────────────
 
   @Name('zzPomodoroFocusMinutes')
