@@ -1,25 +1,20 @@
 import 'package:campusiq/core/theme/app_tokens.dart';
-import 'package:campusiq/features/plan/domain/home_setup_state.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class InitialHomeWelcome extends StatefulWidget {
-  final HomeSetupState setup;
   final double bottomPadding;
   final bool animateEntrance;
-  final ValueChanged<HomeSetupStep> onSetupStepTap;
-  final VoidCallback onExplore;
+  final VoidCallback onGetStarted;
   final VoidCallback onCalculateCwa;
   final VoidCallback onFocusSession;
   final VoidCallback onExploreTimetable;
 
   const InitialHomeWelcome({
     super.key,
-    required this.setup,
     required this.bottomPadding,
     required this.animateEntrance,
-    required this.onSetupStepTap,
-    required this.onExplore,
+    required this.onGetStarted,
     required this.onCalculateCwa,
     required this.onFocusSession,
     required this.onExploreTimetable,
@@ -58,7 +53,6 @@ class _InitialHomeWelcomeState extends State<InitialHomeWelcome>
     final animation = disableAnimations
         ? const AlwaysStoppedAnimation<double>(1)
         : CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
-    final greeting = _greeting(widget.setup);
 
     return CustomScrollView(
       key: const ValueKey('initial-home-welcome'),
@@ -74,32 +68,20 @@ class _InitialHomeWelcomeState extends State<InitialHomeWelcome>
             children: [
               _Entrance(
                 animation: animation,
-                interval: const Interval(0, 0.45),
-                child: const _SemesterSetupHero(),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _Entrance(
-                animation: animation,
-                interval: const Interval(0.16, 0.72),
-                child: _WelcomeGreeting(
-                  greeting: greeting,
-                  isFirstVisit: widget.animateEntrance,
+                interval: const Interval(0, 0.58),
+                child: _WelcomeHeroCard(
+                  onGetStarted: widget.onGetStarted,
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
               _Entrance(
                 animation: animation,
-                interval: const Interval(0.36, 1),
-                child: _HomeSetupChecklist(
-                  setup: widget.setup,
-                  onStepTap: widget.onSetupStepTap,
+                interval: const Interval(0.34, 1),
+                child: _HomeQuickActions(
+                  onCalculateCwa: widget.onCalculateCwa,
+                  onFocusSession: widget.onFocusSession,
+                  onExploreTimetable: widget.onExploreTimetable,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              _HomeQuickActions(
-                onCalculateCwa: widget.onCalculateCwa,
-                onFocusSession: widget.onFocusSession,
-                onExploreTimetable: widget.onExploreTimetable,
               ),
               SizedBox(height: widget.bottomPadding),
             ],
@@ -107,21 +89,6 @@ class _InitialHomeWelcomeState extends State<InitialHomeWelcome>
         ),
       ],
     );
-  }
-
-  String _greeting(HomeSetupState setup) {
-    final firstName = setup.firstName?.trim();
-    final nameSuffix =
-        firstName == null || firstName.isEmpty ? '' : ', $firstName';
-    if (widget.animateEntrance) return 'Welcome to UniMate$nameSuffix';
-
-    final hour = DateTime.now().hour;
-    final salutation = hour < 12
-        ? 'Good morning'
-        : hour < 17
-            ? 'Good afternoon'
-            : 'Good evening';
-    return '$salutation$nameSuffix';
   }
 }
 
@@ -152,362 +119,152 @@ class _Entrance extends StatelessWidget {
   }
 }
 
-class _WelcomeGreeting extends StatelessWidget {
-  final String greeting;
-  final bool isFirstVisit;
+class _WelcomeHeroCard extends StatelessWidget {
+  final VoidCallback onGetStarted;
 
-  const _WelcomeGreeting({
-    required this.greeting,
-    required this.isFirstVisit,
-  });
+  const _WelcomeHeroCard({required this.onGetStarted});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          greeting,
-          key: const ValueKey('initial-home-greeting'),
-          style: theme.textTheme.headlineLarge?.copyWith(
-            color: theme.colorScheme.primary,
-            fontWeight: FontWeight.w800,
-            height: 1.08,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          isFirstVisit
-              ? 'Your academic life is about to become easier.'
-              : 'Let’s finish setting up your semester.',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SemesterSetupHero extends StatelessWidget {
-  const _SemesterSetupHero();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(AppRadii.xl)),
-        gradient: LinearGradient(
-          colors: [Color(0xFF10203F), Color(0xFF1C3564)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: AppShadows.card,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xl,
-          vertical: AppSpacing.xxl,
-        ),
-        child: Center(
-          child: Text(
-            'Welcome to UniMate',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              height: 1.1,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeSetupChecklist extends StatelessWidget {
-  final HomeSetupState setup;
-  final ValueChanged<HomeSetupStep> onStepTap;
-
-  const _HomeSetupChecklist({
-    required this.setup,
-    required this.onStepTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final steps = [
-      (
-        step: HomeSetupStep.university,
-        title: 'University and grading system',
-        helper: null,
-        icon: LucideIcons.school,
-        complete: setup.hasUniversityAndGradingSystem,
-        optional: false,
-      ),
-      (
-        step: HomeSetupStep.courses,
-        title: 'Add your current courses',
-        helper: 'Helps UniMate calculate your semester results',
-        icon: LucideIcons.bookOpen,
-        complete: setup.hasCurrentCourses,
-        optional: false,
-      ),
-      (
-        step: HomeSetupStep.timetable,
-        title: 'Import or create your timetable',
-        helper: null,
-        icon: LucideIcons.calendarDays,
-        complete: setup.hasTimetable,
-        optional: false,
-      ),
-      (
-        step: HomeSetupStep.academicHistory,
-        title: 'Add academic history',
-        helper: null,
-        icon: LucideIcons.history,
-        complete: setup.hasAcademicHistory,
-        optional: true,
-      ),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final progress = Text(
-              '${setup.completedStepCount} of 4 completed',
-              key: const ValueKey('home-setup-progress'),
-              style: Theme.of(context).textTheme.bodyMedium,
-            );
-            if (constraints.maxWidth < 380) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Get UniMate ready',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  progress,
-                ],
-              );
-            }
-            return Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Get UniMate ready',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                progress,
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: AppRadii.card,
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-            boxShadow: AppShadows.soft,
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              for (var index = 0; index < steps.length; index++) ...[
-                _SetupChecklistItem(
-                  step: steps[index].step,
-                  title: steps[index].title,
-                  helper: steps[index].helper,
-                  icon: steps[index].icon,
-                  isComplete: steps[index].complete,
-                  isActive: steps[index].step == setup.nextSetupStep,
-                  isOptional: steps[index].optional,
-                  onTap: () => onStepTap(steps[index].step),
-                ),
-                if (index < steps.length - 1)
-                  Divider(
-                    height: 1,
-                    indent: AppSpacing.md,
-                    endIndent: AppSpacing.md,
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SetupChecklistItem extends StatelessWidget {
-  final HomeSetupStep step;
-  final String title;
-  final String? helper;
-  final IconData icon;
-  final bool isComplete;
-  final bool isActive;
-  final bool isOptional;
-  final VoidCallback onTap;
-
-  const _SetupChecklistItem({
-    required this.step,
-    required this.title,
-    required this.helper,
-    required this.icon,
-    required this.isComplete,
-    required this.isActive,
-    required this.isOptional,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final successBackground = Color.alphaBlend(
-      AppColors.success.withValues(alpha: 0.1),
-      colorScheme.surface,
-    );
-    final activeBackground = Color.alphaBlend(
-      AppColors.gold.withValues(alpha: 0.08),
-      colorScheme.surface,
-    );
+    final colorScheme = theme.colorScheme;
 
     return Semantics(
-      button: true,
-      label: '$title${isOptional ? ', optional' : ''}',
-      child: Material(
-        color: isComplete
-            ? successBackground
-            : isActive
-                ? activeBackground
-                : colorScheme.surface,
-        child: InkWell(
-          key: ValueKey('home-setup-${step.name}'),
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 68),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isComplete
-                          ? AppColors.success
-                          : isActive
-                              ? colorScheme.primary
-                              : colorScheme.surfaceContainerHighest,
-                    ),
-                    child: Icon(
-                      isComplete ? LucideIcons.check : icon,
-                      color: isComplete || isActive
-                          ? Colors.white
-                          : colorScheme.onSurfaceVariant,
-                      size: AppIconSizes.xl,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    color: colorScheme.onSurface,
-                                    fontWeight: isActive
-                                        ? FontWeight.w700
-                                        : FontWeight.w600,
-                                  ),
-                        ),
-                        if (helper != null && isActive) ...[
-                          const SizedBox(height: AppSpacing.xxs),
-                          Text(
-                            helper!,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                        if (isOptional && !isComplete) ...[
-                          const SizedBox(height: AppSpacing.xxs),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.xs,
-                              vertical: AppSpacing.xxs,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHighest,
-                              borderRadius: AppRadii.pill,
-                            ),
-                            child: Text(
-                              'Optional',
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  if (isComplete)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.xs,
-                        vertical: AppSpacing.xxs2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.12),
-                        borderRadius: AppRadii.pill,
-                      ),
-                      child: Text(
-                        'Completed',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                    )
-                  else
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isActive
-                            ? colorScheme.primary
-                            : colorScheme.surfaceContainerHighest,
-                      ),
-                      child: Icon(
-                        LucideIcons.chevronRight,
-                        color: isActive
-                            ? colorScheme.onPrimary
-                            : colorScheme.onSurfaceVariant,
-                        size: AppIconSizes.lg,
-                      ),
-                    ),
-                ],
+      container: true,
+      label: 'Welcome to UniMate',
+      child: Container(
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(AppRadii.xl)),
+          gradient: LinearGradient(
+            colors: [Color(0xFF091A36), Color(0xFF12376B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: AppShadows.card,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            const Positioned(
+              top: 42,
+              right: 34,
+              child: _HeroAccentDots(),
+            ),
+            Positioned(
+              right: -24,
+              bottom: -8,
+              child: Icon(
+                LucideIcons.sparkles,
+                size: 150,
+                color: Colors.white.withValues(alpha: 0.05),
               ),
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxWidth < 320;
+                  final imageWidth = compact ? 120.0 : 154.0;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Welcome to UniMate',
+                                  style:
+                                      theme.textTheme.headlineMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.08,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  'Your academic companion for this semester.',
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.82),
+                                    height: 1.42,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          ExcludeSemantics(
+                            child: Image.asset(
+                              'assets/images/unimate_welcome_student.png',
+                              width: imageWidth,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, _, __) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      FilledButton.icon(
+                        key: const ValueKey('initial-home-get-started'),
+                        onPressed: onGetStarted,
+                        iconAlignment: IconAlignment.end,
+                        icon: const Icon(LucideIcons.arrowRight),
+                        label: const Text('Get Started'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.navy,
+                          minimumSize: Size(
+                            compact ? double.infinity : 168,
+                            52,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: AppSpacing.md,
+                          ),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadii.pill,
+                          ),
+                          textStyle: theme.textTheme.labelLarge?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _HeroAccentDots extends StatelessWidget {
+  const _HeroAccentDots();
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
+      children: [
+        for (var index = 0; index < 9; index++)
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -529,16 +286,19 @@ class _HomeQuickActions extends StatelessWidget {
       _QuickActionData(
         title: 'Calculate CWA',
         icon: LucideIcons.calculator,
+        color: AppColors.success,
         onTap: onCalculateCwa,
       ),
       _QuickActionData(
-        title: 'Focus session',
+        title: 'Focus Session',
         icon: LucideIcons.timer,
+        color: const Color(0xFF6757D8),
         onTap: onFocusSession,
       ),
       _QuickActionData(
-        title: 'Explore timetable',
+        title: 'Explore Timetable',
         icon: LucideIcons.calendarDays,
+        color: AppColors.gold,
         onTap: onExploreTimetable,
       ),
     ];
@@ -547,8 +307,13 @@ class _HomeQuickActions extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Try UniMate now',
+          'Quick Actions',
           style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          'Everything you need, right at your fingertips.',
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: AppSpacing.sm),
         LayoutBuilder(
@@ -563,8 +328,11 @@ class _HomeQuickActions extends StatelessWidget {
                     width: i == cards.length - 1
                         ? constraints.maxWidth
                         : cardWidth,
-                    height: 120,
-                    child: _HomeQuickActionCard(data: cards[i]),
+                    height: i == cards.length - 1 ? 112 : 200,
+                    child: _HomeQuickActionCard(
+                      data: cards[i],
+                      isWide: i == cards.length - 1,
+                    ),
                   ),
               ],
             );
@@ -578,63 +346,158 @@ class _HomeQuickActions extends StatelessWidget {
 class _QuickActionData {
   final String title;
   final IconData icon;
+  final Color color;
   final VoidCallback onTap;
 
   const _QuickActionData({
     required this.title,
     required this.icon,
+    required this.color,
     required this.onTap,
   });
 }
 
 class _HomeQuickActionCard extends StatelessWidget {
   final _QuickActionData data;
+  final bool isWide;
 
-  const _HomeQuickActionCard({required this.data});
+  const _HomeQuickActionCard({
+    required this.data,
+    required this.isWide,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Material(
-      color: colorScheme.surface,
-      shape: RoundedRectangleBorder(
+    final tintedSurface = Color.alphaBlend(
+      data.color.withValues(
+          alpha: Theme.of(context).brightness == Brightness.dark ? 0.14 : 0.08),
+      colorScheme.surface,
+    );
+    final iconBackground = Color.alphaBlend(
+      data.color.withValues(alpha: 0.92),
+      colorScheme.surface,
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: tintedSurface,
         borderRadius: AppRadii.card,
-        side: BorderSide(color: colorScheme.outlineVariant),
+        border: Border.all(
+          color: data.color.withValues(alpha: 0.16),
+        ),
+        boxShadow: AppShadows.soft,
       ),
-      child: InkWell(
-        onTap: data.onTap,
-        borderRadius: AppRadii.card,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary,
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
-                ),
-                child: Icon(
-                  data.icon,
-                  color: AppColors.goldSoft,
-                  size: AppIconSizes.xxl,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                data.title,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: colorScheme.onSurface,
-                    ),
-              ),
-            ],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: data.onTap,
+          borderRadius: AppRadii.card,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: isWide
+                ? Row(
+                    children: [
+                      _QuickActionIcon(
+                        icon: data.icon,
+                        color: iconBackground,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(child: _QuickActionTitle(data: data)),
+                      const SizedBox(width: AppSpacing.xs),
+                      _QuickActionArrow(color: data.color),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _QuickActionIcon(
+                        icon: data.icon,
+                        color: iconBackground,
+                      ),
+                      const Spacer(),
+                      _QuickActionTitle(data: data),
+                      const SizedBox(height: AppSpacing.sm),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _QuickActionArrow(color: data.color),
+                      ),
+                    ],
+                  ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _QuickActionIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+
+  const _QuickActionIcon({
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(AppRadii.sm2),
+      ),
+      child: Icon(
+        icon,
+        color: Colors.white,
+        size: AppIconSizes.xxl,
+      ),
+    );
+  }
+}
+
+class _QuickActionTitle extends StatelessWidget {
+  final _QuickActionData data;
+
+  const _QuickActionTitle({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Text(
+      data.title,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.titleMedium?.copyWith(
+        color: colorScheme.onSurface,
+        fontWeight: FontWeight.w800,
+        height: 1.16,
+      ),
+    );
+  }
+}
+
+class _QuickActionArrow extends StatelessWidget {
+  final Color color;
+
+  const _QuickActionArrow({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.12),
+      ),
+      child: Icon(
+        LucideIcons.arrowRight,
+        color: color,
+        size: AppIconSizes.xxl,
       ),
     );
   }

@@ -138,26 +138,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         ?.setHasSeenInitialHomeWelcome(true);
   }
 
-  String _routeForSetupStep(HomeSetupStep step) {
-    return switch (step) {
-      HomeSetupStep.university => '/settings',
-      HomeSetupStep.courses => '/cwa',
-      HomeSetupStep.timetable => '/timetable',
-      HomeSetupStep.academicHistory => '/cwa/manual-entry?mode=cumulative',
-    };
-  }
-
-  void _openSetupStep(HomeSetupState setup, HomeSetupStep step) {
-    final destination = _routeForSetupStep(step);
-    AnalyticsService.instance.logHomeSetupAction(
-      eventName: 'home_setup_step_tapped',
-      action: step.name,
-      completedStepCount: setup.completedStepCount,
-      destination: destination,
-    );
-    context.push(destination);
-  }
-
   void _openQuickAction(
     HomeSetupState setup, {
     required String action,
@@ -337,18 +317,15 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     }
 
     return InitialHomeWelcome(
-      setup: setup,
       bottomPadding: bottomContentPadding,
       animateEntrance: _showFirstWelcome ?? false,
-      onSetupStepTap: (step) => _openSetupStep(setup, step),
-      onExplore: () {
-        AnalyticsService.instance.logHomeSetupAction(
-          eventName: 'home_setup_started',
-          action: 'explore_unimate',
-          completedStepCount: setup.completedStepCount,
-          destination: 'home_quick_actions',
-        );
-      },
+      onGetStarted: () => _openQuickAction(
+        setup,
+        action: 'get_started',
+        destination: setup.nextSetupStep == HomeSetupStep.university
+            ? '/settings'
+            : '/timetable',
+      ),
       onCalculateCwa: () => _openQuickAction(
         setup,
         action: 'calculate_cwa',

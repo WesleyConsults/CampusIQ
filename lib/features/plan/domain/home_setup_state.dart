@@ -1,8 +1,6 @@
 enum HomeSetupStep {
   university,
-  courses,
   timetable,
-  academicHistory,
 }
 
 class HomeSetupState {
@@ -23,20 +21,16 @@ class HomeSetupState {
   });
 
   bool get isInitialHomeSetup =>
-      !hasUniversityAndGradingSystem || !hasCurrentCourses || !hasTimetable;
+      !hasUniversityAndGradingSystem || !hasTimetable;
 
   int get completedStepCount => [
         hasUniversityAndGradingSystem,
-        hasCurrentCourses,
         hasTimetable,
-        hasAcademicHistory,
       ].where((isComplete) => isComplete).length;
 
   HomeSetupStep? get nextSetupStep {
     if (!hasUniversityAndGradingSystem) return HomeSetupStep.university;
-    if (!hasCurrentCourses) return HomeSetupStep.courses;
     if (!hasTimetable) return HomeSetupStep.timetable;
-    if (!hasAcademicHistory) return HomeSetupStep.academicHistory;
     return null;
   }
 }
