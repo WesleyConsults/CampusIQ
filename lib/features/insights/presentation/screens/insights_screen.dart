@@ -4,6 +4,7 @@ import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/insights/domain/insight.dart';
 import 'package:campusiq/features/insights/presentation/providers/insight_provider.dart';
 import 'package:campusiq/features/insights/presentation/widgets/insight_card.dart';
+import 'package:go_router/go_router.dart';
 
 class InsightsScreen extends ConsumerWidget {
   const InsightsScreen({super.key});
@@ -40,7 +41,7 @@ class InsightsScreen extends ConsumerWidget {
                 AppSpacing.xxs,
               ),
               child: Text(
-                'What your data says about you',
+                'Patterns from your study sessions and academic activity',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
@@ -61,13 +62,19 @@ class InsightsScreen extends ConsumerWidget {
                               ?.copyWith(fontSize: 48)),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        'Log more sessions to generate insights.',
+                        'Complete study sessions to reveal useful patterns over time.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurfaceVariant,
                             ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      FilledButton.icon(
+                        onPressed: () => context.go('/sessions'),
+                        icon: const Icon(Icons.timer_outlined),
+                        label: const Text('Start a Study Session'),
                       ),
                     ],
                   ),

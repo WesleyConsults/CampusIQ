@@ -13,6 +13,7 @@ import 'package:campusiq/features/timetable/domain/timetable_notification_coordi
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
 import 'package:campusiq/core/services/notification_service.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/shared/widgets/campus_button.dart';
 import 'package:campusiq/shared/widgets/import_option_grid.dart';
@@ -22,17 +23,32 @@ class TimetableImportScreen extends ConsumerStatefulWidget {
   const TimetableImportScreen({this.initialSource, super.key});
 
   @override
-  ConsumerState<TimetableImportScreen> createState() => _TimetableImportScreenState();
+  ConsumerState<TimetableImportScreen> createState() =>
+      _TimetableImportScreenState();
 }
 
 class _TimetableImportScreenState extends ConsumerState<TimetableImportScreen> {
+  @override
+  void dispose() {
+    final step = ref.read(timetableImportNotifierProvider).step;
+    if (step != ImportStep.idle && step != ImportStep.done) {
+      AnalyticsService.instance.logImportAbandoned(
+        importType: 'timetable',
+        step: step.name,
+      );
+    }
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
     if (widget.initialSource != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final source = widget.initialSource == 'camera' ? ImageSource.camera : ImageSource.gallery;
+        final source = widget.initialSource == 'camera'
+            ? ImageSource.camera
+            : ImageSource.gallery;
         _pickIfOnline(source);
       });
     }
@@ -50,7 +66,9 @@ class _TimetableImportScreenState extends ConsumerState<TimetableImportScreen> {
       );
       return;
     }
-    await ref.read(timetableImportNotifierProvider.notifier).pickAndParse(source);
+    await ref
+        .read(timetableImportNotifierProvider.notifier)
+        .pickAndParse(source);
   }
 
   @override
@@ -97,13 +115,15 @@ class _TimetableImportScreenState extends ConsumerState<TimetableImportScreen> {
       ),
       body: switch (state.step) {
         ImportStep.idle => _IdleBody(onPick: _pickIfOnline),
-        ImportStep.picking => const _LoadingBody(message: 'Opening camera…'),
+        ImportStep.picking =>
+          const _LoadingBody(message: 'Opening your timetable image…'),
         ImportStep.parsing =>
-          const _LoadingBody(message: 'Extracting timetable…'),
+          const _LoadingBody(message: 'Uploading and reading class times…'),
         ImportStep.reviewing => _ReviewBody(state: state, notifier: notifier),
         ImportStep.saving =>
           _ReviewBody(state: state, notifier: notifier, isSaving: true),
-        ImportStep.done => const _LoadingBody(message: 'Saving…'),
+        ImportStep.done =>
+          const _LoadingBody(message: 'Preparing timetable reminders…'),
         ImportStep.error => _ErrorBody(
             message: state.errorMessage ?? 'Something went wrong.',
             onRetry: notifier.reset,
@@ -336,6 +356,16 @@ class _ErrorBody extends StatelessWidget {
               style: TextStyle(
                 fontSize: 15,
                 color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Try a clear, uncropped screenshot showing the days, course names, and class times. Avoid shadows or overlapping pages.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.4,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: AppSpacing.xl),

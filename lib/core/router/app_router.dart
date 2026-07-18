@@ -460,7 +460,7 @@ class _ShellBottomNav extends StatelessWidget {
         selectedIcon: lucide?.analyticsFilled ?? LucideIcons.chartColumn,
       ),
       (
-        label: 'Table',
+        label: 'Timetable',
         icon: lucide?.timetable ?? LucideIcons.calendarDays,
         selectedIcon: lucide?.timetableFilled ?? LucideIcons.calendarDays,
       ),

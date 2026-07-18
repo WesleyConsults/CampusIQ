@@ -166,7 +166,7 @@ class CwaScreen extends ConsumerWidget {
                 manualBaseline: manualBaseline,
               ),
               icon: const Icon(LucideIcons.plus),
-              label: const Text('Add'),
+              label: const Text('Add Academic Data'),
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
             )
@@ -596,7 +596,6 @@ class _CwaDashboardView extends ConsumerWidget {
     final setupComplete = hasCurrent && hasCumulativeData && targetConfirmed;
     final activeSemesterAlreadyRecorded =
         semesters.any((semester) => semester.semesterKey == activeSemesterKey);
-    final moveNextStepToBottom = hasHistory && hasCurrent;
     final nextStepCard = _NextStepCard(
       gradingSystem: gradingSystem,
       hasAnyData: hasAnyData,
@@ -679,10 +678,6 @@ class _CwaDashboardView extends ConsumerWidget {
             ),
           ),
         ),
-        if (!moveNextStepToBottom) ...[
-          const SizedBox(height: AppSpacing.md),
-          nextStepCard,
-        ],
         const SizedBox(height: AppSpacing.md),
         _AcademicHistorySummaryCard(
           gradingSystem: gradingSystem,
@@ -695,6 +690,8 @@ class _CwaDashboardView extends ConsumerWidget {
           onAddPastResults: () =>
               onShowImportSheet(context, CwaViewMode.cumulative),
         ),
+        const SizedBox(height: AppSpacing.md),
+        nextStepCard,
         const SizedBox(height: AppSpacing.lg),
         _CwaToolsSection(
           gradingSystem: gradingSystem,
@@ -710,10 +707,6 @@ class _CwaDashboardView extends ConsumerWidget {
             ref.read(activeSemesterProvider),
           ),
         ),
-        if (moveNextStepToBottom) ...[
-          const SizedBox(height: AppSpacing.lg),
-          nextStepCard,
-        ],
       ],
     );
 
@@ -911,10 +904,10 @@ class _CwaSetupView extends StatelessWidget {
         _SetupStepCard(
           step: 2,
           icon: LucideIcons.history,
-          title: 'Add academic history',
+          title: 'Add completed results',
           description:
-              'Import past results, or enter your current ${gradingSystem.cumulativeLabel} and completed credits.',
-          actionLabel: 'Import past results',
+              'Import official grades from completed semesters, or enter your current ${gradingSystem.cumulativeLabel} and completed credits.',
+          actionLabel: 'Add completed results',
           completionLabel: 'Academic history added',
           secondaryActionLabel: hasAcademicHistory
               ? null
@@ -1949,7 +1942,7 @@ class _NextStepCard extends StatelessWidget {
   String get _title {
     if (!hasAnyData) return 'Set up your ${gradingSystem.label}';
     if (_showAcademicHistoryInfo) {
-      return 'Add your academic history';
+      return 'Add your completed results';
     }
     if (hasHistory) return 'Keep your results up to date';
     return 'Build from your starting point';
@@ -1957,7 +1950,7 @@ class _NextStepCard extends StatelessWidget {
 
   String get _subtitle {
     if (!hasAnyData) {
-      return 'Add current courses for a semester projection, or add past results to calculate your cumulative ${gradingSystem.cumulativeLabel}.';
+      return 'Current courses are what you study now. Completed results build your academic history and cumulative ${gradingSystem.cumulativeLabel}.';
     }
     if (hasHistory) {
       return 'Review saved semesters, add missing result slips, or save final results when official marks are released.';
@@ -1969,12 +1962,12 @@ class _NextStepCard extends StatelessWidget {
     if (!hasAnyData) {
       return [
         _InlineActionButton(
-          label: 'Add Courses',
+          label: 'Add Current Courses',
           icon: LucideIcons.plus,
           onPressed: onAddCurrentCourses,
         ),
         _InlineActionButton(
-          label: 'Past Results',
+          label: 'Add Completed Results',
           primary: false,
           icon: LucideIcons.fileUp,
           onPressed: onAddPastResults,
@@ -2004,7 +1997,7 @@ class _NextStepCard extends StatelessWidget {
     } else {
       actions.add(
         _InlineActionButton(
-          label: 'Add Past Results',
+          label: 'Add Completed Results',
           icon: LucideIcons.fileUp,
           onPressed: onAddPastResults,
         ),
@@ -2048,6 +2041,7 @@ class _CurrentSemesterSummaryCard extends StatelessWidget {
     final hasCourses = courseCount > 0;
     return _DashboardSummaryCard(
       icon: LucideIcons.bookOpen,
+      accentColor: AppColors.info,
       title: 'Current semester',
       subtitle: activeSemesterLabel,
       metrics: [
@@ -2062,8 +2056,8 @@ class _CurrentSemesterSummaryCard extends StatelessWidget {
           ? 'This active semester already exists in your saved results.'
           : hasCourses
               ? null
-              : 'Add your current semester courses to see a projection.',
-      actionLabel: hasCourses ? 'View/Edit Courses' : 'Add Courses',
+              : 'Add only courses you are studying now—not completed results—to see a projection.',
+      actionLabel: hasCourses ? 'View/Edit Courses' : 'Add Current Courses',
       actionIcon: hasCourses ? LucideIcons.listChecks : LucideIcons.plus,
       onAction: hasCourses ? onViewCourses : onAddCourses,
     );
@@ -2096,12 +2090,13 @@ class _AcademicHistorySummaryCard extends StatelessWidget {
     final hasData = hasHistory || hasBaseline;
     return _DashboardSummaryCard(
       icon: LucideIcons.graduationCap,
-      title: 'Academic history',
+      accentColor: AppColors.success,
+      title: 'Academic history · completed',
       subtitle: hasHistory
           ? '$semesterCount saved semester${semesterCount == 1 ? '' : 's'}'
           : hasBaseline
               ? 'Current ${gradingSystem.cumulativeLabel} saved'
-              : 'No saved results yet',
+              : 'No completed results saved yet',
       metrics: [
         _DashboardMetric(label: 'Semesters', value: '$semesterCount'),
         _DashboardMetric(
@@ -2115,8 +2110,8 @@ class _AcademicHistorySummaryCard extends StatelessWidget {
       ],
       note: hasData
           ? null
-          : 'Add past results or enter your current ${gradingSystem.cumulativeLabel} to unlock this.',
-      actionLabel: hasHistory ? 'View History' : 'Add Past Results',
+          : 'Add official results from completed semesters, or enter your current ${gradingSystem.cumulativeLabel}.',
+      actionLabel: hasHistory ? 'View History' : 'Add Completed Results',
       actionIcon: hasHistory ? LucideIcons.bookOpen : LucideIcons.fileUp,
       onAction: hasHistory ? onViewHistory : onAddPastResults,
     );
@@ -2145,11 +2140,20 @@ class _CwaToolsSection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs2),
         CampusCard(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xs,
-            vertical: AppSpacing.xs,
-          ),
-          child: Column(
+          padding: EdgeInsets.zero,
+          child: ExpansionTile(
+            leading: const Icon(LucideIcons.slidersHorizontal),
+            title: const Text(
+              'More grade settings',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+            ),
+            subtitle: const Text('Target and active semester'),
+            childrenPadding: const EdgeInsets.fromLTRB(
+              AppSpacing.xs,
+              0,
+              AppSpacing.xs,
+              AppSpacing.xs,
+            ),
             children: [
               _ToolRow(
                 icon: LucideIcons.goal,
@@ -2192,7 +2196,8 @@ class _AddGoalSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return CampusModalSheet(
       title: 'What do you want to add?',
-      subtitle: 'Choose the setup path that matches what you have right now.',
+      subtitle:
+          'First choose where the information belongs. Then choose how to enter it.',
       leading: const _AddGoalIcon(),
       trailing: IconButton(
         onPressed: () => Navigator.of(context).pop(),
@@ -2207,15 +2212,15 @@ class _AddGoalSheet extends StatelessWidget {
             icon: LucideIcons.bookOpen,
             title: 'Current semester courses',
             subtitle:
-                'Plan your expected ${gradingSystem.label} for this semester.',
+                'Courses you are studying now. Do not add completed results here.',
             onTap: onCurrentCourses,
           ),
           const SizedBox(height: AppSpacing.xs2),
           _AddGoalOptionTile(
             icon: LucideIcons.fileText,
-            title: 'Past result slip / past semester',
+            title: 'Past completed results',
             subtitle:
-                'Use this to calculate your cumulative ${gradingSystem.cumulativeLabel}.',
+                'Official grades from a semester you have already completed.',
             onTap: onPastResults,
           ),
           const SizedBox(height: AppSpacing.xs2),
@@ -2329,6 +2334,7 @@ class _DashboardSummaryCard extends StatelessWidget {
   final String actionLabel;
   final IconData actionIcon;
   final VoidCallback onAction;
+  final Color accentColor;
 
   const _DashboardSummaryCard({
     required this.icon,
@@ -2339,12 +2345,18 @@ class _DashboardSummaryCard extends StatelessWidget {
     required this.actionLabel,
     required this.actionIcon,
     required this.onAction,
+    required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return CampusCard(
+    return Container(
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.055),
+        borderRadius: AppRadii.card,
+        border: Border.all(color: accentColor.withValues(alpha: 0.24)),
+      ),
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2356,12 +2368,12 @@ class _DashboardSummaryCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.10),
+                  color: accentColor.withValues(alpha: 0.13),
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
                   icon,
-                  color: colorScheme.primary,
+                  color: accentColor,
                   size: AppIconSizes.xl,
                 ),
               ),

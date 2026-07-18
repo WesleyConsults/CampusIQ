@@ -6,6 +6,7 @@ import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/screens/complete_semester_screen.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/academic_data_correction_hint.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/timetable_course_import_sheet.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
@@ -175,6 +176,13 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
                 courseCount: courses.length,
                 credits: credits,
               ),
+              if (courses.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                const AcademicDataCorrectionHint(
+                  message:
+                      'Added something by mistake? Use the menu on a course to edit or delete it. Completed results belong in Academic History.',
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
               if (courses.isEmpty)
                 _EmptyCoursesCard(

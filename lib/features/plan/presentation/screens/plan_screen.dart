@@ -426,6 +426,16 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                   total: total,
                 ),
                 const SizedBox(height: AppSpacing.xl),
+                _AcademicPulseSection(
+                  projectedCwa: projectedCwa,
+                  targetCwa: targetCwa,
+                  gradingSystem: gradingSystem,
+                  cwaGap: cwaGap,
+                  studyStreak: studyStreak,
+                  attendanceStreak: attendanceStreak,
+                  totalCourseStreaks: totalCourseStreaks,
+                ),
+                const SizedBox(height: AppSpacing.xl),
                 _ProgressOverviewCard(
                   completed: completed,
                   total: total,
@@ -561,25 +571,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             ),
           ],
         ],
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              AppSpacing.xl,
-              AppSpacing.xl,
-              0,
-            ),
-            child: _AcademicPulseSection(
-              projectedCwa: projectedCwa,
-              targetCwa: targetCwa,
-              gradingSystem: gradingSystem,
-              cwaGap: cwaGap,
-              studyStreak: studyStreak,
-              attendanceStreak: attendanceStreak,
-              totalCourseStreaks: totalCourseStreaks,
-            ),
-          ),
-        ),
         SliverToBoxAdapter(child: SizedBox(height: bottomContentPadding)),
       ],
     );
@@ -1145,6 +1136,9 @@ class _AcademicPulseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gapLabel = cwaGap <= 0 ? 'On target' : '$gapValue short';
+    final directionMessage = cwaGap <= 0
+        ? 'You are projected at $projectedValue against a target of $targetValue. You are currently on track—keep your course estimates updated.'
+        : 'You are projected at $projectedValue against a target of $targetValue. Close the $gapValue gap by prioritising the study tasks tied to your current courses.';
     final tiles = [
       _MetricTile(
         label: projectedLabel,
@@ -1187,18 +1181,31 @@ class _AcademicPulseCard extends StatelessWidget {
         AppSpacing.md,
         AppSpacing.sm,
       ),
-      child: GridView.builder(
-        padding: EdgeInsets.zero,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: tiles.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: AppSpacing.xs2,
-          crossAxisSpacing: AppSpacing.xs2,
-          childAspectRatio: 1.72,
-        ),
-        itemBuilder: (_, index) => tiles[index],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            directionMessage,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  height: 1.4,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          GridView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: tiles.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: AppSpacing.xs2,
+              crossAxisSpacing: AppSpacing.xs2,
+              childAspectRatio: 1.72,
+            ),
+            itemBuilder: (_, index) => tiles[index],
+          ),
+        ],
       ),
     );
   }

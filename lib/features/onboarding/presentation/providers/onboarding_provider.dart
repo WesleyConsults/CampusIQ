@@ -19,6 +19,7 @@ enum OnboardingStep {
 
 enum OnboardingStartAction {
   importCourses,
+  importPastResults,
   addTimetable,
 }
 
@@ -155,6 +156,16 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
   void setStartAction(OnboardingStartAction action) {
     state = state.copyWith(startAction: action);
+    unawaited(
+      AnalyticsService.instance.logOnboardingSetupChoice(action.name),
+    );
+  }
+
+  void clearStartAction() {
+    state = state.copyWith(startAction: null);
+    unawaited(
+      AnalyticsService.instance.logOnboardingSetupChoice('skip_for_now'),
+    );
   }
 
   void toggleStartAction(OnboardingStartAction action) {

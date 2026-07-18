@@ -303,9 +303,9 @@ class SettingsScreen extends ConsumerWidget {
               const Divider(height: 1),
               _RowTile(
                 leading: LucideIcons.mail,
-                title: 'Send feedback',
-                subtitle: _feedbackEmail,
-                onTap: () => _launchUrl(context, 'mailto:$_feedbackEmail'),
+                title: 'Report a problem or send feedback',
+                subtitle: 'Tell us what you were trying to do',
+                onTap: () => _showFeedbackSheet(context),
               ),
             ]),
 
@@ -413,6 +413,129 @@ class SettingsScreen extends ConsumerWidget {
       default:
         return 'Light';
     }
+  }
+}
+
+Future<void> _showFeedbackSheet(BuildContext context) async {
+  await AnalyticsService.instance.logFeedbackOpened();
+  if (!context.mounted) return;
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const _FeedbackSheet(),
+  );
+}
+
+class _FeedbackSheet extends StatefulWidget {
+  const _FeedbackSheet();
+
+  @override
+  State<_FeedbackSheet> createState() => _FeedbackSheetState();
+}
+
+class _FeedbackSheetState extends State<_FeedbackSheet> {
+  static const _categories = [
+    'Onboarding',
+    'Home',
+    'Grades / CWA',
+    'Timetable',
+    'Study Sessions',
+    'Settings',
+    'Something else',
+  ];
+
+  final _descriptionController = TextEditingController();
+  String _category = _categories.first;
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _prepareEmail() async {
+    final description = _descriptionController.text.trim();
+    if (description.isEmpty) return;
+    await AnalyticsService.instance.logFeedbackPrepared(
+      category: _category.toLowerCase().replaceAll(RegExp(r'[^a-z]+'), '_'),
+    );
+    final uri = Uri(
+      scheme: 'mailto',
+      path: _feedbackEmail,
+      queryParameters: {
+        'subject': 'UniMate feedback — $_category',
+        'body': 'Area: $_category\n'
+            'App version: 1.1.7 (18)\n\n'
+            'What I was trying to do:\n$description\n\n'
+            'Please add screenshots only if they do not expose academic or personal information.',
+      },
+    );
+    if (!mounted) return;
+    await _launchUrl(context, uri.toString());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    return _CampusBottomSheet(
+      title: 'Tell us what happened',
+      child: Padding(
+        padding: EdgeInsets.only(bottom: keyboard),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Choose the area and describe what you were trying to do. UniMate will not attach grades, courses, documents, or other academic data.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            DropdownButtonFormField<String>(
+              initialValue: _category,
+              decoration: const InputDecoration(labelText: 'App area'),
+              items: _categories
+                  .map((value) => DropdownMenuItem(
+                        value: value,
+                        child: Text(value),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) setState(() => _category = value);
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _descriptionController,
+              minLines: 3,
+              maxLines: 6,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'What were you trying to do?',
+                hintText: 'Example: I uploaded my result slip but…',
+                alignLabelWithHint: true,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _descriptionController.text.trim().isEmpty
+                    ? null
+                    : _prepareEmail,
+                icon: const Icon(LucideIcons.mail),
+                label: const Text('Continue to Email'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -684,8 +684,6 @@ class _TimetableAddOptionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return CampusModalSheet(
       title: 'Add Timetable',
       subtitle: 'Choose how you want to add classes',

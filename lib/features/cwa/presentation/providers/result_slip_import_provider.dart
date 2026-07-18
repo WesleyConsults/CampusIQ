@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/domain/past_course_result.dart';
+import 'package:campusiq/features/cwa/domain/academic_document_kind.dart';
 import 'package:campusiq/features/cwa/domain/result_slip_parser.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/core/services/connectivity_service.dart';
@@ -37,6 +38,7 @@ class ResultImportState {
   final double? cumulativeCreditsCalc;
   final double? cumulativeWeightedMarks;
   final int skippedCourseCount;
+  final AcademicDocumentKind documentKind;
 
   /// Metadata parsed from the slip header by AI — used to pre-fill the
   /// labelling screen so the user only needs to verify, not re-enter.
@@ -57,6 +59,7 @@ class ResultImportState {
     this.cumulativeCreditsCalc,
     this.cumulativeWeightedMarks,
     this.skippedCourseCount = 0,
+    this.documentKind = AcademicDocumentKind.unknown,
     this.parsedAcademicYearStart,
     this.parsedSemesterNumber,
     this.parsedLevel,
@@ -75,6 +78,7 @@ class ResultImportState {
     double? cumulativeCreditsCalc,
     double? cumulativeWeightedMarks,
     int? skippedCourseCount,
+    AcademicDocumentKind? documentKind,
     int? parsedAcademicYearStart,
     int? parsedSemesterNumber,
     int? parsedLevel,
@@ -95,6 +99,7 @@ class ResultImportState {
         cumulativeWeightedMarks:
             cumulativeWeightedMarks ?? this.cumulativeWeightedMarks,
         skippedCourseCount: skippedCourseCount ?? this.skippedCourseCount,
+        documentKind: documentKind ?? this.documentKind,
         parsedAcademicYearStart:
             parsedAcademicYearStart ?? this.parsedAcademicYearStart,
         parsedSemesterNumber: parsedSemesterNumber ?? this.parsedSemesterNumber,
@@ -243,6 +248,12 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
     try {
       const parser = ResultSlipParser();
       final parseResult = await parser.parse(bytes, mimeType);
+      if (parseResult.documentKind == AcademicDocumentKind.registrationSlip) {
+        await AnalyticsService.instance.logDocumentTypeMismatch(
+          expectedType: 'result_slip',
+          detectedType: 'registration_slip',
+        );
+      }
 
       if (parseResult.courses.isEmpty) {
         await AnalyticsService.instance.logCourseImportFailed(
@@ -268,6 +279,7 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
         cumulativeCreditsCalc: parseResult.cumulativeCreditsCalc,
         cumulativeWeightedMarks: parseResult.cumulativeWeightedMarks,
         skippedCourseCount: parseResult.skippedCourseCount,
+        documentKind: parseResult.documentKind,
         parsedAcademicYearStart: parseResult.academicYearStart,
         parsedSemesterNumber: parseResult.semesterNumber,
         parsedLevel: parseResult.level,

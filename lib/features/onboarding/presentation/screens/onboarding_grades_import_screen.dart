@@ -17,12 +17,17 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
     final notifier = ref.read(onboardingProvider.notifier);
 
     // Map selection to active visual highlights
-    final isSlipSelected = state.startAction == OnboardingStartAction.importCourses;
-    final isTimetableSelected = state.startAction == OnboardingStartAction.addTimetable;
+    final isSlipSelected =
+        state.startAction == OnboardingStartAction.importCourses;
+    final isPastResultsSelected =
+        state.startAction == OnboardingStartAction.importPastResults;
+    final isTimetableSelected =
+        state.startAction == OnboardingStartAction.addTimetable;
     final isSkipSelected = state.startAction == null;
 
     final setupDestination = switch (state.startAction) {
       OnboardingStartAction.importCourses => '/cwa/import/registration',
+      OnboardingStartAction.importPastResults => '/cwa/import/results',
       OnboardingStartAction.addTimetable => '/timetable/import',
       null => null,
     };
@@ -47,7 +52,8 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
                 children: [
                   IconButton(
                     onPressed: notifier.goBack,
-                    icon: Icon(LucideIcons.arrowLeft, color: colorScheme.onSurface),
+                    icon: Icon(LucideIcons.arrowLeft,
+                        color: colorScheme.onSurface),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -86,7 +92,7 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.sm),
                     // Subtitle
                     Text(
-                      'Choose what you\'d like to do first.\nYou can always add more later.',
+                      'What are you adding? Choose where the information belongs first. You can add more later.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
@@ -100,42 +106,56 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
                       icon: LucideIcons.fileSpreadsheet,
                       iconColor: const Color(0xFF636AE8),
                       iconBgColor: const Color(0xFFEEF0FF),
-                      title: 'Import Registration Slip',
-                      description: 'Import your courses and current scores.',
+                      title: 'Current Semester Courses',
+                      description:
+                          'Courses you are studying now. Upload your current registration slip—not completed results.',
                       isSelected: isSlipSelected,
                       onTap: () {
-                        notifier.setStartAction(OnboardingStartAction.importCourses);
+                        notifier.setStartAction(
+                            OnboardingStartAction.importCourses);
                       },
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    // Option 2: Import Timetable
+                    _SetupOptionRow(
+                      icon: LucideIcons.graduationCap,
+                      iconColor: const Color(0xFF2F8F6B),
+                      iconBgColor: const Color(0xFFE8F8F0),
+                      title: 'Past Completed Results',
+                      description:
+                          'Official grades from a semester you have already completed.',
+                      isSelected: isPastResultsSelected,
+                      onTap: () {
+                        notifier.setStartAction(
+                          OnboardingStartAction.importPastResults,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    // Option 3: Import Timetable
                     _SetupOptionRow(
                       icon: LucideIcons.calendarDays,
                       iconColor: const Color(0xFFE5A93C),
                       iconBgColor: const Color(0xFFFEF7E8),
                       title: 'Import Timetable',
-                      description: 'Import your class schedule and find free study time.',
+                      description:
+                          'Import your class schedule and find free study time.',
                       isSelected: isTimetableSelected,
                       onTap: () {
-                        notifier.setStartAction(OnboardingStartAction.addTimetable);
+                        notifier
+                            .setStartAction(OnboardingStartAction.addTimetable);
                       },
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    // Option 3: Skip for now
+                    // Option 4: Skip for now
                     _SetupOptionRow(
                       icon: LucideIcons.star,
-                      iconColor: const Color(0xFF2F8F6B),
-                      iconBgColor: const Color(0xFFE8F8F0),
+                      iconColor: colorScheme.onSurfaceVariant,
+                      iconBgColor: colorScheme.surfaceContainerHighest,
                       title: 'Skip for now',
                       description: 'Explore the app and set things up later.',
                       isSelected: isSkipSelected,
                       onTap: () {
-                        // Clear startAction to represent skip path
-                        ref.read(onboardingProvider.notifier).setStartAction(
-                          // Use reflection or standard state modification to unset startAction
-                          // The provider copyWith allows startAction to be unset or set to null
-                          null as dynamic, 
-                        );
+                        notifier.clearStartAction();
                       },
                     ),
                     const SizedBox(height: AppSpacing.xxl),
@@ -146,13 +166,15 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
                         Icon(
                           LucideIcons.lock,
                           size: 15,
-                          color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                          color: colorScheme.onSurfaceVariant
+                              .withValues(alpha: 0.8),
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         Text(
                           'Your data stays private and secure.',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                            color: colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.8),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -257,8 +279,8 @@ class _SetupOptionRow extends StatelessWidget {
           color: isDark ? colorScheme.surfaceContainerHighest : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected 
-                ? const Color(0xFF636AE8) 
+            color: isSelected
+                ? const Color(0xFF636AE8)
                 : colorScheme.outlineVariant.withValues(alpha: 0.8),
             width: isSelected ? 1.8 : 1.0,
           ),
@@ -313,7 +335,7 @@ class _SetupOptionRow extends StatelessWidget {
             const SizedBox(width: AppSpacing.xs),
             Icon(
               LucideIcons.chevronRight,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               size: 20,
             ),
           ],
@@ -322,5 +344,3 @@ class _SetupOptionRow extends StatelessWidget {
     );
   }
 }
-
-

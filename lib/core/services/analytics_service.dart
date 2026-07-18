@@ -70,6 +70,11 @@ class AnalyticsService {
 
   Future<void> logOnboardingStarted() => logEvent('onboarding_started');
 
+  Future<void> logOnboardingSetupChoice(String choice) => logEvent(
+        'onboarding_setup_choice',
+        parameters: {'choice': choice},
+      );
+
   Future<void> logOnboardingCompleted({
     required String gradingSystem,
     required bool universitySet,
@@ -151,6 +156,34 @@ class AnalyticsService {
           'source': source,
           'reason': reason,
         },
+      );
+
+  Future<void> logImportAbandoned({
+    required String importType,
+    required String step,
+  }) =>
+      logEvent(
+        'import_abandoned',
+        parameters: {'import_type': importType, 'step': step},
+      );
+
+  Future<void> logDocumentTypeMismatch({
+    required String expectedType,
+    required String detectedType,
+  }) =>
+      logEvent(
+        'document_type_mismatch',
+        parameters: {
+          'expected_type': expectedType,
+          'detected_type': detectedType,
+        },
+      );
+
+  Future<void> logFeedbackOpened() => logEvent('feedback_opened');
+
+  Future<void> logFeedbackPrepared({required String category}) => logEvent(
+        'feedback_prepared',
+        parameters: {'category': category},
       );
 
   Future<void> logTimetableSlotSaved({required String action}) => logEvent(

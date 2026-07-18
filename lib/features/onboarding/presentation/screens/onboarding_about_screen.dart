@@ -12,7 +12,6 @@ class OnboardingAboutScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -20,8 +19,8 @@ class OnboardingAboutScreen extends ConsumerWidget {
         child: Column(
           children: [
             const SizedBox(height: AppSpacing.md),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
               child: OnboardingProgressDots(
                 currentStep: OnboardingStep.about,
               ),
@@ -34,7 +33,8 @@ class OnboardingAboutScreen extends ConsumerWidget {
                   IconButton(
                     onPressed: () =>
                         ref.read(onboardingProvider.notifier).goBack(),
-                    icon: Icon(LucideIcons.arrowLeft, color: colorScheme.onSurface),
+                    icon: Icon(LucideIcons.arrowLeft,
+                        color: colorScheme.onSurface),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -71,9 +71,8 @@ class OnboardingAboutScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    // Paragraph
                     Text(
-                      'We spent years calculating CWA by hand, missing timetable reminders, and guessing what scores we needed to reach our goals.\n\nUniMate was built to give every student a clearer picture of their academic journey.',
+                      'UniMate organises your academic life into three simple parts. Keeping them separate makes your projections and cumulative results accurate.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
@@ -83,14 +82,22 @@ class OnboardingAboutScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     // Feature Points
-                    _FeaturePoint(
-                      title: 'Stop guessing your CWA',
-                      description: 'See your projected CWA in real time and know what scores you need.',
+                    const _FeaturePoint(
+                      title: '1. Current courses',
+                      description:
+                          'What you are studying now. These are used for your semester projection.',
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    _FeaturePoint(
-                      title: 'Never miss classes',
-                      description: 'Import your timetable, get reminders, and stay organised every day.',
+                    const _FeaturePoint(
+                      title: '2. Past results',
+                      description:
+                          'Official grades from completed semesters. These build your academic history.',
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    const _FeaturePoint(
+                      title: '3. Timetable',
+                      description:
+                          'When your classes happen, so UniMate can help organise your day.',
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     // Wesley Pill
@@ -210,9 +217,12 @@ class _WesleyPill extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: isDark ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.6),
+        color: isDark
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.6)
+            : Colors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.8)),
+        border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.8)),
       ),
       child: Row(
         children: [

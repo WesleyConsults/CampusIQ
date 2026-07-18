@@ -13,7 +13,7 @@ import 'package:campusiq/features/session/presentation/widgets/floating_mini_tim
 import 'package:campusiq/features/settings/presentation/providers/settings_provider.dart';
 import 'package:campusiq/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:campusiq/features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'package:campusiq/core/data/repositories/user_prefs_repository.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/academic_import_destination_banner.dart';
 import 'package:isar_community/isar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,8 +49,7 @@ void main() {
     expect(find.byType(OnboardingScreen), findsOneWidget);
   });
 
-  testWidgets('routes to /plan when onboarding is completed',
-      (tester) async {
+  testWidgets('routes to /plan when onboarding is completed', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -92,7 +91,7 @@ void main() {
     expect(find.text('Today'), findsWidgets);
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('CWA'), findsOneWidget);
-    expect(find.text('Table'), findsOneWidget);
+    expect(find.text('Timetable'), findsOneWidget);
     expect(find.text('Sessions'), findsOneWidget);
     expect(find.byTooltip('AI Assistant'), findsNothing);
 
@@ -139,6 +138,30 @@ void main() {
     expect(find.text('Upload Image'), findsOneWidget);
     expect(find.text('Choose PDF'), findsOneWidget);
     expect(find.text('Enter Manually'), findsOneWidget);
+  });
+
+  testWidgets('academic import destination explains where data will be saved',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: AcademicImportDestinationBanner(
+            destination: 'Current Semester — 2026/2027 • First Semester',
+            description:
+                'Upload only courses you are studying now. Do not upload completed results here.',
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.text(
+        'Adding to: Current Semester — 2026/2027 • First Semester',
+      ),
+      findsOneWidget,
+    );
+    expect(
+        find.textContaining('Do not upload completed results'), findsOneWidget);
   });
 
   testWidgets('cwa setup animates a newly completed step once', (tester) async {
@@ -513,7 +536,8 @@ void main() {
     expect(find.byType(FloatingMiniTimer), findsOneWidget);
   });
 
-  testWidgets('tapping plus button on Timetable screen opens bottom sheet with options',
+  testWidgets(
+      'tapping plus button on Timetable screen opens bottom sheet with options',
       (tester) async {
     await tester.pumpWidget(
       ProviderScope(

@@ -10,6 +10,7 @@ import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/cwa/domain/academic_term.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/academic_data_correction_hint.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 
@@ -37,17 +38,26 @@ class PastSemestersScreen extends ConsumerWidget {
               onImport: () => _openImport(context),
             );
           }
-          return ListView.separated(
+          return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            itemCount: semesters.length,
-            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, i) => _SemesterCard(
-              semester: semesters[i],
-              onDelete: () => _confirmDelete(context, ref, semesters[i]),
-              onFinalize: semesters[i].isPendingResults
-                  ? () => _confirmFinalize(context, ref, semesters[i])
-                  : null,
-            ),
+            children: [
+              const AcademicDataCorrectionHint(
+                message:
+                    'Wrong semester or duplicate result? Expand a semester to review it, or use the trash button to remove it before importing again.',
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              for (var i = 0; i < semesters.length; i++) ...[
+                _SemesterCard(
+                  semester: semesters[i],
+                  onDelete: () => _confirmDelete(context, ref, semesters[i]),
+                  onFinalize: semesters[i].isPendingResults
+                      ? () => _confirmFinalize(context, ref, semesters[i])
+                      : null,
+                ),
+                if (i != semesters.length - 1)
+                  const SizedBox(height: AppSpacing.sm),
+              ],
+            ],
           );
         },
       ),

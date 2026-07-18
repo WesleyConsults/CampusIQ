@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/domain/registration_course_import.dart';
+import 'package:campusiq/features/cwa/domain/academic_document_kind.dart';
 import 'package:campusiq/features/cwa/domain/registration_slip_parser.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/core/services/connectivity_service.dart';
@@ -23,6 +24,7 @@ class SlipImportState {
   final String? errorMessage;
   final int skippedCourseCount;
   final int duplicateCourseCount;
+  final AcademicDocumentKind documentKind;
 
   const SlipImportState({
     this.step = SlipImportStep.idle,
@@ -31,6 +33,7 @@ class SlipImportState {
     this.errorMessage,
     this.skippedCourseCount = 0,
     this.duplicateCourseCount = 0,
+    this.documentKind = AcademicDocumentKind.unknown,
   });
 
   SlipImportState copyWith({
@@ -40,6 +43,7 @@ class SlipImportState {
     String? errorMessage,
     int? skippedCourseCount,
     int? duplicateCourseCount,
+    AcademicDocumentKind? documentKind,
   }) =>
       SlipImportState(
         step: step ?? this.step,
@@ -48,6 +52,7 @@ class SlipImportState {
         errorMessage: errorMessage,
         skippedCourseCount: skippedCourseCount ?? this.skippedCourseCount,
         duplicateCourseCount: duplicateCourseCount ?? this.duplicateCourseCount,
+        documentKind: documentKind ?? this.documentKind,
       );
 }
 
@@ -191,6 +196,12 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
     try {
       const parser = RegistrationSlipParser();
       final parseResult = await parser.parse(bytes, mimeType);
+      if (parseResult.documentKind == AcademicDocumentKind.resultSlip) {
+        await AnalyticsService.instance.logDocumentTypeMismatch(
+          expectedType: 'registration_slip',
+          detectedType: 'result_slip',
+        );
+      }
       final gradingSystem = ref.read(gradingSystemProvider);
       final courses = parseResult.courses.map((course) {
         final score = gradingSystem.usesLetterGrades
@@ -220,6 +231,7 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
         courses: courses,
         selectedIndexes: Set.from(List.generate(courses.length, (i) => i)),
         skippedCourseCount: parseResult.skippedCourseCount,
+        documentKind: parseResult.documentKind,
       );
     } catch (e, stackTrace) {
       await _handleFailure(

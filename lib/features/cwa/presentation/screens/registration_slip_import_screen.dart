@@ -4,13 +4,19 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:campusiq/core/domain/grading_system.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/domain/registration_course_import.dart';
+import 'package:campusiq/features/cwa/domain/academic_term.dart';
+import 'package:campusiq/features/cwa/domain/academic_document_kind.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/providers/registration_slip_import_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/academic_import_destination_banner.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/wrong_academic_document_view.dart';
+import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 import 'package:campusiq/shared/widgets/import_option_grid.dart';
 
 class RegistrationSlipImportScreen extends ConsumerStatefulWidget {
@@ -26,6 +32,18 @@ class RegistrationSlipImportScreen extends ConsumerStatefulWidget {
 class _RegistrationSlipImportScreenState
     extends ConsumerState<RegistrationSlipImportScreen> {
   bool _didTriggerInitialSource = false;
+
+  @override
+  void dispose() {
+    final step = ref.read(registrationSlipImportNotifierProvider).step;
+    if (step != SlipImportStep.idle && step != SlipImportStep.done) {
+      AnalyticsService.instance.logImportAbandoned(
+        importType: 'registration',
+        step: step.name,
+      );
+    }
+    super.dispose();
+  }
 
   void _showOfflineMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -78,11 +96,14 @@ class _RegistrationSlipImportScreenState
     final state = ref.watch(registrationSlipImportNotifierProvider);
     final notifier = ref.read(registrationSlipImportNotifierProvider.notifier);
     final gradingSystem = ref.watch(gradingSystemProvider);
+    final activeSemesterLabel = formatAcademicTermLabel(
+      ref.watch(activeSemesterProvider),
+    );
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Import Courses'),
+        title: const Text('Add Current Courses'),
         leading: BackButton(
           onPressed: () {
             notifier.reset();
@@ -90,40 +111,59 @@ class _RegistrationSlipImportScreenState
           },
         ),
       ),
-      body: switch (state.step) {
-        SlipImportStep.idle => _IdleView(
-            onCamera: () => _runIfOnline(notifier.pickFromCamera),
-            onGallery: () => _runIfOnline(notifier.pickFromGallery),
-            onPdf: () => _runIfOnline(notifier.pickFromGalleryOrFile),
-            onManual: () {
-              notifier.reset();
-              context.push('/cwa/manual-entry?mode=semester');
+      body: state.documentKind == AcademicDocumentKind.resultSlip
+          ? WrongAcademicDocumentView(
+              detectedLabel: 'a completed result slip',
+              expectedLabel: 'Current Semester Courses',
+              actionLabel: 'Open Past Results',
+              onSwitch: () {
+                notifier.reset();
+                context.pushReplacement('/cwa/import/results');
+              },
+              onTryAgain: notifier.reset,
+            )
+          : switch (state.step) {
+              SlipImportStep.idle => _IdleView(
+                  activeSemesterLabel: activeSemesterLabel,
+                  onCamera: () => _runIfOnline(notifier.pickFromCamera),
+                  onGallery: () => _runIfOnline(notifier.pickFromGallery),
+                  onPdf: () => _runIfOnline(notifier.pickFromGalleryOrFile),
+                  onManual: () {
+                    notifier.reset();
+                    context.push('/cwa/manual-entry?mode=semester');
+                  },
+                  onPastResults: () {
+                    notifier.reset();
+                    context.pushReplacement('/cwa/import/results');
+                  },
+                ),
+              SlipImportStep.picking || SlipImportStep.parsing => _LoadingView(
+                  state.step == SlipImportStep.parsing
+                      ? 'Uploading and reading current courses…'
+                      : 'Opening your document…',
+                ),
+              SlipImportStep.reviewing => _ReviewView(
+                  state: state,
+                  notifier: notifier,
+                  gradingSystem: gradingSystem,
+                  activeSemesterLabel: activeSemesterLabel,
+                ),
+              SlipImportStep.saving =>
+                const _LoadingView('Saving to Current Semester…'),
+              SlipImportStep.done => _DoneView(
+                  count:
+                      state.selectedIndexes.length - state.duplicateCourseCount,
+                  duplicateCount: state.duplicateCourseCount,
+                  onFinish: () {
+                    notifier.reset();
+                    Navigator.of(context).pop();
+                  },
+                ),
+              SlipImportStep.error => _ErrorView(
+                  message: state.errorMessage ?? 'Unknown error.',
+                  onRetry: notifier.reset,
+                ),
             },
-          ),
-        SlipImportStep.picking || SlipImportStep.parsing => _LoadingView(
-            state.step == SlipImportStep.parsing
-                ? 'AI is reading your slip…'
-                : 'Opening file…',
-          ),
-        SlipImportStep.reviewing => _ReviewView(
-            state: state,
-            notifier: notifier,
-            gradingSystem: gradingSystem,
-          ),
-        SlipImportStep.saving => const _LoadingView('Saving courses…'),
-        SlipImportStep.done => _DoneView(
-            count: state.selectedIndexes.length - state.duplicateCourseCount,
-            duplicateCount: state.duplicateCourseCount,
-            onFinish: () {
-              notifier.reset();
-              Navigator.of(context).pop();
-            },
-          ),
-        SlipImportStep.error => _ErrorView(
-            message: state.errorMessage ?? 'Unknown error.',
-            onRetry: notifier.reset,
-          ),
-      },
     );
   }
 }
@@ -131,46 +171,60 @@ class _RegistrationSlipImportScreenState
 // ─── Idle ─────────────────────────────────────────────────────────────────────
 
 class _IdleView extends StatelessWidget {
+  final String activeSemesterLabel;
   final VoidCallback onCamera;
   final VoidCallback onGallery;
   final VoidCallback onPdf;
   final VoidCallback onManual;
+  final VoidCallback onPastResults;
 
   const _IdleView({
+    required this.activeSemesterLabel,
     required this.onCamera,
     required this.onGallery,
     required this.onPdf,
     required this.onManual,
+    required this.onPastResults,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return ListView(
       padding: const EdgeInsets.all(AppSpacing.xl),
-      child: ImportOptionGrid(
-        options: [
-          ImportOptionGridItem(
-            icon: LucideIcons.camera,
-            label: 'Take Photo',
-            onTap: onCamera,
-          ),
-          ImportOptionGridItem(
-            icon: LucideIcons.image,
-            label: 'Upload Image',
-            onTap: onGallery,
-          ),
-          ImportOptionGridItem(
-            icon: LucideIcons.fileText,
-            label: 'Choose PDF',
-            onTap: onPdf,
-          ),
-          ImportOptionGridItem(
-            icon: LucideIcons.squarePen,
-            label: 'Enter Manually',
-            onTap: onManual,
-          ),
-        ],
-      ),
+      children: [
+        AcademicImportDestinationBanner(
+          destination: 'Current Semester — $activeSemesterLabel',
+          description:
+              'Upload only courses you are studying now. Do not upload official results from a completed semester here.',
+          alternativeLabel: 'I have completed results instead',
+          onAlternative: onPastResults,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ImportOptionGrid(
+          options: [
+            ImportOptionGridItem(
+              icon: LucideIcons.camera,
+              label: 'Take Photo',
+              onTap: onCamera,
+            ),
+            ImportOptionGridItem(
+              icon: LucideIcons.image,
+              label: 'Upload Image',
+              onTap: onGallery,
+            ),
+            ImportOptionGridItem(
+              icon: LucideIcons.fileText,
+              label: 'Choose PDF',
+              onTap: onPdf,
+            ),
+            ImportOptionGridItem(
+              icon: LucideIcons.squarePen,
+              label: 'Enter Manually',
+              onTap: onManual,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -209,11 +263,13 @@ class _ReviewView extends StatelessWidget {
   final SlipImportState state;
   final RegistrationSlipImportNotifier notifier;
   final GradingSystem gradingSystem;
+  final String activeSemesterLabel;
 
   const _ReviewView({
     required this.state,
     required this.notifier,
     required this.gradingSystem,
+    required this.activeSemesterLabel,
   });
 
   @override
@@ -223,6 +279,14 @@ class _ReviewView extends StatelessWidget {
 
     return Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: AcademicImportDestinationBanner(
+            destination: 'Current Semester — $activeSemesterLabel',
+            description:
+                'These should be in-progress courses, not official grades from a completed semester.',
+          ),
+        ),
         // Header
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -312,12 +376,14 @@ class _ReviewView extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: selected == 0 ? null : notifier.confirmImport,
+                onPressed: selected == 0
+                    ? null
+                    : () => _confirmImport(context, selected),
                 icon: const Icon(LucideIcons.check),
                 label: Text(
                   selected == 0
                       ? 'Select at least one course'
-                      : 'Import $selected course${selected == 1 ? '' : 's'}',
+                      : 'Save to Current Semester',
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
@@ -334,6 +400,19 @@ class _ReviewView extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _confirmImport(BuildContext context, int selected) async {
+    final confirmed = await showCampusConfirmDialog(
+          context: context,
+          title: 'Save current courses?',
+          message:
+              'You are adding $selected course${selected == 1 ? '' : 's'} to $activeSemesterLabel. These courses should still be in progress and should not be official past results.',
+          confirmLabel: 'Save Current Courses',
+          cancelLabel: 'Review Again',
+        ) ??
+        false;
+    if (confirmed) await notifier.confirmImport();
   }
 
   Future<void> _showAddCourseSheet(
@@ -803,7 +882,7 @@ class _DoneView extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              '$count course${count == 1 ? '' : 's'} added to CWA',
+              '$count current course${count == 1 ? '' : 's'} added',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -824,7 +903,7 @@ class _DoneView extends StatelessWidget {
             ],
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'You can update expected scores and credit hours from the CWA screen.',
+              'Your semester projection now uses these courses. You can edit expected scores from Current Semester.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -874,7 +953,7 @@ class _ErrorView extends StatelessWidget {
               size: 56, color: AppTheme.warning),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Something went wrong',
+            'We couldn\'t read this document',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -887,6 +966,16 @@ class _ErrorView extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Try a clear, uncropped image with readable course codes. For PDFs, make sure the file opens normally and is not password-protected.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.4,
               color: colorScheme.onSurfaceVariant,
             ),
           ),

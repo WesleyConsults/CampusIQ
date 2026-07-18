@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:campusiq/core/config/ai_proxy_config.dart';
 import 'package:campusiq/features/cwa/domain/past_course_result.dart';
+import 'package:campusiq/features/cwa/domain/academic_document_kind.dart';
 
 class ResultSlipParseResult {
   final List<PastCourseResult> courses;
@@ -30,6 +31,7 @@ class ResultSlipParseResult {
   final String? programme;
 
   final int skippedCourseCount;
+  final AcademicDocumentKind documentKind;
 
   const ResultSlipParseResult({
     required this.courses,
@@ -42,6 +44,7 @@ class ResultSlipParseResult {
     this.level,
     this.programme,
     this.skippedCourseCount = 0,
+    this.documentKind = AcademicDocumentKind.unknown,
   });
 }
 
@@ -71,13 +74,14 @@ class ResultSlipParser {
       '   - cumulative_cwa: the Weighted Average from the CUMULATIVE column\n'
       '   - cumulative_credits_calc: the Credits Calc value from the CUMULATIVE column\n'
       '   - cumulative_weighted_marks: the Weighted Marks value from the CUMULATIVE column\n\n'
+      'Classify the document as result_slip, registration_slip, or unknown. A registration slip has selected courses but no official final marks or grades.\n'
       'Return ONLY a JSON object with these exact top-level keys:\n'
-      '"academic_year_start", "semester_number", "level", "programme", '
+      '"document_type", "academic_year_start", "semester_number", "level", "programme", '
       '"courses", "semester_cwa", "cumulative_cwa", "cumulative_credits_calc", "cumulative_weighted_marks".\n'
       'All keys must be present. Use null for any value not visible on the slip.\n'
       'Return nothing except the JSON. No explanation. No markdown. No code fences.\n\n'
       'Example:\n'
-      '{"academic_year_start":2024,"semester_number":2,"level":300,"programme":"Computer Engineering",'
+      '{"document_type":"result_slip","academic_year_start":2024,"semester_number":2,"level":300,"programme":"Computer Engineering",'
       '"semester_cwa":65.05,"cumulative_cwa":50.03,"cumulative_credits_calc":173,"cumulative_weighted_marks":8655,'
       '"courses":['
       '{"course_code":"COE 454","course_name":"SOFTWARE ENGINEERING","credit_hours":3,"mark":79,"grade":"A"},'
@@ -182,6 +186,8 @@ class ResultSlipParser {
         level: (parsedObj['level'] as num?)?.toInt(),
         programme: parsedObj['programme'] as String?,
         skippedCourseCount: skippedCourseCount,
+        documentKind:
+            AcademicDocumentKind.fromValue(parsedObj['document_type']),
       );
     } on TimeoutException {
       throw Exception(

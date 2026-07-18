@@ -8,7 +8,6 @@ import 'package:campusiq/core/providers/isar_provider.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
-import 'package:campusiq/features/ai/data/models/study_plan_model.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_slot_model.dart';
 import 'package:campusiq/features/ai/domain/deepseek_client.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
@@ -38,7 +37,7 @@ void main() {
       libraries: {
         Abi.current():
             '${Platform.environment['HOME']}/.pub-cache/hosted/pub.dev/'
-            'isar_community_flutter_libs-3.3.0-dev.1/macos/libisar.dylib',
+                'isar_community_flutter_libs-3.3.0-dev.1/macos/libisar.dylib',
       },
     );
   });
@@ -60,7 +59,9 @@ void main() {
     }
   });
 
-  test('StudyPlanNotifier rejects/rewrites hallucinated course names/codes and uses exact course info', () async {
+  test(
+      'StudyPlanNotifier rejects/rewrites hallucinated course names/codes and uses exact course info',
+      () async {
     final course1 = CourseModel.create(
       name: '',
       code: 'ER-125',
@@ -175,7 +176,7 @@ void main() {
       ..venue = 'Engineering Block A'
       ..slotType = 'Lecture'
       ..startMinutes = 600 // 10:00 AM
-      ..endMinutes = 720;  // 12:00 PM
+      ..endMinutes = 720; // 12:00 PM
 
     final generator = PlanGenerator(
       todaySlots: [slot],

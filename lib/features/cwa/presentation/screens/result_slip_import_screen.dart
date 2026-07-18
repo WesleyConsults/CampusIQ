@@ -4,13 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:campusiq/core/domain/grading_system.dart';
+import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/domain/past_course_result.dart';
+import 'package:campusiq/features/cwa/domain/academic_document_kind.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/cwa/presentation/providers/result_slip_import_provider.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/academic_import_destination_banner.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/wrong_academic_document_view.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/grade_value_dropdown.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 import 'package:campusiq/shared/widgets/import_option_grid.dart';
@@ -28,6 +32,18 @@ class ResultSlipImportScreen extends ConsumerStatefulWidget {
 class _ResultSlipImportScreenState
     extends ConsumerState<ResultSlipImportScreen> {
   bool _didTriggerInitialSource = false;
+
+  @override
+  void dispose() {
+    final step = ref.read(resultSlipImportNotifierProvider).step;
+    if (step != ResultImportStep.idle && step != ResultImportStep.done) {
+      AnalyticsService.instance.logImportAbandoned(
+        importType: 'result',
+        step: step.name,
+      );
+    }
+    super.dispose();
+  }
 
   void _showOfflineMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -86,7 +102,7 @@ class _ResultSlipImportScreenState
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Import Results'),
+        title: const Text('Add Past Results'),
         leading: BackButton(
           onPressed: () {
             notifier.reset();
@@ -94,48 +110,66 @@ class _ResultSlipImportScreenState
           },
         ),
       ),
-      body: switch (state.step) {
-        ResultImportStep.idle => _IdleView(
-            onCamera: () => _runIfOnline(notifier.pickFromCamera),
-            onGallery: () => _runIfOnline(notifier.pickFromGallery),
-            onPdf: () => _runIfOnline(notifier.pickFromFile),
-            onManual: () {
-              notifier.reset();
-              context.push('/cwa/manual-entry?mode=cumulative');
+      body: state.documentKind == AcademicDocumentKind.registrationSlip
+          ? WrongAcademicDocumentView(
+              detectedLabel: 'a current course registration slip',
+              expectedLabel: 'Academic History — Past Results',
+              actionLabel: 'Open Current Courses',
+              onSwitch: () {
+                notifier.reset();
+                context.pushReplacement('/cwa/import/registration');
+              },
+              onTryAgain: notifier.reset,
+            )
+          : switch (state.step) {
+              ResultImportStep.idle => _IdleView(
+                  onCamera: () => _runIfOnline(notifier.pickFromCamera),
+                  onGallery: () => _runIfOnline(notifier.pickFromGallery),
+                  onPdf: () => _runIfOnline(notifier.pickFromFile),
+                  onManual: () {
+                    notifier.reset();
+                    context.push('/cwa/manual-entry?mode=cumulative');
+                  },
+                  onCurrentCourses: () {
+                    notifier.reset();
+                    context.pushReplacement('/cwa/import/registration');
+                  },
+                ),
+              ResultImportStep.picking ||
+              ResultImportStep.parsing =>
+                _LoadingView(
+                  state.step == ResultImportStep.parsing
+                      ? 'Uploading and reading completed results…'
+                      : 'Opening your document…',
+                ),
+              ResultImportStep.labelling => _LabelView(
+                  notifier: notifier,
+                  initialSelection: activeSemester,
+                  parsedAcademicYearStart: state.parsedAcademicYearStart,
+                  parsedSemesterNumber: state.parsedSemesterNumber,
+                  parsedLevel: state.parsedLevel,
+                  parsedProgramme: state.parsedProgramme,
+                ),
+              ResultImportStep.reviewing => _ReviewView(
+                  state: state,
+                  notifier: notifier,
+                  gradingSystem: gradingSystem,
+                ),
+              ResultImportStep.saving =>
+                const _LoadingView('Saving to Academic History…'),
+              ResultImportStep.done => _DoneView(
+                  count: state.selectedIndexes.length,
+                  label: state.semesterLabel,
+                  onFinish: () {
+                    notifier.reset();
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ResultImportStep.error => _ErrorView(
+                  message: state.errorMessage ?? 'Unknown error.',
+                  onRetry: notifier.reset,
+                ),
             },
-          ),
-        ResultImportStep.picking || ResultImportStep.parsing => _LoadingView(
-            state.step == ResultImportStep.parsing
-                ? 'AI is reading your result slip…'
-                : 'Opening file…',
-          ),
-        ResultImportStep.labelling => _LabelView(
-            notifier: notifier,
-            initialSelection: activeSemester,
-            parsedAcademicYearStart: state.parsedAcademicYearStart,
-            parsedSemesterNumber: state.parsedSemesterNumber,
-            parsedLevel: state.parsedLevel,
-            parsedProgramme: state.parsedProgramme,
-          ),
-        ResultImportStep.reviewing => _ReviewView(
-            state: state,
-            notifier: notifier,
-            gradingSystem: gradingSystem,
-          ),
-        ResultImportStep.saving => const _LoadingView('Saving results…'),
-        ResultImportStep.done => _DoneView(
-            count: state.selectedIndexes.length,
-            label: state.semesterLabel,
-            onFinish: () {
-              notifier.reset();
-              Navigator.of(context).pop();
-            },
-          ),
-        ResultImportStep.error => _ErrorView(
-            message: state.errorMessage ?? 'Unknown error.',
-            onRetry: notifier.reset,
-          ),
-      },
     );
   }
 }
@@ -147,42 +181,54 @@ class _IdleView extends StatelessWidget {
   final VoidCallback onGallery;
   final VoidCallback onPdf;
   final VoidCallback onManual;
+  final VoidCallback onCurrentCourses;
 
   const _IdleView({
     required this.onCamera,
     required this.onGallery,
     required this.onPdf,
     required this.onManual,
+    required this.onCurrentCourses,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return ListView(
       padding: const EdgeInsets.all(AppSpacing.xl),
-      child: ImportOptionGrid(
-        options: [
-          ImportOptionGridItem(
-            icon: LucideIcons.camera,
-            label: 'Take Photo',
-            onTap: onCamera,
-          ),
-          ImportOptionGridItem(
-            icon: LucideIcons.image,
-            label: 'Upload Image',
-            onTap: onGallery,
-          ),
-          ImportOptionGridItem(
-            icon: LucideIcons.fileText,
-            label: 'Choose PDF',
-            onTap: onPdf,
-          ),
-          ImportOptionGridItem(
-            icon: LucideIcons.squarePen,
-            label: 'Enter Manually',
-            onTap: onManual,
-          ),
-        ],
-      ),
+      children: [
+        AcademicImportDestinationBanner(
+          destination: 'Academic History — Past Results',
+          description:
+              'Upload official grades from a semester you have completed. Current registered courses do not belong here.',
+          alternativeLabel: 'I have current courses instead',
+          onAlternative: onCurrentCourses,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ImportOptionGrid(
+          options: [
+            ImportOptionGridItem(
+              icon: LucideIcons.camera,
+              label: 'Take Photo',
+              onTap: onCamera,
+            ),
+            ImportOptionGridItem(
+              icon: LucideIcons.image,
+              label: 'Upload Image',
+              onTap: onGallery,
+            ),
+            ImportOptionGridItem(
+              icon: LucideIcons.fileText,
+              label: 'Choose PDF',
+              onTap: onPdf,
+            ),
+            ImportOptionGridItem(
+              icon: LucideIcons.squarePen,
+              label: 'Enter Manually',
+              onTap: onManual,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -510,6 +556,14 @@ class _ReviewView extends StatelessWidget {
 
     return Column(
       children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: AcademicImportDestinationBanner(
+            destination: 'Academic History — Past Results',
+            description:
+                'These courses will be stored as completed official results and included in your cumulative calculation.',
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Row(
@@ -664,7 +718,7 @@ class _ReviewView extends StatelessWidget {
                 label: Text(
                   selected == 0
                       ? 'Select at least one course'
-                      : 'Import $selected course${selected == 1 ? '' : 's'}',
+                      : 'Save to Academic History',
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
@@ -724,8 +778,17 @@ class _ReviewView extends StatelessWidget {
       await notifier.confirmImport(replaceExisting: true);
       return;
     }
-
-    await notifier.confirmImport();
+    if (!context.mounted) return;
+    final confirmed = await showCampusConfirmDialog(
+          context: context,
+          title: 'Save completed results?',
+          message:
+              'You are adding ${state.selectedIndexes.length} completed course result${state.selectedIndexes.length == 1 ? '' : 's'} under "${state.semesterLabel}". These will be included in your academic history and cumulative calculation.',
+          confirmLabel: 'Save Past Results',
+          cancelLabel: 'Review Again',
+        ) ??
+        false;
+    if (confirmed) await notifier.confirmImport();
   }
 }
 
@@ -1331,7 +1394,7 @@ class _ErrorView extends StatelessWidget {
               size: AppIconSizes.error, color: AppTheme.warning),
           const SizedBox(height: AppSpacing.md),
           const Text(
-            'Something went wrong',
+            'We couldn\'t read this document',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -1343,6 +1406,16 @@ class _ErrorView extends StatelessWidget {
             message,
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const Text(
+            'Try a clear, uncropped image showing course codes, official grades, and the semester heading. For PDFs, make sure the file is not password-protected.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.4,
+              color: AppTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 28),
           ElevatedButton.icon(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:campusiq/features/onboarding/presentation/widgets/onboarding_progress_dots.dart';
@@ -23,7 +22,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
           child: Column(
             children: [
               const SizedBox(height: AppSpacing.md),
-              OnboardingProgressDots(
+              const OnboardingProgressDots(
                 currentStep: OnboardingStep.welcome,
               ),
               Expanded(
@@ -65,7 +64,8 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                             style: theme.textTheme.headlineLarge?.copyWith(
                               fontSize: 34,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF636AE8), // Premium violet color
+                              color: const Color(
+                                  0xFF636AE8), // Premium violet color
                             ),
                             textAlign: TextAlign.center,
                           ),
