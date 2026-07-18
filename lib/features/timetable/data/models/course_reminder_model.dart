@@ -1,4 +1,5 @@
 import 'package:isar_community/isar.dart';
+import 'package:campusiq/features/timetable/domain/course_code_normalizer.dart';
 
 part 'course_reminder_model.g.dart';
 
@@ -11,6 +12,9 @@ class CourseReminderModel {
 
   @Index()
   late String courseCode;
+
+  @Index()
+  String normalizedCourseCode = '';
 
   late String courseName;
 
@@ -32,7 +36,13 @@ class CourseReminderModel {
     this.isEnabled = true,
     this.isAlarm = false,
   })  : createdAt = DateTime.now(),
-        updatedAt = DateTime.now();
+        updatedAt = DateTime.now() {
+    normalizedCourseCode = normalizeCourseCode(courseCode);
+  }
+
+  void normalizeForSave() {
+    normalizedCourseCode = normalizeCourseCode(courseCode);
+  }
 
   @ignore
   String get offsetLabel {

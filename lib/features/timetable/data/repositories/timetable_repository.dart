@@ -28,6 +28,7 @@ class TimetableRepository {
 
   Future<void> addSlot(TimetableSlotModel slot) async {
     try {
+      slot.ensureStableIdentity();
       await _isar.writeTxn(() => _isar.timetableSlotModels.put(slot));
     } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
@@ -43,6 +44,7 @@ class TimetableRepository {
 
   Future<void> updateSlot(TimetableSlotModel slot) async {
     try {
+      slot.ensureStableIdentity();
       await _isar.writeTxn(() => _isar.timetableSlotModels.put(slot));
     } catch (e, stackTrace) {
       debugPrint('🔴 Isar write failed: $e');
@@ -82,10 +84,12 @@ class TimetableRepository {
   }
 
   Future<List<TimetableSlotModel>> getAllSlotsOnce(String semesterKey) async {
-    return _isar.timetableSlotModels
+    final slots = await _isar.timetableSlotModels
         .filter()
         .semesterKeyEqualTo(semesterKey)
         .findAll();
+    await _backfillMissingSlotIdentity(slots);
+    return slots;
   }
 
   /// Returns how many slots exist — used to assign next color.
@@ -94,5 +98,28 @@ class TimetableRepository {
         .filter()
         .semesterKeyEqualTo(semesterKey)
         .count();
+  }
+
+  Future<List<TimetableSlotModel>> getAllSlotsAcrossSemesters() async {
+    final slots = await _isar.timetableSlotModels.where().findAll();
+    await _backfillMissingSlotIdentity(slots);
+    return slots;
+  }
+
+  Future<void> _backfillMissingSlotIdentity(
+    List<TimetableSlotModel> slots,
+  ) async {
+    final changed = <TimetableSlotModel>[];
+    for (final slot in slots) {
+      final previousSlotId = slot.slotId;
+      final previousNormalized = slot.normalizedCourseCode;
+      slot.ensureStableIdentity();
+      if (slot.slotId != previousSlotId ||
+          slot.normalizedCourseCode != previousNormalized) {
+        changed.add(slot);
+      }
+    }
+    if (changed.isEmpty) return;
+    await _isar.writeTxn(() => _isar.timetableSlotModels.putAll(changed));
   }
 }

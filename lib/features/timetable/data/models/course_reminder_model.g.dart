@@ -43,18 +43,23 @@ const CourseReminderModelSchema = CollectionSchema(
       name: r'isEnabled',
       type: IsarType.bool,
     ),
-    r'offsetMinutes': PropertySchema(
+    r'normalizedCourseCode': PropertySchema(
       id: 5,
+      name: r'normalizedCourseCode',
+      type: IsarType.string,
+    ),
+    r'offsetMinutes': PropertySchema(
+      id: 6,
       name: r'offsetMinutes',
       type: IsarType.long,
     ),
     r'semesterKey': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'semesterKey',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -90,6 +95,19 @@ const CourseReminderModelSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
+    ),
+    r'normalizedCourseCode': IndexSchema(
+      id: 2161616251008618838,
+      name: r'normalizedCourseCode',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'normalizedCourseCode',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -108,6 +126,7 @@ int _courseReminderModelEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.courseCode.length * 3;
   bytesCount += 3 + object.courseName.length * 3;
+  bytesCount += 3 + object.normalizedCourseCode.length * 3;
   bytesCount += 3 + object.semesterKey.length * 3;
   return bytesCount;
 }
@@ -123,9 +142,10 @@ void _courseReminderModelSerialize(
   writer.writeDateTime(offsets[2], object.createdAt);
   writer.writeBool(offsets[3], object.isAlarm);
   writer.writeBool(offsets[4], object.isEnabled);
-  writer.writeLong(offsets[5], object.offsetMinutes);
-  writer.writeString(offsets[6], object.semesterKey);
-  writer.writeDateTime(offsets[7], object.updatedAt);
+  writer.writeString(offsets[5], object.normalizedCourseCode);
+  writer.writeLong(offsets[6], object.offsetMinutes);
+  writer.writeString(offsets[7], object.semesterKey);
+  writer.writeDateTime(offsets[8], object.updatedAt);
 }
 
 CourseReminderModel _courseReminderModelDeserialize(
@@ -141,9 +161,10 @@ CourseReminderModel _courseReminderModelDeserialize(
   object.id = id;
   object.isAlarm = reader.readBool(offsets[3]);
   object.isEnabled = reader.readBool(offsets[4]);
-  object.offsetMinutes = reader.readLong(offsets[5]);
-  object.semesterKey = reader.readString(offsets[6]);
-  object.updatedAt = reader.readDateTime(offsets[7]);
+  object.normalizedCourseCode = reader.readString(offsets[5]);
+  object.offsetMinutes = reader.readLong(offsets[6]);
+  object.semesterKey = reader.readString(offsets[7]);
+  object.updatedAt = reader.readDateTime(offsets[8]);
   return object;
 }
 
@@ -165,10 +186,12 @@ P _courseReminderModelDeserializeProp<P>(
     case 4:
       return (reader.readBool(offset)) as P;
     case 5:
-      return (reader.readLong(offset)) as P;
-    case 6:
       return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
     case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -352,6 +375,51 @@ extension CourseReminderModelQueryWhere
               indexName: r'courseCode',
               lower: [],
               upper: [courseCode],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterWhereClause>
+      normalizedCourseCodeEqualTo(String normalizedCourseCode) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'normalizedCourseCode',
+        value: [normalizedCourseCode],
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterWhereClause>
+      normalizedCourseCodeNotEqualTo(String normalizedCourseCode) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedCourseCode',
+              lower: [],
+              upper: [normalizedCourseCode],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedCourseCode',
+              lower: [normalizedCourseCode],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedCourseCode',
+              lower: [normalizedCourseCode],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedCourseCode',
+              lower: [],
+              upper: [normalizedCourseCode],
               includeUpper: false,
             ));
       }
@@ -766,6 +834,142 @@ extension CourseReminderModelQueryFilter on QueryBuilder<CourseReminderModel,
   }
 
   QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      normalizedCourseCodeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      normalizedCourseCodeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      normalizedCourseCodeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      normalizedCourseCodeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'normalizedCourseCode',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      normalizedCourseCodeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      normalizedCourseCodeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      normalizedCourseCodeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      normalizedCourseCodeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'normalizedCourseCode',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      normalizedCourseCodeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'normalizedCourseCode',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
+      normalizedCourseCodeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'normalizedCourseCode',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterFilterCondition>
       offsetMinutesEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1093,6 +1297,20 @@ extension CourseReminderModelQuerySortBy
   }
 
   QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
+      sortByNormalizedCourseCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedCourseCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
+      sortByNormalizedCourseCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedCourseCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
       sortByOffsetMinutes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'offsetMinutes', Sort.asc);
@@ -1222,6 +1440,20 @@ extension CourseReminderModelQuerySortThenBy
   }
 
   QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
+      thenByNormalizedCourseCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedCourseCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
+      thenByNormalizedCourseCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedCourseCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QAfterSortBy>
       thenByOffsetMinutes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'offsetMinutes', Sort.asc);
@@ -1302,6 +1534,14 @@ extension CourseReminderModelQueryWhereDistinct
   }
 
   QueryBuilder<CourseReminderModel, CourseReminderModel, QDistinct>
+      distinctByNormalizedCourseCode({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'normalizedCourseCode',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, CourseReminderModel, QDistinct>
       distinctByOffsetMinutes() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'offsetMinutes');
@@ -1362,6 +1602,13 @@ extension CourseReminderModelQueryProperty
       isEnabledProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isEnabled');
+    });
+  }
+
+  QueryBuilder<CourseReminderModel, String, QQueryOperations>
+      normalizedCourseCodeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'normalizedCourseCode');
     });
   }
 

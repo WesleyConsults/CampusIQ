@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
+import 'package:campusiq/features/timetable/domain/course_code_normalizer.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/timetable_slot_card.dart';
@@ -67,7 +68,8 @@ class ClassTimetableGrid extends ConsumerWidget {
                         final laneWidth = totalWidth / pos.totalColumns;
                         final cardWidth = laneWidth - laneGap;
                         final hasAlarm = reminders.any((r) =>
-                            r.courseCode.toUpperCase() == s.courseCode.toUpperCase() &&
+                            normalizeCourseCode(r.courseCode) ==
+                                normalizeCourseCode(s.courseCode) &&
                             r.isEnabled &&
                             r.isAlarm);
 

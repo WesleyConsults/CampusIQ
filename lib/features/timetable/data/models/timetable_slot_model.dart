@@ -1,5 +1,7 @@
 import 'package:isar_community/isar.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
+import 'package:campusiq/features/timetable/domain/course_code_normalizer.dart';
+import 'package:campusiq/features/timetable/domain/stable_id.dart';
 
 part 'timetable_slot_model.g.dart';
 
@@ -9,10 +11,16 @@ part 'timetable_slot_model.g.dart';
 class TimetableSlotModel {
   Id id = Isar.autoIncrement;
 
+  @Index()
+  String slotId = '';
+
   /// 0 = Monday, 1 = Tuesday ... 5 = Saturday (KNUST runs Mon–Sat)
   late int dayIndex;
 
   late String courseCode;
+  @Index()
+  String normalizedCourseCode = '';
+
   late String courseName;
   late String venue;
   String lecturerName = '';
@@ -33,6 +41,13 @@ class TimetableSlotModel {
   DateTime createdAt = DateTime.now();
 
   TimetableSlotModel();
+
+  void ensureStableIdentity() {
+    if (slotId.trim().isEmpty) {
+      slotId = createStableTimetableId();
+    }
+    normalizedCourseCode = normalizeCourseCode(courseCode);
+  }
 
   /// Convenience: duration in minutes
   int get durationMinutes => endMinutes - startMinutes;

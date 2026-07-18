@@ -97,20 +97,6 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.xs),
-              TextButton(
-                onPressed: () async {
-                  await ref.read(onboardingProvider.notifier).skip();
-                  if (context.mounted) context.go('/plan');
-                },
-                child: Text(
-                  'Skip for now',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
               const SizedBox(height: AppSpacing.lg),
             ],
           ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/router/app_router.dart';
+import 'package:campusiq/core/theme/app_tokens.dart';
+import 'package:campusiq/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
@@ -12,6 +14,7 @@ import 'package:campusiq/features/review/presentation/providers/review_provider.
 import 'package:campusiq/features/review/presentation/widgets/weekly_review_sheet.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
+import 'package:campusiq/features/timetable/domain/timetable_notification_payload.dart';
 import 'package:campusiq/features/timetable/presentation/providers/course_reminder_provider.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
 import 'package:campusiq/features/session/presentation/providers/session_provider.dart';
@@ -30,6 +33,10 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.instance.setNotificationResponseHandler(
+        _handleNotificationPayload,
+      );
+      _handleLaunchNotification();
       _scheduleNotifications();
       _maybeShowWeeklyReview();
     });
@@ -69,7 +76,7 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
 
     // Wait for the first emission of sessions
     final sessions = await ref.read(allSessionsProvider.future);
-    
+
     // Check if the user has study sessions logged in the past week
     final previousWeekStart = _mondayOf(now).subtract(const Duration(days: 7));
     final previousWeekEndInclusive = DateTime(
@@ -94,7 +101,8 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
 
-    final currentNavContext = appRouter.routerDelegate.navigatorKey.currentContext;
+    final currentNavContext =
+        appRouter.routerDelegate.navigatorKey.currentContext;
     if (currentNavContext == null || !currentNavContext.mounted) return;
 
     showModalBottomSheet(
@@ -105,6 +113,19 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
       backgroundColor: Colors.transparent,
       builder: (_) => const WeeklyReviewSheet(),
     );
+  }
+
+  Future<void> _handleLaunchNotification() async {
+    final payload =
+        await NotificationService.instance.getLaunchNotificationPayload();
+    _handleNotificationPayload(payload);
+  }
+
+  void _handleNotificationPayload(String? rawPayload) {
+    final payload = TimetableNotificationPayload.parse(rawPayload);
+    if (payload?.isTimetableAlert != true) return;
+    debugPrint('Timetable notification tapped: ${payload!.slotId}');
+    appRouter.go('/timetable?slotId=${Uri.encodeComponent(payload.slotId)}');
   }
 
   DateTime _mondayOf(DateTime date) {
@@ -236,6 +257,26 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
   Widget build(BuildContext context) {
     final themeMode =
         ref.watch(themeModeProvider).valueOrNull ?? ThemeMode.system;
+
+    ref.listen<bool?>(onboardingCompletedProvider, (previous, next) {
+      if (next != null) {
+        appRouter.refresh();
+      }
+    });
+
+    final onboardingCompleted = ref.watch(onboardingCompletedProvider);
+
+    if (onboardingCompleted == null) {
+      return MaterialApp(
+        title: AppConstants.appName,
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: themeMode,
+        debugShowCheckedModeBanner: false,
+        home: const _StartupSplashScreen(),
+      );
+    }
+
     return MaterialApp.router(
       title: AppConstants.appName,
       theme: AppTheme.light,
@@ -243,6 +284,47 @@ class _CampusIQAppState extends ConsumerState<CampusIQApp>
       themeMode: themeMode,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class _StartupSplashScreen extends StatelessWidget {
+  const _StartupSplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.navy : AppColors.background,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'UniMate',
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white : AppColors.navy,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Color(0xFF636AE8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

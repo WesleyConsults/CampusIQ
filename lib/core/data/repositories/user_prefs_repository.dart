@@ -391,6 +391,32 @@ class UserPrefsRepository {
     }
   }
 
+  Future<void> setTimetableLegacyNotificationsCleaned(bool value) async {
+    final prefs = await _getOrCreate();
+    prefs.timetableLegacyNotificationsCleaned = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> setLastTimetableNotificationSync({
+    required DateTime syncedAt,
+    required String summary,
+  }) async {
+    final prefs = await _getOrCreate();
+    prefs.lastTimetableNotificationSyncAt = syncedAt;
+    prefs.lastTimetableNotificationSyncSummary = summary;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
   Future<double> getTargetCwa() async {
     final prefs = await _getOrCreate();
     return prefs.targetCwa

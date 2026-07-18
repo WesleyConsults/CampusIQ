@@ -8,7 +8,8 @@ import 'package:campusiq/features/timetable/presentation/providers/timetable_imp
 import 'package:campusiq/features/timetable/presentation/widgets/import_slot_review_tile.dart';
 import 'package:campusiq/features/timetable/data/models/course_reminder_model.dart';
 import 'package:campusiq/features/timetable/data/repositories/course_reminder_repository.dart';
-import 'package:campusiq/features/timetable/data/repositories/timetable_repository.dart';
+import 'package:campusiq/features/timetable/domain/course_code_normalizer.dart';
+import 'package:campusiq/features/timetable/domain/timetable_notification_coordinator.dart';
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
 import 'package:campusiq/core/services/notification_service.dart';
@@ -16,28 +17,46 @@ import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/shared/widgets/campus_button.dart';
 import 'package:campusiq/shared/widgets/import_option_grid.dart';
 
-class TimetableImportScreen extends ConsumerWidget {
-  const TimetableImportScreen({super.key});
+class TimetableImportScreen extends ConsumerStatefulWidget {
+  final String? initialSource;
+  const TimetableImportScreen({this.initialSource, super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TimetableImportScreen> createState() => _TimetableImportScreenState();
+}
+
+class _TimetableImportScreenState extends ConsumerState<TimetableImportScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialSource != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final source = widget.initialSource == 'camera' ? ImageSource.camera : ImageSource.gallery;
+        _pickIfOnline(source);
+      });
+    }
+  }
+
+  Future<void> _pickIfOnline(ImageSource source) async {
+    final isOnline = await ref.read(isOnlineProvider.future);
+    if (!mounted) return;
+    if (!isOnline) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("You're offline. Connect to use features."),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    await ref.read(timetableImportNotifierProvider.notifier).pickAndParse(source);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(timetableImportNotifierProvider);
     final notifier = ref.read(timetableImportNotifierProvider.notifier);
-
-    Future<void> pickIfOnline(ImageSource source) async {
-      final isOnline = await ref.read(isOnlineProvider.future);
-      if (!context.mounted) return;
-      if (!isOnline) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("You're offline. Connect to use features."),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        return;
-      }
-      await notifier.pickAndParse(source);
-    }
 
     // Auto-navigate / show dialog when done
     ref.listen(timetableImportNotifierProvider, (_, next) {
@@ -77,7 +96,7 @@ class TimetableImportScreen extends ConsumerWidget {
         ],
       ),
       body: switch (state.step) {
-        ImportStep.idle => _IdleBody(onPick: pickIfOnline),
+        ImportStep.idle => _IdleBody(onPick: _pickIfOnline),
         ImportStep.picking => const _LoadingBody(message: 'Opening camera…'),
         ImportStep.parsing =>
           const _LoadingBody(message: 'Extracting timetable…'),
@@ -354,8 +373,9 @@ Future<void> _showPostImportAlertsDialog(
     if (index < slots.length) {
       final slot = slots[index];
       final code = slot.courseCode.trim().toUpperCase();
-      if (code.isNotEmpty && !seen.contains(code)) {
-        seen.add(code);
+      final normalized = normalizeCourseCode(code);
+      if (normalized.isNotEmpty && !seen.contains(normalized)) {
+        seen.add(normalized);
         uniqueImportedCourses.add((code: code, name: slot.courseName));
       }
     }
@@ -381,10 +401,16 @@ Future<void> _showPostImportAlertsDialog(
       },
       onSave: (isAlarm, offsetMinutes) async {
         try {
+          final notificationsGranted =
+              await NotificationService.instance.requestPermission();
+          if (isAlarm &&
+              notificationsGranted &&
+              !await NotificationService.instance.canScheduleExactAlarms()) {
+            await NotificationService.instance.openExactAlarmSettings();
+          }
           final isar = await ref.read(isarProvider.future);
           final semesterKey = ref.read(activeSemesterProvider);
           final reminderRepo = CourseReminderRepository(isar);
-          final timetableRepo = TimetableRepository(isar);
 
           for (final course in uniqueImportedCourses) {
             final existing = await reminderRepo.findByCourse(
@@ -399,19 +425,22 @@ Future<void> _showPostImportAlertsDialog(
                   offsetMinutes: offsetMinutes,
                 );
             reminder.courseName = course.name;
+            reminder.courseCode = course.code;
             reminder.offsetMinutes = offsetMinutes;
             reminder.isAlarm = isAlarm;
             reminder.isEnabled = true;
             await reminderRepo.saveReminder(reminder);
           }
 
-          final reminders = await reminderRepo.getReminders(semesterKey);
-          final activeSlots = await timetableRepo.getAllSlotsOnce(semesterKey);
-          await NotificationService.instance
-              .scheduleCourseReminderNotifications(
-            reminders: reminders,
-            slots: activeSlots,
+          final result =
+              await TimetableNotificationCoordinator(isar: isar).reconcile(
+            reason: 'post_import_alerts',
           );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(result.summary)),
+            );
+          }
         } catch (_) {
           // Fail silently — import succeeded
         } finally {

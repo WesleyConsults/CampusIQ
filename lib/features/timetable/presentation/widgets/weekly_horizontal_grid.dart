@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/core/theme/app_theme.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
+import 'package:campusiq/features/timetable/domain/course_code_normalizer.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/presentation/widgets/timetable_slot_card.dart';
 import 'package:campusiq/features/timetable/presentation/providers/course_reminder_provider.dart';
@@ -31,8 +32,10 @@ class WeeklyHorizontalGrid extends ConsumerWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: List.generate(TimetableConstants.dayLabels.length, (dayIdx) {
-                final daySlots = allSlots.where((s) => s.dayIndex == dayIdx).toList();
+              children:
+                  List.generate(TimetableConstants.dayLabels.length, (dayIdx) {
+                final daySlots =
+                    allSlots.where((s) => s.dayIndex == dayIdx).toList();
                 return _DayColumn(
                   dayIndex: dayIdx,
                   slots: daySlots,
@@ -84,7 +87,9 @@ class _DayColumn extends StatelessWidget {
                   : colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(AppRadii.sm),
               border: Border.all(
-                color: isToday ? colorScheme.secondary : colorScheme.outlineVariant,
+                color: isToday
+                    ? colorScheme.secondary
+                    : colorScheme.outlineVariant,
                 width: 1,
               ),
             ),
@@ -94,7 +99,9 @@ class _DayColumn extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: isToday ? colorScheme.onSecondaryContainer : colorScheme.onSurface,
+                color: isToday
+                    ? colorScheme.onSecondaryContainer
+                    : colorScheme.onSurface,
               ),
             ),
           ),
@@ -132,7 +139,8 @@ class _DayColumn extends StatelessWidget {
                       final laneWidth = totalWidth / pos.totalColumns;
                       final cardWidth = laneWidth - laneGap;
                       final hasAlarm = reminders.any((r) =>
-                          r.courseCode.toUpperCase() == s.courseCode.toUpperCase() &&
+                          normalizeCourseCode(r.courseCode) ==
+                              normalizeCourseCode(s.courseCode) &&
                           r.isEnabled &&
                           r.isAlarm);
 

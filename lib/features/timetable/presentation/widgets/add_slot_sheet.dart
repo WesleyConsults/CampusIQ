@@ -6,6 +6,7 @@ import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
+import 'package:campusiq/features/timetable/domain/course_code_normalizer.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/shared/widgets/campus_modal_action_row.dart';
 import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
@@ -112,6 +113,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
 
     final slot = widget.existing ?? TimetableSlotModel();
     slot.courseCode = _codeController.text.trim().toUpperCase();
+    slot.normalizedCourseCode = normalizeCourseCode(slot.courseCode);
     slot.courseName = _nameController.text.trim();
     slot.venue = _venueController.text.trim();
     slot.lecturerName = _lecturerController.text.trim();
@@ -121,6 +123,7 @@ class _AddSlotSheetState extends ConsumerState<AddSlotSheet> {
     slot.dayIndex = _dayIndex;
     slot.semesterKey = widget.semesterKey;
     slot.colorValue = widget.colorValue;
+    slot.ensureStableIdentity();
 
     Navigator.of(context).pop(slot);
   }

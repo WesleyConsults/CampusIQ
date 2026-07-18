@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/providers/isar_provider.dart';
-import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/features/timetable/data/models/course_reminder_model.dart';
 import 'package:campusiq/features/timetable/data/repositories/course_reminder_repository.dart';
-import 'package:campusiq/features/timetable/data/repositories/timetable_repository.dart';
+import 'package:campusiq/features/timetable/domain/timetable_notification_coordinator.dart';
 
 final courseReminderRepositoryProvider =
     Provider<CourseReminderRepository?>((ref) {
@@ -24,17 +23,12 @@ final activeCourseReminderCountProvider = Provider<int>((ref) {
   return reminders.where((reminder) => reminder.isEnabled).length;
 });
 
-Future<void> refreshCourseReminderNotifications(WidgetRef ref) async {
+Future<TimetableNotificationSyncResult> refreshCourseReminderNotifications(
+  WidgetRef ref, {
+  String reason = 'course_reminder_refresh',
+}) async {
   final isar = await ref.read(isarProvider.future);
-  final semester = ref.read(activeSemesterProvider);
-  final reminderRepo = CourseReminderRepository(isar);
-  final timetableRepo = TimetableRepository(isar);
-
-  final reminders = await reminderRepo.getReminders(semester);
-  final slots = await timetableRepo.getAllSlotsOnce(semester);
-
-  await NotificationService.instance.scheduleCourseReminderNotifications(
-    reminders: reminders,
-    slots: slots,
+  return TimetableNotificationCoordinator(isar: isar).reconcile(
+    reason: reason,
   );
 }

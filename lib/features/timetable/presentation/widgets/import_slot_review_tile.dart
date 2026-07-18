@@ -21,8 +21,14 @@ class ImportSlotReviewTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final dayLabel = TimetableConstants.dayFullLabels[slot.dayIndex];
-    final startLabel = TimetableConstants.minutesToLabel(slot.startMinutes);
-    final endLabel = TimetableConstants.minutesToLabel(slot.endMinutes);
+    final startLabel = slot.isValid
+        ? TimetableConstants.minutesToLabel(slot.startMinutes)
+        : (slot.rawStartTime.trim().isEmpty
+            ? 'Invalid start'
+            : slot.rawStartTime);
+    final endLabel = slot.isValid
+        ? TimetableConstants.minutesToLabel(slot.endMinutes)
+        : (slot.rawEndTime.trim().isEmpty ? 'Invalid end' : slot.rawEndTime);
 
     final chipColor = switch (slot.slotType) {
       'Practical' => Colors.teal,
@@ -30,9 +36,41 @@ class ImportSlotReviewTile extends ConsumerWidget {
       _ => colorScheme.primary,
     };
 
+    Future<void> fixTime() async {
+      final initialStart = slot.startMinutes > 0 ? slot.startMinutes : 8 * 60;
+      final start = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay(
+          hour: initialStart ~/ 60,
+          minute: initialStart % 60,
+        ),
+      );
+      if (start == null || !context.mounted) return;
+
+      final initialEnd =
+          slot.endMinutes > initialStart ? slot.endMinutes : initialStart + 60;
+      final end = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay(
+          hour: (initialEnd ~/ 60).clamp(0, 23),
+          minute: initialEnd % 60,
+        ),
+      );
+      if (end == null) return;
+
+      ref.read(timetableImportNotifierProvider.notifier).updateSlotTimes(
+            index: index,
+            startMinutes: start.hour * 60 + start.minute,
+            endMinutes: end.hour * 60 + end.minute,
+          );
+    }
+
     return InkWell(
-      onTap: () =>
-          ref.read(timetableImportNotifierProvider.notifier).toggleSlot(index),
+      onTap: slot.isValid
+          ? () => ref
+              .read(timetableImportNotifierProvider.notifier)
+              .toggleSlot(index)
+          : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Row(
@@ -40,9 +78,11 @@ class ImportSlotReviewTile extends ConsumerWidget {
             Checkbox(
               value: isSelected,
               activeColor: colorScheme.primary,
-              onChanged: (_) => ref
-                  .read(timetableImportNotifierProvider.notifier)
-                  .toggleSlot(index),
+              onChanged: slot.isValid
+                  ? (_) => ref
+                      .read(timetableImportNotifierProvider.notifier)
+                      .toggleSlot(index)
+                  : null,
             ),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
@@ -76,6 +116,38 @@ class ImportSlotReviewTile extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (!slot.isValid) ...[
+                    const SizedBox(height: AppSpacing.xxxs),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            slot.validationError ?? 'Invalid timetable time',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colorScheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: fixTime,
+                          child: const Text('Fix time'),
+                        ),
+                      ],
+                    ),
+                  ] else if (slot.validationError != null) ...[
+                    const SizedBox(height: AppSpacing.xxxs),
+                    Text(
+                      slot.validationError!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.error,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

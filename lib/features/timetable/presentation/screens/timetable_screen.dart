@@ -25,6 +25,7 @@ import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_chip.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
+import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
 
 class TimetableScreen extends ConsumerStatefulWidget {
   const TimetableScreen({super.key});
@@ -34,6 +35,8 @@ class TimetableScreen extends ConsumerStatefulWidget {
 }
 
 class _TimetableScreenState extends ConsumerState<TimetableScreen> {
+  String? _handledNotificationSlotId;
+
   void _onDaySwipe(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
     if (velocity.abs() < 300) return; // ignore slow drags
@@ -97,6 +100,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       } else {
         await repo.updateSlot(result);
       }
+      await refreshCourseReminderNotifications(ref);
       await AnalyticsService.instance.logTimetableSlotSaved(
         action: existing == null ? 'created' : 'updated',
       );
@@ -146,6 +150,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
           }
           try {
             await repo.deleteSlot(slot.id);
+            await refreshCourseReminderNotifications(ref);
           } catch (e) {
             if (mounted) {
               messenger.showSnackBar(
@@ -161,6 +166,39 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     );
   }
 
+  void _handleNotificationRoute(List<TimetableSlotModel> allSlots) {
+    final slotId = GoRouterState.of(context).uri.queryParameters['slotId'];
+    if (slotId == null ||
+        slotId.isEmpty ||
+        slotId == _handledNotificationSlotId ||
+        allSlots.isEmpty) {
+      return;
+    }
+    _handledNotificationSlotId = slotId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      TimetableSlotModel? target;
+      for (final slot in allSlots) {
+        if (slot.slotId == slotId) {
+          target = slot;
+          break;
+        }
+      }
+      if (target == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('That timetable class no longer exists.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        context.go('/timetable');
+        return;
+      }
+      ref.read(activeDayProvider.notifier).state = target.dayIndex;
+      _showClassDetail(target);
+    });
+  }
+
   void _onFreeBlockTap(FreeBlock block) {
     _openAddClassSheet(
         prefillStart: block.startMinutes, prefillEnd: block.endMinutes);
@@ -170,13 +208,25 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     _openAddClassSheet();
   }
 
-  void _onFabTap() {
-    _openAddClassSheet();
+  Future<void> _onFabTap() async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _TimetableAddOptionsSheet(),
+    );
+    if (result == 'manual') {
+      _openAddClassSheet();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final allSlotsAsync = ref.watch(allSlotsProvider);
+    final allSlots = allSlotsAsync.valueOrNull ?? [];
+    _handleNotificationRoute(allSlots);
     final classSlots = ref.watch(activeDaySlotsProvider);
     final freeBlocks = ref.watch(activeDayFreeBlocksProvider);
     final hasActiveSession = ref.watch(activeSessionProvider) != null;
@@ -205,9 +255,8 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
             icon: Icon(viewMode == TimetableViewMode.grid
                 ? LucideIcons.listTodo
                 : LucideIcons.layoutGrid),
-            tooltip: viewMode == TimetableViewMode.grid
-                ? 'List view'
-                : 'Grid view',
+            tooltip:
+                viewMode == TimetableViewMode.grid ? 'List view' : 'Grid view',
             onPressed: () {
               ref.read(timetableViewModeProvider.notifier).state =
                   viewMode == TimetableViewMode.grid
@@ -243,11 +292,6 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
             ],
           ),
           IconButton(
-            icon: const Icon(LucideIcons.scanText),
-            tooltip: 'Import from image',
-            onPressed: () => context.push('/timetable/import'),
-          ),
-          IconButton(
             icon: const Icon(LucideIcons.plus),
             tooltip: 'Add class',
             onPressed: _onFabTap,
@@ -257,9 +301,10 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       body: SafeArea(
         top: false,
         child: GestureDetector(
-          onHorizontalDragEnd: (viewMode == TimetableViewMode.grid && layoutIndex == 1)
-              ? null
-              : _onDaySwipe,
+          onHorizontalDragEnd:
+              (viewMode == TimetableViewMode.grid && layoutIndex == 1)
+                  ? null
+                  : _onDaySwipe,
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
@@ -327,8 +372,10 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                     }
 
                     final allSlots = allSlotsAsync.valueOrNull ?? [];
-                    final isWeeklyGrid = viewMode == TimetableViewMode.grid && layoutIndex == 1;
-                    final showEmpty = isWeeklyGrid ? allSlots.isEmpty : classSlots.isEmpty;
+                    final isWeeklyGrid =
+                        viewMode == TimetableViewMode.grid && layoutIndex == 1;
+                    final showEmpty =
+                        isWeeklyGrid ? allSlots.isEmpty : classSlots.isEmpty;
 
                     if (showEmpty) {
                       return Padding(
@@ -625,6 +672,52 @@ class _LoadingState extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
               fontSize: 14,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimetableAddOptionsSheet extends StatelessWidget {
+  const _TimetableAddOptionsSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return CampusModalSheet(
+      title: 'Add Timetable',
+      subtitle: 'Choose how you want to add classes',
+      dismissOnBackdropTap: true,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(LucideIcons.camera, color: AppColors.navy),
+            title: const Text('Take Photo'),
+            subtitle: const Text('Scan timetable using your camera'),
+            onTap: () {
+              Navigator.pop(context);
+              context.push('/timetable/import?source=camera');
+            },
+          ),
+          ListTile(
+            leading: const Icon(LucideIcons.image, color: AppColors.navy),
+            title: const Text('Upload Image'),
+            subtitle: const Text('Upload a timetable screenshot or PDF'),
+            onTap: () {
+              Navigator.pop(context);
+              context.push('/timetable/import?source=gallery');
+            },
+          ),
+          ListTile(
+            leading: const Icon(LucideIcons.keyboard, color: AppColors.navy),
+            title: const Text('Enter Manually'),
+            subtitle: const Text('Add class times and venues manually'),
+            onTap: () {
+              Navigator.pop(context, 'manual');
+            },
           ),
         ],
       ),

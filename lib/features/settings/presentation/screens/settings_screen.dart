@@ -188,6 +188,13 @@ class SettingsScreen extends ConsumerWidget {
                   ref.invalidate(notificationPrefsProvider);
                 },
               ),
+              const Divider(height: 1),
+              _RowTile(
+                leading: LucideIcons.shieldCheck,
+                title: 'Timetable alert reliability',
+                subtitle: 'Permissions, scheduled class alerts, and recovery',
+                onTap: () => context.push('/settings/timetable-notifications'),
+              ),
             ]),
 
             const SizedBox(height: AppSpacing.md),
@@ -337,8 +344,6 @@ class SettingsScreen extends ConsumerWidget {
     final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
     return '${h.toString()}:${minute.toString().padLeft(2, '0')} $suffix';
   }
-
-
 
   void _showGradingSystemPicker(
     BuildContext context,

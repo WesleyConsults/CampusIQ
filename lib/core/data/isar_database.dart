@@ -13,6 +13,7 @@ import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
 import 'package:campusiq/features/session/data/models/study_session_model.dart';
 import 'package:campusiq/features/timetable/data/models/course_reminder_model.dart';
+import 'package:campusiq/features/timetable/data/models/scheduled_timetable_notification_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 
 const List<CollectionSchema<dynamic>> kCampusIqIsarSchemas = [
@@ -28,6 +29,7 @@ const List<CollectionSchema<dynamic>> kCampusIqIsarSchemas = [
   WeeklyReviewModelSchema,
   CourseNoteModelSchema,
   CourseReminderModelSchema,
+  ScheduledTimetableNotificationModelSchema,
 ];
 
 const _isarOpenRetryDelays = [

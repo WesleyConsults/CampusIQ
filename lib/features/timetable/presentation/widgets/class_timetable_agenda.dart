@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
+import 'package:campusiq/features/timetable/domain/course_code_normalizer.dart';
 import 'package:campusiq/features/timetable/presentation/providers/course_reminder_provider.dart';
 
 class ClassTimetableAgenda extends ConsumerWidget {
@@ -28,12 +29,14 @@ class ClassTimetableAgenda extends ConsumerWidget {
       itemBuilder: (context, index) {
         final slot = classSlots[index];
         final hasAlarm = reminders.any((r) =>
-            r.courseCode.toUpperCase() == slot.courseCode.toUpperCase() &&
+            normalizeCourseCode(r.courseCode) ==
+                normalizeCourseCode(slot.courseCode) &&
             r.isEnabled &&
             r.isAlarm);
         final accent = Color(slot.colorValue);
         final background = isDark
-            ? Color.lerp(colorScheme.surface, accent, 0.15) ?? colorScheme.surface
+            ? Color.lerp(colorScheme.surface, accent, 0.15) ??
+                colorScheme.surface
             : Color.lerp(Colors.white, accent, 0.08) ?? Colors.white;
         final borderColor = accent.withValues(alpha: isDark ? 0.35 : 0.18);
 
@@ -122,7 +125,8 @@ class ClassTimetableAgenda extends ConsumerWidget {
                             color: colorScheme.onSurface,
                           ),
                         ),
-                        if (slot.venue.isNotEmpty || slot.slotType.isNotEmpty) ...[
+                        if (slot.venue.isNotEmpty ||
+                            slot.slotType.isNotEmpty) ...[
                           const SizedBox(height: 6),
                           Row(
                             children: [

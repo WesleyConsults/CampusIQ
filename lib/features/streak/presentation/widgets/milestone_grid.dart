@@ -87,9 +87,10 @@ class _BadgeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Opacity(
-      opacity: isUnlocked ? 1.0 : 0.35,
+      opacity: isUnlocked ? 1.0 : (isDark ? 0.7 : 0.35),
       child: Container(
         decoration: BoxDecoration(
           color: isUnlocked

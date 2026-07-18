@@ -22,6 +22,10 @@ class UserPrefsModel {
   /// Set to true after they tap either "Allow" or "Not now".
   bool notificationPermissionAsked = false;
 
+  bool timetableLegacyNotificationsCleaned = false;
+  DateTime? lastTimetableNotificationSyncAt;
+  String lastTimetableNotificationSyncSummary = '';
+
   bool notifyStudyReminders = true;
   bool notifyStreakAlerts = true;
   bool notifyMilestoneAlerts = true;

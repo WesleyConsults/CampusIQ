@@ -5,8 +5,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:campusiq/core/services/notification_service.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 import 'package:campusiq/features/timetable/data/models/course_reminder_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
+import 'package:campusiq/features/timetable/domain/course_code_normalizer.dart';
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 import 'package:campusiq/features/timetable/presentation/providers/course_reminder_provider.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
@@ -28,7 +30,7 @@ class CourseRemindersScreen extends ConsumerWidget {
     final slots = ref.read(allSlotsProvider).valueOrNull ?? [];
     final options = _courseOptionsFromSlots(slots);
 
-    final result = await showModalBottomSheet<_ReminderDraft>(
+    var result = await showModalBottomSheet<_ReminderDraft>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -48,11 +50,8 @@ class CourseRemindersScreen extends ConsumerWidget {
     }
 
     try {
-      if (result.isAlarm) {
-        await NotificationService.instance.requestAlarmPermission();
-      } else {
-        await NotificationService.instance.requestPermission();
-      }
+      result = await _preparePermissionsForDraft(context, ref, result);
+      if (result == null) return;
       final semester = ref.read(activeSemesterProvider);
       final existingForCourse = existing ??
           await repo.findByCourse(
@@ -75,10 +74,18 @@ class CourseRemindersScreen extends ConsumerWidget {
       reminder.isEnabled = true;
 
       await repo.saveReminder(reminder);
-      await refreshCourseReminderNotifications(ref);
+      final syncResult = await refreshCourseReminderNotifications(
+        ref,
+        reason: 'reminder_saved',
+      );
 
       if (context.mounted) {
-        _showMessage(context, 'Reminder saved for ${reminder.courseCode}.');
+        _showMessage(context, syncResult.summary);
+        if (syncResult.hasPermissionFailure) {
+          await _showPermissionRequiredDialog(context);
+        } else if (syncResult.hasExactAlarmFailure) {
+          await _showExactAlarmRequiredDialog(context);
+        }
       }
     } catch (_) {
       if (context.mounted) {
@@ -109,7 +116,10 @@ class CourseRemindersScreen extends ConsumerWidget {
     }
 
     try {
-      await NotificationService.instance.requestPermission();
+      final granted = await _requestNotificationPermission(ref);
+      if (!granted && context.mounted) {
+        _showMessage(context, 'Notification permission is required.');
+      }
       final semester = ref.read(activeSemesterProvider);
 
       for (final option in options) {
@@ -131,13 +141,13 @@ class CourseRemindersScreen extends ConsumerWidget {
         await repo.saveReminder(reminder);
       }
 
-      await refreshCourseReminderNotifications(ref);
+      final syncResult = await refreshCourseReminderNotifications(
+        ref,
+        reason: 'all_reminders_enabled',
+      );
 
       if (context.mounted) {
-        _showMessage(
-          context,
-          'Reminders turned on for ${options.length} courses.',
-        );
+        _showMessage(context, syncResult.summary);
       }
     } catch (_) {
       if (context.mounted) {
@@ -157,11 +167,18 @@ class CourseRemindersScreen extends ConsumerWidget {
 
     try {
       if (enabled) {
-        await NotificationService.instance.requestPermission();
+        final granted = await _requestNotificationPermission(ref);
+        if (!granted && context.mounted) {
+          _showMessage(context, 'Notification permission is required.');
+        }
       }
       reminder.isEnabled = enabled;
       await repo.saveReminder(reminder);
-      await refreshCourseReminderNotifications(ref);
+      final result = await refreshCourseReminderNotifications(
+        ref,
+        reason: enabled ? 'reminder_enabled' : 'reminder_disabled',
+      );
+      if (context.mounted) _showMessage(context, result.summary);
     } catch (_) {
       if (context.mounted) {
         _showMessage(context, 'Could not update reminder. Please try again.');
@@ -179,7 +196,7 @@ class CourseRemindersScreen extends ConsumerWidget {
 
     try {
       await repo.deleteReminder(reminder.id);
-      await refreshCourseReminderNotifications(ref);
+      await refreshCourseReminderNotifications(ref, reason: 'reminder_deleted');
       if (context.mounted) {
         _showMessage(context, 'Reminder removed.');
       }
@@ -195,6 +212,115 @@ class CourseRemindersScreen extends ConsumerWidget {
       SnackBar(
         content: Text(message),
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<bool> _requestNotificationPermission(WidgetRef ref) async {
+    final granted = await NotificationService.instance.requestPermission();
+    final repo = ref.read(userPrefsRepositoryProvider);
+    await repo?.setNotificationPermissionAsked(true);
+    return granted;
+  }
+
+  Future<_ReminderDraft?> _preparePermissionsForDraft(
+    BuildContext context,
+    WidgetRef ref,
+    _ReminderDraft draft,
+  ) async {
+    final notificationsGranted = await _requestNotificationPermission(ref);
+    if (!notificationsGranted) return draft;
+    if (!draft.isAlarm) return draft;
+
+    if (await NotificationService.instance.canScheduleExactAlarms()) {
+      return draft;
+    }
+    if (!context.mounted) return null;
+    return _showExactAlarmChoiceDialog(context, draft);
+  }
+
+  Future<_ReminderDraft?> _showExactAlarmChoiceDialog(
+    BuildContext context,
+    _ReminderDraft draft,
+  ) {
+    return showDialog<_ReminderDraft?>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exact alarm access required'),
+        content: const Text(
+          'Alarm mode needs exact alarm access. You can enable it in system settings, use a standard reminder, or cancel.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(null),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(_ReminderDraft(
+              course: draft.course,
+              offsetMinutes: draft.offsetMinutes,
+              isAlarm: false,
+            )),
+            child: const Text('Use reminder'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              await NotificationService.instance.openExactAlarmSettings();
+              if (context.mounted) Navigator.of(context).pop(draft);
+            },
+            child: const Text('Enable'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showPermissionRequiredDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Notification permission required'),
+        content: const Text(
+          'Your reminder preference was saved, but UniMate cannot schedule timetable alerts until notifications are allowed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              await NotificationService.instance.openNotificationSettings();
+              if (context.mounted) Navigator.of(context).pop();
+            },
+            child: const Text('Open settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showExactAlarmRequiredDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exact alarm access required'),
+        content: const Text(
+          'Alarm reminders were saved, but exact alarm access is disabled. Enable it or switch the course to a standard reminder.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              await NotificationService.instance.openExactAlarmSettings();
+              if (context.mounted) Navigator.of(context).pop();
+            },
+            child: const Text('Open settings'),
+          ),
+        ],
       ),
     );
   }
@@ -281,8 +407,8 @@ class CourseRemindersScreen extends ConsumerWidget {
                         reminder: reminder,
                         slots: slots
                             .where((slot) =>
-                                slot.courseCode.toUpperCase() ==
-                                reminder.courseCode.toUpperCase())
+                                normalizeCourseCode(slot.courseCode) ==
+                                normalizeCourseCode(reminder.courseCode))
                             .toList(),
                         onEdit: () => _openReminderSheet(
                           context,
@@ -624,8 +750,8 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
         ? (widget.options.isEmpty ? null : widget.options.first)
         : widget.options.firstWhere(
             (option) =>
-                option.courseCode.toUpperCase() ==
-                existing.courseCode.toUpperCase(),
+                normalizeCourseCode(option.courseCode) ==
+                normalizeCourseCode(existing.courseCode),
             orElse: () => _CourseOption(
               courseCode: existing.courseCode,
               courseName: existing.courseName,
@@ -807,7 +933,8 @@ class _CourseReminderSheetState extends State<_CourseReminderSheet> {
 
     final containsSelected = widget.options.any(
       (option) =>
-          option.courseCode.toUpperCase() == selected.courseCode.toUpperCase(),
+          normalizeCourseCode(option.courseCode) ==
+          normalizeCourseCode(selected.courseCode),
     );
     if (containsSelected) return widget.options;
     return [selected, ...widget.options];
@@ -889,7 +1016,9 @@ class _CourseOption {
 List<_CourseOption> _courseOptionsFromSlots(List<TimetableSlotModel> slots) {
   final grouped = <String, List<TimetableSlotModel>>{};
   for (final slot in slots) {
-    grouped.putIfAbsent(slot.courseCode.toUpperCase(), () => []).add(slot);
+    final normalized = normalizeCourseCode(slot.courseCode);
+    if (normalized.isEmpty) continue;
+    grouped.putIfAbsent(normalized, () => []).add(slot);
   }
 
   final options = grouped.entries.map((entry) {

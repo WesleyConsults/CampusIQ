@@ -97,9 +97,14 @@ class PlanGenerator {
       assignedCourseCodes.add(candidate.course.code);
       studyMinutesAssigned += block.durationMinutes;
 
+      final courseName = candidate.course.name.trim();
+      final taskLabel = courseName.isEmpty || courseName == candidate.course.code
+          ? 'Study ${candidate.course.code}'
+          : 'Study $courseName';
+
       tasks.add(PlanTask(
         taskType: 'study',
-        label: 'Study ${candidate.course.name}',
+        label: taskLabel,
         courseCode: candidate.course.code,
         durationMinutes: block.durationMinutes,
         startTime: DateTime(

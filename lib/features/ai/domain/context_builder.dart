@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:campusiq/features/cwa/data/repositories/cwa_repository.dart';
 import 'package:campusiq/features/session/data/repositories/session_repository.dart';
 import 'package:campusiq/features/timetable/data/repositories/timetable_repository.dart';
@@ -22,17 +23,40 @@ class ContextBuilder {
   Future<String> buildStudyPlanPrompt() async {
     final semesterKey = await userPrefsRepository.getActiveSemesterKey();
 
-    // 1. Courses sorted by (creditHours * gap) desc — proxy for CWA leverage
+    // 1. Gather all unique courses from saved courses & timetable slots
     final allCourses = await _getCourses(semesterKey);
-    // We don't have targetCwa here so just sort by creditHours desc as best proxy
-    final sortedCourses = [...allCourses]
-      ..sort((a, b) => b.creditHours.compareTo(a.creditHours));
+    final allSlots = await timetableRepository.getAllSlotsOnce(semesterKey);
 
-    final courseLines = sortedCourses.asMap().entries.map((e) {
-      final i = e.key + 1;
-      final c = e.value;
-      return '$i. ${c.code} — ${c.creditHours.toInt()} credit hours, expected score ${c.expectedScore.toInt()}';
-    }).join('\n');
+    final coursesMap = <String, String?>{};
+    final creditsMap = <String, int>{};
+
+    for (final c in allCourses) {
+      final code = c.code as String;
+      final name = c.name as String;
+      coursesMap[code] = name.trim().isEmpty ? null : name.trim();
+      creditsMap[code] = c.creditHours.toInt();
+    }
+
+    for (final slot in allSlots) {
+      final code = slot.courseCode;
+      final name = slot.courseName;
+      if (!coursesMap.containsKey(code) || coursesMap[code] == null) {
+        coursesMap[code] = name.trim().isEmpty ? null : name.trim();
+      }
+    }
+
+    final allowedCoursesList = <Map<String, dynamic>>[];
+    for (final code in coursesMap.keys) {
+      allowedCoursesList.add({
+        'courseCode': code,
+        'courseName': coursesMap[code],
+        'credits': creditsMap[code] ?? 3,
+      });
+    }
+
+    final allowedCoursesJson = const JsonEncoder.withIndent('  ').convert({
+      'allowedCourses': allowedCoursesList,
+    });
 
     // 2. Free blocks per day Mon–Sat (KNUST grid)
     const dayNames = TimetableConstants.dayFullLabels; // Mon–Sat
@@ -80,8 +104,8 @@ class ContextBuilder {
 
     return '''You are a study planner. Generate a 7-day study plan for a university student.
 
-Course priority (highest to lowest impact on CWA):
-$courseLines
+Allowed course data (Use only the exact course codes and course names provided. Do not infer, expand, rename, or guess what a course code means):
+$allowedCoursesJson
 
 Available free blocks per day (class times are already excluded):
 ${freeBlockLines.join('\n')}
@@ -91,7 +115,9 @@ $patternSummary
 
 Rules:
 - Never schedule a study session during a class time
-- Prioritize high-credit courses (more impact on CWA)
+- Use only the exact course codes and course names provided in 'allowedCourses'. Do not infer, expand, rename, or guess what a course code means.
+- If a course has a code but no name (or 'courseName' is null), display/use only the course code as the 'courseName' value. Do not invent any names.
+- Never include tasks for courses that are not in the allowed list.
 - Respect past patterns where possible — don't force sessions at times they never study
 - Maximum 2 study sessions per day
 - Each session: 60–120 minutes

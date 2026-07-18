@@ -1,6 +1,6 @@
 # CampusIQ — UI Design Flow (Figma Redesign Reference)
 
-This document maps every screen, state, overlay, and transition in CampusIQ v1.0. Use it to create linked Figma frames for each page and modal.
+This document maps every screen, state, overlay, and transition in CampusIQ v1.1.6. Use it to create linked Figma frames for each page and modal.
 
 ---
 
@@ -466,17 +466,69 @@ Reached via button on Sessions screen.
   - Toggle: Weekly Review Prompt (on/off).
   - Daily reminder time picker (tap to open time dialog).
   - "Cancel All Notifications" button (with confirmation dialog).
+- Row: **Timetable Alert Reliability** (shield icon) → pushes `/settings/timetable-notifications`.
 - Section: **Account** (or debug section)
   - DEV Premium Toggle (visible only in debug builds) — flips `isPremium` for testing.
 - Back navigation.
 
+### 8.2 Navigation Destinations
+
+| Trigger | Destination |
+|---------|-------------|
+| "Timetable alert reliability" | `/settings/timetable-notifications` |
+| Back | Previous route |
+
 ---
 
-## 9. Weekly Review (`/ai/weekly-review`)
+## 9. Timetable Alert Reliability (`/settings/timetable-notifications`)
+
+Full-screen push route from Settings. Diagnostics screen for timetable notification health.
+
+### 9.1 States
+
+**Loading State**
+- AppBar: "Timetable Alert Reliability".
+- Centred `CircularProgressIndicator`.
+
+**Has Data**
+- AppBar: "Timetable Alert Reliability".
+- **Status** card:
+  - Notification permission (Allowed / Permission required).
+  - Exact alarm access (Available / Access required).
+  - Reminder channel status (Ready/Missing/Disabled).
+  - Alarm channel status (Ready/Missing/Disabled).
+  - Active semester key.
+- **Timetable Sync** card:
+  - Timetable slots count.
+  - Enabled reminders count.
+  - Desired alerts (slots × enabled reminders).
+  - Registered alerts (in local registry).
+  - Pending alerts (confirmed in OS queue).
+  - Next reminder (day + time + course code, or "None").
+  - Last sync timestamp (or "Never").
+  - Last sync result summary.
+- **Warnings** card (if any): list of warning messages (e.g., "Some registered alerts are missing from the OS queue").
+- **Failures** card (if any): list of failure reasons.
+- **Action buttons** (Wrap layout):
+  - "Synchronize now" (filled, triggers `TimetableNotificationCoordinator.reconcile()`).
+  - "Send test" (outlined, fires an immediate non-recurring test notification on ID 999001).
+  - "Notification settings" (outlined, opens system notification settings).
+  - "Exact alarms" (outlined, opens system exact-alarm settings).
+- **Expandable: "Scheduled timetable reminders"** — lists all registry entries for the active semester with title, semester/course/day/time, and Alarm/Reminder badge.
+
+### 9.2 Navigation Destinations
+
+| Trigger | Destination |
+|---------|-------------|
+| Back | `/settings` |
+
+---
+
+## 10. Weekly Review (`/ai/weekly-review`)
 
 Full-screen AI-generated weekly review.
 
-### 9.1 States
+### 10.1 States
 
 **Loading State**
 - Skeleton/spinner while AI generates review.
@@ -500,7 +552,7 @@ Full-screen AI-generated weekly review.
 **Error State**
 - `ErrorRetryWidget`.
 
-### 9.2 Navigation Destinations
+### 10.2 Navigation Destinations
 
 | Trigger | Destination |
 |---------|-------------|
@@ -509,9 +561,9 @@ Full-screen AI-generated weekly review.
 
 ---
 
-## 10. Subscribe (`/subscribe`)
+## 11. Subscribe (`/subscribe`)
 
-### 10.1 States
+### 11.1 States
 
 - AppBar: "Premium".
 - **Current state**: Stub/placeholder screen.
@@ -521,17 +573,17 @@ Full-screen AI-generated weekly review.
 
 ---
 
-## 11. Course Hub Workspace (`/course/:courseCode`)
+## 12. Course Hub Workspace (`/course/:courseCode`)
 
 Full-screen push route (no bottom nav). 3-tab workspace for a specific course.
 
-### 11.1 Entry Points
+### 12.1 Entry Points
 
 1. CWA screen → course card PopupMenuButton → "Open Workspace".
 2. Timetable → slot detail sheet → "Open Workspace" button.
 3. Sessions → course breakdown → tap course row.
 
-### 11.2 States (Loading / Not Found)
+### 12.2 States (Loading / Not Found)
 
 **Loading State**
 - `CircularProgressIndicator`.
@@ -540,7 +592,7 @@ Full-screen push route (no bottom nav). 3-tab workspace for a specific course.
 **Not Found (Invalid courseCode)**
 - Fallback Scaffold with error message and back button.
 
-### 11.3 Tab: Overview
+### 12.3 Tab: Overview
 
 **Loading State**
 - Skeleton cards.
@@ -556,7 +608,7 @@ Full-screen push route (no bottom nav). 3-tab workspace for a specific course.
 **Error State**
 - `ErrorRetryWidget`.
 
-### 11.4 Tab: Sessions
+### 12.4 Tab: Sessions
 
 **Loading State**
 - Skeleton chart + list.
@@ -573,7 +625,7 @@ Full-screen push route (no bottom nav). 3-tab workspace for a specific course.
 **Error State**
 - `ErrorRetryWidget`.
 
-### 11.5 Tab: Notes
+### 12.5 Tab: Notes
 
 **Loading State**
 - Skeleton list.
@@ -591,7 +643,7 @@ Full-screen push route (no bottom nav). 3-tab workspace for a specific course.
 **Error State**
 - `ErrorRetryWidget`.
 
-### 11.6 Sheets
+### 12.6 Sheets
 
 **NoteEditorSheet** (`DraggableScrollableSheet`)
 - Mode: Create (blank) or Edit (pre-filled).
@@ -600,7 +652,7 @@ Full-screen push route (no bottom nav). 3-tab workspace for a specific course.
 - "Save" button.
 - "Delete" button (edit mode only, with confirmation).
 
-### 11.7 Navigation Destinations
+### 12.7 Navigation Destinations
 
 | Trigger | Destination |
 |---------|-------------|
@@ -608,11 +660,11 @@ Full-screen push route (no bottom nav). 3-tab workspace for a specific course.
 
 ---
 
-## 12. Timetable Import (`/timetable/import`)
+## 13. Timetable Import (`/timetable/import`)
 
 Full-screen push route. 7-state import state machine.
 
-### 12.1 State Machine Flow
+### 13.1 State Machine Flow
 
 **1. Idle State**
 - AppBar: "Import Timetable".
@@ -662,7 +714,7 @@ Full-screen push route. 7-state import state machine.
 - "Try Again" button → resets to idle.
 - Back button → returns to idle.
 
-### 12.2 Navigation Destinations
+### 13.2 Navigation Destinations
 
 | Trigger | Destination |
 |---------|-------------|
@@ -672,7 +724,7 @@ Full-screen push route. 7-state import state machine.
 
 ---
 
-## 13. Registration Slip Import (Pushed from CWA — Semester Mode)
+## 14. Registration Slip Import (Pushed from CWA — Semester Mode)
 
 Pushed as `MaterialPageRoute` from CWA screen (scanner icon in Semester mode).
 
@@ -715,7 +767,7 @@ Pushed as `MaterialPageRoute` from CWA screen (scanner icon in Semester mode).
 
 ---
 
-## 14. Result Slip Import (Pushed from CWA — Cumulative Mode)
+## 15. Result Slip Import (Pushed from CWA — Cumulative Mode)
 
 Pushed from CWA screen (scanner icon in Cumulative mode).
 
@@ -763,7 +815,7 @@ Pushed from CWA screen (scanner icon in Cumulative mode).
 
 ---
 
-## 15. Past Semesters Screen (Pushed from CWA — Cumulative Mode)
+## 16. Past Semesters Screen (Pushed from CWA — Cumulative Mode)
 
 Pushed from CWA screen (history icon in Cumulative mode).
 
@@ -789,7 +841,7 @@ Pushed from CWA screen (history icon in Cumulative mode).
 
 ---
 
-## 16. Overlays, Sheets & Dialogs (Alphabetical Reference)
+## 17. Overlays, Sheets & Dialogs (Alphabetical Reference)
 
 | Name | Type | Triggered From | Purpose |
 |------|------|----------------|---------|
@@ -800,14 +852,16 @@ Pushed from CWA screen (history icon in Cumulative mode).
 | Course Picker Sheet | Bottom sheet | Sessions screen | Select course for study session |
 | CWA Coach Sheet | Bottom sheet | CWA screen | AI-generated academic coaching advice |
 | Note Editor Sheet | Draggable sheet | Course Hub (Notes tab) | Create or edit a course note |
+| Exact Alarm Choice Dialog | Dialog | Course Reminders | Choose between enabling exact alarms, falling back to reminder, or cancelling |
 | Notification Permission Dialog | Dialog | First notification enable | Custom dialog before requesting OS permission |
+| Notification Permission Required Dialog | Dialog | Course Reminders | Informs user reminders were saved but can't schedule without permission; offers system settings shortcut |
 | Slot Detail Sheet | Bottom sheet | Timetable (tap slot) | View slot details, open workspace, delete slot |
 | Target CWA Dialog | Dialog | CWA summary bar | Set personal target CWA |
 | Weekly Review Sheet | Draggable sheet | Sessions/Streak (legacy) | Weekly stats + reflection (now superseded by full-screen AI review) |
 
 ---
 
-## 17. Complete Navigation Map
+## 18. Complete Navigation Map
 
 ```
 ShellRoute (Bottom Nav)
@@ -846,6 +900,7 @@ ShellRoute (Bottom Nav)
 ├── /streak ───────────────── Streak System
 ├── /insights ─────────────── Insights (from /sessions)
 ├── /settings ─────────────── Settings
+│   └── → /settings/timetable-notifications
 ├── /subscribe ────────────── Premium upsell
 │
 ├── Full-screen pushes (no bottom nav):
@@ -857,6 +912,7 @@ ShellRoute (Bottom Nav)
 │   ├── /timetable/import ─── Timetable Image Import (7 states)
 │   ├── /ai/weekly-review ─── AI Weekly Review
 │   │   └── [Premium Gate overlay]
+│   ├── /settings/timetable-notifications ── Timetable Alert Diagnostics
 │   ├── Registration Slip Import (pushed, 6 states)
 │   ├── Result Slip Import (pushed, 7 states)
 │   └── Past Semesters Screen (pushed)
@@ -867,7 +923,7 @@ ShellRoute (Bottom Nav)
 
 ---
 
-## 18. States Checklist (for Figma frames)
+## 19. States Checklist (for Figma frames)
 
 Every screen/component needs these state frames:
 
@@ -886,6 +942,7 @@ Every screen/component needs these state frames:
 | Streak /streak | ✓ | — | ✓ | ✓ | — | — |
 | Insights /insights | ✓ | ✓ | ✓ | ✓ | — | — |
 | Settings /settings | — | — | ✓ | — | — | — |
+| Timetable Alert Reliability /settings/timetable-notifications | ✓ | — | ✓ | ✓ | — | — |
 | Weekly Review /ai/weekly-review | ✓ | — | ✓ | ✓ | ✓ | — |
 | Subscribe /subscribe | — | — | ✓ | — | — | — |
 | Course Hub /course/:code | ✓ | — | ✓ | ✓ | — | — |
@@ -898,7 +955,7 @@ Every screen/component needs these state frames:
 
 ---
 
-## 19. Reusable Components (Design System)
+## 20. Reusable Components (Design System)
 
 These should have their own Figma component/variant sets:
 

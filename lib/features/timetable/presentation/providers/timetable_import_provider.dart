@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
+import 'package:campusiq/features/timetable/domain/timetable_notification_coordinator.dart';
 import 'package:campusiq/features/timetable/domain/timetable_slot_import.dart';
 import 'package:campusiq/features/timetable/domain/timetable_vision_parser.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
@@ -12,6 +13,7 @@ import 'package:campusiq/core/services/connectivity_service.dart';
 import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/core/providers/isar_provider.dart';
 
 part 'timetable_import_provider.g.dart';
 
@@ -114,7 +116,10 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
       state = TimetableImportState(
         step: ImportStep.reviewing,
         slots: slots,
-        selectedIndexes: Set<int>.from(List.generate(slots.length, (i) => i)),
+        selectedIndexes: Set<int>.from(
+          List.generate(slots.length, (i) => i)
+              .where((index) => slots[index].isValid),
+        ),
       );
     } catch (e, stackTrace) {
       await CrashReportingService.instance.recordNonFatalError(
@@ -142,13 +147,40 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
 
   void selectAll() {
     state = state.copyWith(
-      selectedIndexes:
-          Set<int>.from(List.generate(state.slots.length, (i) => i)),
+      selectedIndexes: Set<int>.from(
+        List.generate(state.slots.length, (i) => i)
+            .where((index) => state.slots[index].isValid),
+      ),
     );
   }
 
   void deselectAll() {
     state = state.copyWith(selectedIndexes: {});
+  }
+
+  void updateSlotTimes({
+    required int index,
+    required int startMinutes,
+    required int endMinutes,
+  }) {
+    if (index < 0 || index >= state.slots.length) return;
+    final slots = [...state.slots];
+    final validationError =
+        endMinutes <= startMinutes ? 'End time must be after start time' : null;
+    slots[index] = slots[index].copyWith(
+      startMinutes: startMinutes,
+      endMinutes: endMinutes,
+      rawStartTime: '',
+      rawEndTime: '',
+      validationError: validationError,
+    );
+    final selected = Set<int>.from(state.selectedIndexes);
+    if (validationError == null) {
+      selected.add(index);
+    } else {
+      selected.remove(index);
+    }
+    state = state.copyWith(slots: slots, selectedIndexes: selected);
   }
 
   Future<void> confirmImport() async {
@@ -161,12 +193,27 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
 
     try {
       final ordered = state.selectedIndexes.toList()..sort();
+      final invalidSelected =
+          ordered.where((index) => !state.slots[index].isValid).toList();
+      if (invalidSelected.isNotEmpty) {
+        state = state.copyWith(
+          step: ImportStep.reviewing,
+          errorMessage:
+              'Fix or deselect invalid timetable rows before importing.',
+        );
+        return;
+      }
       for (var i = 0; i < ordered.length; i++) {
         final slot = state.slots[ordered[i]];
         final color = TimetableConstants.colorForIndex(i);
         await repo
             .addSlot(slot.toModel(colorValue: color, semesterKey: semesterKey));
       }
+
+      final isar = await ref.read(isarProvider.future);
+      await TimetableNotificationCoordinator(isar: isar).reconcile(
+        reason: 'timetable_import',
+      );
 
       state = state.copyWith(step: ImportStep.done);
       await AnalyticsService.instance.logTimetableImportSucceeded(

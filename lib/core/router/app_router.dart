@@ -17,6 +17,7 @@ import 'package:campusiq/features/ai/presentation/screens/weekly_review_screen.d
 import 'package:campusiq/features/course_hub/presentation/screens/course_hub_screen.dart';
 import 'package:campusiq/features/timetable/presentation/screens/timetable_import_screen.dart';
 import 'package:campusiq/features/timetable/presentation/screens/course_reminders_screen.dart';
+import 'package:campusiq/features/timetable/presentation/screens/timetable_notification_diagnostics_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/cwa_manual_entry_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/past_semesters_screen.dart';
 import 'package:campusiq/features/cwa/presentation/screens/registration_slip_import_screen.dart';
@@ -32,8 +33,7 @@ final appRouter = GoRouter(
   redirect: (context, state) {
     final uri = state.uri.toString();
     final container = ProviderScope.containerOf(context);
-    final hasCompleted =
-        container.read(hasCompletedOnboardingProvider).valueOrNull;
+    final hasCompleted = container.read(onboardingCompletedProvider);
     if (hasCompleted == null) return null;
     if (uri == '/onboarding' && hasCompleted) return '/plan';
     if (uri == '/onboarding') return null;
@@ -141,10 +141,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/timetable/import',
       name: 'timetable-import',
-      builder: (context, state) => const TrackedScreen(
-        screenName: 'timetable_import',
-        child: TimetableImportScreen(),
-      ),
+      builder: (context, state) {
+        final source = state.uri.queryParameters['source'];
+        return TrackedScreen(
+          screenName: 'timetable_import',
+          child: TimetableImportScreen(initialSource: source),
+        );
+      },
     ),
     GoRoute(
       path: '/timetable/reminders',
@@ -152,6 +155,14 @@ final appRouter = GoRouter(
       builder: (context, state) => const TrackedScreen(
         screenName: 'course_reminders',
         child: CourseRemindersScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/settings/timetable-notifications',
+      name: 'timetable-notification-diagnostics',
+      builder: (context, state) => const TrackedScreen(
+        screenName: 'timetable_notification_diagnostics',
+        child: TimetableNotificationDiagnosticsScreen(),
       ),
     ),
     GoRoute(
@@ -252,7 +263,10 @@ class _AppShell extends ConsumerWidget {
               data: mediaQuery,
               child: ColoredBox(
                 color: theme.scaffoldBackgroundColor,
-                child: child,
+                child: _ShellTabTransition(
+                  selectedIndex: selectedIndex,
+                  child: child,
+                ),
               ),
             ),
           ),
@@ -293,6 +307,74 @@ class _AppShell extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ShellTabTransition extends StatefulWidget {
+  final int? selectedIndex;
+  final Widget child;
+
+  const _ShellTabTransition({
+    required this.selectedIndex,
+    required this.child,
+  });
+
+  @override
+  State<_ShellTabTransition> createState() => _ShellTabTransitionState();
+}
+
+class _ShellTabTransitionState extends State<_ShellTabTransition>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  Offset _beginOffset = Offset.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+      value: 1,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _ShellTabTransition oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final previousIndex = oldWidget.selectedIndex;
+    final nextIndex = widget.selectedIndex;
+    if (previousIndex == null ||
+        nextIndex == null ||
+        previousIndex == nextIndex) {
+      return;
+    }
+
+    _beginOffset = Offset(nextIndex > previousIndex ? 1 : -1, 0);
+    _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: _beginOffset,
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: Curves.easeOutCubic,
+          ),
+        ),
+        child: widget.child,
       ),
     );
   }

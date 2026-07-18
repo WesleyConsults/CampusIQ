@@ -63,28 +63,38 @@ const TimetableSlotModelSchema = CollectionSchema(
       name: r'lecturerName',
       type: IsarType.string,
     ),
-    r'semesterKey': PropertySchema(
+    r'normalizedCourseCode': PropertySchema(
       id: 9,
+      name: r'normalizedCourseCode',
+      type: IsarType.string,
+    ),
+    r'semesterKey': PropertySchema(
+      id: 10,
       name: r'semesterKey',
       type: IsarType.string,
     ),
+    r'slotId': PropertySchema(
+      id: 11,
+      name: r'slotId',
+      type: IsarType.string,
+    ),
     r'slotType': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'slotType',
       type: IsarType.string,
     ),
     r'startMinutes': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'startMinutes',
       type: IsarType.long,
     ),
     r'startTimeLabel': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'startTimeLabel',
       type: IsarType.string,
     ),
     r'venue': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'venue',
       type: IsarType.string,
     )
@@ -94,7 +104,34 @@ const TimetableSlotModelSchema = CollectionSchema(
   deserialize: _timetableSlotModelDeserialize,
   deserializeProp: _timetableSlotModelDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'slotId': IndexSchema(
+      id: -665048265905431799,
+      name: r'slotId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'slotId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'normalizedCourseCode': IndexSchema(
+      id: 2161616251008618838,
+      name: r'normalizedCourseCode',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'normalizedCourseCode',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _timetableSlotModelGetId,
@@ -113,7 +150,9 @@ int _timetableSlotModelEstimateSize(
   bytesCount += 3 + object.courseName.length * 3;
   bytesCount += 3 + object.endTimeLabel.length * 3;
   bytesCount += 3 + object.lecturerName.length * 3;
+  bytesCount += 3 + object.normalizedCourseCode.length * 3;
   bytesCount += 3 + object.semesterKey.length * 3;
+  bytesCount += 3 + object.slotId.length * 3;
   bytesCount += 3 + object.slotType.length * 3;
   bytesCount += 3 + object.startTimeLabel.length * 3;
   bytesCount += 3 + object.venue.length * 3;
@@ -135,11 +174,13 @@ void _timetableSlotModelSerialize(
   writer.writeLong(offsets[6], object.endMinutes);
   writer.writeString(offsets[7], object.endTimeLabel);
   writer.writeString(offsets[8], object.lecturerName);
-  writer.writeString(offsets[9], object.semesterKey);
-  writer.writeString(offsets[10], object.slotType);
-  writer.writeLong(offsets[11], object.startMinutes);
-  writer.writeString(offsets[12], object.startTimeLabel);
-  writer.writeString(offsets[13], object.venue);
+  writer.writeString(offsets[9], object.normalizedCourseCode);
+  writer.writeString(offsets[10], object.semesterKey);
+  writer.writeString(offsets[11], object.slotId);
+  writer.writeString(offsets[12], object.slotType);
+  writer.writeLong(offsets[13], object.startMinutes);
+  writer.writeString(offsets[14], object.startTimeLabel);
+  writer.writeString(offsets[15], object.venue);
 }
 
 TimetableSlotModel _timetableSlotModelDeserialize(
@@ -157,10 +198,12 @@ TimetableSlotModel _timetableSlotModelDeserialize(
   object.endMinutes = reader.readLong(offsets[6]);
   object.id = id;
   object.lecturerName = reader.readString(offsets[8]);
-  object.semesterKey = reader.readString(offsets[9]);
-  object.slotType = reader.readString(offsets[10]);
-  object.startMinutes = reader.readLong(offsets[11]);
-  object.venue = reader.readString(offsets[13]);
+  object.normalizedCourseCode = reader.readString(offsets[9]);
+  object.semesterKey = reader.readString(offsets[10]);
+  object.slotId = reader.readString(offsets[11]);
+  object.slotType = reader.readString(offsets[12]);
+  object.startMinutes = reader.readLong(offsets[13]);
+  object.venue = reader.readString(offsets[15]);
   return object;
 }
 
@@ -194,10 +237,14 @@ P _timetableSlotModelDeserializeProp<P>(
     case 10:
       return (reader.readString(offset)) as P;
     case 11:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 12:
       return (reader.readString(offset)) as P;
     case 13:
+      return (reader.readLong(offset)) as P;
+    case 14:
+      return (reader.readString(offset)) as P;
+    case 15:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -294,6 +341,96 @@ extension TimetableSlotModelQueryWhere
         upper: upperId,
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterWhereClause>
+      slotIdEqualTo(String slotId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'slotId',
+        value: [slotId],
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterWhereClause>
+      slotIdNotEqualTo(String slotId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'slotId',
+              lower: [],
+              upper: [slotId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'slotId',
+              lower: [slotId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'slotId',
+              lower: [slotId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'slotId',
+              lower: [],
+              upper: [slotId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterWhereClause>
+      normalizedCourseCodeEqualTo(String normalizedCourseCode) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'normalizedCourseCode',
+        value: [normalizedCourseCode],
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterWhereClause>
+      normalizedCourseCodeNotEqualTo(String normalizedCourseCode) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedCourseCode',
+              lower: [],
+              upper: [normalizedCourseCode],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedCourseCode',
+              lower: [normalizedCourseCode],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedCourseCode',
+              lower: [normalizedCourseCode],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'normalizedCourseCode',
+              lower: [],
+              upper: [normalizedCourseCode],
+              includeUpper: false,
+            ));
+      }
     });
   }
 }
@@ -1181,6 +1318,142 @@ extension TimetableSlotModelQueryFilter
   }
 
   QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      normalizedCourseCodeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      normalizedCourseCodeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      normalizedCourseCodeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      normalizedCourseCodeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'normalizedCourseCode',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      normalizedCourseCodeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      normalizedCourseCodeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      normalizedCourseCodeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'normalizedCourseCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      normalizedCourseCodeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'normalizedCourseCode',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      normalizedCourseCodeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'normalizedCourseCode',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      normalizedCourseCodeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'normalizedCourseCode',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
       semesterKeyEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1311,6 +1584,142 @@ extension TimetableSlotModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'semesterKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      slotIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'slotId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      slotIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'slotId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      slotIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'slotId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      slotIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'slotId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      slotIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'slotId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      slotIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'slotId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      slotIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'slotId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      slotIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'slotId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      slotIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'slotId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterFilterCondition>
+      slotIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'slotId',
         value: '',
       ));
     });
@@ -1916,6 +2325,20 @@ extension TimetableSlotModelQuerySortBy
   }
 
   QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      sortByNormalizedCourseCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedCourseCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      sortByNormalizedCourseCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedCourseCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
       sortBySemesterKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.asc);
@@ -1926,6 +2349,20 @@ extension TimetableSlotModelQuerySortBy
       sortBySemesterKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      sortBySlotId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'slotId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      sortBySlotIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'slotId', Sort.desc);
     });
   }
 
@@ -2129,6 +2566,20 @@ extension TimetableSlotModelQuerySortThenBy
   }
 
   QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      thenByNormalizedCourseCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedCourseCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      thenByNormalizedCourseCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'normalizedCourseCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
       thenBySemesterKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.asc);
@@ -2139,6 +2590,20 @@ extension TimetableSlotModelQuerySortThenBy
       thenBySemesterKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'semesterKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      thenBySlotId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'slotId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QAfterSortBy>
+      thenBySlotIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'slotId', Sort.desc);
     });
   }
 
@@ -2265,9 +2730,24 @@ extension TimetableSlotModelQueryWhereDistinct
   }
 
   QueryBuilder<TimetableSlotModel, TimetableSlotModel, QDistinct>
+      distinctByNormalizedCourseCode({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'normalizedCourseCode',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QDistinct>
       distinctBySemesterKey({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'semesterKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, TimetableSlotModel, QDistinct>
+      distinctBySlotId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'slotId', caseSensitive: caseSensitive);
     });
   }
 
@@ -2370,9 +2850,22 @@ extension TimetableSlotModelQueryProperty
   }
 
   QueryBuilder<TimetableSlotModel, String, QQueryOperations>
+      normalizedCourseCodeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'normalizedCourseCode');
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, String, QQueryOperations>
       semesterKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'semesterKey');
+    });
+  }
+
+  QueryBuilder<TimetableSlotModel, String, QQueryOperations> slotIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'slotId');
     });
   }
 

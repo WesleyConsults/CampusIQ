@@ -42,133 +42,148 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'lastReviewShownWeek',
       type: IsarType.string,
     ),
-    r'notificationPermissionAsked': PropertySchema(
+    r'lastTimetableNotificationSyncAt': PropertySchema(
       id: 5,
+      name: r'lastTimetableNotificationSyncAt',
+      type: IsarType.dateTime,
+    ),
+    r'lastTimetableNotificationSyncSummary': PropertySchema(
+      id: 6,
+      name: r'lastTimetableNotificationSyncSummary',
+      type: IsarType.string,
+    ),
+    r'notificationPermissionAsked': PropertySchema(
+      id: 7,
       name: r'notificationPermissionAsked',
       type: IsarType.bool,
     ),
     r'notifyMilestoneAlerts': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'notifyMilestoneAlerts',
       type: IsarType.bool,
     ),
     r'notifyStreakAlerts': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'notifyStreakAlerts',
       type: IsarType.bool,
     ),
     r'notifyStudyReminders': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'notifyStudyReminders',
       type: IsarType.bool,
     ),
     r'notifyWeeklyReview': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'notifyWeeklyReview',
       type: IsarType.bool,
     ),
+    r'timetableLegacyNotificationsCleaned': PropertySchema(
+      id: 12,
+      name: r'timetableLegacyNotificationsCleaned',
+      type: IsarType.bool,
+    ),
     r'weeklyNotesJson': PropertySchema(
-      id: 10,
+      id: 13,
       name: r'weeklyNotesJson',
       type: IsarType.string,
     ),
     r'zzActiveSemesterKey': PropertySchema(
-      id: 11,
+      id: 14,
       name: r'zzActiveSemesterKey',
       type: IsarType.string,
     ),
     r'zzCwaSetupTargetConfirmed': PropertySchema(
-      id: 12,
+      id: 15,
       name: r'zzCwaSetupTargetConfirmed',
       type: IsarType.bool,
     ),
     r'zzGradingSystemId': PropertySchema(
-      id: 13,
+      id: 16,
       name: r'zzGradingSystemId',
       type: IsarType.string,
     ),
     r'zzHasCompletedOnboarding': PropertySchema(
-      id: 14,
+      id: 17,
       name: r'zzHasCompletedOnboarding',
       type: IsarType.bool,
     ),
     r'zzHasSeenInitialHomeWelcome': PropertySchema(
-      id: 15,
+      id: 18,
       name: r'zzHasSeenInitialHomeWelcome',
       type: IsarType.bool,
     ),
     r'zzManualCwaDraftJson': PropertySchema(
-      id: 16,
+      id: 19,
       name: r'zzManualCwaDraftJson',
       type: IsarType.string,
     ),
     r'zzPomodoroFocusMinutes': PropertySchema(
-      id: 17,
+      id: 20,
       name: r'zzPomodoroFocusMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroLongBreakMinutes': PropertySchema(
-      id: 18,
+      id: 21,
       name: r'zzPomodoroLongBreakMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroShortBreakMinutes': PropertySchema(
-      id: 19,
+      id: 22,
       name: r'zzPomodoroShortBreakMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroTotalRounds': PropertySchema(
-      id: 20,
+      id: 23,
       name: r'zzPomodoroTotalRounds',
       type: IsarType.long,
     ),
     r'zzProgrammeName': PropertySchema(
-      id: 21,
+      id: 24,
       name: r'zzProgrammeName',
       type: IsarType.string,
     ),
     r'zzSoundOnTimerEnd': PropertySchema(
-      id: 22,
+      id: 25,
       name: r'zzSoundOnTimerEnd',
       type: IsarType.bool,
     ),
     r'zzTargetCwa': PropertySchema(
-      id: 23,
+      id: 26,
       name: r'zzTargetCwa',
       type: IsarType.double,
     ),
     r'zzThemeModeIndex': PropertySchema(
-      id: 24,
+      id: 27,
       name: r'zzThemeModeIndex',
       type: IsarType.long,
     ),
     r'zzTimetableGridLayoutIndex': PropertySchema(
-      id: 25,
+      id: 28,
       name: r'zzTimetableGridLayoutIndex',
       type: IsarType.long,
     ),
     r'zzUniversityName': PropertySchema(
-      id: 26,
+      id: 29,
       name: r'zzUniversityName',
       type: IsarType.string,
     ),
     r'zzVibrateOnTimerEnd': PropertySchema(
-      id: 27,
+      id: 30,
       name: r'zzVibrateOnTimerEnd',
       type: IsarType.bool,
     ),
     r'zzzManualBaselineCredits': PropertySchema(
-      id: 28,
+      id: 31,
       name: r'zzzManualBaselineCredits',
       type: IsarType.double,
     ),
     r'zzzManualBaselineCwa': PropertySchema(
-      id: 29,
+      id: 32,
       name: r'zzzManualBaselineCwa',
       type: IsarType.double,
     ),
     r'zzzManualBaselineGradingSystemId': PropertySchema(
-      id: 30,
+      id: 33,
       name: r'zzzManualBaselineGradingSystemId',
       type: IsarType.string,
     )
@@ -195,6 +210,7 @@ int _userPrefsModelEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.attendedDatesJson.length * 3;
   bytesCount += 3 + object.lastReviewShownWeek.length * 3;
+  bytesCount += 3 + object.lastTimetableNotificationSyncSummary.length * 3;
   bytesCount += 3 + object.weeklyNotesJson.length * 3;
   bytesCount += 3 + object.activeSemesterKey.length * 3;
   bytesCount += 3 + object.gradingSystemId.length * 3;
@@ -231,32 +247,35 @@ void _userPrefsModelSerialize(
   writer.writeLong(offsets[2], object.dailyReminderMinute);
   writer.writeDateTime(offsets[3], object.lastOpenedDate);
   writer.writeString(offsets[4], object.lastReviewShownWeek);
-  writer.writeBool(offsets[5], object.notificationPermissionAsked);
-  writer.writeBool(offsets[6], object.notifyMilestoneAlerts);
-  writer.writeBool(offsets[7], object.notifyStreakAlerts);
-  writer.writeBool(offsets[8], object.notifyStudyReminders);
-  writer.writeBool(offsets[9], object.notifyWeeklyReview);
-  writer.writeString(offsets[10], object.weeklyNotesJson);
-  writer.writeString(offsets[11], object.activeSemesterKey);
-  writer.writeBool(offsets[12], object.cwaSetupTargetConfirmed);
-  writer.writeString(offsets[13], object.gradingSystemId);
-  writer.writeBool(offsets[14], object.hasCompletedOnboarding);
-  writer.writeBool(offsets[15], object.hasSeenInitialHomeWelcome);
-  writer.writeString(offsets[16], object.manualCwaDraftJson);
-  writer.writeLong(offsets[17], object.defaultFocusMinutes);
-  writer.writeLong(offsets[18], object.defaultLongBreakMinutes);
-  writer.writeLong(offsets[19], object.defaultShortBreakMinutes);
-  writer.writeLong(offsets[20], object.defaultTotalRounds);
-  writer.writeString(offsets[21], object.programmeName);
-  writer.writeBool(offsets[22], object.playSoundOnTimerEnd);
-  writer.writeDouble(offsets[23], object.targetCwa);
-  writer.writeLong(offsets[24], object.themeModeIndex);
-  writer.writeLong(offsets[25], object.timetableGridLayoutIndex);
-  writer.writeString(offsets[26], object.universityName);
-  writer.writeBool(offsets[27], object.vibrateOnTimerEnd);
-  writer.writeDouble(offsets[28], object.manualBaselineCredits);
-  writer.writeDouble(offsets[29], object.manualBaselineCwa);
-  writer.writeString(offsets[30], object.manualBaselineGradingSystemId);
+  writer.writeDateTime(offsets[5], object.lastTimetableNotificationSyncAt);
+  writer.writeString(offsets[6], object.lastTimetableNotificationSyncSummary);
+  writer.writeBool(offsets[7], object.notificationPermissionAsked);
+  writer.writeBool(offsets[8], object.notifyMilestoneAlerts);
+  writer.writeBool(offsets[9], object.notifyStreakAlerts);
+  writer.writeBool(offsets[10], object.notifyStudyReminders);
+  writer.writeBool(offsets[11], object.notifyWeeklyReview);
+  writer.writeBool(offsets[12], object.timetableLegacyNotificationsCleaned);
+  writer.writeString(offsets[13], object.weeklyNotesJson);
+  writer.writeString(offsets[14], object.activeSemesterKey);
+  writer.writeBool(offsets[15], object.cwaSetupTargetConfirmed);
+  writer.writeString(offsets[16], object.gradingSystemId);
+  writer.writeBool(offsets[17], object.hasCompletedOnboarding);
+  writer.writeBool(offsets[18], object.hasSeenInitialHomeWelcome);
+  writer.writeString(offsets[19], object.manualCwaDraftJson);
+  writer.writeLong(offsets[20], object.defaultFocusMinutes);
+  writer.writeLong(offsets[21], object.defaultLongBreakMinutes);
+  writer.writeLong(offsets[22], object.defaultShortBreakMinutes);
+  writer.writeLong(offsets[23], object.defaultTotalRounds);
+  writer.writeString(offsets[24], object.programmeName);
+  writer.writeBool(offsets[25], object.playSoundOnTimerEnd);
+  writer.writeDouble(offsets[26], object.targetCwa);
+  writer.writeLong(offsets[27], object.themeModeIndex);
+  writer.writeLong(offsets[28], object.timetableGridLayoutIndex);
+  writer.writeString(offsets[29], object.universityName);
+  writer.writeBool(offsets[30], object.vibrateOnTimerEnd);
+  writer.writeDouble(offsets[31], object.manualBaselineCredits);
+  writer.writeDouble(offsets[32], object.manualBaselineCwa);
+  writer.writeString(offsets[33], object.manualBaselineGradingSystemId);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -272,32 +291,36 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.id = id;
   object.lastOpenedDate = reader.readDateTimeOrNull(offsets[3]);
   object.lastReviewShownWeek = reader.readString(offsets[4]);
-  object.notificationPermissionAsked = reader.readBool(offsets[5]);
-  object.notifyMilestoneAlerts = reader.readBool(offsets[6]);
-  object.notifyStreakAlerts = reader.readBool(offsets[7]);
-  object.notifyStudyReminders = reader.readBool(offsets[8]);
-  object.notifyWeeklyReview = reader.readBool(offsets[9]);
-  object.weeklyNotesJson = reader.readString(offsets[10]);
-  object.activeSemesterKey = reader.readString(offsets[11]);
-  object.cwaSetupTargetConfirmed = reader.readBool(offsets[12]);
-  object.gradingSystemId = reader.readString(offsets[13]);
-  object.hasCompletedOnboarding = reader.readBool(offsets[14]);
-  object.hasSeenInitialHomeWelcome = reader.readBool(offsets[15]);
-  object.manualCwaDraftJson = reader.readString(offsets[16]);
-  object.defaultFocusMinutes = reader.readLong(offsets[17]);
-  object.defaultLongBreakMinutes = reader.readLong(offsets[18]);
-  object.defaultShortBreakMinutes = reader.readLong(offsets[19]);
-  object.defaultTotalRounds = reader.readLong(offsets[20]);
-  object.programmeName = reader.readStringOrNull(offsets[21]);
-  object.playSoundOnTimerEnd = reader.readBool(offsets[22]);
-  object.targetCwa = reader.readDouble(offsets[23]);
-  object.themeModeIndex = reader.readLong(offsets[24]);
-  object.timetableGridLayoutIndex = reader.readLong(offsets[25]);
-  object.universityName = reader.readStringOrNull(offsets[26]);
-  object.vibrateOnTimerEnd = reader.readBool(offsets[27]);
-  object.manualBaselineCredits = reader.readDoubleOrNull(offsets[28]);
-  object.manualBaselineCwa = reader.readDoubleOrNull(offsets[29]);
-  object.manualBaselineGradingSystemId = reader.readStringOrNull(offsets[30]);
+  object.lastTimetableNotificationSyncAt =
+      reader.readDateTimeOrNull(offsets[5]);
+  object.lastTimetableNotificationSyncSummary = reader.readString(offsets[6]);
+  object.notificationPermissionAsked = reader.readBool(offsets[7]);
+  object.notifyMilestoneAlerts = reader.readBool(offsets[8]);
+  object.notifyStreakAlerts = reader.readBool(offsets[9]);
+  object.notifyStudyReminders = reader.readBool(offsets[10]);
+  object.notifyWeeklyReview = reader.readBool(offsets[11]);
+  object.timetableLegacyNotificationsCleaned = reader.readBool(offsets[12]);
+  object.weeklyNotesJson = reader.readString(offsets[13]);
+  object.activeSemesterKey = reader.readString(offsets[14]);
+  object.cwaSetupTargetConfirmed = reader.readBool(offsets[15]);
+  object.gradingSystemId = reader.readString(offsets[16]);
+  object.hasCompletedOnboarding = reader.readBool(offsets[17]);
+  object.hasSeenInitialHomeWelcome = reader.readBool(offsets[18]);
+  object.manualCwaDraftJson = reader.readString(offsets[19]);
+  object.defaultFocusMinutes = reader.readLong(offsets[20]);
+  object.defaultLongBreakMinutes = reader.readLong(offsets[21]);
+  object.defaultShortBreakMinutes = reader.readLong(offsets[22]);
+  object.defaultTotalRounds = reader.readLong(offsets[23]);
+  object.programmeName = reader.readStringOrNull(offsets[24]);
+  object.playSoundOnTimerEnd = reader.readBool(offsets[25]);
+  object.targetCwa = reader.readDouble(offsets[26]);
+  object.themeModeIndex = reader.readLong(offsets[27]);
+  object.timetableGridLayoutIndex = reader.readLong(offsets[28]);
+  object.universityName = reader.readStringOrNull(offsets[29]);
+  object.vibrateOnTimerEnd = reader.readBool(offsets[30]);
+  object.manualBaselineCredits = reader.readDoubleOrNull(offsets[31]);
+  object.manualBaselineCwa = reader.readDoubleOrNull(offsets[32]);
+  object.manualBaselineGradingSystemId = reader.readStringOrNull(offsets[33]);
   return object;
 }
 
@@ -319,9 +342,9 @@ P _userPrefsModelDeserializeProp<P>(
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 7:
       return (reader.readBool(offset)) as P;
     case 8:
@@ -329,46 +352,52 @@ P _userPrefsModelDeserializeProp<P>(
     case 9:
       return (reader.readBool(offset)) as P;
     case 10:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 11:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 12:
       return (reader.readBool(offset)) as P;
     case 13:
       return (reader.readString(offset)) as P;
     case 14:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 15:
       return (reader.readBool(offset)) as P;
     case 16:
       return (reader.readString(offset)) as P;
     case 17:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 18:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 19:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 20:
       return (reader.readLong(offset)) as P;
     case 21:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 22:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 23:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 24:
-      return (reader.readLong(offset)) as P;
-    case 25:
-      return (reader.readLong(offset)) as P;
-    case 26:
       return (reader.readStringOrNull(offset)) as P;
-    case 27:
+    case 25:
       return (reader.readBool(offset)) as P;
+    case 26:
+      return (reader.readDouble(offset)) as P;
+    case 27:
+      return (reader.readLong(offset)) as P;
     case 28:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 29:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 30:
+      return (reader.readBool(offset)) as P;
+    case 31:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 32:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 33:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -985,6 +1014,218 @@ extension UserPrefsModelQueryFilter
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastTimetableNotificationSyncAt',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastTimetableNotificationSyncAt',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastTimetableNotificationSyncAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastTimetableNotificationSyncAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastTimetableNotificationSyncAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastTimetableNotificationSyncAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncSummaryEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastTimetableNotificationSyncSummary',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncSummaryGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastTimetableNotificationSyncSummary',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncSummaryLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastTimetableNotificationSyncSummary',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncSummaryBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastTimetableNotificationSyncSummary',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncSummaryStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'lastTimetableNotificationSyncSummary',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncSummaryEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'lastTimetableNotificationSyncSummary',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncSummaryContains(String value,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'lastTimetableNotificationSyncSummary',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncSummaryMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'lastTimetableNotificationSyncSummary',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncSummaryIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastTimetableNotificationSyncSummary',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      lastTimetableNotificationSyncSummaryIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'lastTimetableNotificationSyncSummary',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
       notificationPermissionAskedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1029,6 +1270,16 @@ extension UserPrefsModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'notifyWeeklyReview',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      timetableLegacyNotificationsCleanedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'timetableLegacyNotificationsCleaned',
         value: value,
       ));
     });
@@ -2742,6 +2993,35 @@ extension UserPrefsModelQuerySortBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByLastTimetableNotificationSyncAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastTimetableNotificationSyncAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByLastTimetableNotificationSyncAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastTimetableNotificationSyncAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByLastTimetableNotificationSyncSummary() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastTimetableNotificationSyncSummary', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByLastTimetableNotificationSyncSummaryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(
+          r'lastTimetableNotificationSyncSummary', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       sortByNotificationPermissionAsked() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notificationPermissionAsked', Sort.asc);
@@ -2808,6 +3088,20 @@ extension UserPrefsModelQuerySortBy
       sortByNotifyWeeklyReviewDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notifyWeeklyReview', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByTimetableLegacyNotificationsCleaned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timetableLegacyNotificationsCleaned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByTimetableLegacyNotificationsCleanedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timetableLegacyNotificationsCleaned', Sort.desc);
     });
   }
 
@@ -3190,6 +3484,35 @@ extension UserPrefsModelQuerySortThenBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByLastTimetableNotificationSyncAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastTimetableNotificationSyncAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByLastTimetableNotificationSyncAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastTimetableNotificationSyncAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByLastTimetableNotificationSyncSummary() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastTimetableNotificationSyncSummary', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByLastTimetableNotificationSyncSummaryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(
+          r'lastTimetableNotificationSyncSummary', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       thenByNotificationPermissionAsked() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notificationPermissionAsked', Sort.asc);
@@ -3256,6 +3579,20 @@ extension UserPrefsModelQuerySortThenBy
       thenByNotifyWeeklyReviewDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notifyWeeklyReview', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByTimetableLegacyNotificationsCleaned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timetableLegacyNotificationsCleaned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByTimetableLegacyNotificationsCleanedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timetableLegacyNotificationsCleaned', Sort.desc);
     });
   }
 
@@ -3593,6 +3930,22 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByLastTimetableNotificationSyncAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastTimetableNotificationSyncAt');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByLastTimetableNotificationSyncSummary(
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastTimetableNotificationSyncSummary',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByNotificationPermissionAsked() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'notificationPermissionAsked');
@@ -3624,6 +3977,13 @@ extension UserPrefsModelQueryWhereDistinct
       distinctByNotifyWeeklyReview() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'notifyWeeklyReview');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByTimetableLegacyNotificationsCleaned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'timetableLegacyNotificationsCleaned');
     });
   }
 
@@ -3825,6 +4185,20 @@ extension UserPrefsModelQueryProperty
     });
   }
 
+  QueryBuilder<UserPrefsModel, DateTime?, QQueryOperations>
+      lastTimetableNotificationSyncAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastTimetableNotificationSyncAt');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, String, QQueryOperations>
+      lastTimetableNotificationSyncSummaryProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastTimetableNotificationSyncSummary');
+    });
+  }
+
   QueryBuilder<UserPrefsModel, bool, QQueryOperations>
       notificationPermissionAskedProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -3857,6 +4231,13 @@ extension UserPrefsModelQueryProperty
       notifyWeeklyReviewProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'notifyWeeklyReview');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, bool, QQueryOperations>
+      timetableLegacyNotificationsCleanedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'timetableLegacyNotificationsCleaned');
     });
   }
 

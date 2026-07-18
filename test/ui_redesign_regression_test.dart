@@ -11,6 +11,10 @@ import 'package:campusiq/features/cwa/presentation/screens/cwa_screen.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
 import 'package:campusiq/features/session/presentation/widgets/floating_mini_timer.dart';
 import 'package:campusiq/features/settings/presentation/providers/settings_provider.dart';
+import 'package:campusiq/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:campusiq/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:campusiq/core/data/repositories/user_prefs_repository.dart';
+import 'package:isar_community/isar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +25,50 @@ void main() {
 
   setUp(() {
     appRouter.go('/plan');
+  });
+
+  testWidgets('routes to /onboarding when onboarding is not completed',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          isarProvider.overrideWith((ref) => _FakeIsar()),
+          cwaRepositoryProvider.overrideWithValue(null),
+          pastResultRepositoryProvider.overrideWithValue(null),
+          isPremiumProvider.overrideWith((ref) async => false),
+          notificationPrefsProvider
+              .overrideWith((ref) async => UserPrefsModel()),
+          onboardingCompletedProvider.overrideWith((ref) => false),
+        ],
+        child: MaterialApp.router(routerConfig: appRouter),
+      ),
+    );
+
+    await _pumpFrames(tester);
+
+    expect(find.byType(OnboardingScreen), findsOneWidget);
+  });
+
+  testWidgets('routes to /plan when onboarding is completed',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          isarProvider.overrideWith((ref) async => throw UnimplementedError()),
+          cwaRepositoryProvider.overrideWithValue(null),
+          pastResultRepositoryProvider.overrideWithValue(null),
+          isPremiumProvider.overrideWith((ref) async => false),
+          notificationPrefsProvider
+              .overrideWith((ref) async => UserPrefsModel()),
+          onboardingCompletedProvider.overrideWith((ref) => true),
+        ],
+        child: MaterialApp.router(routerConfig: appRouter),
+      ),
+    );
+
+    await _pumpFrames(tester);
+
+    expect(find.text('Today'), findsWidgets);
   });
 
   testWidgets('shell navigation still exposes core destinations',
@@ -464,6 +512,39 @@ void main() {
 
     expect(find.byType(FloatingMiniTimer), findsOneWidget);
   });
+
+  testWidgets('tapping plus button on Timetable screen opens bottom sheet with options',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          isarProvider.overrideWith((ref) => _FakeIsar()),
+          cwaRepositoryProvider.overrideWithValue(null),
+          pastResultRepositoryProvider.overrideWithValue(null),
+          isPremiumProvider.overrideWith((ref) async => false),
+          notificationPrefsProvider
+              .overrideWith((ref) async => UserPrefsModel()),
+          onboardingCompletedProvider.overrideWith((ref) => true),
+        ],
+        child: MaterialApp.router(routerConfig: appRouter),
+      ),
+    );
+
+    appRouter.go('/timetable');
+    await _pumpFrames(tester);
+
+    expect(find.text('Daily timeline'), findsOneWidget);
+
+    final plusButton = find.byTooltip('Add class');
+    expect(plusButton, findsOneWidget);
+    await tester.tap(plusButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Add Timetable'), findsOneWidget);
+    expect(find.text('Take Photo'), findsOneWidget);
+    expect(find.text('Upload Image'), findsOneWidget);
+    expect(find.text('Enter Manually'), findsOneWidget);
+  });
 }
 
 Future<void> _pumpFrames(WidgetTester tester) async {
@@ -482,3 +563,5 @@ Finder? _navigationDestinationContainer(WidgetTester tester, String label) {
     matching: find.byType(AnimatedContainer),
   );
 }
+
+class _FakeIsar extends Fake implements Isar {}

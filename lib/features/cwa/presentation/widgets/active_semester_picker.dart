@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/cwa/domain/academic_term.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
+import 'package:campusiq/features/timetable/presentation/providers/course_reminder_provider.dart';
 
 export 'package:campusiq/features/cwa/domain/academic_term.dart';
 
@@ -116,6 +117,7 @@ Future<void> showActiveSemesterDialog(
 
               try {
                 await repo.setActiveSemesterKey(selection.key);
+                await refreshCourseReminderNotifications(ref);
                 if (ctx.mounted) Navigator.pop(ctx);
               } catch (e) {
                 debugPrint('🔴 showActiveSemesterDialog failed: $e');

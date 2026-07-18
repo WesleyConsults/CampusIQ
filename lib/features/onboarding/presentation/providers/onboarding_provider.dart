@@ -104,8 +104,9 @@ class OnboardingState {
 
 class OnboardingNotifier extends StateNotifier<OnboardingState> {
   final UserPrefsRepository _repo;
+  final Ref _ref;
 
-  OnboardingNotifier(this._repo) : super(const OnboardingState()) {
+  OnboardingNotifier(this._repo, this._ref) : super(const OnboardingState()) {
     unawaited(AnalyticsService.instance.logOnboardingStarted());
   }
 
@@ -182,6 +183,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = state.copyWith(isLoading: true);
     try {
       await _repo.setHasCompletedOnboarding(true);
+      _ref.read(onboardingCompletedProvider.notifier).state = true;
       await AnalyticsService.instance.logOnboardingCompleted(
         gradingSystem: state.gradingSystemId,
         universitySet: state.university != null,
@@ -227,6 +229,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       await _repo.setNotifyMilestoneAlerts(state.notifyMilestoneAlerts);
       await _repo.setNotifyWeeklyReview(state.notifyWeeklyReview);
       await _repo.setHasCompletedOnboarding(true);
+      _ref.read(onboardingCompletedProvider.notifier).state = true;
       await AnalyticsService.instance.logOnboardingCompleted(
         gradingSystem: state.gradingSystemId,
         universitySet: state.university != null,
@@ -265,7 +268,7 @@ final onboardingProvider =
     final isarAsync = ref.watch(isarProvider);
     final isar = isarAsync.requireValue;
     final repo = UserPrefsRepository(isar);
-    return OnboardingNotifier(repo);
+    return OnboardingNotifier(repo, ref);
   },
 );
 
@@ -278,4 +281,9 @@ final hasCompletedOnboardingProvider = StreamProvider<bool>((ref) async* {
   await for (final prefs in repo.watchPrefs()) {
     yield prefs?.hasCompletedOnboarding ?? false;
   }
+});
+
+final onboardingCompletedProvider = StateProvider<bool?>((ref) {
+  final streamVal = ref.watch(hasCompletedOnboardingProvider).valueOrNull;
+  return streamVal;
 });

@@ -8,6 +8,8 @@ import 'package:campusiq/core/services/crash_reporting_service.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_model.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_slot_model.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
+import 'package:campusiq/features/cwa/data/models/course_model.dart';
+import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 
 class StudyPlanState {
   final StudyPlanModel? plan;
@@ -114,9 +116,57 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
         maxTokens: 1000,
       );
 
-      final newSlots = _parseSlots(response);
+      final parsedSlots = _parseSlots(response);
 
       final isar = await _isar;
+      final courses = await isar.courseModels.where().findAll();
+      final timetableSlots = await isar.timetableSlotModels.where().findAll();
+
+      final knownCodes = <String>{};
+      final codeToName = <String, String?>{};
+
+      for (final c in courses) {
+        knownCodes.add(c.code);
+        if (c.name.trim().isNotEmpty) {
+          codeToName[c.code] = c.name.trim();
+        }
+      }
+
+      for (final s in timetableSlots) {
+        knownCodes.add(s.courseCode);
+        if (s.courseName.trim().isNotEmpty) {
+          if (!codeToName.containsKey(s.courseCode) || codeToName[s.courseCode] == null) {
+            codeToName[s.courseCode] = s.courseName.trim();
+          }
+        }
+      }
+
+      final newSlots = <StudyPlanSlotModel>[];
+      for (final slot in parsedSlots) {
+        final code = slot.courseCode.trim();
+        final name = slot.courseName.trim();
+
+        if (knownCodes.contains(code)) {
+          final exactName = codeToName[code];
+          slot.courseCode = code;
+          slot.courseName = exactName != null && exactName.isNotEmpty ? exactName : code;
+          newSlots.add(slot);
+        } else {
+          final closestCode = _findClosestKnownCourseCode(code.isNotEmpty ? code : name, knownCodes.toList());
+          if (closestCode != null) {
+            final exactName = codeToName[closestCode];
+            slot.courseCode = closestCode;
+            slot.courseName = exactName != null && exactName.isNotEmpty ? exactName : closestCode;
+            newSlots.add(slot);
+          } else {
+            // Fallback to a safe generic study task without invented course label
+            slot.courseCode = 'STUDY';
+            slot.courseName = 'Study Session';
+            newSlots.add(slot);
+          }
+        }
+      }
+
       await isar.writeTxn(() async {
         // Delete all existing slots
         await isar.studyPlanSlotModels.clear();
@@ -192,6 +242,80 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
         ..reason = map['reason'] as String;
     }).toList();
   }
+
+  String? _findClosestKnownCourseCode(String query, List<String> knownCodes) {
+    if (knownCodes.isEmpty) return null;
+    
+    // 1. Prefer exact string match first
+    if (knownCodes.contains(query)) {
+      return query;
+    }
+
+    String clean(String s) => s.replaceAll(RegExp(r'[\s\-]+'), '').toUpperCase();
+    final cleanQuery = clean(query);
+    if (cleanQuery.isEmpty) return null;
+    
+    // 2. Exact clean match (ignoring spaces/hyphens)
+    final cleanMatches = knownCodes.where((code) => clean(code) == cleanQuery).toList();
+    if (cleanMatches.length == 1) {
+      return cleanMatches.first;
+    } else if (cleanMatches.length > 1) {
+      // Ambiguous clean matches, do not guess
+      return null;
+    }
+
+    // 3. Fuzzy matches (Levenshtein distance <= 1 on clean strings)
+    final fuzzyCandidates = <String>[];
+    int minDistance = 999;
+    for (final code in knownCodes) {
+      final dist = _levenshtein(cleanQuery, clean(code));
+      if (dist <= 1) {
+        if (dist < minDistance) {
+          minDistance = dist;
+          fuzzyCandidates.clear();
+          fuzzyCandidates.add(code);
+        } else if (dist == minDistance) {
+          fuzzyCandidates.add(code);
+        }
+      }
+    }
+
+    if (fuzzyCandidates.length == 1) {
+      return fuzzyCandidates.first;
+    }
+
+    return null;
+  }
+
+  int _levenshtein(String s, String t) {
+    if (s == t) return 0;
+    if (s.isEmpty) return t.length;
+    if (t.isEmpty) return s.length;
+
+    List<int> v0 = List<int>.filled(t.length + 1, 0);
+    List<int> v1 = List<int>.filled(t.length + 1, 0);
+
+    for (int i = 0; i < v0.length; i++) {
+      v0[i] = i;
+    }
+
+    for (int i = 0; i < s.length; i++) {
+      v1[0] = i + 1;
+
+      for (int j = 0; j < t.length; j++) {
+        int cost = (s[i] == t[j]) ? 0 : 1;
+        v1[j + 1] = _min(v1[j] + 1, _min(v0[j + 1] + 1, v0[j] + cost));
+      }
+
+      for (int j = 0; j < v0.length; j++) {
+        v0[j] = v1[j];
+      }
+    }
+
+    return v0[t.length];
+  }
+
+  int _min(int a, int b) => a < b ? a : b;
 }
 
 final studyPlanProvider =

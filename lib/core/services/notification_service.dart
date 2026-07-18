@@ -2,13 +2,11 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:campusiq/features/plan/data/models/daily_plan_task_model.dart';
-import 'package:campusiq/features/timetable/data/models/course_reminder_model.dart';
-import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
 import 'package:campusiq/features/timetable/domain/free_time_detector.dart';
-import 'package:campusiq/features/timetable/domain/timetable_constants.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
@@ -24,6 +22,9 @@ class NotificationService {
   static const String _channelWeeklyReview = 'weekly_review';
   static const String _channelCourseReminder = 'course_reminder';
   static const String _channelCourseAlarm = 'course_alarm';
+  static const int timetableTestNotificationId = 999001;
+  static const MethodChannel _settingsChannel =
+      MethodChannel('campusiq/notification_settings');
 
   // ── ID ranges ────────────────────────────────────────────────────────────
   // Free block reminders : 100–199
@@ -37,6 +38,7 @@ class NotificationService {
 
   static const String _channelPomodoro = 'pomodoro_timer';
   static const int _pomodoroNotifId = 600;
+  void Function(String? payload)? _onNotificationResponse;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -57,9 +59,23 @@ class NotificationService {
         android: androidSettings,
         iOS: iosSettings,
       ),
+      onDidReceiveNotificationResponse: (response) {
+        _onNotificationResponse?.call(response.payload);
+      },
     );
 
+    await ensureTimetableChannels();
     _initialized = true;
+  }
+
+  void setNotificationResponseHandler(void Function(String? payload) handler) {
+    _onNotificationResponse = handler;
+  }
+
+  Future<String?> getLaunchNotificationPayload() async {
+    final details = await _plugin.getNotificationAppLaunchDetails();
+    if (details?.didNotificationLaunchApp != true) return null;
+    return details?.notificationResponse?.payload;
   }
 
   // ── Internal helpers ─────────────────────────────────────────────────────
@@ -146,6 +162,13 @@ class NotificationService {
     return iosResult ?? false;
   }
 
+  Future<bool?> iosNotificationsEnabled() async {
+    final ios = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    final permissions = await ios?.checkPermissions();
+    return permissions?.isEnabled;
+  }
+
   /// Requests both notification delivery and exact-alarm access on Android.
   ///
   /// Exact-alarm access is user-controlled on recent Android versions. The
@@ -168,7 +191,117 @@ class NotificationService {
   Future<bool> areNotificationsEnabled() async {
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
-    return await android?.areNotificationsEnabled() ?? false;
+    if (android != null) {
+      return await android.areNotificationsEnabled() ?? false;
+    }
+    return await iosNotificationsEnabled() ?? false;
+  }
+
+  Future<bool> canScheduleExactAlarms() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    return await android?.canScheduleExactNotifications() ?? true;
+  }
+
+  Future<List<PendingNotificationRequest>> pendingNotifications() {
+    return _plugin.pendingNotificationRequests();
+  }
+
+  Future<void> ensureTimetableChannels() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return;
+
+    await android.createNotificationChannel(AndroidNotificationChannel(
+      _channelCourseReminder,
+      'Course Reminders',
+      description: 'Weekly reminders before timetable classes.',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+      vibrationPattern: Int64List.fromList([0, 500, 200, 500]),
+      audioAttributesUsage: AudioAttributesUsage.notification,
+    ));
+    await android.createNotificationChannel(AndroidNotificationChannel(
+      _channelCourseAlarm,
+      'Course Alarms',
+      description: 'Stronger alarm-style alerts before timetable classes.',
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+      vibrationPattern: Int64List.fromList([0, 1000, 500, 1000]),
+      audioAttributesUsage: AudioAttributesUsage.alarm,
+    ));
+  }
+
+  Future<TimetableChannelDiagnostics> timetableChannelDiagnostics() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) {
+      return const TimetableChannelDiagnostics(
+        reminderChannelStatus: 'Not applicable on this platform',
+        alarmChannelStatus: 'Not applicable on this platform',
+      );
+    }
+
+    await ensureTimetableChannels();
+    final channels = await android.getNotificationChannels() ?? [];
+    String statusFor(String id, Importance minimum) {
+      AndroidNotificationChannel? channel;
+      for (final candidate in channels) {
+        if (candidate.id == id) {
+          channel = candidate;
+          break;
+        }
+      }
+      if (channel == null) return 'Missing';
+      if (channel.importance == Importance.none) return 'Disabled';
+      if (channel.importance.value < minimum.value) {
+        return 'Lower importance than expected';
+      }
+      final sound = channel.playSound ? 'sound' : 'no sound';
+      final vibration = channel.enableVibration ? 'vibration' : 'no vibration';
+      return 'Ready (${channel.importance.name}, $sound, $vibration)';
+    }
+
+    return TimetableChannelDiagnostics(
+      reminderChannelStatus: statusFor(_channelCourseReminder, Importance.high),
+      alarmChannelStatus: statusFor(_channelCourseAlarm, Importance.max),
+    );
+  }
+
+  Future<bool> requestExactAlarmPermission() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return true;
+    return await android.requestExactAlarmsPermission() ?? false;
+  }
+
+  Future<void> openNotificationSettings() async {
+    try {
+      await _settingsChannel.invokeMethod<void>('openNotificationSettings');
+      return;
+    } catch (_) {
+      await launchUrl(Uri.parse('app-settings:'));
+    }
+  }
+
+  Future<void> openExactAlarmSettings() async {
+    try {
+      await _settingsChannel.invokeMethod<void>('openExactAlarmSettings');
+      return;
+    } catch (_) {
+      await requestExactAlarmPermission();
+    }
+  }
+
+  Future<int> cancelLegacyTimetableNotifications() async {
+    var cancelled = 0;
+    for (var id = 700; id <= 999; id++) {
+      await _plugin.cancel(id: id);
+      cancelled++;
+    }
+    return cancelled;
   }
 
   // ── Public scheduling methods ─────────────────────────────────────────────
@@ -317,107 +450,63 @@ class NotificationService {
     );
   }
 
-  Future<void> scheduleCourseReminderNotifications({
-    required List<CourseReminderModel> reminders,
-    required List<TimetableSlotModel> slots,
+  Future<void> scheduleTimetableCourseAlert({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledAt,
+    required bool isAlarm,
+    required String payload,
   }) async {
-    await cancelCourseReminderNotifications();
-
-    final enabledReminders = reminders.where((r) => r.isEnabled).toList();
-    if (enabledReminders.isEmpty || slots.isEmpty) return;
-
-    final now = DateTime.now();
-    int notifId = 700;
-
-    for (final reminder in enabledReminders) {
-      final courseSlots = slots
-          .where((slot) =>
-              slot.semesterKey == reminder.semesterKey &&
-              slot.courseCode.toUpperCase() ==
-                  reminder.courseCode.toUpperCase())
-          .toList()
-        ..sort((a, b) {
-          final day = a.dayIndex.compareTo(b.dayIndex);
-          if (day != 0) return day;
-          return a.startMinutes.compareTo(b.startMinutes);
-        });
-
-      for (final slot in courseSlots) {
-        if (notifId > 999) return;
-
-        final scheduledAt = nextWeeklyCourseReminderTime(
-          now: now,
-          dayIndex: slot.dayIndex,
-          classStartMinutes: slot.startMinutes,
-          offsetMinutes: reminder.offsetMinutes,
-        );
-        final day = TimetableConstants.dayLabels[slot.dayIndex];
-        final start = TimetableConstants.minutesToLabel(slot.startMinutes);
-        final isAlarm = reminder.isAlarm;
-
-        try {
-          await _plugin.zonedSchedule(
-            id: notifId,
-            title: isAlarm
-                ? '${slot.courseCode} Class Starts Soon'
-                : '${slot.courseCode} starts soon',
-            body: isAlarm
-                ? '${slot.courseName} starts in ${reminder.offsetMinutes} mins. Tap to dismiss.'
-                : '${slot.courseName} is at $start on $day.',
-            scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
-            notificationDetails: NotificationDetails(
-              android: isAlarm
-                  ? _androidAlarmDetails(_channelCourseAlarm, 'Course Alarms')
-                  : _androidDetails(_channelCourseReminder, 'Course Reminders'),
-              iOS: const DarwinNotificationDetails(
-                presentAlert: true,
-                presentSound: true,
-                presentBadge: true,
-              ),
-            ),
-            androidScheduleMode: isAlarm
-                ? AndroidScheduleMode.exactAllowWhileIdle
-                : AndroidScheduleMode.inexactAllowWhileIdle,
-            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-          );
-        } on PlatformException catch (e) {
-          if (e.code == 'exact_alarms_not_permitted') {
-            await _plugin.zonedSchedule(
-              id: notifId,
-              title: isAlarm
-                  ? '${slot.courseCode} Class Starts Soon'
-                  : '${slot.courseCode} starts soon',
-              body: isAlarm
-                  ? '${slot.courseName} starts in ${reminder.offsetMinutes} mins. Tap to dismiss.'
-                  : '${slot.courseName} is at $start on $day.',
-              scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
-              notificationDetails: NotificationDetails(
-                android: isAlarm
-                    ? _androidAlarmDetails(_channelCourseAlarm, 'Course Alarms')
-                    : _androidDetails(
-                        _channelCourseReminder, 'Course Reminders'),
-                iOS: const DarwinNotificationDetails(
-                  presentAlert: true,
-                  presentSound: true,
-                  presentBadge: true,
-                ),
-              ),
-              androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-              matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-            );
-          } else {
-            rethrow;
-          }
-        }
-        notifId++;
-      }
+    if (isAlarm && !await canScheduleExactAlarms()) {
+      throw PlatformException(
+        code: 'exact_alarms_not_permitted',
+        message: 'Exact alarm access is disabled.',
+      );
     }
+
+    await ensureTimetableChannels();
+    await _plugin.zonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(scheduledAt, tz.local),
+      notificationDetails: NotificationDetails(
+        android: isAlarm
+            ? _androidAlarmDetails(_channelCourseAlarm, 'Course Alarms')
+            : _androidDetails(_channelCourseReminder, 'Course Reminders'),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentSound: true,
+          presentBadge: true,
+          interruptionLevel: isAlarm ? InterruptionLevel.timeSensitive : null,
+        ),
+      ),
+      androidScheduleMode: isAlarm
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      payload: payload,
+    );
   }
 
-  Future<void> cancelCourseReminderNotifications() async {
-    for (int i = 700; i <= 999; i++) {
-      await _plugin.cancel(id: i);
-    }
+  Future<void> showTimetableTestReminder() async {
+    await ensureTimetableChannels();
+    await _plugin.show(
+      id: timetableTestNotificationId,
+      title: 'Timetable test reminder',
+      body:
+          'This is a test alert. It does not affect your real class reminders.',
+      notificationDetails: NotificationDetails(
+        android: _androidDetails(_channelCourseReminder, 'Course Reminders'),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentSound: true,
+          presentBadge: false,
+        ),
+      ),
+      payload: '{"type":"timetable_test"}',
+    );
   }
 
   /// Cancel notification IDs 200 and 201 (used when a session is logged).
@@ -535,4 +624,14 @@ DateTime nextWeeklyCourseReminderTime({
     reminderTime = reminderTime.add(const Duration(days: 7));
   }
   return reminderTime;
+}
+
+class TimetableChannelDiagnostics {
+  const TimetableChannelDiagnostics({
+    required this.reminderChannelStatus,
+    required this.alarmChannelStatus,
+  });
+
+  final String reminderChannelStatus;
+  final String alarmChannelStatus;
 }

@@ -3,10 +3,10 @@
 ## What this is
 Flutter academic planning app for Ghanaian university students (KNUST first).
 Package ID: com.wesleyconsults.campusiq
-Current state: **v1.0 lean build — UI redesign complete, ready for beta device testing.**
+Current state: **v1.1.6 — Android + iOS, notification system hardened.**
 
 ## Tech stack
-- Flutter + Dart (Android-first)
+- Flutter + Dart (Android + iOS)
 - State: Riverpod (riverpod_annotation + riverpod_generator)
 - Storage: Isar 3.x (NOT Hive)
 - Navigation: GoRouter — ShellRoute + full-screen push routes
@@ -48,6 +48,7 @@ Home (/plan)    CWA (/cwa)    Table (/timetable)    Sessions (/sessions)
 /course/:courseCode    ← CWA / Table / Sessions → CourseHubScreen (3 tabs)
 /timetable/import      ← Table scanner icon     → TimetableImportScreen
 /cwa/manual-entry      ← CWA → Import → Enter Manually → CwaManualEntryScreen
+/settings/timetable-notifications  ← Settings → TimetableNotificationDiagnosticsScreen
 /subscribe             ← Today drawer  → SubscribeScreenStub
 ```
 
@@ -77,6 +78,7 @@ Today | Streak | Insights | Weekly Review | Settings | Subscribe
 | CWA Slip Import | (from CWA) | Registration slip + result slip import via AI vision |
 | Manual Course Entry | `/cwa/manual-entry` | Full-screen form, semester + cumulative modes, keyboard-safe |
 | Smart Notifications | (background) | Workmanager, streak protection, personalised alerts |
+| Timetable Alert Reliability | `/settings/timetable-notifications` | Notification channel diagnostics, permission checks, sync status, test reminder, legacy cleanup, exact-alarm verification |
 | Settings | `/settings` | Notification toggles, daily reminder time, cancel all, DEV premium toggle |
 
 ### Removed in v1.0
@@ -86,7 +88,7 @@ Today | Streak | Insights | Weekly Review | Settings | Subscribe
 - Course Hub: Files tab and per-course AI Chat tab removed (now 3 tabs only)
 
 ## Isar collections (active)
-`CourseModel`, `TimetableSlotModel`, `StudySessionModel`, `UserPrefsModel`, `AiMessageModel`, `AiChatSessionModel`, `AiUsageModel`, `SubscriptionModel`, `StudyPlanModel`, `StudyPlanSlotModel`, `WeeklyReviewModel`, `DailyPlanTaskModel`, `CourseNoteModel`, `PastSemesterModel`
+`CourseModel`, `TimetableSlotModel`, `ScheduledTimetableNotificationModel`, `StudySessionModel`, `UserPrefsModel`, `AiMessageModel`, `AiChatSessionModel`, `AiUsageModel`, `SubscriptionModel`, `StudyPlanModel`, `StudyPlanSlotModel`, `WeeklyReviewModel`, `DailyPlanTaskModel`, `CourseNoteModel`, `PastSemesterModel`
 
 ## Global state / Services
 - `activeSessionProvider` — scoped above ShellRoute, survives tab switches
@@ -97,19 +99,25 @@ Today | Streak | Insights | Weekly Review | Settings | Subscribe
 - `runZonedGuarded` + `FlutterError.onError` — global error capture in main.dart
 
 ## Notification IDs
-- 100: Streak Secured (Immediate)
-- 200: Streak at Risk (Background/AI-personalized)
+- 100–199: Free block reminders
+- 200–299: Streak at Risk (200, 201 = study-session based)
 - 300: Study Reminder (Scheduled)
 - 400: Weekly Review ready (Scheduled)
 - 500: Milestone unlocked (Immediate)
+- 600: Pomodoro timer end
+- 700–999: Timetable course alerts (managed by `TimetableNotificationCoordinator`)
+- 999001: Timetable test reminder (diagnostics)
 
 ## Key engineering decisions
 - **Timer reliability**: DateTime anchor, not Stopwatch — survives Android pauses
 - **Pomodoro**: `phaseEndsAt` DateTime anchor, `_lastFiredPhaseEnd` guard prevents double-fire, break time excluded from saved duration
+- **Timetable notifications**: `TimetableNotificationCoordinator` reconciles desired alerts (slots × reminders) against OS-pending state. Each alert gets a `ScheduledTimetableNotificationModel` registry record with a stable `logicalKey`. The coordinator diffs, schedules/cancels only what changed, and persists sync results to `UserPrefsModel.lastTimetableNotificationSync*`.
+- **Stable slot identity**: `TimetableSlotModel.slotId` is a random hex ID (`createStableTimetableId()`). Populated via `ensureStableIdentity()` before save; used for notification deep-linking and cross-referencing.
+- **Course code normalization**: `normalizeCourseCode()` strips whitespace, uppercases, and removes non-alphanumeric chars. Both `TimetableSlotModel` and `CourseReminderModel` store a `normalizedCourseCode` (indexed) for case-insensitive, whitespace-agnostic matching between reminders and slots.
 - **Streak calculation**: Pure Dart from existing data — no dedicated Isar collection
 - **AI quotas**: Per-feature keys (`chat`, `whatif`) in `AiUsageModel`, not a single counter
 - **Offline safety**: All 9 AI providers check `ConnectivityService.isOnline()` before API calls
-- **Isar write safety**: All 13 repositories wrap `.put()/.delete()` in try-catch with debugPrint
+- **Isar write safety**: All repositories wrap `.put()/.delete()` in try-catch with debugPrint
 - **Every screen**: Handles loading, error, and empty states via `AsyncValue.when()` pattern
 
 ## Build commands
