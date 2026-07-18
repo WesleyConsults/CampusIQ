@@ -3,7 +3,7 @@
 ## What this is
 Flutter academic planning app for Ghanaian university students (KNUST first).
 Package ID: com.wesleyconsults.campusiq
-Current state: **v1.1.6 — Android + iOS, notification system hardened.**
+Current state: **v1.1.8 — Document validation and parser classification updates.**
 
 ## Tech stack
 - Flutter + Dart (Android + iOS)
