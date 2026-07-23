@@ -18,6 +18,9 @@ import 'package:campusiq/features/cwa/presentation/widgets/academic_import_desti
 import 'package:campusiq/features/cwa/presentation/widgets/wrong_academic_document_view.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 import 'package:campusiq/shared/widgets/import_option_grid.dart';
+import 'package:campusiq/shared/widgets/campus_progress_panel.dart';
+import 'package:campusiq/shared/widgets/import_error_recovery.dart';
+import 'package:campusiq/shared/widgets/import_safety_notice.dart';
 
 class RegistrationSlipImportScreen extends ConsumerStatefulWidget {
   final String? initialSource;
@@ -162,6 +165,12 @@ class _RegistrationSlipImportScreenState
               SlipImportStep.error => _ErrorView(
                   message: state.errorMessage ?? 'Unknown error.',
                   onRetry: notifier.reset,
+                  onReviewAgain:
+                      state.courses.isEmpty ? null : notifier.resumeReview,
+                  onEnterManually: () {
+                    notifier.reset();
+                    context.push('/cwa/manual-entry?mode=semester');
+                  },
                 ),
             },
     );
@@ -195,10 +204,12 @@ class _IdleView extends StatelessWidget {
         AcademicImportDestinationBanner(
           destination: 'Current Semester — $activeSemesterLabel',
           description:
-              'Upload only courses you are studying now. Do not upload official results from a completed semester here.',
+              'We will extract course codes, names, and credit hours. You will review every course before anything is saved.',
           alternativeLabel: 'I have completed results instead',
           onAlternative: onPastResults,
         ),
+        const SizedBox(height: AppSpacing.lg),
+        const ImportSafetyNotice(),
         const SizedBox(height: AppSpacing.lg),
         ImportOptionGrid(
           options: [
@@ -237,22 +248,10 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 15,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
+    return CampusProgressPanel(
+      message: message,
+      detail:
+          'Nothing has been saved yet. Keep this screen open while we prepare your review.',
     );
   }
 }
@@ -275,6 +274,16 @@ class _ReviewView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selected = state.selectedIndexes.length;
+    final attentionCount = state.courses
+        .where((course) =>
+            course.courseCode.trim().isEmpty ||
+            course.courseName.trim().isEmpty)
+        .length;
+    final selectedAttentionCount = state.selectedIndexes.where((index) {
+      final course = state.courses[index];
+      return course.courseCode.trim().isEmpty ||
+          course.courseName.trim().isEmpty;
+    }).length;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -318,12 +327,12 @@ class _ReviewView extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Adjust expected scores and credit hours if needed, then tap Import.',
-            style: TextStyle(
-              fontSize: 12,
-              color: colorScheme.onSurfaceVariant,
-            ),
+          child: ImportSafetyNotice(
+            requiresAttention:
+                attentionCount > 0 || state.skippedCourseCount > 0,
+            message: attentionCount > 0
+                ? '$attentionCount detected course${attentionCount == 1 ? '' : 's'} need your attention. Nothing will be saved until you review and confirm.'
+                : 'Nothing has been saved yet. Check every course and credit value before you confirm.',
           ),
         ),
         if (state.skippedCourseCount > 0) ...[
@@ -361,6 +370,8 @@ class _ReviewView extends StatelessWidget {
                 course: course,
                 gradingSystem: gradingSystem,
                 isSelected: isSelected,
+                requiresAttention: course.courseCode.trim().isEmpty ||
+                    course.courseName.trim().isEmpty,
                 onToggle: () => notifier.toggleCourse(i),
                 onCreditChanged: (v) => notifier.setCreditHours(i, v),
                 onExpectedScoreChanged: (v) => notifier.setExpectedScore(i, v),
@@ -376,14 +387,16 @@ class _ReviewView extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: selected == 0
+                onPressed: selected == 0 || selectedAttentionCount > 0
                     ? null
                     : () => _confirmImport(context, selected),
                 icon: const Icon(LucideIcons.check),
                 label: Text(
                   selected == 0
                       ? 'Select at least one course'
-                      : 'Save to Current Semester',
+                      : selectedAttentionCount > 0
+                          ? 'Review highlighted courses'
+                          : 'Save to Current Semester',
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
@@ -483,6 +496,7 @@ class _ReviewCourseCard extends StatelessWidget {
   final RegistrationCourseImport course;
   final GradingSystem gradingSystem;
   final bool isSelected;
+  final bool requiresAttention;
   final VoidCallback onToggle;
   final ValueChanged<double> onCreditChanged;
   final ValueChanged<double> onExpectedScoreChanged;
@@ -491,6 +505,7 @@ class _ReviewCourseCard extends StatelessWidget {
     required this.course,
     required this.gradingSystem,
     required this.isSelected,
+    required this.requiresAttention,
     required this.onToggle,
     required this.onCreditChanged,
     required this.onExpectedScoreChanged,
@@ -503,6 +518,12 @@ class _ReviewCourseCard extends StatelessWidget {
       color: isSelected ? Theme.of(context).cardColor : colorScheme.surface,
       borderRadius: BorderRadius.circular(AppRadii.sm),
       elevation: isSelected ? 1 : 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        side: requiresAttention
+            ? BorderSide(color: colorScheme.error)
+            : BorderSide.none,
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadii.sm),
         onTap: onToggle,
@@ -525,7 +546,9 @@ class _ReviewCourseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      course.courseCode.toUpperCase(),
+                      course.courseCode.trim().isEmpty
+                          ? 'Course code missing'
+                          : course.courseCode.toUpperCase(),
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
@@ -535,12 +558,25 @@ class _ReviewCourseCard extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxxs),
                     Text(
-                      course.courseName,
+                      course.courseName.trim().isEmpty
+                          ? 'Course name missing — deselect and add it manually'
+                          : course.courseName,
                       style: TextStyle(
                         fontSize: 14,
                         color: colorScheme.onSurface,
                       ),
                     ),
+                    if (requiresAttention) ...[
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(
+                        'Please check this item before importing.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                     if (isSelected) ...[
                       const SizedBox(height: AppSpacing.xs2),
                       Row(
@@ -923,7 +959,7 @@ class _DoneView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                 ),
-                child: const Text('Done'),
+                child: const Text('View Current Semester'),
               ),
             ),
           ],
@@ -938,63 +974,33 @@ class _DoneView extends StatelessWidget {
 class _ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
+  final VoidCallback? onReviewAgain;
+  final VoidCallback onEnterManually;
 
-  const _ErrorView({required this.message, required this.onRetry});
+  const _ErrorView({
+    required this.message,
+    required this.onRetry,
+    required this.onEnterManually,
+    this.onReviewAgain,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xxl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(LucideIcons.circleAlert,
-              size: 56, color: AppTheme.warning),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'We couldn\'t read this document',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs2),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Try a clear, uncropped image with readable course codes. For PDFs, make sure the file opens normally and is not password-protected.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.4,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 28),
-          ElevatedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(LucideIcons.refreshCw),
-            label: const Text('Try Again'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 13),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.xs2),
-              ),
-            ),
-          ),
-        ],
-      ),
+    final saveFailed = onReviewAgain != null;
+    return ImportErrorRecovery(
+      title: saveFailed
+          ? 'Your reviewed courses were not saved'
+          : 'We couldn’t read this registration slip',
+      explanation: message,
+      dataStatus: saveFailed
+          ? 'Nothing new was added. Your reviewed courses and corrections are still available.'
+          : 'Nothing was saved to Current Semester.',
+      nextStep: saveFailed
+          ? 'Return to review and try saving again.'
+          : 'Try a clearer, uncropped image or enter the courses manually.',
+      onTryAgain: onRetry,
+      onReviewAgain: onReviewAgain,
+      onEnterManually: onEnterManually,
     );
   }
 }

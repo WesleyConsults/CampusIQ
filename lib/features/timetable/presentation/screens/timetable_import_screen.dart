@@ -17,6 +17,10 @@ import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/features/cwa/presentation/providers/cwa_provider.dart';
 import 'package:campusiq/shared/widgets/campus_button.dart';
 import 'package:campusiq/shared/widgets/import_option_grid.dart';
+import 'package:campusiq/shared/widgets/campus_progress_panel.dart';
+import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
+import 'package:campusiq/shared/widgets/import_error_recovery.dart';
+import 'package:campusiq/shared/widgets/import_safety_notice.dart';
 
 class TimetableImportScreen extends ConsumerStatefulWidget {
   final String? initialSource;
@@ -101,7 +105,11 @@ class _TimetableImportScreenState extends ConsumerState<TimetableImportScreen> {
           if (state.step == ImportStep.reviewing)
             TextButton(
               onPressed: state.selectedIndexes.isNotEmpty
-                  ? () => notifier.confirmImport()
+                  ? () => _confirmTimetableImport(
+                        context,
+                        notifier,
+                        state.selectedIndexes.length,
+                      )
                   : null,
               child: Text(
                 'Import (${state.selectedIndexes.length})',
@@ -127,6 +135,7 @@ class _TimetableImportScreenState extends ConsumerState<TimetableImportScreen> {
         ImportStep.error => _ErrorBody(
             message: state.errorMessage ?? 'Something went wrong.',
             onRetry: notifier.reset,
+            onReviewAgain: state.slots.isEmpty ? null : notifier.resumeReview,
           ),
       },
     );
@@ -144,17 +153,28 @@ class _IdleBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.xl),
-      child: ImportOptionGrid(
-        options: [
-          ImportOptionGridItem(
-            icon: Icons.camera_alt_outlined,
-            label: 'Take Photo',
-            onTap: () => onPick(ImageSource.camera),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'We will extract course names, days, class times, venues, and lecturers. You will review every class before anything is saved.',
           ),
-          ImportOptionGridItem(
-            icon: Icons.photo_library_outlined,
-            label: 'Upload Image',
-            onTap: () => onPick(ImageSource.gallery),
+          const SizedBox(height: AppSpacing.md),
+          const ImportSafetyNotice(),
+          const SizedBox(height: AppSpacing.lg),
+          ImportOptionGrid(
+            options: [
+              ImportOptionGridItem(
+                icon: Icons.camera_alt_outlined,
+                label: 'Take Photo',
+                onTap: () => onPick(ImageSource.camera),
+              ),
+              ImportOptionGridItem(
+                icon: Icons.photo_library_outlined,
+                label: 'Upload Image',
+                onTap: () => onPick(ImageSource.gallery),
+              ),
+            ],
           ),
         ],
       ),
@@ -171,23 +191,10 @@ class _LoadingBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 15,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
+    return CampusProgressPanel(
+      message: message,
+      detail:
+          'Nothing has been saved yet. Keep this screen open while we prepare your review.',
     );
   }
 }
@@ -209,6 +216,7 @@ class _ReviewBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final allSelected = state.selectedIndexes.length == state.slots.length;
     final colorScheme = Theme.of(context).colorScheme;
+    final attentionCount = state.slots.where((slot) => !slot.isValid).length;
 
     return Stack(
       children: [
@@ -248,6 +256,15 @@ class _ReviewBody extends StatelessWidget {
               ),
             ),
             const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: ImportSafetyNotice(
+                requiresAttention: attentionCount > 0,
+                message: attentionCount > 0
+                    ? '$attentionCount class${attentionCount == 1 ? '' : 'es'} need a corrected time or must remain unselected. Nothing will be saved until you confirm.'
+                    : 'Nothing has been saved yet. Check every class time and venue before you confirm.',
+              ),
+            ),
 
             // Slot list
             Expanded(
@@ -277,7 +294,11 @@ class _ReviewBody extends StatelessWidget {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: state.selectedIndexes.isNotEmpty
-                        ? () => notifier.confirmImport()
+                        ? () => _confirmTimetableImport(
+                              context,
+                              notifier,
+                              state.selectedIndexes.length,
+                            )
                         : null,
                     style: FilledButton.styleFrom(
                       backgroundColor: colorScheme.primary,
@@ -335,59 +356,49 @@ class _ReviewBody extends StatelessWidget {
 class _ErrorBody extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
+  final VoidCallback? onReviewAgain;
 
-  const _ErrorBody({required this.message, required this.onRetry});
+  const _ErrorBody({
+    required this.message,
+    required this.onRetry,
+    this.onReviewAgain,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 56, color: colorScheme.error),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Try a clear, uncropped screenshot showing the days, course names, and class times. Avoid shadows or overlapping pages.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.4,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton.icon(
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
-              onPressed: onRetry,
-              style: FilledButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    final saveFailed = onReviewAgain != null;
+    return ImportErrorRecovery(
+      title: saveFailed
+          ? 'Your reviewed timetable was not saved'
+          : 'We couldn’t read this timetable',
+      explanation: message,
+      dataStatus: saveFailed
+          ? 'Nothing new was added. Your reviewed classes are still available.'
+          : 'Nothing was added to your timetable.',
+      nextStep: saveFailed
+          ? 'Return to review and try saving again.'
+          : 'Try a clear, uncropped image showing days, course names, and class times.',
+      onTryAgain: onRetry,
+      onReviewAgain: onReviewAgain,
     );
   }
+}
+
+Future<void> _confirmTimetableImport(
+  BuildContext context,
+  TimetableImportNotifier notifier,
+  int count,
+) async {
+  final confirmed = await showCampusConfirmDialog(
+        context: context,
+        title: 'Add classes to timetable?',
+        message:
+            'You reviewed $count class${count == 1 ? '' : 'es'}. They will appear in your current timetable after you confirm.',
+        confirmLabel: 'Add to Timetable',
+        cancelLabel: 'Review Again',
+      ) ??
+      false;
+  if (confirmed) await notifier.confirmImport();
 }
 
 Future<void> _showPostImportAlertsDialog(

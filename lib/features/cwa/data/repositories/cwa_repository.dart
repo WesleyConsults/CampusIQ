@@ -30,6 +30,45 @@ class CwaRepository {
     }
   }
 
+  /// Adds a reviewed import as one transaction so it either fully succeeds or
+  /// leaves the current semester unchanged.
+  Future<int> addCoursesIfMissing(
+    List<CourseModel> courses,
+    String semesterKey,
+  ) async {
+    try {
+      final existing = await _isar.courseModels
+          .filter()
+          .semesterKeyEqualTo(semesterKey)
+          .findAll();
+      final existingCodes =
+          existing.map((course) => course.code.trim().toUpperCase()).toSet();
+      final additions = <CourseModel>[];
+      var duplicateCount = 0;
+      for (final course in courses) {
+        final code = course.code.trim().toUpperCase();
+        if (existingCodes.add(code)) {
+          additions.add(course);
+        } else {
+          duplicateCount++;
+        }
+      }
+      if (additions.isNotEmpty) {
+        await _isar.writeTxn(() => _isar.courseModels.putAll(additions));
+      }
+      return duplicateCount;
+    } catch (e, stackTrace) {
+      debugPrint('🔴 Isar batch write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {'repository': 'cwa', 'operation': 'import_courses'},
+      );
+      rethrow;
+    }
+  }
+
   Future<void> updateCourse(CourseModel course) async {
     try {
       await _isar.writeTxn(() => _isar.courseModels.put(course));

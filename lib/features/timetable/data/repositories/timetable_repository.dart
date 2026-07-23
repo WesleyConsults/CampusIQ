@@ -42,6 +42,25 @@ class TimetableRepository {
     }
   }
 
+  /// Saves a reviewed timetable import atomically.
+  Future<void> addSlots(List<TimetableSlotModel> slots) async {
+    try {
+      for (final slot in slots) {
+        slot.ensureStableIdentity();
+      }
+      await _isar.writeTxn(() => _isar.timetableSlotModels.putAll(slots));
+    } catch (e, stackTrace) {
+      debugPrint('🔴 Isar batch write failed: $e');
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'isar_write_failed',
+        context: {'repository': 'timetable', 'operation': 'import_slots'},
+      );
+      rethrow;
+    }
+  }
+
   Future<void> updateSlot(TimetableSlotModel slot) async {
     try {
       slot.ensureStableIdentity();

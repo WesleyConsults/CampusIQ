@@ -283,7 +283,14 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
 
   Future<void> confirmImport() async {
     final cwaRepo = ref.read(cwaRepositoryProvider);
-    if (cwaRepo == null) return;
+    if (cwaRepo == null) {
+      state = state.copyWith(
+        step: SlipImportStep.error,
+        errorMessage:
+            'The local database is not ready, so the import could not be saved.',
+      );
+      return;
+    }
 
     final semesterKey = ref.read(activeSemesterProvider);
     final gradingSystem = ref.read(gradingSystemProvider);
@@ -291,27 +298,24 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
 
     try {
       final ordered = state.selectedIndexes.toList()..sort();
-      int duplicateCount = 0;
+      final additions = <CourseModel>[];
       for (final i in ordered) {
         final course = state.courses[i];
         final code = course.courseCode.trim().toUpperCase();
         if (code.isEmpty) continue;
-        final exists = await cwaRepo.courseExistsByCode(code, semesterKey);
-        if (!exists) {
-          await cwaRepo.addCourse(
-            CourseModel.create(
-              name: course.courseName,
-              code: code,
-              creditHours: course.creditHours,
-              expectedScore: gradingSystem.clampScore(course.expectedScore),
-              semesterKey: semesterKey,
-              gradingSystemId: gradingSystem.id,
-            ),
-          );
-        } else {
-          duplicateCount++;
-        }
+        additions.add(
+          CourseModel.create(
+            name: course.courseName,
+            code: code,
+            creditHours: course.creditHours,
+            expectedScore: gradingSystem.clampScore(course.expectedScore),
+            semesterKey: semesterKey,
+            gradingSystemId: gradingSystem.id,
+          ),
+        );
       }
+      final duplicateCount =
+          await cwaRepo.addCoursesIfMissing(additions, semesterKey);
       state = state.copyWith(
         step: SlipImportStep.done,
         duplicateCourseCount: duplicateCount,
@@ -336,10 +340,16 @@ class RegistrationSlipImportNotifier extends _$RegistrationSlipImportNotifier {
       );
       state = state.copyWith(
         step: SlipImportStep.error,
-        errorMessage: 'Failed to save: ${e.toString()}',
+        errorMessage:
+            'We read your registration slip, but could not save the reviewed courses.',
       );
     }
   }
+
+  void resumeReview() => state = state.copyWith(
+        step: SlipImportStep.reviewing,
+        errorMessage: null,
+      );
 
   void reset() => state = const SlipImportState();
 

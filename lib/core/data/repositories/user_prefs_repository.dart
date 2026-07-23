@@ -114,6 +114,33 @@ class UserPrefsRepository {
       changed = true;
     }
 
+    if (prefs.onboardingStepIndex < 0 || prefs.onboardingStepIndex > 5) {
+      prefs.onboardingStepIndex = 0;
+      changed = true;
+    }
+    if (prefs.onboardingStartActionIndex < -1 ||
+        prefs.onboardingStartActionIndex > 2) {
+      prefs.onboardingStartActionIndex = -1;
+      changed = true;
+    }
+
+    // Completed users do not need a resumable draft. This also normalizes old
+    // databases where newly added integer fields deserialize as zero.
+    if (prefs.hasCompletedOnboarding &&
+        (prefs.onboardingStepIndex != 0 ||
+            prefs.onboardingStartActionIndex != -1)) {
+      prefs.onboardingStepIndex = 0;
+      prefs.onboardingStartActionIndex = -1;
+      changed = true;
+    } else if (!prefs.hasCompletedOnboarding &&
+        prefs.onboardingStepIndex == 0 &&
+        prefs.universityName == null &&
+        prefs.programmeName == null &&
+        prefs.onboardingStartActionIndex == 0) {
+      prefs.onboardingStartActionIndex = -1;
+      changed = true;
+    }
+
     if (!changed) return;
 
     try {
@@ -478,6 +505,50 @@ class UserPrefsRepository {
   Future<void> setHasCompletedOnboarding(bool value) async {
     final prefs = await _getOrCreate();
     prefs.hasCompletedOnboarding = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> saveOnboardingProgress({
+    required int stepIndex,
+    required String? universityName,
+    required String? programmeName,
+    required String gradingSystemId,
+    required double target,
+    required int startActionIndex,
+    required bool notifyStudyReminders,
+    required bool notifyStreakAlerts,
+    required bool notifyMilestoneAlerts,
+    required bool notifyWeeklyReview,
+  }) async {
+    final prefs = await _getOrCreate();
+    prefs.onboardingStepIndex = stepIndex;
+    prefs.universityName = universityName;
+    prefs.programmeName =
+        programmeName?.trim().isEmpty == true ? null : programmeName?.trim();
+    prefs.gradingSystemId = GradingSystem.byId(gradingSystemId).id;
+    prefs.targetCwa = target;
+    prefs.onboardingStartActionIndex = startActionIndex;
+    prefs.notifyStudyReminders = notifyStudyReminders;
+    prefs.notifyStreakAlerts = notifyStreakAlerts;
+    prefs.notifyMilestoneAlerts = notifyMilestoneAlerts;
+    prefs.notifyWeeklyReview = notifyWeeklyReview;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> clearOnboardingProgress() async {
+    final prefs = await _getOrCreate();
+    prefs.onboardingStepIndex = 0;
+    prefs.onboardingStartActionIndex = -1;
     try {
       await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
     } catch (e) {

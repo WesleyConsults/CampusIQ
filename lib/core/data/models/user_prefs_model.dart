@@ -79,6 +79,15 @@ class UserPrefsModel {
   @Name('zzHasCompletedOnboarding')
   bool hasCompletedOnboarding = false;
 
+  /// Last onboarding page reached. Uses the stable [OnboardingStep] index.
+  @Name('zzOnboardingStepIndex')
+  int onboardingStepIndex = 0;
+
+  /// Optional setup shortcut selected on the final onboarding page.
+  /// -1 means no shortcut was selected.
+  @Name('zzOnboardingStartActionIndex')
+  int onboardingStartActionIndex = -1;
+
   /// The university the student attends (e.g. "KNUST", "University of Ghana").
   @Name('zzUniversityName')
   String? universityName;

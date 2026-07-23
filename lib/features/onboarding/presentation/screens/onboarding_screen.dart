@@ -13,9 +13,13 @@ class OnboardingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final step = ref.watch(
-      onboardingProvider.select((s) => s.step),
-    );
+    final state = ref.watch(onboardingProvider);
+    if (state.isRestoring) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    final step = state.step;
 
     return switch (step) {
       OnboardingStep.welcome => const OnboardingWelcomeScreen(),

@@ -11,6 +11,7 @@ import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart
 import 'package:campusiq/features/cwa/presentation/widgets/timetable_course_import_sheet.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
+import 'package:campusiq/shared/widgets/campus_feedback.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,7 +45,15 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
 
     if (result == null) return;
     final repo = ref.read(cwaRepositoryProvider);
-    if (repo == null) return;
+    if (repo == null) {
+      if (context.mounted) {
+        CampusFeedback.showError(
+          context,
+          message: 'Course could not be saved. Your changes were not lost.',
+        );
+      }
+      return;
+    }
 
     try {
       existing == null
@@ -55,6 +64,14 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
         source: 'current_semester_courses',
         gradingSystem: selectedSystem.id,
       );
+      if (context.mounted) {
+        CampusFeedback.showSuccess(
+          context,
+          message: existing == null
+              ? '${result.code} added'
+              : '${result.code} updated',
+        );
+      }
     } catch (e, stackTrace) {
       await CrashReportingService.instance.recordNonFatalError(
         e,
@@ -64,10 +81,9 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
       );
       debugPrint('CurrentSemesterCoursesScreen _openAddSheet failed: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not save course. Please try again.'),
-          ),
+        CampusFeedback.showError(
+          context,
+          message: 'Course could not be saved. Please try again.',
         );
       }
     }
@@ -89,14 +105,29 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
     if (confirm != true) return;
 
     try {
-      await ref.read(cwaRepositoryProvider)?.deleteCourse(course.id);
+      final repo = ref.read(cwaRepositoryProvider);
+      if (repo == null) {
+        if (context.mounted) {
+          CampusFeedback.showError(
+            context,
+            message: 'Course could not be deleted. Please try again.',
+          );
+        }
+        return;
+      }
+      await repo.deleteCourse(course.id);
+      if (context.mounted) {
+        CampusFeedback.showSuccess(
+          context,
+          message: '${course.code} deleted',
+        );
+      }
     } catch (e) {
       debugPrint('CurrentSemesterCoursesScreen deleteCourse failed: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not delete course. Please try again.'),
-          ),
+        CampusFeedback.showError(
+          context,
+          message: 'Course could not be deleted. Please try again.',
         );
       }
     }
@@ -120,12 +151,9 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
     );
 
     if (nextSemesterLabel == null || !context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Semester completed. You are now in $nextSemesterLabel.',
-        ),
-      ),
+    CampusFeedback.showSuccess(
+      context,
+      message: 'Semester completed. You are now in $nextSemesterLabel.',
     );
   }
 

@@ -27,6 +27,7 @@ import 'package:campusiq/shared/widgets/campus_chip.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
+import 'package:campusiq/shared/widgets/campus_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -112,11 +113,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final durationMins = completed.elapsedMinutes;
     if (durationMins < 1) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Session too short to save (under 1 minute).'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        CampusFeedback.showWarning(
+          context,
+          message: 'Session was under 1 minute, so it was not saved.',
         );
       }
       return;
@@ -151,11 +150,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final repo = ref.read(sessionRepositoryProvider);
     if (repo == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not save session. Please try again.'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        CampusFeedback.showError(
+          context,
+          message: 'Study session could not be saved. Please try again.',
         );
       }
       return;
@@ -174,11 +171,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         },
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not save session. Please try again.'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        CampusFeedback.showError(
+          context,
+          message: 'Study session could not be saved. Please try again.',
         );
       }
       return;
@@ -197,6 +192,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       final streak = ref.read(studyStreakProvider);
       await NotificationService.instance
           .showStreakSecured(streak.currentStreak);
+    }
+    if (mounted) {
+      CampusFeedback.showSuccess(
+        context,
+        message:
+            '$durationMins-minute ${completed.courseCode} study session saved',
+      );
     }
   }
 

@@ -354,7 +354,14 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
 
   Future<void> confirmImport({bool replaceExisting = false}) async {
     final repo = ref.read(pastResultRepositoryProvider);
-    if (repo == null) return;
+    if (repo == null) {
+      state = state.copyWith(
+        step: ResultImportStep.error,
+        errorMessage:
+            'The local database is not ready, so the results were not saved.',
+      );
+      return;
+    }
 
     state = state.copyWith(step: ResultImportStep.saving);
     try {
@@ -414,10 +421,16 @@ class ResultSlipImportNotifier extends _$ResultSlipImportNotifier {
       );
       state = state.copyWith(
         step: ResultImportStep.error,
-        errorMessage: 'Failed to save: ${e.toString()}',
+        errorMessage:
+            'We read your result slip, but could not save the reviewed results.',
       );
     }
   }
+
+  void resumeReview() => state = state.copyWith(
+        step: ResultImportStep.reviewing,
+        errorMessage: null,
+      );
 
   void reset() => state = const ResultImportState();
 

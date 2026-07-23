@@ -26,6 +26,7 @@ import 'package:campusiq/shared/widgets/campus_chip.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 import 'package:campusiq/shared/widgets/campus_modal_sheet.dart';
+import 'package:campusiq/shared/widgets/campus_feedback.dart';
 
 class TimetableScreen extends ConsumerStatefulWidget {
   const TimetableScreen({super.key});
@@ -84,11 +85,9 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     final repo = ref.read(timetableRepositoryProvider);
     if (repo == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not save slot. Please try again.'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        CampusFeedback.showError(
+          context,
+          message: 'Class could not be saved. Please try again.',
         );
       }
       return;
@@ -104,6 +103,14 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       await AnalyticsService.instance.logTimetableSlotSaved(
         action: existing == null ? 'created' : 'updated',
       );
+      if (mounted) {
+        CampusFeedback.showSuccess(
+          context,
+          message: existing == null
+              ? '${result.courseCode} added to your timetable'
+              : '${result.courseCode} timetable updated',
+        );
+      }
     } catch (e, stackTrace) {
       await CrashReportingService.instance.recordNonFatalError(
         e,
@@ -112,11 +119,9 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
         context: {'action': existing == null ? 'created' : 'updated'},
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not save slot. Please try again.'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        CampusFeedback.showError(
+          context,
+          message: 'Class could not be saved. Please try again.',
         );
       }
     }
@@ -135,15 +140,12 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
         slot: slot,
         onEdit: () => _openAddClassSheet(existing: slot),
         onDelete: () async {
-          final messenger = ScaffoldMessenger.of(context);
           final repo = ref.read(timetableRepositoryProvider);
           if (repo == null) {
             if (mounted) {
-              messenger.showSnackBar(
-                const SnackBar(
-                  content: Text('Could not delete slot. Please try again.'),
-                  behavior: SnackBarBehavior.floating,
-                ),
+              CampusFeedback.showError(
+                context,
+                message: 'Class could not be deleted. Please try again.',
               );
             }
             return;
@@ -151,13 +153,17 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
           try {
             await repo.deleteSlot(slot.id);
             await refreshCourseReminderNotifications(ref);
+            if (mounted) {
+              CampusFeedback.showSuccess(
+                context,
+                message: '${slot.courseCode} removed from your timetable',
+              );
+            }
           } catch (e) {
             if (mounted) {
-              messenger.showSnackBar(
-                const SnackBar(
-                  content: Text('Could not delete slot. Please try again.'),
-                  behavior: SnackBarBehavior.floating,
-                ),
+              CampusFeedback.showError(
+                context,
+                message: 'Class could not be deleted. Please try again.',
               );
             }
           }

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:campusiq/core/data/isar_database.dart';
 import 'package:campusiq/core/data/models/user_prefs_model.dart';
+import 'package:campusiq/core/data/repositories/user_prefs_repository.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/cwa/data/models/past_semester_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
@@ -17,7 +18,7 @@ void main() {
       libraries: {
         Abi.current():
             '${Platform.environment['HOME']}/.pub-cache/hosted/pub.dev/'
-            'isar_community_flutter_libs-3.3.0-dev.1/macos/libisar.dylib',
+                'isar_community_flutter_libs-3.3.0-dev.1/macos/libisar.dylib',
       },
     );
   });
@@ -51,10 +52,26 @@ void main() {
     expect(slot, isNotNull);
     expect(slot!.venue, 'Engineering Block A');
 
-    final prefs = await isar.userPrefsModels.get(1);
+    final prefsRepo = UserPrefsRepository(isar);
+    final prefs = await prefsRepo.getPrefs();
     expect(prefs, isNotNull);
-    expect(prefs!.universityName, 'KNUST');
+    expect(prefs.universityName, 'KNUST');
     expect(prefs.hasCompletedOnboarding, isTrue);
+    expect(prefs.onboardingStepIndex, 0);
+    expect(prefs.onboardingStartActionIndex, -1);
+
+    await prefsRepo.saveOnboardingProgress(
+      stepIndex: 3,
+      universityName: 'KNUST',
+      programmeName: 'BSc Computer Engineering',
+      gradingSystemId: 'cwa',
+      target: 78,
+      startActionIndex: 1,
+      notifyStudyReminders: true,
+      notifyStreakAlerts: false,
+      notifyMilestoneAlerts: true,
+      notifyWeeklyReview: false,
+    );
 
     course.expectedScore = 86;
     await isar.writeTxn(() => isar.courseModels.put(course));
@@ -73,6 +90,11 @@ void main() {
     expect((await isar.timetableSlotModels.get(303))!.courseCode, 'MATH 151');
     expect((await isar.userPrefsModels.get(1))!.programmeName,
         'BSc Computer Engineering');
+    final reopenedPrefs = (await isar.userPrefsModels.get(1))!;
+    expect(reopenedPrefs.onboardingStepIndex, 3);
+    expect(reopenedPrefs.onboardingStartActionIndex, 1);
+    expect(reopenedPrefs.targetCwa, 78);
+    expect(reopenedPrefs.notifyStreakAlerts, isFalse);
 
     await isar.close();
   });

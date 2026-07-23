@@ -117,73 +117,83 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'zzManualCwaDraftJson',
       type: IsarType.string,
     ),
-    r'zzPomodoroFocusMinutes': PropertySchema(
+    r'zzOnboardingStartActionIndex': PropertySchema(
       id: 20,
+      name: r'zzOnboardingStartActionIndex',
+      type: IsarType.long,
+    ),
+    r'zzOnboardingStepIndex': PropertySchema(
+      id: 21,
+      name: r'zzOnboardingStepIndex',
+      type: IsarType.long,
+    ),
+    r'zzPomodoroFocusMinutes': PropertySchema(
+      id: 22,
       name: r'zzPomodoroFocusMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroLongBreakMinutes': PropertySchema(
-      id: 21,
+      id: 23,
       name: r'zzPomodoroLongBreakMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroShortBreakMinutes': PropertySchema(
-      id: 22,
+      id: 24,
       name: r'zzPomodoroShortBreakMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroTotalRounds': PropertySchema(
-      id: 23,
+      id: 25,
       name: r'zzPomodoroTotalRounds',
       type: IsarType.long,
     ),
     r'zzProgrammeName': PropertySchema(
-      id: 24,
+      id: 26,
       name: r'zzProgrammeName',
       type: IsarType.string,
     ),
     r'zzSoundOnTimerEnd': PropertySchema(
-      id: 25,
+      id: 27,
       name: r'zzSoundOnTimerEnd',
       type: IsarType.bool,
     ),
     r'zzTargetCwa': PropertySchema(
-      id: 26,
+      id: 28,
       name: r'zzTargetCwa',
       type: IsarType.double,
     ),
     r'zzThemeModeIndex': PropertySchema(
-      id: 27,
+      id: 29,
       name: r'zzThemeModeIndex',
       type: IsarType.long,
     ),
     r'zzTimetableGridLayoutIndex': PropertySchema(
-      id: 28,
+      id: 30,
       name: r'zzTimetableGridLayoutIndex',
       type: IsarType.long,
     ),
     r'zzUniversityName': PropertySchema(
-      id: 29,
+      id: 31,
       name: r'zzUniversityName',
       type: IsarType.string,
     ),
     r'zzVibrateOnTimerEnd': PropertySchema(
-      id: 30,
+      id: 32,
       name: r'zzVibrateOnTimerEnd',
       type: IsarType.bool,
     ),
     r'zzzManualBaselineCredits': PropertySchema(
-      id: 31,
+      id: 33,
       name: r'zzzManualBaselineCredits',
       type: IsarType.double,
     ),
     r'zzzManualBaselineCwa': PropertySchema(
-      id: 32,
+      id: 34,
       name: r'zzzManualBaselineCwa',
       type: IsarType.double,
     ),
     r'zzzManualBaselineGradingSystemId': PropertySchema(
-      id: 33,
+      id: 35,
       name: r'zzzManualBaselineGradingSystemId',
       type: IsarType.string,
     )
@@ -262,20 +272,22 @@ void _userPrefsModelSerialize(
   writer.writeBool(offsets[17], object.hasCompletedOnboarding);
   writer.writeBool(offsets[18], object.hasSeenInitialHomeWelcome);
   writer.writeString(offsets[19], object.manualCwaDraftJson);
-  writer.writeLong(offsets[20], object.defaultFocusMinutes);
-  writer.writeLong(offsets[21], object.defaultLongBreakMinutes);
-  writer.writeLong(offsets[22], object.defaultShortBreakMinutes);
-  writer.writeLong(offsets[23], object.defaultTotalRounds);
-  writer.writeString(offsets[24], object.programmeName);
-  writer.writeBool(offsets[25], object.playSoundOnTimerEnd);
-  writer.writeDouble(offsets[26], object.targetCwa);
-  writer.writeLong(offsets[27], object.themeModeIndex);
-  writer.writeLong(offsets[28], object.timetableGridLayoutIndex);
-  writer.writeString(offsets[29], object.universityName);
-  writer.writeBool(offsets[30], object.vibrateOnTimerEnd);
-  writer.writeDouble(offsets[31], object.manualBaselineCredits);
-  writer.writeDouble(offsets[32], object.manualBaselineCwa);
-  writer.writeString(offsets[33], object.manualBaselineGradingSystemId);
+  writer.writeLong(offsets[20], object.onboardingStartActionIndex);
+  writer.writeLong(offsets[21], object.onboardingStepIndex);
+  writer.writeLong(offsets[22], object.defaultFocusMinutes);
+  writer.writeLong(offsets[23], object.defaultLongBreakMinutes);
+  writer.writeLong(offsets[24], object.defaultShortBreakMinutes);
+  writer.writeLong(offsets[25], object.defaultTotalRounds);
+  writer.writeString(offsets[26], object.programmeName);
+  writer.writeBool(offsets[27], object.playSoundOnTimerEnd);
+  writer.writeDouble(offsets[28], object.targetCwa);
+  writer.writeLong(offsets[29], object.themeModeIndex);
+  writer.writeLong(offsets[30], object.timetableGridLayoutIndex);
+  writer.writeString(offsets[31], object.universityName);
+  writer.writeBool(offsets[32], object.vibrateOnTimerEnd);
+  writer.writeDouble(offsets[33], object.manualBaselineCredits);
+  writer.writeDouble(offsets[34], object.manualBaselineCwa);
+  writer.writeString(offsets[35], object.manualBaselineGradingSystemId);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -307,20 +319,22 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.hasCompletedOnboarding = reader.readBool(offsets[17]);
   object.hasSeenInitialHomeWelcome = reader.readBool(offsets[18]);
   object.manualCwaDraftJson = reader.readString(offsets[19]);
-  object.defaultFocusMinutes = reader.readLong(offsets[20]);
-  object.defaultLongBreakMinutes = reader.readLong(offsets[21]);
-  object.defaultShortBreakMinutes = reader.readLong(offsets[22]);
-  object.defaultTotalRounds = reader.readLong(offsets[23]);
-  object.programmeName = reader.readStringOrNull(offsets[24]);
-  object.playSoundOnTimerEnd = reader.readBool(offsets[25]);
-  object.targetCwa = reader.readDouble(offsets[26]);
-  object.themeModeIndex = reader.readLong(offsets[27]);
-  object.timetableGridLayoutIndex = reader.readLong(offsets[28]);
-  object.universityName = reader.readStringOrNull(offsets[29]);
-  object.vibrateOnTimerEnd = reader.readBool(offsets[30]);
-  object.manualBaselineCredits = reader.readDoubleOrNull(offsets[31]);
-  object.manualBaselineCwa = reader.readDoubleOrNull(offsets[32]);
-  object.manualBaselineGradingSystemId = reader.readStringOrNull(offsets[33]);
+  object.onboardingStartActionIndex = reader.readLong(offsets[20]);
+  object.onboardingStepIndex = reader.readLong(offsets[21]);
+  object.defaultFocusMinutes = reader.readLong(offsets[22]);
+  object.defaultLongBreakMinutes = reader.readLong(offsets[23]);
+  object.defaultShortBreakMinutes = reader.readLong(offsets[24]);
+  object.defaultTotalRounds = reader.readLong(offsets[25]);
+  object.programmeName = reader.readStringOrNull(offsets[26]);
+  object.playSoundOnTimerEnd = reader.readBool(offsets[27]);
+  object.targetCwa = reader.readDouble(offsets[28]);
+  object.themeModeIndex = reader.readLong(offsets[29]);
+  object.timetableGridLayoutIndex = reader.readLong(offsets[30]);
+  object.universityName = reader.readStringOrNull(offsets[31]);
+  object.vibrateOnTimerEnd = reader.readBool(offsets[32]);
+  object.manualBaselineCredits = reader.readDoubleOrNull(offsets[33]);
+  object.manualBaselineCwa = reader.readDoubleOrNull(offsets[34]);
+  object.manualBaselineGradingSystemId = reader.readStringOrNull(offsets[35]);
   return object;
 }
 
@@ -380,24 +394,28 @@ P _userPrefsModelDeserializeProp<P>(
     case 23:
       return (reader.readLong(offset)) as P;
     case 24:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 25:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 26:
-      return (reader.readDouble(offset)) as P;
-    case 27:
-      return (reader.readLong(offset)) as P;
-    case 28:
-      return (reader.readLong(offset)) as P;
-    case 29:
       return (reader.readStringOrNull(offset)) as P;
-    case 30:
+    case 27:
       return (reader.readBool(offset)) as P;
+    case 28:
+      return (reader.readDouble(offset)) as P;
+    case 29:
+      return (reader.readLong(offset)) as P;
+    case 30:
+      return (reader.readLong(offset)) as P;
     case 31:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 32:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 33:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 34:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 35:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1860,6 +1878,118 @@ extension UserPrefsModelQueryFilter
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      onboardingStartActionIndexEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzOnboardingStartActionIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      onboardingStartActionIndexGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzOnboardingStartActionIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      onboardingStartActionIndexLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzOnboardingStartActionIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      onboardingStartActionIndexBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzOnboardingStartActionIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      onboardingStepIndexEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzOnboardingStepIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      onboardingStepIndexGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzOnboardingStepIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      onboardingStepIndexLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzOnboardingStepIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      onboardingStepIndexBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzOnboardingStepIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
       defaultFocusMinutesEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -3204,6 +3334,34 @@ extension UserPrefsModelQuerySortBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByOnboardingStartActionIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzOnboardingStartActionIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByOnboardingStartActionIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzOnboardingStartActionIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByOnboardingStepIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzOnboardingStepIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByOnboardingStepIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzOnboardingStepIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       sortByDefaultFocusMinutes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzPomodoroFocusMinutes', Sort.asc);
@@ -3695,6 +3853,34 @@ extension UserPrefsModelQuerySortThenBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByOnboardingStartActionIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzOnboardingStartActionIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByOnboardingStartActionIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzOnboardingStartActionIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByOnboardingStepIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzOnboardingStepIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByOnboardingStepIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzOnboardingStepIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       thenByDefaultFocusMinutes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzPomodoroFocusMinutes', Sort.asc);
@@ -4041,6 +4227,20 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByOnboardingStartActionIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzOnboardingStartActionIndex');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByOnboardingStepIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzOnboardingStepIndex');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByDefaultFocusMinutes() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'zzPomodoroFocusMinutes');
@@ -4287,6 +4487,20 @@ extension UserPrefsModelQueryProperty
       manualCwaDraftJsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'zzManualCwaDraftJson');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      onboardingStartActionIndexProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzOnboardingStartActionIndex');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      onboardingStepIndexProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzOnboardingStepIndex');
     });
   }
 

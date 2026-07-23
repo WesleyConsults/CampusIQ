@@ -185,7 +185,14 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
 
   Future<void> confirmImport() async {
     final repo = ref.read(timetableRepositoryProvider);
-    if (repo == null) return;
+    if (repo == null) {
+      state = state.copyWith(
+        step: ImportStep.error,
+        errorMessage:
+            'The local database is not ready, so the timetable was not saved.',
+      );
+      return;
+    }
 
     final semesterKey = ref.read(activeSemesterProvider);
 
@@ -203,12 +210,14 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
         );
         return;
       }
-      for (var i = 0; i < ordered.length; i++) {
-        final slot = state.slots[ordered[i]];
-        final color = TimetableConstants.colorForIndex(i);
-        await repo
-            .addSlot(slot.toModel(colorValue: color, semesterKey: semesterKey));
-      }
+      final models = [
+        for (var i = 0; i < ordered.length; i++)
+          state.slots[ordered[i]].toModel(
+            colorValue: TimetableConstants.colorForIndex(i),
+            semesterKey: semesterKey,
+          ),
+      ];
+      await repo.addSlots(models);
 
       final isar = await ref.read(isarProvider.future);
       await TimetableNotificationCoordinator(isar: isar).reconcile(
@@ -233,10 +242,16 @@ class TimetableImportNotifier extends _$TimetableImportNotifier {
       );
       state = state.copyWith(
         step: ImportStep.error,
-        errorMessage: 'Failed to save: ${e.toString()}',
+        errorMessage:
+            'We read your timetable, but could not save the reviewed classes.',
       );
     }
   }
+
+  void resumeReview() => state = state.copyWith(
+        step: ImportStep.reviewing,
+        errorMessage: null,
+      );
 
   void reset() => state = const TimetableImportState();
 }

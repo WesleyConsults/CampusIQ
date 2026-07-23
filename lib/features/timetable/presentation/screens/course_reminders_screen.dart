@@ -16,6 +16,7 @@ import 'package:campusiq/shared/widgets/campus_button.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
+import 'package:campusiq/shared/widgets/campus_feedback.dart';
 
 const _reminderOffsetOptions = [10, 15, 30, 60, 120];
 
@@ -80,7 +81,19 @@ class CourseRemindersScreen extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        _showMessage(context, syncResult.summary);
+        if (syncResult.hasPermissionFailure ||
+            syncResult.hasExactAlarmFailure) {
+          CampusFeedback.showWarning(
+            context,
+            message: syncResult.summary,
+          );
+        } else {
+          CampusFeedback.showSuccess(
+            context,
+            message:
+                '${result.course.courseCode} reminder scheduled ${result.offsetMinutes} minutes before class',
+          );
+        }
         if (syncResult.hasPermissionFailure) {
           await _showPermissionRequiredDialog(context);
         } else if (syncResult.hasExactAlarmFailure) {
@@ -208,12 +221,7 @@ class CourseRemindersScreen extends ConsumerWidget {
   }
 
   void _showMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    CampusFeedback.showInfo(context, message: message);
   }
 
   Future<bool> _requestNotificationPermission(WidgetRef ref) async {
