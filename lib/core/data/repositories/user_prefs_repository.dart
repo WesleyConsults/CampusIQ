@@ -14,6 +14,8 @@ class UserPrefsRepository {
   static const int _defaultPomodoroLongBreakMinutes = 15;
   static const int _defaultPomodoroTotalRounds = 4;
   static const int _defaultThemeModeIndex = 0;
+  static const int _defaultDailyFocusGoalMinutes = 120;
+  static const int _defaultWeeklyFocusGoalMinutes = 600;
 
   Future<UserPrefsModel> _getOrCreate() async {
     final existing = await _isar.userPrefsModels.get(1);
@@ -75,6 +77,28 @@ class UserPrefsRepository {
     );
     if (rounds != prefs.defaultTotalRounds) {
       prefs.defaultTotalRounds = rounds;
+      changed = true;
+    }
+
+    final dailyGoal = _validRangeOrDefault(
+      prefs.dailyFocusGoalMinutes,
+      min: 15,
+      max: 720,
+      fallback: _defaultDailyFocusGoalMinutes,
+    );
+    if (dailyGoal != prefs.dailyFocusGoalMinutes) {
+      prefs.dailyFocusGoalMinutes = dailyGoal;
+      changed = true;
+    }
+
+    final weeklyGoal = _validRangeOrDefault(
+      prefs.weeklyFocusGoalMinutes,
+      min: 60,
+      max: 5040,
+      fallback: _defaultWeeklyFocusGoalMinutes,
+    );
+    if (weeklyGoal != prefs.weeklyFocusGoalMinutes) {
+      prefs.weeklyFocusGoalMinutes = weeklyGoal;
       changed = true;
     }
 
@@ -336,6 +360,23 @@ class UserPrefsRepository {
   Future<void> setDefaultTotalRounds(int value) async {
     final prefs = await _getOrCreate();
     prefs.defaultTotalRounds = value.clamp(2, 10).toInt();
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  // ── Study goals ───────────────────────────────────────────────────────────
+
+  Future<void> setStudyGoals({
+    required int dailyMinutes,
+    required int weeklyMinutes,
+  }) async {
+    final prefs = await _getOrCreate();
+    prefs.dailyFocusGoalMinutes = dailyMinutes.clamp(15, 720).toInt();
+    prefs.weeklyFocusGoalMinutes = weeklyMinutes.clamp(60, 5040).toInt();
     try {
       await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
     } catch (e) {

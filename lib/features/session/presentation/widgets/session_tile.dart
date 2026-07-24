@@ -5,12 +5,12 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class SessionTile extends StatelessWidget {
   final StudySessionModel session;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
 
   const SessionTile({
     super.key,
     required this.session,
-    required this.onDelete,
+    this.onDelete,
   });
 
   @override
@@ -99,6 +99,19 @@ class SessionTile extends StatelessWidget {
                         color: colorScheme.onSurfaceVariant,
                       ),
                 ),
+                if (session.objective != null &&
+                    session.objective!.trim().isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    session.objective!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontStyle: FontStyle.italic,
+                        ),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.sm),
                 Wrap(
                   spacing: AppSpacing.sm,
@@ -124,16 +137,18 @@ class SessionTile extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          IconButton(
-            onPressed: onDelete,
-            icon: Icon(
-              LucideIcons.trash2,
-              size: AppIconSizes.lg,
-              color: colorScheme.onSurfaceVariant,
+          if (onDelete != null) ...[
+            const SizedBox(width: AppSpacing.sm),
+            IconButton(
+              onPressed: onDelete,
+              icon: Icon(
+                LucideIcons.trash2,
+                size: AppIconSizes.lg,
+                color: colorScheme.onSurfaceVariant,
+              ),
+              tooltip: 'Delete session',
             ),
-            tooltip: 'Delete session',
-          ),
+          ],
         ],
       ),
     );

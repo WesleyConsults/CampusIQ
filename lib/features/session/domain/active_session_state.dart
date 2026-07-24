@@ -6,6 +6,7 @@ class ActiveSessionState {
   final String courseCode;
   final String courseName;
   final String courseSource; // "cwa" | "timetable" | "custom"
+  final String? objective;
   final DateTime startTime;
   final bool isPaused;
   final DateTime? pausedAt;
@@ -29,6 +30,7 @@ class ActiveSessionState {
     required this.courseCode,
     required this.courseName,
     required this.courseSource,
+    this.objective,
     required this.startTime,
     this.isPaused = false,
     this.pausedAt,
@@ -52,6 +54,7 @@ class ActiveSessionState {
     String? courseCode,
     String? courseName,
     String? courseSource,
+    Object? objective = _activeSessionNoChange,
     DateTime? startTime,
     bool? isPaused,
     Object? pausedAt = _activeSessionNoChange,
@@ -73,6 +76,9 @@ class ActiveSessionState {
       courseCode: courseCode ?? this.courseCode,
       courseName: courseName ?? this.courseName,
       courseSource: courseSource ?? this.courseSource,
+      objective: identical(objective, _activeSessionNoChange)
+          ? this.objective
+          : objective as String?,
       startTime: startTime ?? this.startTime,
       isPaused: isPaused ?? this.isPaused,
       pausedAt: identical(pausedAt, _activeSessionNoChange)

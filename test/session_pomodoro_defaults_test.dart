@@ -22,4 +22,19 @@ void main() {
     expect(session.longBreakDuration, const Duration(minutes: 15));
     expect(session.totalRounds, 4);
   });
+
+  test('session setup supports a single round and objective', () {
+    final notifier = ActiveSessionNotifier();
+
+    notifier.startSession(
+      courseCode: 'CS101',
+      courseName: 'Computer Science',
+      courseSource: 'cwa',
+      objective: 'Complete binary tree exercises',
+      totalRounds: 1,
+    );
+
+    expect(notifier.state!.totalRounds, 1);
+    expect(notifier.state!.objective, 'Complete binary tree exercises');
+  });
 }

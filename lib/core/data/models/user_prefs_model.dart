@@ -114,6 +114,15 @@ class UserPrefsModel {
   @Name('zzPomodoroTotalRounds')
   int defaultTotalRounds = 4;
 
+  // ── Study goals ───────────────────────────────────────────────────────────
+
+  /// Focus targets used by the Sessions dashboard.
+  @Name('zzDailyFocusGoalMinutes')
+  int dailyFocusGoalMinutes = 120;
+
+  @Name('zzWeeklyFocusGoalMinutes')
+  int weeklyFocusGoalMinutes = 600;
+
   // ── Timer feedback ────────────────────────────────────────────────────────
 
   @Name('zzVibrateOnTimerEnd')

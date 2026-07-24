@@ -97,103 +97,113 @@ const UserPrefsModelSchema = CollectionSchema(
       name: r'zzCwaSetupTargetConfirmed',
       type: IsarType.bool,
     ),
-    r'zzGradingSystemId': PropertySchema(
+    r'zzDailyFocusGoalMinutes': PropertySchema(
       id: 16,
+      name: r'zzDailyFocusGoalMinutes',
+      type: IsarType.long,
+    ),
+    r'zzGradingSystemId': PropertySchema(
+      id: 17,
       name: r'zzGradingSystemId',
       type: IsarType.string,
     ),
     r'zzHasCompletedOnboarding': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'zzHasCompletedOnboarding',
       type: IsarType.bool,
     ),
     r'zzHasSeenInitialHomeWelcome': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'zzHasSeenInitialHomeWelcome',
       type: IsarType.bool,
     ),
     r'zzManualCwaDraftJson': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'zzManualCwaDraftJson',
       type: IsarType.string,
     ),
     r'zzOnboardingStartActionIndex': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'zzOnboardingStartActionIndex',
       type: IsarType.long,
     ),
     r'zzOnboardingStepIndex': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'zzOnboardingStepIndex',
       type: IsarType.long,
     ),
     r'zzPomodoroFocusMinutes': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'zzPomodoroFocusMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroLongBreakMinutes': PropertySchema(
-      id: 23,
+      id: 24,
       name: r'zzPomodoroLongBreakMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroShortBreakMinutes': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'zzPomodoroShortBreakMinutes',
       type: IsarType.long,
     ),
     r'zzPomodoroTotalRounds': PropertySchema(
-      id: 25,
+      id: 26,
       name: r'zzPomodoroTotalRounds',
       type: IsarType.long,
     ),
     r'zzProgrammeName': PropertySchema(
-      id: 26,
+      id: 27,
       name: r'zzProgrammeName',
       type: IsarType.string,
     ),
     r'zzSoundOnTimerEnd': PropertySchema(
-      id: 27,
+      id: 28,
       name: r'zzSoundOnTimerEnd',
       type: IsarType.bool,
     ),
     r'zzTargetCwa': PropertySchema(
-      id: 28,
+      id: 29,
       name: r'zzTargetCwa',
       type: IsarType.double,
     ),
     r'zzThemeModeIndex': PropertySchema(
-      id: 29,
+      id: 30,
       name: r'zzThemeModeIndex',
       type: IsarType.long,
     ),
     r'zzTimetableGridLayoutIndex': PropertySchema(
-      id: 30,
+      id: 31,
       name: r'zzTimetableGridLayoutIndex',
       type: IsarType.long,
     ),
     r'zzUniversityName': PropertySchema(
-      id: 31,
+      id: 32,
       name: r'zzUniversityName',
       type: IsarType.string,
     ),
     r'zzVibrateOnTimerEnd': PropertySchema(
-      id: 32,
+      id: 33,
       name: r'zzVibrateOnTimerEnd',
       type: IsarType.bool,
     ),
+    r'zzWeeklyFocusGoalMinutes': PropertySchema(
+      id: 34,
+      name: r'zzWeeklyFocusGoalMinutes',
+      type: IsarType.long,
+    ),
     r'zzzManualBaselineCredits': PropertySchema(
-      id: 33,
+      id: 35,
       name: r'zzzManualBaselineCredits',
       type: IsarType.double,
     ),
     r'zzzManualBaselineCwa': PropertySchema(
-      id: 34,
+      id: 36,
       name: r'zzzManualBaselineCwa',
       type: IsarType.double,
     ),
     r'zzzManualBaselineGradingSystemId': PropertySchema(
-      id: 35,
+      id: 37,
       name: r'zzzManualBaselineGradingSystemId',
       type: IsarType.string,
     )
@@ -268,26 +278,28 @@ void _userPrefsModelSerialize(
   writer.writeString(offsets[13], object.weeklyNotesJson);
   writer.writeString(offsets[14], object.activeSemesterKey);
   writer.writeBool(offsets[15], object.cwaSetupTargetConfirmed);
-  writer.writeString(offsets[16], object.gradingSystemId);
-  writer.writeBool(offsets[17], object.hasCompletedOnboarding);
-  writer.writeBool(offsets[18], object.hasSeenInitialHomeWelcome);
-  writer.writeString(offsets[19], object.manualCwaDraftJson);
-  writer.writeLong(offsets[20], object.onboardingStartActionIndex);
-  writer.writeLong(offsets[21], object.onboardingStepIndex);
-  writer.writeLong(offsets[22], object.defaultFocusMinutes);
-  writer.writeLong(offsets[23], object.defaultLongBreakMinutes);
-  writer.writeLong(offsets[24], object.defaultShortBreakMinutes);
-  writer.writeLong(offsets[25], object.defaultTotalRounds);
-  writer.writeString(offsets[26], object.programmeName);
-  writer.writeBool(offsets[27], object.playSoundOnTimerEnd);
-  writer.writeDouble(offsets[28], object.targetCwa);
-  writer.writeLong(offsets[29], object.themeModeIndex);
-  writer.writeLong(offsets[30], object.timetableGridLayoutIndex);
-  writer.writeString(offsets[31], object.universityName);
-  writer.writeBool(offsets[32], object.vibrateOnTimerEnd);
-  writer.writeDouble(offsets[33], object.manualBaselineCredits);
-  writer.writeDouble(offsets[34], object.manualBaselineCwa);
-  writer.writeString(offsets[35], object.manualBaselineGradingSystemId);
+  writer.writeLong(offsets[16], object.dailyFocusGoalMinutes);
+  writer.writeString(offsets[17], object.gradingSystemId);
+  writer.writeBool(offsets[18], object.hasCompletedOnboarding);
+  writer.writeBool(offsets[19], object.hasSeenInitialHomeWelcome);
+  writer.writeString(offsets[20], object.manualCwaDraftJson);
+  writer.writeLong(offsets[21], object.onboardingStartActionIndex);
+  writer.writeLong(offsets[22], object.onboardingStepIndex);
+  writer.writeLong(offsets[23], object.defaultFocusMinutes);
+  writer.writeLong(offsets[24], object.defaultLongBreakMinutes);
+  writer.writeLong(offsets[25], object.defaultShortBreakMinutes);
+  writer.writeLong(offsets[26], object.defaultTotalRounds);
+  writer.writeString(offsets[27], object.programmeName);
+  writer.writeBool(offsets[28], object.playSoundOnTimerEnd);
+  writer.writeDouble(offsets[29], object.targetCwa);
+  writer.writeLong(offsets[30], object.themeModeIndex);
+  writer.writeLong(offsets[31], object.timetableGridLayoutIndex);
+  writer.writeString(offsets[32], object.universityName);
+  writer.writeBool(offsets[33], object.vibrateOnTimerEnd);
+  writer.writeLong(offsets[34], object.weeklyFocusGoalMinutes);
+  writer.writeDouble(offsets[35], object.manualBaselineCredits);
+  writer.writeDouble(offsets[36], object.manualBaselineCwa);
+  writer.writeString(offsets[37], object.manualBaselineGradingSystemId);
 }
 
 UserPrefsModel _userPrefsModelDeserialize(
@@ -315,26 +327,28 @@ UserPrefsModel _userPrefsModelDeserialize(
   object.weeklyNotesJson = reader.readString(offsets[13]);
   object.activeSemesterKey = reader.readString(offsets[14]);
   object.cwaSetupTargetConfirmed = reader.readBool(offsets[15]);
-  object.gradingSystemId = reader.readString(offsets[16]);
-  object.hasCompletedOnboarding = reader.readBool(offsets[17]);
-  object.hasSeenInitialHomeWelcome = reader.readBool(offsets[18]);
-  object.manualCwaDraftJson = reader.readString(offsets[19]);
-  object.onboardingStartActionIndex = reader.readLong(offsets[20]);
-  object.onboardingStepIndex = reader.readLong(offsets[21]);
-  object.defaultFocusMinutes = reader.readLong(offsets[22]);
-  object.defaultLongBreakMinutes = reader.readLong(offsets[23]);
-  object.defaultShortBreakMinutes = reader.readLong(offsets[24]);
-  object.defaultTotalRounds = reader.readLong(offsets[25]);
-  object.programmeName = reader.readStringOrNull(offsets[26]);
-  object.playSoundOnTimerEnd = reader.readBool(offsets[27]);
-  object.targetCwa = reader.readDouble(offsets[28]);
-  object.themeModeIndex = reader.readLong(offsets[29]);
-  object.timetableGridLayoutIndex = reader.readLong(offsets[30]);
-  object.universityName = reader.readStringOrNull(offsets[31]);
-  object.vibrateOnTimerEnd = reader.readBool(offsets[32]);
-  object.manualBaselineCredits = reader.readDoubleOrNull(offsets[33]);
-  object.manualBaselineCwa = reader.readDoubleOrNull(offsets[34]);
-  object.manualBaselineGradingSystemId = reader.readStringOrNull(offsets[35]);
+  object.dailyFocusGoalMinutes = reader.readLong(offsets[16]);
+  object.gradingSystemId = reader.readString(offsets[17]);
+  object.hasCompletedOnboarding = reader.readBool(offsets[18]);
+  object.hasSeenInitialHomeWelcome = reader.readBool(offsets[19]);
+  object.manualCwaDraftJson = reader.readString(offsets[20]);
+  object.onboardingStartActionIndex = reader.readLong(offsets[21]);
+  object.onboardingStepIndex = reader.readLong(offsets[22]);
+  object.defaultFocusMinutes = reader.readLong(offsets[23]);
+  object.defaultLongBreakMinutes = reader.readLong(offsets[24]);
+  object.defaultShortBreakMinutes = reader.readLong(offsets[25]);
+  object.defaultTotalRounds = reader.readLong(offsets[26]);
+  object.programmeName = reader.readStringOrNull(offsets[27]);
+  object.playSoundOnTimerEnd = reader.readBool(offsets[28]);
+  object.targetCwa = reader.readDouble(offsets[29]);
+  object.themeModeIndex = reader.readLong(offsets[30]);
+  object.timetableGridLayoutIndex = reader.readLong(offsets[31]);
+  object.universityName = reader.readStringOrNull(offsets[32]);
+  object.vibrateOnTimerEnd = reader.readBool(offsets[33]);
+  object.weeklyFocusGoalMinutes = reader.readLong(offsets[34]);
+  object.manualBaselineCredits = reader.readDoubleOrNull(offsets[35]);
+  object.manualBaselineCwa = reader.readDoubleOrNull(offsets[36]);
+  object.manualBaselineGradingSystemId = reader.readStringOrNull(offsets[37]);
   return object;
 }
 
@@ -378,15 +392,15 @@ P _userPrefsModelDeserializeProp<P>(
     case 15:
       return (reader.readBool(offset)) as P;
     case 16:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 17:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 18:
       return (reader.readBool(offset)) as P;
     case 19:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 20:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 21:
       return (reader.readLong(offset)) as P;
     case 22:
@@ -398,24 +412,28 @@ P _userPrefsModelDeserializeProp<P>(
     case 25:
       return (reader.readLong(offset)) as P;
     case 26:
-      return (reader.readStringOrNull(offset)) as P;
-    case 27:
-      return (reader.readBool(offset)) as P;
-    case 28:
-      return (reader.readDouble(offset)) as P;
-    case 29:
       return (reader.readLong(offset)) as P;
+    case 27:
+      return (reader.readStringOrNull(offset)) as P;
+    case 28:
+      return (reader.readBool(offset)) as P;
+    case 29:
+      return (reader.readDouble(offset)) as P;
     case 30:
       return (reader.readLong(offset)) as P;
     case 31:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 32:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 33:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 34:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 35:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 36:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 37:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1586,6 +1604,62 @@ extension UserPrefsModelQueryFilter
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyFocusGoalMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzDailyFocusGoalMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyFocusGoalMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzDailyFocusGoalMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyFocusGoalMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzDailyFocusGoalMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      dailyFocusGoalMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzDailyFocusGoalMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
       gradingSystemIdEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -2720,6 +2794,62 @@ extension UserPrefsModelQueryFilter
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyFocusGoalMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'zzWeeklyFocusGoalMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyFocusGoalMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'zzWeeklyFocusGoalMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyFocusGoalMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'zzWeeklyFocusGoalMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
+      weeklyFocusGoalMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'zzWeeklyFocusGoalMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterFilterCondition>
       manualBaselineCreditsIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -3278,6 +3408,20 @@ extension UserPrefsModelQuerySortBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDailyFocusGoalMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzDailyFocusGoalMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByDailyFocusGoalMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzDailyFocusGoalMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       sortByGradingSystemId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzGradingSystemId', Sort.asc);
@@ -3511,6 +3655,20 @@ extension UserPrefsModelQuerySortBy
       sortByVibrateOnTimerEndDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzVibrateOnTimerEnd', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByWeeklyFocusGoalMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzWeeklyFocusGoalMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      sortByWeeklyFocusGoalMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzWeeklyFocusGoalMinutes', Sort.desc);
     });
   }
 
@@ -3797,6 +3955,20 @@ extension UserPrefsModelQuerySortThenBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDailyFocusGoalMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzDailyFocusGoalMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByDailyFocusGoalMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzDailyFocusGoalMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       thenByGradingSystemId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzGradingSystemId', Sort.asc);
@@ -4034,6 +4206,20 @@ extension UserPrefsModelQuerySortThenBy
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByWeeklyFocusGoalMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzWeeklyFocusGoalMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
+      thenByWeeklyFocusGoalMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzWeeklyFocusGoalMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QAfterSortBy>
       thenByManualBaselineCredits() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'zzzManualBaselineCredits', Sort.asc);
@@ -4197,6 +4383,13 @@ extension UserPrefsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByDailyFocusGoalMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzDailyFocusGoalMinutes');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
       distinctByGradingSystemId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'zzGradingSystemId',
@@ -4316,6 +4509,13 @@ extension UserPrefsModelQueryWhereDistinct
       distinctByVibrateOnTimerEnd() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'zzVibrateOnTimerEnd');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, UserPrefsModel, QDistinct>
+      distinctByWeeklyFocusGoalMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zzWeeklyFocusGoalMinutes');
     });
   }
 
@@ -4462,6 +4662,13 @@ extension UserPrefsModelQueryProperty
     });
   }
 
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      dailyFocusGoalMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzDailyFocusGoalMinutes');
+    });
+  }
+
   QueryBuilder<UserPrefsModel, String, QQueryOperations>
       gradingSystemIdProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -4576,6 +4783,13 @@ extension UserPrefsModelQueryProperty
       vibrateOnTimerEndProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'zzVibrateOnTimerEnd');
+    });
+  }
+
+  QueryBuilder<UserPrefsModel, int, QQueryOperations>
+      weeklyFocusGoalMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzWeeklyFocusGoalMinutes');
     });
   }
 

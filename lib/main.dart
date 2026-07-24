@@ -66,12 +66,19 @@ Future<void> _handleStreakRiskCheck() async {
         .filter()
         .startTimeBetween(todayStart, todayEnd)
         .findAll();
-    if (todaySessions.isNotEmpty) return;
+    final todayMinutes = todaySessions.fold<int>(
+      0,
+      (total, session) => total + session.durationMinutes,
+    );
+    if (todayMinutes >= StreakCalculator.studyRequirementMinutes) return;
 
     // Calculate current streak from all sessions
     final allSessions = await isar.studySessionModels.where().findAll();
     final streak = StreakCalculator.calculate(
-      activeDates: allSessions.map((s) => s.startTime).toList(),
+      activeDates: StreakCalculator.qualifyingStudyDates(
+        sessions: allSessions
+            .map((s) => (date: s.startTime, minutes: s.durationMinutes)),
+      ),
     );
     if (streak.currentStreak <= 0) return;
 

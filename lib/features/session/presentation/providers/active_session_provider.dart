@@ -14,6 +14,7 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
     required String courseCode,
     required String courseName,
     required String courseSource,
+    String? objective,
     bool isPomodoroMode = false,
     Duration focusDuration = const Duration(minutes: 25),
     Duration shortBreakDuration = const Duration(minutes: 5),
@@ -44,13 +45,14 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
       fallback: const Duration(minutes: 15),
     );
     final normalizedTotalRounds =
-        totalRounds < 2 || totalRounds > 10 ? 4 : totalRounds;
+        totalRounds < 1 || totalRounds > 10 ? 4 : totalRounds;
 
     final now = DateTime.now();
     final s = ActiveSessionState(
       courseCode: courseCode,
       courseName: courseName,
       courseSource: courseSource,
+      objective: objective,
       startTime: now,
       isPomodoroMode: isPomodoroMode,
       focusDuration: normalizedFocusDuration,
@@ -84,6 +86,14 @@ class ActiveSessionNotifier extends StateNotifier<ActiveSessionState?> {
       // Focus phase ended → enter break
       final newAccumulated =
           s.accumulatedFocusSeconds + s.focusDuration.inSeconds;
+      if (s.totalRounds == 1) {
+        state = s.copyWith(
+          isComplete: true,
+          accumulatedFocusSeconds: newAccumulated,
+        );
+        NotificationService.instance.cancelPomodoroPhaseNotification();
+        return;
+      }
       final isLong = s.currentRound >= s.totalRounds;
       final breakDuration = isLong ? s.longBreakDuration : s.shortBreakDuration;
       final next = s.copyWith(

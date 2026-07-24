@@ -29,6 +29,9 @@ class StudySessionModel {
   /// Number of complete focus rounds finished (Pomodoro sessions only)
   int? pomodoroRoundsCompleted;
 
+  /// Optional intention entered before the student starts focusing.
+  String? objective;
+
   StudySessionModel();
 
   String get formattedDuration {

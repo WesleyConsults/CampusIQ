@@ -2,6 +2,25 @@ import 'package:campusiq/features/streak/domain/milestone.dart';
 import 'package:campusiq/features/streak/domain/streak_result.dart';
 
 class StreakCalculator {
+  static const int studyRequirementMinutes = 20;
+
+  /// Returns dates whose combined focus time reaches the meaningful-study
+  /// threshold. Multiple short sessions on the same day are accumulated.
+  static List<DateTime> qualifyingStudyDates({
+    required Iterable<({DateTime date, int minutes})> sessions,
+    int requirementMinutes = studyRequirementMinutes,
+  }) {
+    final totals = <DateTime, int>{};
+    for (final session in sessions) {
+      final day = _norm(session.date);
+      totals[day] = (totals[day] ?? 0) + session.minutes;
+    }
+    return totals.entries
+        .where((entry) => entry.value >= requirementMinutes)
+        .map((entry) => entry.key)
+        .toList();
+  }
+
   /// Computes a StreakResult from a list of dates on which the student
   /// performed the tracked activity (studied, attended, etc.).
   ///

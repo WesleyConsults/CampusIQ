@@ -52,28 +52,33 @@ const StudySessionModelSchema = CollectionSchema(
       name: r'isPomodoro',
       type: IsarType.bool,
     ),
-    r'pomodoroRoundsCompleted': PropertySchema(
+    r'objective': PropertySchema(
       id: 7,
+      name: r'objective',
+      type: IsarType.string,
+    ),
+    r'pomodoroRoundsCompleted': PropertySchema(
+      id: 8,
       name: r'pomodoroRoundsCompleted',
       type: IsarType.long,
     ),
     r'semesterKey': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'semesterKey',
       type: IsarType.string,
     ),
     r'sessionType': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'sessionType',
       type: IsarType.string,
     ),
     r'startTime': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'startTime',
       type: IsarType.dateTime,
     ),
     r'wasPlanned': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'wasPlanned',
       type: IsarType.bool,
     )
@@ -102,6 +107,12 @@ int _studySessionModelEstimateSize(
   bytesCount += 3 + object.courseName.length * 3;
   bytesCount += 3 + object.courseSource.length * 3;
   bytesCount += 3 + object.formattedDuration.length * 3;
+  {
+    final value = object.objective;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.semesterKey.length * 3;
   {
     final value = object.sessionType;
@@ -125,11 +136,12 @@ void _studySessionModelSerialize(
   writer.writeDateTime(offsets[4], object.endTime);
   writer.writeString(offsets[5], object.formattedDuration);
   writer.writeBool(offsets[6], object.isPomodoro);
-  writer.writeLong(offsets[7], object.pomodoroRoundsCompleted);
-  writer.writeString(offsets[8], object.semesterKey);
-  writer.writeString(offsets[9], object.sessionType);
-  writer.writeDateTime(offsets[10], object.startTime);
-  writer.writeBool(offsets[11], object.wasPlanned);
+  writer.writeString(offsets[7], object.objective);
+  writer.writeLong(offsets[8], object.pomodoroRoundsCompleted);
+  writer.writeString(offsets[9], object.semesterKey);
+  writer.writeString(offsets[10], object.sessionType);
+  writer.writeDateTime(offsets[11], object.startTime);
+  writer.writeBool(offsets[12], object.wasPlanned);
 }
 
 StudySessionModel _studySessionModelDeserialize(
@@ -145,11 +157,12 @@ StudySessionModel _studySessionModelDeserialize(
   object.durationMinutes = reader.readLong(offsets[3]);
   object.endTime = reader.readDateTime(offsets[4]);
   object.id = id;
-  object.pomodoroRoundsCompleted = reader.readLongOrNull(offsets[7]);
-  object.semesterKey = reader.readString(offsets[8]);
-  object.sessionType = reader.readStringOrNull(offsets[9]);
-  object.startTime = reader.readDateTime(offsets[10]);
-  object.wasPlanned = reader.readBool(offsets[11]);
+  object.objective = reader.readStringOrNull(offsets[7]);
+  object.pomodoroRoundsCompleted = reader.readLongOrNull(offsets[8]);
+  object.semesterKey = reader.readString(offsets[9]);
+  object.sessionType = reader.readStringOrNull(offsets[10]);
+  object.startTime = reader.readDateTime(offsets[11]);
+  object.wasPlanned = reader.readBool(offsets[12]);
   return object;
 }
 
@@ -175,14 +188,16 @@ P _studySessionModelDeserializeProp<P>(
     case 6:
       return (reader.readBool(offset)) as P;
     case 7:
-      return (reader.readLongOrNull(offset)) as P;
-    case 8:
-      return (reader.readString(offset)) as P;
-    case 9:
       return (reader.readStringOrNull(offset)) as P;
+    case 8:
+      return (reader.readLongOrNull(offset)) as P;
+    case 9:
+      return (reader.readString(offset)) as P;
     case 10:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 11:
+      return (reader.readDateTime(offset)) as P;
+    case 12:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1008,6 +1023,160 @@ extension StudySessionModelQueryFilter
   }
 
   QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'objective',
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'objective',
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'objective',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'objective',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'objective',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'objective',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'objective',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'objective',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'objective',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'objective',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'objective',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
+      objectiveIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'objective',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterFilterCondition>
       pomodoroRoundsCompletedIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1545,6 +1714,20 @@ extension StudySessionModelQuerySortBy
   }
 
   QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      sortByObjective() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'objective', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      sortByObjectiveDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'objective', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
       sortByPomodoroRoundsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pomodoroRoundsCompleted', Sort.asc);
@@ -1729,6 +1912,20 @@ extension StudySessionModelQuerySortThenBy
   }
 
   QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      thenByObjective() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'objective', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
+      thenByObjectiveDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'objective', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QAfterSortBy>
       thenByPomodoroRoundsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pomodoroRoundsCompleted', Sort.asc);
@@ -1852,6 +2049,13 @@ extension StudySessionModelQueryWhereDistinct
   }
 
   QueryBuilder<StudySessionModel, StudySessionModel, QDistinct>
+      distinctByObjective({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'objective', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<StudySessionModel, StudySessionModel, QDistinct>
       distinctByPomodoroRoundsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'pomodoroRoundsCompleted');
@@ -1940,6 +2144,13 @@ extension StudySessionModelQueryProperty
   QueryBuilder<StudySessionModel, bool, QQueryOperations> isPomodoroProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isPomodoro');
+    });
+  }
+
+  QueryBuilder<StudySessionModel, String?, QQueryOperations>
+      objectiveProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'objective');
     });
   }
 

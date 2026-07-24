@@ -132,7 +132,7 @@ class PlannedActualAnalyser {
     required DateTime weekStart, // Monday of the week
   }) {
     final days = <DayAnalytics>[];
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 7; i++) {
       final date = weekStart.add(Duration(days: i));
       final daySessions = allSessions.where((s) {
         final d = s.startTime;
@@ -150,7 +150,12 @@ class PlannedActualAnalyser {
     // Course totals across the week
     final weekActual = <String, int>{};
     final weekNames = <String, String>{};
-    for (final s in allSessions) {
+    final weekEnd = weekStart.add(const Duration(days: 7));
+    for (final s in allSessions.where(
+      (session) =>
+          !session.startTime.isBefore(weekStart) &&
+          session.startTime.isBefore(weekEnd),
+    )) {
       weekActual[s.courseCode] =
           (weekActual[s.courseCode] ?? 0) + s.durationMinutes;
       weekNames[s.courseCode] = s.courseName;

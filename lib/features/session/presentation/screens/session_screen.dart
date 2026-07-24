@@ -13,11 +13,13 @@ import 'package:campusiq/features/session/domain/planned_actual_analyser.dart';
 import 'package:campusiq/features/session/presentation/providers/active_session_provider.dart';
 import 'package:campusiq/features/session/presentation/providers/session_provider.dart';
 import 'package:campusiq/features/session/presentation/widgets/active_timer_card.dart';
-import 'package:campusiq/features/session/presentation/widgets/analytics_summary_card.dart';
-import 'package:campusiq/features/session/presentation/widgets/course_breakdown_card.dart';
+import 'package:campusiq/features/session/presentation/widgets/course_balance_card.dart';
 import 'package:campusiq/features/session/presentation/widgets/course_picker_sheet.dart';
 import 'package:campusiq/features/session/presentation/widgets/session_tile.dart';
+import 'package:campusiq/features/session/presentation/widgets/start_session_sheet.dart';
+import 'package:campusiq/features/session/presentation/widgets/today_focus_card.dart';
 import 'package:campusiq/features/session/presentation/widgets/weekly_bar_chart.dart';
+import 'package:campusiq/features/streak/domain/streak_calculator.dart';
 import 'package:campusiq/features/streak/presentation/providers/streak_provider.dart';
 import 'package:campusiq/features/streak/presentation/widgets/streak_action_button.dart';
 import 'package:campusiq/features/timetable/presentation/providers/timetable_provider.dart';
@@ -58,50 +60,76 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     super.dispose();
   }
 
-  Future<void> _startSession(
-    BuildContext context, {
-    bool isPomodoroMode = false,
-    Duration focusDuration = const Duration(minutes: 25),
-    Duration shortBreakDuration = const Duration(minutes: 5),
-    Duration longBreakDuration = const Duration(minutes: 15),
-    int totalRounds = 4,
+  Future<void> _showStartSession({
+    PickedCourse? initialCourse,
+    SessionFocusMode initialMode = SessionFocusMode.quick,
   }) async {
-    if (isPomodoroMode) {
-      await NotificationService.instance.requestPermission();
-      if (!context.mounted) return;
-    }
-
-    final prefsRepo = ref.read(userPrefsRepositoryProvider);
-    final vibrate = await prefsRepo?.getVibrateOnTimerEnd() ?? true;
-    final playSound = await prefsRepo?.getPlaySoundOnTimerEnd() ?? true;
-    if (!context.mounted) return;
-
-    final picked = await showModalBottomSheet<PickedCourse>(
+    final setup = await showModalBottomSheet<StartSessionSetup>(
       context: context,
       isScrollControlled: true,
       useRootNavigator: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const CoursePickerSheet(),
+      builder: (_) => StartSessionSheet(
+        initialCourse: initialCourse,
+        initialMode: initialMode,
+      ),
     );
+    if (setup == null || !mounted) return;
+    await _startSession(setup);
+  }
 
-    if (picked == null || !context.mounted) return;
+  Future<void> _startSession(StartSessionSetup setup) async {
+    final isPomodoroMode = setup.mode != SessionFocusMode.open;
+    final focusDuration = Duration(
+      minutes: setup.mode == SessionFocusMode.deep ? 50 : 25,
+    );
+    if (isPomodoroMode) {
+      await NotificationService.instance.requestPermission();
+      if (!mounted) return;
+    }
+
+    final prefsRepo = ref.read(userPrefsRepositoryProvider);
+    final vibrate = await prefsRepo?.getVibrateOnTimerEnd() ?? true;
+    final playSound = await prefsRepo?.getPlaySoundOnTimerEnd() ?? true;
+    if (!mounted) return;
 
     ref.read(activeSessionProvider.notifier).startSession(
-          courseCode: picked.courseCode,
-          courseName: picked.courseName,
-          courseSource: picked.source,
+          courseCode: setup.course.courseCode,
+          courseName: setup.course.courseName,
+          courseSource: setup.course.source,
+          objective: setup.objective,
           isPomodoroMode: isPomodoroMode,
           focusDuration: focusDuration,
-          shortBreakDuration: shortBreakDuration,
-          longBreakDuration: longBreakDuration,
-          totalRounds: totalRounds,
+          shortBreakDuration: const Duration(minutes: 5),
+          longBreakDuration: const Duration(minutes: 10),
+          totalRounds: 1,
           vibrateOnTimerEnd: vibrate,
           playSoundOnTimerEnd: playSound,
         );
     await AnalyticsService.instance.logStudySessionStarted(
       mode: isPomodoroMode ? 'pomodoro' : 'normal',
-      source: picked.source,
+      source: setup.course.source,
+    );
+  }
+
+  Future<void> _quickStart() async {
+    final sessions = ref.read(allSessionsProvider).valueOrNull ?? [];
+    if (sessions.isEmpty) {
+      await _showStartSession();
+      return;
+    }
+    final recent = sessions.first;
+    await _startSession(
+      StartSessionSetup(
+        course: PickedCourse(
+          courseCode: recent.courseCode,
+          courseName: recent.courseName,
+          source: recent.courseSource,
+        ),
+        objective: null,
+        mode: SessionFocusMode.quick,
+      ),
     );
   }
 
@@ -123,12 +151,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
     final existingSessions = ref.read(allSessionsProvider).valueOrNull ?? [];
     final today = DateTime.now();
-    final hadSessionToday = existingSessions.any((s) {
+    final previousTodayMinutes = existingSessions.where((s) {
       final d = s.startTime;
       return d.year == today.year &&
           d.month == today.month &&
           d.day == today.day;
-    });
+    }).fold<int>(0, (total, session) => total + session.durationMinutes);
+    final hadQualifiedToday =
+        previousTodayMinutes >= StreakCalculator.studyRequirementMinutes;
 
     final todaySlots = ref.read(activeDaySlotsProvider);
     final wasPlanned =
@@ -145,7 +175,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       ..semesterKey = semesterKey
       ..sessionType = completed.isPomodoroMode ? 'pomodoro' : 'normal'
       ..pomodoroRoundsCompleted =
-          completed.isPomodoroMode ? completed.pomodoroRoundsCompleted : null;
+          completed.isPomodoroMode ? completed.pomodoroRoundsCompleted : null
+      ..objective = completed.objective;
 
     final repo = ref.read(sessionRepositoryProvider);
     if (repo == null) {
@@ -179,7 +210,6 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       return;
     }
 
-    await NotificationService.instance.cancelStudiedTodayAlerts();
     await AnalyticsService.instance.logStudySessionCompleted(
       mode: completed.isPomodoroMode ? 'pomodoro' : 'normal',
       durationMinutes: durationMins,
@@ -188,18 +218,223 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           completed.isPomodoroMode ? completed.pomodoroRoundsCompleted : null,
     );
 
-    if (!hadSessionToday) {
+    final todayMinutes = previousTodayMinutes + durationMins;
+    if (todayMinutes >= StreakCalculator.studyRequirementMinutes) {
+      await NotificationService.instance.cancelStudiedTodayAlerts();
+    }
+    final streakJustSecured = !hadQualifiedToday &&
+        todayMinutes >= StreakCalculator.studyRequirementMinutes;
+    if (streakJustSecured) {
       final streak = ref.read(studyStreakProvider);
       await NotificationService.instance
           .showStreakSecured(streak.currentStreak);
     }
     if (mounted) {
-      CampusFeedback.showSuccess(
-        context,
-        message:
-            '$durationMins-minute ${completed.courseCode} study session saved',
+      final studyAgain = await _showCompletionSheet(
+        completed: completed,
+        durationMinutes: durationMins,
+        todayMinutes: todayMinutes,
+        streakSecured: todayMinutes >= StreakCalculator.studyRequirementMinutes,
       );
+      if (studyAgain && mounted) {
+        await _showStartSession(
+          initialCourse: PickedCourse(
+            courseCode: completed.courseCode,
+            courseName: completed.courseName,
+            source: completed.courseSource,
+          ),
+          initialMode: completed.isPomodoroMode
+              ? SessionFocusMode.quick
+              : SessionFocusMode.open,
+        );
+      }
     }
+  }
+
+  Future<bool> _showCompletionSheet({
+    required ActiveSessionState completed,
+    required int durationMinutes,
+    required int todayMinutes,
+    required bool streakSecured,
+  }) async {
+    final goals = ref.read(studyGoalsProvider).valueOrNull ??
+        (dailyMinutes: 120, weeklyMinutes: 600);
+    final streak = ref.read(studyStreakProvider);
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.xl,
+          AppSpacing.lg,
+          AppSpacing.xl,
+          AppSpacing.xl + MediaQuery.viewPaddingOf(sheetContext).bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor:
+                  Theme.of(sheetContext).colorScheme.primaryContainer,
+              child: Icon(
+                LucideIcons.check,
+                size: 30,
+                color: Theme.of(sheetContext).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Session complete',
+              style: Theme.of(sheetContext).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '$durationMinutes focused minutes · ${completed.courseCode}',
+              style: Theme.of(sheetContext).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            if (completed.objective != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                completed.objective!,
+                style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                      color:
+                          Theme.of(sheetContext).colorScheme.onSurfaceVariant,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            const SizedBox(height: AppSpacing.lg),
+            LinearProgressIndicator(
+              value: (todayMinutes / goals.dailyMinutes).clamp(0.0, 1.0),
+              minHeight: 9,
+              borderRadius: AppRadii.pill,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Daily goal · ${_formatMinutes(todayMinutes)} of ${_formatMinutes(goals.dailyMinutes)}',
+            ),
+            if (streakSecured) ...[
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                '🔥 ${streak.currentStreak == 0 ? 1 : streak.currentStreak}-day streak secured',
+                style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(true),
+                    child: const Text('Study again'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(false),
+                    child: const Text('Done'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<void> _showStudyGoalsSheet() async {
+    final current = ref.read(studyGoalsProvider).valueOrNull ??
+        (dailyMinutes: 120, weeklyMinutes: 600);
+    var daily = current.dailyMinutes;
+    var weekly = current.weeklyMinutes;
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      useRootNavigator: true,
+      useSafeArea: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Study goals',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                'Your streak is secured separately after 20 focused minutes.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              DropdownButtonFormField<int>(
+                initialValue: daily,
+                decoration: const InputDecoration(labelText: 'Daily goal'),
+                items: const [30, 60, 90, 120, 180, 240]
+                    .map(
+                      (minutes) => DropdownMenuItem(
+                        value: minutes,
+                        child: Text(_formatMinutes(minutes)),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) setModalState(() => daily = value);
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+              DropdownButtonFormField<int>(
+                initialValue: weekly,
+                decoration: const InputDecoration(labelText: 'Weekly goal'),
+                items: const [300, 420, 600, 900, 1200, 1800]
+                    .map(
+                      (minutes) => DropdownMenuItem(
+                        value: minutes,
+                        child: Text(_formatMinutes(minutes)),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) setModalState(() => weekly = value);
+                },
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Save goals'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (saved != true) return;
+    final repo = ref.read(userPrefsRepositoryProvider);
+    await repo?.setStudyGoals(dailyMinutes: daily, weeklyMinutes: weekly);
+  }
+
+  static String _formatMinutes(int minutes) {
+    final hours = minutes ~/ 60;
+    final remainder = minutes % 60;
+    if (hours == 0) return '${remainder}m';
+    if (remainder == 0) return '${hours}h';
+    return '${hours}h ${remainder}m';
   }
 
   void _onPhaseExpired() {
@@ -264,15 +499,15 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                 _HistoryTab(
                   activeSession: activeSession,
                   bottomContentPadding: bottomContentPadding,
-                  onStart: (isPomodoroMode, focus, shortBreak, longBreak,
-                          totalRounds) =>
-                      _startSession(
-                    context,
-                    isPomodoroMode: isPomodoroMode,
-                    focusDuration: focus,
-                    shortBreakDuration: shortBreak,
-                    longBreakDuration: longBreak,
-                    totalRounds: totalRounds,
+                  onStart: _showStartSession,
+                  onQuickStart: _quickStart,
+                  onEditGoals: _showStudyGoalsSheet,
+                  onStartCourse: (course) => _showStartSession(
+                    initialCourse: PickedCourse(
+                      courseCode: course.courseCode,
+                      courseName: course.courseName,
+                      source: 'cwa',
+                    ),
                   ),
                   onPause: () =>
                       ref.read(activeSessionProvider.notifier).pauseSession(),
@@ -297,13 +532,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
 class _HistoryTab extends ConsumerWidget {
   final ActiveSessionState? activeSession;
-  final void Function(
-    bool isPomodoroMode,
-    Duration focus,
-    Duration shortBreak,
-    Duration longBreak,
-    int totalRounds,
-  ) onStart;
+  final VoidCallback onStart;
+  final VoidCallback onQuickStart;
+  final VoidCallback onEditGoals;
+  final void Function(CourseStats course) onStartCourse;
   final VoidCallback onPause;
   final VoidCallback onResume;
   final VoidCallback onStop;
@@ -315,6 +547,9 @@ class _HistoryTab extends ConsumerWidget {
   const _HistoryTab({
     required this.activeSession,
     required this.onStart,
+    required this.onQuickStart,
+    required this.onEditGoals,
+    required this.onStartCourse,
     required this.onPause,
     required this.onResume,
     required this.onStop,
@@ -323,6 +558,70 @@ class _HistoryTab extends ConsumerWidget {
     required this.onSkipBreak,
     required this.bottomContentPadding,
   });
+
+  void _showAllSessions(
+    BuildContext context,
+    List<StudySessionModel> sessions,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.82,
+        minChildSize: 0.5,
+        maxChildSize: 0.94,
+        builder: (context, controller) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.lg,
+                AppSpacing.xl,
+                AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Session history',
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(LucideIcons.x),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                controller: controller,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  0,
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                ),
+                itemCount: sessions.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSpacing.xs),
+                itemBuilder: (context, index) => SessionTile(
+                  session: sessions[index],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -336,6 +635,10 @@ class _HistoryTab extends ConsumerWidget {
           perCourse: const [],
         );
     final weeklyAnalytics = ref.watch(weeklyAnalyticsProvider);
+    final goals = ref.watch(studyGoalsProvider).valueOrNull ??
+        (dailyMinutes: 120, weeklyMinutes: 600);
+    final streak = ref.watch(studyStreakProvider);
+    final courseBalance = ref.watch(weeklyCourseBalanceProvider);
 
     return CustomScrollView(
       slivers: [
@@ -357,21 +660,20 @@ class _HistoryTab extends ConsumerWidget {
                     onPhaseExpired: onPhaseExpired,
                     onSkipBreak: onSkipBreak,
                   )
-                : _StartCard(onStart: onStart),
+                : TodayFocusCard(
+                    studiedMinutes: todaySummary.totalActualMinutes,
+                    goalMinutes: goals.dailyMinutes,
+                    sessionCount: todaySummary.sessionCount,
+                    streak: streak.currentStreak,
+                    streakSecured: todaySummary.totalActualMinutes >=
+                        StreakCalculator.studyRequirementMinutes,
+                    onStart: onStart,
+                    onQuickStart: onQuickStart,
+                    onEditGoals: onEditGoals,
+                  ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              _SessionScreenState._compactSectionGap,
-              AppSpacing.xl,
-              0,
-            ),
-            child: AnalyticsSummaryCard(analytics: todaySummary),
-          ),
-        ),
-        if (todaySummary.perCourse.isNotEmpty)
+        if (courseBalance.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -380,7 +682,10 @@ class _HistoryTab extends ConsumerWidget {
                 AppSpacing.xl,
                 0,
               ),
-              child: CourseBreakdownCard(courses: todaySummary.perCourse),
+              child: CourseBalanceCard(
+                courses: courseBalance,
+                onPlanCourse: onStartCourse,
+              ),
             ),
           ),
         if (weeklyAnalytics != null)
@@ -392,7 +697,10 @@ class _HistoryTab extends ConsumerWidget {
                 AppSpacing.xl,
                 0,
               ),
-              child: WeeklyBarChart(weekly: weeklyAnalytics),
+              child: WeeklyBarChart(
+                weekly: weeklyAnalytics,
+                goalMinutes: goals.weeklyMinutes,
+              ),
             ),
           ),
         SliverToBoxAdapter(
@@ -405,15 +713,21 @@ class _HistoryTab extends ConsumerWidget {
             ),
             child: CampusSectionHeader(
               title: 'Recent sessions',
-              subtitle: 'A calmer look at your latest focus history.',
+              subtitle: 'Your latest focused work.',
               trailing: sessionsAsync.whenOrNull(
-                    data: (sessions) => CampusChip(
-                      label:
-                          '${sessions.length} session${sessions.length == 1 ? '' : 's'}',
-                      icon: LucideIcons.history,
-                      backgroundColor: AppColors.surfaceMuted,
-                      foregroundColor: AppTheme.textPrimary,
-                    ),
+                    data: (sessions) => sessions.length > 3
+                        ? TextButton(
+                            onPressed: () =>
+                                _showAllSessions(context, sessions),
+                            child: const Text('View all'),
+                          )
+                        : CampusChip(
+                            label:
+                                '${sessions.length} session${sessions.length == 1 ? '' : 's'}',
+                            icon: LucideIcons.history,
+                            backgroundColor: AppColors.surfaceMuted,
+                            foregroundColor: AppTheme.textPrimary,
+                          ),
                   ) ??
                   const SizedBox.shrink(),
             ),
@@ -482,7 +796,7 @@ class _HistoryTab extends ConsumerWidget {
                 },
                 separatorBuilder: (_, __) =>
                     const SizedBox(height: AppSpacing.xs2),
-                itemCount: sessions.length,
+                itemCount: sessions.take(3).length,
               ),
             );
           },
@@ -521,7 +835,7 @@ class _TabSwitcher extends StatelessWidget {
         unselectedLabelColor: colorScheme.onSurfaceVariant,
         overlayColor: WidgetStateProperty.all(Colors.transparent),
         tabs: const [
-          Tab(text: 'History'),
+          Tab(text: 'Focus'),
           Tab(text: 'Plan'),
         ],
       ),

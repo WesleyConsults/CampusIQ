@@ -26,7 +26,10 @@ final attendedDatesProvider = StreamProvider<List<DateTime>>((ref) async* {
 final studyStreakProvider = Provider<StreakResult>((ref) {
   final sessions = ref.watch(allSessionsProvider).valueOrNull ?? [];
 
-  final activeDates = sessions.map((s) => s.startTime).toList();
+  final activeDates = StreakCalculator.qualifyingStudyDates(
+    sessions:
+        sessions.map((s) => (date: s.startTime, minutes: s.durationMinutes)),
+  );
   return StreakCalculator.calculate(activeDates: activeDates);
 });
 
@@ -37,10 +40,11 @@ final perCourseStreakProvider = Provider<Map<String, StreakResult>>((ref) {
 
   final result = <String, StreakResult>{};
   for (final course in courses) {
-    final courseDates = sessions
-        .where((s) => s.courseCode == course.code)
-        .map((s) => s.startTime)
-        .toList();
+    final courseDates = StreakCalculator.qualifyingStudyDates(
+      sessions: sessions
+          .where((s) => s.courseCode == course.code)
+          .map((s) => (date: s.startTime, minutes: s.durationMinutes)),
+    );
     result[course.code] = StreakCalculator.calculate(activeDates: courseDates);
   }
   return result;

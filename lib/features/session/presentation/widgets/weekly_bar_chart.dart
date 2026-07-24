@@ -9,10 +9,12 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 /// Simple custom bar chart — no external charting library needed.
 class WeeklyBarChart extends StatelessWidget {
   final WeeklyAnalytics weekly;
+  final int goalMinutes;
 
   const WeeklyBarChart({
     super.key,
     required this.weekly,
+    this.goalMinutes = 600,
   });
 
   @override
@@ -21,7 +23,7 @@ class WeeklyBarChart extends StatelessWidget {
     final maxMinutes = weekly.days
         .map((day) => day.totalActualMinutes)
         .fold(0, (a, b) => a > b ? a : b);
-    final dayLabels = ['M', 'T', 'W', 'T', 'F', 'S'];
+    final dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return CampusCard(
       padding: const EdgeInsets.symmetric(
@@ -40,12 +42,25 @@ class WeeklyBarChart extends StatelessWidget {
                 foregroundColor: AppTheme.textPrimary,
               ),
               const Spacer(),
-              Text(
-                _fmt(weekly.totalActualMinutes),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.w700,
-                    ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${_fmt(weekly.totalActualMinutes)} / ${_fmt(goalMinutes)}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  Text(
+                    weekly.totalActualMinutes >= goalMinutes
+                        ? 'Weekly goal complete'
+                        : '${_fmt(goalMinutes - weekly.totalActualMinutes)} remaining',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ],
               ),
             ],
           ),

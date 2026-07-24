@@ -87,6 +87,7 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
       statusLabel: session.isPaused ? 'Paused' : 'Active',
       statusColor: session.isPaused ? AppTheme.accent : const Color(0xFFBFD8C5),
       secondaryDetails: [
+        if (session.objective != null) session.objective!,
         'Started ${_formatTime(session.startTime)}',
         'Normal session',
       ],
@@ -114,6 +115,7 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
         statusLabel: 'Complete',
         statusColor: const Color(0xFFBFD8C5),
         secondaryDetails: [
+          if (session.objective != null) session.objective!,
           'Started ${_formatTime(session.startTime)}',
           'Ready to save to history',
         ],
@@ -186,6 +188,7 @@ class _ActiveTimerCardState extends State<ActiveTimerCard> {
               : 'Focus',
       statusColor: statusColor,
       secondaryDetails: [
+        if (session.objective != null) session.objective!,
         'Started ${_formatTime(session.startTime)}',
         '${session.focusDuration.inMinutes}m focus · ${session.shortBreakDuration.inMinutes}m short break',
       ],
