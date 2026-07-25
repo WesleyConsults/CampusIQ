@@ -299,6 +299,63 @@ void main() {
     );
   });
 
+  testWidgets('completed cwa setup does not replay while persisted data loads',
+      (tester) async {
+    final baselineController = StreamController<ManualAcademicBaseline?>();
+    final targetController = StreamController<bool>();
+    addTearDown(baselineController.close);
+    addTearDown(targetController.close);
+
+    final existingCourse = CourseModel.create(
+      name: 'Engineering Mathematics',
+      code: 'MATH101',
+      creditHours: 3,
+      expectedScore: 72,
+      semesterKey: '2026-Sem1',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          isarProvider.overrideWith((ref) async => throw UnimplementedError()),
+          cwaRepositoryProvider.overrideWithValue(null),
+          pastResultRepositoryProvider.overrideWithValue(null),
+          coursesProvider.overrideWith((ref) => Stream.value([existingCourse])),
+          pastSemestersProvider.overrideWith((ref) => Stream.value(const [])),
+          manualAcademicBaselineProvider
+              .overrideWith((ref) => baselineController.stream),
+          cwaSetupTargetConfirmedProvider
+              .overrideWith((ref) => targetController.stream),
+        ],
+        child: const MaterialApp(home: CwaScreen()),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byKey(const ValueKey('cwa-setup')), findsNothing);
+
+    baselineController.add(
+      const ManualAcademicBaseline(
+        score: 68,
+        credits: 45,
+        gradingSystemId: 'cwa',
+      ),
+    );
+    targetController.add(true);
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('cwa-dashboard')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cwa-setup')), findsNothing);
+
+    await tester.pump(const Duration(seconds: 4));
+    expect(find.byKey(const ValueKey('cwa-dashboard')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cwa-setup')), findsNothing);
+  });
+
   testWidgets('cwa completion waits until a covering route is dismissed',
       (tester) async {
     final coursesController = StreamController<List<CourseModel>>();

@@ -55,33 +55,45 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/plan',
           name: 'plan',
-          builder: (context, state) => const TrackedScreen(
-            screenName: 'today',
-            child: PlanScreen(),
+          pageBuilder: (context, state) => _shellTabPage(
+            state: state,
+            child: const TrackedScreen(
+              screenName: 'today',
+              child: PlanScreen(),
+            ),
           ),
         ),
         GoRoute(
           path: '/cwa',
           name: 'cwa',
-          builder: (context, state) => const TrackedScreen(
-            screenName: 'planner',
-            child: CwaScreen(),
+          pageBuilder: (context, state) => _shellTabPage(
+            state: state,
+            child: const TrackedScreen(
+              screenName: 'planner',
+              child: CwaScreen(),
+            ),
           ),
         ),
         GoRoute(
           path: '/timetable',
           name: 'timetable',
-          builder: (context, state) => const TrackedScreen(
-            screenName: 'timetable',
-            child: TimetableScreen(),
+          pageBuilder: (context, state) => _shellTabPage(
+            state: state,
+            child: const TrackedScreen(
+              screenName: 'timetable',
+              child: TimetableScreen(),
+            ),
           ),
         ),
         GoRoute(
           path: '/sessions',
           name: 'sessions',
-          builder: (context, state) => const TrackedScreen(
-            screenName: 'sessions',
-            child: SessionScreen(),
+          pageBuilder: (context, state) => _shellTabPage(
+            state: state,
+            child: const TrackedScreen(
+              screenName: 'sessions',
+              child: SessionScreen(),
+            ),
           ),
         ),
       ],
@@ -209,6 +221,52 @@ final appRouter = GoRouter(
   ],
 );
 
+class _ShellTabNavigation {
+  final int direction;
+
+  const _ShellTabNavigation(this.direction);
+}
+
+CustomTransitionPage<void> _shellTabPage({
+  required GoRouterState state,
+  required Widget child,
+}) {
+  final navigation = state.extra;
+  final direction =
+      navigation is _ShellTabNavigation ? navigation.direction.toDouble() : 0.0;
+
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 320),
+    reverseTransitionDuration: const Duration(milliseconds: 320),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curve = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeInOutCubic,
+      );
+      final secondaryCurve = CurvedAnimation(
+        parent: secondaryAnimation,
+        curve: Curves.easeInOutCubic,
+      );
+
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: Offset(direction, 0),
+          end: Offset.zero,
+        ).animate(curve),
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset.zero,
+            end: Offset(-direction, 0),
+          ).animate(secondaryCurve),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 class _AppShell extends ConsumerWidget {
   static const double _navHeight = AppSpacing.navHeight;
   static const double _navBottomMargin = AppSpacing.navBottomMargin;
@@ -263,10 +321,7 @@ class _AppShell extends ConsumerWidget {
               data: mediaQuery,
               child: ColoredBox(
                 color: theme.scaffoldBackgroundColor,
-                child: _ShellTabTransition(
-                  selectedIndex: selectedIndex,
-                  child: child,
-                ),
+                child: ClipRect(child: child),
               ),
             ),
           ),
@@ -289,92 +344,27 @@ class _AppShell extends ConsumerWidget {
               isSessionActive: isSessionActive,
               gradesLabel: gradingSystem.label,
               onDestinationSelected: (i) {
+                final direction =
+                    selectedIndex == null || i > selectedIndex ? 1 : -1;
+                final extra = _ShellTabNavigation(direction);
                 switch (i) {
                   case 0:
-                    context.go('/plan');
+                    context.go('/plan', extra: extra);
                     return;
                   case 1:
-                    context.go('/cwa');
+                    context.go('/cwa', extra: extra);
                     return;
                   case 2:
-                    context.go('/timetable');
+                    context.go('/timetable', extra: extra);
                     return;
                   case 3:
-                    context.go('/sessions');
+                    context.go('/sessions', extra: extra);
                     return;
                 }
               },
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ShellTabTransition extends StatefulWidget {
-  final int? selectedIndex;
-  final Widget child;
-
-  const _ShellTabTransition({
-    required this.selectedIndex,
-    required this.child,
-  });
-
-  @override
-  State<_ShellTabTransition> createState() => _ShellTabTransitionState();
-}
-
-class _ShellTabTransitionState extends State<_ShellTabTransition>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  Offset _beginOffset = Offset.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 260),
-      value: 1,
-    );
-  }
-
-  @override
-  void didUpdateWidget(covariant _ShellTabTransition oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final previousIndex = oldWidget.selectedIndex;
-    final nextIndex = widget.selectedIndex;
-    if (previousIndex == null ||
-        nextIndex == null ||
-        previousIndex == nextIndex) {
-      return;
-    }
-
-    _beginOffset = Offset(nextIndex > previousIndex ? 1 : -1, 0);
-    _controller.forward(from: 0);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRect(
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: _beginOffset,
-          end: Offset.zero,
-        ).animate(
-          CurvedAnimation(
-            parent: _controller,
-            curve: Curves.easeOutCubic,
-          ),
-        ),
-        child: widget.child,
       ),
     );
   }

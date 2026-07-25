@@ -541,17 +541,17 @@ class _CwaDashboardView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final coursesAsync = ref.watch(coursesProvider);
     final semestersAsync = ref.watch(pastSemestersProvider);
+    final manualBaselineAsync = ref.watch(manualAcademicBaselineProvider);
+    final targetConfirmedAsync = ref.watch(cwaSetupTargetConfirmedProvider);
     final selectedGradingSystem = ref.watch(gradingSystemProvider);
     final projected = ref.watch(projectedCwaProvider);
     final cumulative = ref.watch(cumulativeCwaProvider);
     final cumulativeGap = ref.watch(cumulativeGapProvider);
     final target = ref.watch(targetCwaProvider);
-    final targetConfirmed =
-        ref.watch(cwaSetupTargetConfirmedProvider).valueOrNull ?? false;
+    final targetConfirmed = targetConfirmedAsync.valueOrNull ?? false;
     final totalCredits = ref.watch(totalCreditsProvider);
     final activeSemesterKey = ref.watch(activeSemesterProvider);
-    final manualBaseline =
-        ref.watch(manualAcademicBaselineProvider).valueOrNull;
+    final manualBaseline = manualBaselineAsync.valueOrNull;
 
     if (coursesAsync.hasError && coursesAsync.valueOrNull == null) {
       return Padding(
@@ -573,8 +573,10 @@ class _CwaDashboardView extends ConsumerWidget {
       );
     }
 
-    if ((coursesAsync.isLoading && coursesAsync.valueOrNull == null) ||
-        (semestersAsync.isLoading && semestersAsync.valueOrNull == null)) {
+    if ((coursesAsync.isLoading && !coursesAsync.hasValue) ||
+        (semestersAsync.isLoading && !semestersAsync.hasValue) ||
+        (manualBaselineAsync.isLoading && !manualBaselineAsync.hasValue) ||
+        (targetConfirmedAsync.isLoading && !targetConfirmedAsync.hasValue)) {
       return const Center(child: CircularProgressIndicator());
     }
 
