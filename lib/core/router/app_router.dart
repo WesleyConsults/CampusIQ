@@ -532,12 +532,22 @@ class _ShellBottomNav extends StatelessWidget {
                           color: iconColor,
                         ),
                         const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          destination.label,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: iconColor,
-                            fontWeight:
-                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                        SizedBox(
+                          height: 18,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              destination.label,
+                              maxLines: 1,
+                              softWrap: false,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                fontSize: 11,
+                                color: iconColor,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ),
                       ],

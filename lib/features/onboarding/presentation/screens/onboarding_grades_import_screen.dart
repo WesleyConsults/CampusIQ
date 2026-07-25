@@ -16,6 +16,19 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
     final state = ref.watch(onboardingProvider);
     final notifier = ref.read(onboardingProvider.notifier);
 
+    Future<void> openSetup(OnboardingStartAction action) async {
+      if (state.isLoading) return;
+      notifier.setStartAction(action);
+      await notifier.complete();
+      if (!context.mounted) return;
+      final destination = switch (action) {
+        OnboardingStartAction.importCourses => '/cwa/import/registration',
+        OnboardingStartAction.importPastResults => '/cwa/import/results',
+        OnboardingStartAction.addTimetable => '/timetable/import',
+      };
+      context.go(destination);
+    }
+
     // Map selection to active visual highlights
     final isSlipSelected =
         state.startAction == OnboardingStartAction.importCourses;
@@ -24,14 +37,6 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
     final isTimetableSelected =
         state.startAction == OnboardingStartAction.addTimetable;
     final isSkipSelected = state.startAction == null;
-
-    final setupDestination = switch (state.startAction) {
-      OnboardingStartAction.importCourses => '/cwa/import/registration',
-      OnboardingStartAction.importPastResults => '/cwa/import/results',
-      OnboardingStartAction.addTimetable => '/timetable/import',
-      null => null,
-    };
-    final hasSetupShortcut = state.startAction != null;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -110,10 +115,9 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
                       description:
                           'Courses you are studying now. Upload your current registration slip—not completed results.',
                       isSelected: isSlipSelected,
-                      onTap: () {
-                        notifier.setStartAction(
-                            OnboardingStartAction.importCourses);
-                      },
+                      onTap: () => openSetup(
+                        OnboardingStartAction.importCourses,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _SetupOptionRow(
@@ -124,11 +128,9 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
                       description:
                           'Official grades from a semester you have already completed.',
                       isSelected: isPastResultsSelected,
-                      onTap: () {
-                        notifier.setStartAction(
-                          OnboardingStartAction.importPastResults,
-                        );
-                      },
+                      onTap: () => openSetup(
+                        OnboardingStartAction.importPastResults,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     // Option 3: Import Timetable
@@ -140,10 +142,9 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
                       description:
                           'Import your class schedule and find free study time.',
                       isSelected: isTimetableSelected,
-                      onTap: () {
-                        notifier
-                            .setStartAction(OnboardingStartAction.addTimetable);
-                      },
+                      onTap: () => openSetup(
+                        OnboardingStartAction.addTimetable,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     // Option 4: Skip for now
@@ -204,12 +205,6 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
                           await notifier.complete();
                           if (!context.mounted) return;
                           context.go('/plan');
-                          if (setupDestination == null) return;
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (context.mounted) {
-                              context.push(setupDestination);
-                            }
-                          });
                         },
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.navy,
@@ -224,11 +219,9 @@ class OnboardingGradesImportScreen extends ConsumerWidget {
                             color: Colors.white,
                           ),
                         )
-                      : Text(
-                          hasSetupShortcut
-                              ? 'Finish and open setup'
-                              : 'Finish and go to Today',
-                          style: const TextStyle(
+                      : const Text(
+                          'Skip and go to Today',
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,

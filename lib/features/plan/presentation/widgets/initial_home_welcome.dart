@@ -164,7 +164,7 @@ class _WelcomeHeroCard extends StatelessWidget {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final compact = constraints.maxWidth < 320;
-                  final imageWidth = compact ? 120.0 : 154.0;
+                  final imageWidth = compact ? 144.0 : 184.8;
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -198,7 +198,7 @@ class _WelcomeHeroCard extends StatelessWidget {
                           const SizedBox(width: AppSpacing.xs),
                           ExcludeSemantics(
                             child: Image.asset(
-                              'assets/images/unimate_welcome_student.png',
+                              'assets/images/unimate_welcome_students.png',
                               width: imageWidth,
                               fit: BoxFit.contain,
                               errorBuilder: (context, _, __) =>
