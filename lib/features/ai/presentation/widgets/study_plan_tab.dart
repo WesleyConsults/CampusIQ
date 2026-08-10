@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusiq/core/providers/connectivity_provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:campusiq/core/theme/app_tokens.dart';
 import 'package:campusiq/features/ai/presentation/providers/study_plan_provider.dart';
 import 'package:campusiq/features/ai/presentation/widgets/plan_day_card.dart';
@@ -23,29 +23,15 @@ class StudyPlanTab extends ConsumerWidget {
     'Sunday'
   ];
 
-  Future<void> _generatePlan(BuildContext context, WidgetRef ref) async {
-    final isOnline = await ref.read(isOnlineProvider.future);
-    if (!context.mounted) return;
-    if (!isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("You're offline. Connect to use features."),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    await ref.read(studyPlanProvider.notifier).generatePlan();
-  }
+  Future<void> _generatePlan(WidgetRef ref) =>
+      ref.read(studyPlanProvider.notifier).generatePlan();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final planState = ref.watch(studyPlanProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Loading state
-    if (planState.isLoading) {
+    if (planState.isInitializing) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -53,13 +39,93 @@ class StudyPlanTab extends ConsumerWidget {
             const CircularProgressIndicator(),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Reading your timetable and sessions...',
+              'Loading your saved study plan...',
               style: TextStyle(
                 color: colorScheme.onSurfaceVariant,
                 fontSize: 13,
               ),
             ),
           ],
+        ),
+      );
+    }
+
+    if (planState.isGenerating) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                planState.isTakingLong
+                    ? 'This is taking longer than usual. You can keep waiting or cancel and try again.'
+                    : 'Creating your plan from your timetable and study history...',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextButton(
+                onPressed: () =>
+                    ref.read(studyPlanProvider.notifier).cancelGeneration(),
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (planState.prerequisiteMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.school_outlined,
+                size: 48,
+                color: colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              const Text(
+                'Add your academic data first',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                planState.prerequisiteMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => context.go('/cwa'),
+                    child: const Text('Add courses'),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => context.go('/timetable'),
+                    child: const Text('Add timetable'),
+                  ),
+                  TextButton(
+                    onPressed: () => _generatePlan(ref),
+                    child: const Text('Try again'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -79,7 +145,7 @@ class StudyPlanTab extends ConsumerWidget {
                   style: TextStyle(color: colorScheme.onSurfaceVariant)),
               const SizedBox(height: AppSpacing.md),
               ElevatedButton(
-                onPressed: () => _generatePlan(context, ref),
+                onPressed: () => _generatePlan(ref),
                 child: const Text('Try Again'),
               ),
             ],
@@ -114,7 +180,7 @@ class StudyPlanTab extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.xl),
               ElevatedButton.icon(
-                onPressed: () => _generatePlan(context, ref),
+                onPressed: () => _generatePlan(ref),
                 icon: const Icon(Icons.auto_awesome),
                 label: const Text('Generate My Study Plan'),
                 style: ElevatedButton.styleFrom(
@@ -171,7 +237,7 @@ class StudyPlanTab extends ConsumerWidget {
               bottomContentPadding,
             ),
             child: OutlinedButton.icon(
-              onPressed: () => _generatePlan(context, ref),
+              onPressed: () => _generatePlan(ref),
               icon: const Icon(Icons.refresh, size: AppIconSizes.md),
               label: const Text('Regenerate Plan'),
             ),

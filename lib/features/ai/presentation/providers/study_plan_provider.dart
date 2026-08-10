@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
@@ -14,31 +15,48 @@ import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dar
 class StudyPlanState {
   final StudyPlanModel? plan;
   final List<StudyPlanSlotModel> slots;
-  final bool isLoading;
+  final bool isInitializing;
+  final bool isGenerating;
+  final bool isTakingLong;
   final String? error;
+  final String? prerequisiteMessage;
   final bool isGenerated;
 
   const StudyPlanState({
     this.plan,
     this.slots = const [],
-    this.isLoading = false,
+    this.isInitializing = true,
+    this.isGenerating = false,
+    this.isTakingLong = false,
     this.error,
+    this.prerequisiteMessage,
     this.isGenerated = false,
   });
+
+  bool get isLoading => isInitializing || isGenerating;
 
   StudyPlanState copyWith({
     StudyPlanModel? plan,
     List<StudyPlanSlotModel>? slots,
-    bool? isLoading,
+    bool? isInitializing,
+    bool? isGenerating,
+    bool? isTakingLong,
     String? error,
     bool clearError = false,
+    String? prerequisiteMessage,
+    bool clearPrerequisite = false,
     bool? isGenerated,
   }) {
     return StudyPlanState(
       plan: plan ?? this.plan,
       slots: slots ?? this.slots,
-      isLoading: isLoading ?? this.isLoading,
+      isInitializing: isInitializing ?? this.isInitializing,
+      isGenerating: isGenerating ?? this.isGenerating,
+      isTakingLong: isTakingLong ?? this.isTakingLong,
       error: clearError ? null : (error ?? this.error),
+      prerequisiteMessage: clearPrerequisite
+          ? null
+          : (prerequisiteMessage ?? this.prerequisiteMessage),
       isGenerated: isGenerated ?? this.isGenerated,
     );
   }
@@ -46,6 +64,8 @@ class StudyPlanState {
 
 class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
   final Ref _ref;
+  Timer? _slowGenerationTimer;
+  int _generationId = 0;
 
   StudyPlanNotifier(this._ref) : super(const StudyPlanState()) {
     loadPlan();
@@ -59,7 +79,7 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
       final plan = await isar.studyPlanModels.get(1);
       if (plan == null) {
         state = state.copyWith(
-          isLoading: false,
+          isInitializing: false,
           isGenerated: false,
           slots: [],
         );
@@ -84,7 +104,7 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
       state = state.copyWith(
         plan: plan,
         slots: slots,
-        isLoading: false,
+        isInitializing: false,
         isGenerated: true,
         clearError: true,
       );
@@ -95,31 +115,68 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
         reason: 'study_plan_load_failed',
       );
       state = state.copyWith(
-        isLoading: false,
+        isInitializing: false,
         error: 'Failed to load study plan.',
       );
     }
   }
 
   Future<void> generatePlan() async {
-    final isOnline = await _ref.read(isOnlineProvider.future);
-    if (!isOnline) {
-      await AnalyticsService.instance.logAiGenerationFailed(
-        feature: 'ai_study_plan',
-        reason: 'offline',
-      );
-      state = state.copyWith(
-        isLoading: false,
-        error: "You're offline. Connect to use features.",
-      );
-      return;
-    }
-    state = state.copyWith(isLoading: true, clearError: true);
+    final generationId = ++_generationId;
+    _slowGenerationTimer?.cancel();
+    state = state.copyWith(
+      isGenerating: true,
+      isTakingLong: false,
+      clearError: true,
+      clearPrerequisite: true,
+    );
+    _slowGenerationTimer = Timer(const Duration(seconds: 12), () {
+      if (generationId == _generationId && state.isGenerating) {
+        state = state.copyWith(isTakingLong: true);
+      }
+    });
+    final totalTimer = Stopwatch()..start();
+
     try {
+      final isOnline = await _ref.read(isOnlineProvider.future);
+      if (generationId != _generationId) return;
+      if (!isOnline) {
+        await AnalyticsService.instance.logAiGenerationFailed(
+          feature: 'ai_study_plan',
+          reason: 'offline',
+        );
+        state = state.copyWith(
+          isGenerating: false,
+          isTakingLong: false,
+          error: "You're offline. Connect to use features.",
+        );
+        return;
+      }
+
+      final isar = await _isar;
+      if (generationId != _generationId) return;
+      final courses = await isar.courseModels.where().findAll();
+      final timetableSlots = await isar.timetableSlotModels.where().findAll();
+      if (generationId != _generationId) return;
+      if (courses.isEmpty && timetableSlots.isEmpty) {
+        state = state.copyWith(
+          isGenerating: false,
+          isTakingLong: false,
+          clearError: true,
+          prerequisiteMessage:
+              'Add at least one course or timetable class before generating a study plan.',
+        );
+        return;
+      }
+
+      final promptTimer = Stopwatch()..start();
       final builder = await _ref.read(contextBuilderProvider.future);
       final prompt = await builder.buildStudyPlanPrompt();
+      promptTimer.stop();
+      if (generationId != _generationId) return;
 
       final client = await _ref.read(deepseekClientProvider.future);
+      final apiTimer = Stopwatch()..start();
       final response = await client.complete(
         systemPrompt: prompt,
         messages: const [
@@ -127,12 +184,10 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
         ],
         maxTokens: 1000,
       );
+      apiTimer.stop();
+      if (generationId != _generationId) return;
 
       final parsedSlots = _parseSlots(response);
-
-      final isar = await _isar;
-      final courses = await isar.courseModels.where().findAll();
-      final timetableSlots = await isar.timetableSlotModels.where().findAll();
 
       final knownCodes = <String>{};
       final codeToName = <String, String?>{};
@@ -147,7 +202,8 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
       for (final s in timetableSlots) {
         knownCodes.add(s.courseCode);
         if (s.courseName.trim().isNotEmpty) {
-          if (!codeToName.containsKey(s.courseCode) || codeToName[s.courseCode] == null) {
+          if (!codeToName.containsKey(s.courseCode) ||
+              codeToName[s.courseCode] == null) {
             codeToName[s.courseCode] = s.courseName.trim();
           }
         }
@@ -161,14 +217,18 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
         if (knownCodes.contains(code)) {
           final exactName = codeToName[code];
           slot.courseCode = code;
-          slot.courseName = exactName != null && exactName.isNotEmpty ? exactName : code;
+          slot.courseName =
+              exactName != null && exactName.isNotEmpty ? exactName : code;
           newSlots.add(slot);
         } else {
-          final closestCode = _findClosestKnownCourseCode(code.isNotEmpty ? code : name, knownCodes.toList());
+          final closestCode = _findClosestKnownCourseCode(
+              code.isNotEmpty ? code : name, knownCodes.toList());
           if (closestCode != null) {
             final exactName = codeToName[closestCode];
             slot.courseCode = closestCode;
-            slot.courseName = exactName != null && exactName.isNotEmpty ? exactName : closestCode;
+            slot.courseName = exactName != null && exactName.isNotEmpty
+                ? exactName
+                : closestCode;
             newSlots.add(slot);
           } else {
             // Fallback to a safe generic study task without invented course label
@@ -179,6 +239,7 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
         }
       }
 
+      final saveTimer = Stopwatch()..start();
       await isar.writeTxn(() async {
         // Delete all existing slots
         await isar.studyPlanSlotModels.clear();
@@ -204,13 +265,34 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
           await saved.slots.save();
         }
       });
+      saveTimer.stop();
+      if (generationId != _generationId) return;
 
       await loadPlan();
-      await AnalyticsService.instance.logAiGenerationSucceeded(
+      if (generationId != _generationId) return;
+      state = state.copyWith(
+        isGenerating: false,
+        isTakingLong: false,
+      );
+      totalTimer.stop();
+      unawaited(AnalyticsService.instance.logAiGenerationSucceeded(
         feature: 'ai_study_plan',
         itemCount: newSlots.length,
-      );
+      ));
+      unawaited(AnalyticsService.instance.logEvent(
+        'ai_study_plan_timing',
+        parameters: {
+          'outcome': 'success',
+          'prompt_ms': promptTimer.elapsedMilliseconds,
+          'api_ms': apiTimer.elapsedMilliseconds,
+          'save_ms': saveTimer.elapsedMilliseconds,
+          'total_ms': totalTimer.elapsedMilliseconds,
+          'item_count': newSlots.length,
+        },
+      ));
     } catch (e, stackTrace) {
+      if (generationId != _generationId) return;
+      totalTimer.stop();
       await CrashReportingService.instance.recordNonFatalError(
         e,
         stackTrace,
@@ -221,11 +303,45 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
         reason: _aiFailureReason(e),
       );
       state = state.copyWith(
-        isLoading: false,
+        isGenerating: false,
+        isTakingLong: false,
         error:
             'Could not generate plan. ${e.toString().contains('JSON') ? 'AI returned unexpected format — try again.' : 'Check your connection and try again.'}',
       );
+      unawaited(AnalyticsService.instance.logEvent(
+        'ai_study_plan_timing',
+        parameters: {
+          'outcome': 'failed',
+          'total_ms': totalTimer.elapsedMilliseconds,
+        },
+      ));
+    } finally {
+      if (generationId == _generationId) {
+        _slowGenerationTimer?.cancel();
+        _slowGenerationTimer = null;
+      }
     }
+  }
+
+  void cancelGeneration() {
+    if (!state.isGenerating) return;
+    _generationId++;
+    _slowGenerationTimer?.cancel();
+    _slowGenerationTimer = null;
+    state = state.copyWith(
+      isGenerating: false,
+      isTakingLong: false,
+      clearError: true,
+    );
+    unawaited(AnalyticsService.instance.logEvent(
+      'ai_study_plan_cancelled',
+    ));
+  }
+
+  @override
+  void dispose() {
+    _slowGenerationTimer?.cancel();
+    super.dispose();
   }
 
   String _aiFailureReason(Object error) {
@@ -263,12 +379,14 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
       return query;
     }
 
-    String clean(String s) => s.replaceAll(RegExp(r'[\s\-]+'), '').toUpperCase();
+    String clean(String s) =>
+        s.replaceAll(RegExp(r'[\s\-]+'), '').toUpperCase();
     final cleanQuery = clean(query);
     if (cleanQuery.isEmpty) return null;
 
     // 2. Exact clean match (ignoring spaces/hyphens)
-    final cleanMatches = knownCodes.where((code) => clean(code) == cleanQuery).toList();
+    final cleanMatches =
+        knownCodes.where((code) => clean(code) == cleanQuery).toList();
     if (cleanMatches.length == 1) {
       return cleanMatches.first;
     } else if (cleanMatches.length > 1) {

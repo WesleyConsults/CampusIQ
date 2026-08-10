@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +9,7 @@ import 'package:campusiq/core/providers/isar_provider.dart';
 import 'package:campusiq/core/providers/connectivity_provider.dart';
 import 'package:campusiq/features/cwa/data/models/course_model.dart';
 import 'package:campusiq/features/timetable/data/models/timetable_slot_model.dart';
+import 'package:campusiq/features/ai/data/models/study_plan_model.dart';
 import 'package:campusiq/features/ai/data/models/study_plan_slot_model.dart';
 import 'package:campusiq/features/ai/domain/deepseek_client.dart';
 import 'package:campusiq/features/ai/presentation/providers/ai_providers.dart';
@@ -16,6 +18,7 @@ import 'package:campusiq/features/plan/domain/plan_generator.dart';
 
 class _MockDeepSeekClient extends Fake implements DeepSeekClient {
   String responseText = '';
+  Completer<String>? pendingResponse;
 
   @override
   Future<String> complete({
@@ -23,6 +26,8 @@ class _MockDeepSeekClient extends Fake implements DeepSeekClient {
     required List<Map<String, String>> messages,
     int maxTokens = 800,
   }) async {
+    final pending = pendingResponse;
+    if (pending != null) return await pending.future;
     return responseText;
   }
 }
@@ -98,6 +103,7 @@ void main() {
         isOnlineProvider.overrideWith((ref) async => true),
       ],
     );
+    addTearDown(container.dispose);
 
     mockDeepSeekClient.responseText = '''
     [
@@ -161,6 +167,71 @@ void main() {
     final slot4 = slots.firstWhere((s) => s.day == 'Thursday');
     expect(slot4.courseCode, 'STUDY');
     expect(slot4.courseName, 'Study Session');
+  });
+
+  test('StudyPlanNotifier explains when academic data is missing', () async {
+    final container = ProviderContainer(
+      overrides: [
+        isarProvider.overrideWith((ref) => isar),
+        deepseekClientProvider.overrideWith((ref) async => mockDeepSeekClient),
+        isOnlineProvider.overrideWith((ref) async => true),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(studyPlanProvider.notifier).generatePlan();
+
+    final planState = container.read(studyPlanProvider);
+    expect(planState.isGenerating, isFalse);
+    expect(planState.prerequisiteMessage, isNotNull);
+  });
+
+  test('StudyPlanNotifier ignores an AI response after cancellation', () async {
+    final course = CourseModel.create(
+      name: 'Introduction to Computer Science',
+      code: 'CS-101',
+      creditHours: 3.0,
+      expectedScore: 75.0,
+      semesterKey: '2024-Sem2',
+    );
+    await isar.writeTxn(() => isar.courseModels.put(course));
+
+    final container = ProviderContainer(
+      overrides: [
+        isarProvider.overrideWith((ref) => isar),
+        deepseekClientProvider.overrideWith((ref) async => mockDeepSeekClient),
+        isOnlineProvider.overrideWith((ref) async => true),
+      ],
+    );
+    addTearDown(container.dispose);
+    mockDeepSeekClient.pendingResponse = Completer<String>();
+
+    final generation =
+        container.read(studyPlanProvider.notifier).generatePlan();
+    for (var attempt = 0; attempt < 100; attempt++) {
+      if (container.read(studyPlanProvider).isGenerating) break;
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+
+    container.read(studyPlanProvider.notifier).cancelGeneration();
+    mockDeepSeekClient.pendingResponse!.complete('''
+      [
+        {
+          "day": "Monday",
+          "courseCode": "CS-101",
+          "courseName": "Introduction to Computer Science",
+          "startTime": "10:00",
+          "durationMinutes": 90,
+          "reason": "Review"
+        }
+      ]
+    ''');
+    await generation;
+
+    final planState = container.read(studyPlanProvider);
+    expect(planState.isGenerating, isFalse);
+    expect(planState.isGenerated, isFalse);
+    expect(await isar.studyPlanModels.count(), 0);
   });
 
   test('PlanGenerator fallback to course code when course name is empty', () {
