@@ -58,7 +58,11 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
       final isar = await _isar;
       final plan = await isar.studyPlanModels.get(1);
       if (plan == null) {
-        state = state.copyWith(isGenerated: false, slots: []);
+        state = state.copyWith(
+          isLoading: false,
+          isGenerated: false,
+          slots: [],
+        );
         return;
       }
       await plan.slots.load();
@@ -78,14 +82,22 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
           return a.startTime.compareTo(b.startTime);
         });
       state = state.copyWith(
-          plan: plan, slots: slots, isGenerated: true, clearError: true);
+        plan: plan,
+        slots: slots,
+        isLoading: false,
+        isGenerated: true,
+        clearError: true,
+      );
     } catch (e, stackTrace) {
       await CrashReportingService.instance.recordNonFatalError(
         e,
         stackTrace,
         reason: 'study_plan_load_failed',
       );
-      state = state.copyWith(error: 'Failed to load study plan.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to load study plan.',
+      );
     }
   }
 
@@ -245,7 +257,7 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
 
   String? _findClosestKnownCourseCode(String query, List<String> knownCodes) {
     if (knownCodes.isEmpty) return null;
-    
+
     // 1. Prefer exact string match first
     if (knownCodes.contains(query)) {
       return query;
@@ -254,7 +266,7 @@ class StudyPlanNotifier extends StateNotifier<StudyPlanState> {
     String clean(String s) => s.replaceAll(RegExp(r'[\s\-]+'), '').toUpperCase();
     final cleanQuery = clean(query);
     if (cleanQuery.isEmpty) return null;
-    
+
     // 2. Exact clean match (ignoring spaces/hyphens)
     final cleanMatches = knownCodes.where((code) => clean(code) == cleanQuery).toList();
     if (cleanMatches.length == 1) {

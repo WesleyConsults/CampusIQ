@@ -138,6 +138,10 @@ void main() {
 
     await container.read(studyPlanProvider.notifier).generatePlan();
 
+    final planState = container.read(studyPlanProvider);
+    expect(planState.isLoading, isFalse);
+    expect(planState.isGenerated, isTrue);
+
     final slots = await isar.studyPlanSlotModels.where().findAll();
 
     expect(slots.length, 4);
