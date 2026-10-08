@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:campusiq/core/domain/grading_system.dart';
 import 'package:campusiq/core/services/analytics_service.dart';
 import 'package:campusiq/core/services/crash_reporting_service.dart';
@@ -8,6 +10,7 @@ import 'package:campusiq/features/cwa/presentation/screens/complete_semester_scr
 import 'package:campusiq/features/cwa/presentation/widgets/active_semester_picker.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/academic_data_correction_hint.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/add_course_sheet.dart';
+import 'package:campusiq/features/cwa/presentation/widgets/course_card.dart';
 import 'package:campusiq/features/cwa/presentation/widgets/timetable_course_import_sheet.dart';
 import 'package:campusiq/shared/widgets/campus_card.dart';
 import 'package:campusiq/shared/widgets/campus_confirm_dialog.dart';
@@ -133,6 +136,54 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
     }
   }
 
+  void _previewExpectedScore(
+    WidgetRef ref,
+    int courseId,
+    double score,
+  ) {
+    ref.read(inFlightScoreAdjustmentsProvider.notifier).state = {
+      ...ref.read(inFlightScoreAdjustmentsProvider),
+      courseId: score,
+    };
+  }
+
+  Future<void> _saveExpectedScore(
+    BuildContext context,
+    WidgetRef ref,
+    CourseModel course,
+    double score,
+  ) async {
+    final repo = ref.read(cwaRepositoryProvider);
+    final prefs = ref.read(cwaPrefsRepositoryProvider);
+    final oldScore = course.expectedScore;
+    course.expectedScore = score;
+
+    try {
+      if (repo == null) throw StateError('Course repository is unavailable');
+      await repo.updateCourse(course);
+      await prefs?.setAcademicProjectionAdjusted(true);
+    } catch (e, stackTrace) {
+      course.expectedScore = oldScore;
+      await CrashReportingService.instance.recordNonFatalError(
+        e,
+        stackTrace,
+        reason: 'course_projection_update_failed',
+        context: {'courseId': course.id, 'source': 'inline_projection'},
+      );
+      if (context.mounted) {
+        CampusFeedback.showError(
+          context,
+          message: 'Could not update the projection. Please try again.',
+        );
+      }
+    } finally {
+      final adjustments = {
+        ...ref.read(inFlightScoreAdjustmentsProvider),
+      }..remove(course.id);
+      ref.read(inFlightScoreAdjustmentsProvider.notifier).state = adjustments;
+    }
+  }
+
   Future<void> _openCompleteSemester(
     BuildContext context,
     WidgetRef ref,
@@ -163,6 +214,8 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
     final selectedGradingSystem = ref.watch(gradingSystemProvider);
     final projected = ref.watch(projectedCwaProvider);
     final activeSemesterKey = ref.watch(activeSemesterProvider);
+    final guideState = ref.watch(academicPlannerGuideProvider).valueOrNull ??
+        AcademicPlannerGuideState.initial;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -188,6 +241,11 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
             0,
             (sum, course) => sum + course.creditHours,
           );
+          final highImpactCourseId = courses.isEmpty
+              ? null
+              : courses
+                  .reduce((a, b) => a.creditHours >= b.creditHours ? a : b)
+                  .id;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(
@@ -206,6 +264,10 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
               ),
               if (courses.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.sm),
+                if (!guideState.hasAdjustedProjection) ...[
+                  _ProjectionGuideCard(gradingSystem: gradingSystem),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
                 const AcademicDataCorrectionHint(
                   message:
                       'Added something by mistake? Use the menu on a course to edit or delete it. Completed results belong in Academic History.',
@@ -229,21 +291,30 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs2),
                 for (final course in courses) ...[
-                  _CompactCurrentCourseCard(
+                  CourseCard(
                     course: course,
                     gradingSystem:
                         _gradingSystemForCourse(course, gradingSystem),
-                    onEditScore: () => _openAddSheet(
-                      context,
-                      ref,
-                      existing: course,
-                    ),
+                    isHighImpact: course.id == highImpactCourseId,
                     onEdit: () => _openAddSheet(
                       context,
                       ref,
                       existing: course,
                     ),
                     onDelete: () => _deleteCourse(context, ref, course),
+                    onScoreChanged: (score) =>
+                        _previewExpectedScore(ref, course.id, score),
+                    onDragEnd: (score) {
+                      unawaited(
+                        _saveExpectedScore(
+                          context,
+                          ref,
+                          course,
+                          score,
+                        ),
+                      );
+                    },
+                    padding: EdgeInsets.zero,
                   ),
                   if (course != courses.last)
                     const SizedBox(height: AppSpacing.xs2),
@@ -263,6 +334,62 @@ class CurrentSemesterCoursesScreen extends ConsumerWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ProjectionGuideCard extends StatelessWidget {
+  final GradingSystem gradingSystem;
+
+  const _ProjectionGuideCard({required this.gradingSystem});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.55),
+        borderRadius: AppRadii.card,
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            LucideIcons.slidersHorizontal,
+            color: colorScheme.primary,
+            size: AppIconSizes.xxl,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Try a projected score',
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  'Open the adjustment on any course and change its expected '
+                  '${gradingSystem.usesLetterGrades ? 'grade' : 'score'}. '
+                  'Your projected ${gradingSystem.label} updates instantly.',
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -554,135 +681,6 @@ class _EmptyCoursesCard extends StatelessWidget {
     );
   }
 }
-
-class _CompactCurrentCourseCard extends StatelessWidget {
-  final CourseModel course;
-  final GradingSystem gradingSystem;
-  final VoidCallback onEditScore;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  const _CompactCurrentCourseCard({
-    required this.course,
-    required this.gradingSystem,
-    required this.onEditScore,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return CampusCard(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm2,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  course.code,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xxxs),
-                Text(
-                  course.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.onSurface,
-                    height: 1.25,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  '${course.creditHours.toInt()} cr',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(AppRadii.xxs),
-                ),
-                child: Text(
-                  gradingSystem.formatScore(course.expectedScore),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              TextButton(
-                onPressed: onEditScore,
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(0, 36),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs,
-                  ),
-                ),
-                child: const Text('Edit'),
-              ),
-            ],
-          ),
-          PopupMenuButton<_CourseMenuAction>(
-            tooltip: 'Course options',
-            icon:
-                const Icon(LucideIcons.ellipsisVertical, size: AppIconSizes.lg),
-            onSelected: (action) {
-              switch (action) {
-                case _CourseMenuAction.edit:
-                  onEdit();
-                  return;
-                case _CourseMenuAction.delete:
-                  onDelete();
-                  return;
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: _CourseMenuAction.edit,
-                child: Text('Edit course'),
-              ),
-              PopupMenuItem(
-                value: _CourseMenuAction.delete,
-                child: Text('Delete course'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum _CourseMenuAction { edit, delete }
 
 GradingSystem _gradingSystemForCourse(
   CourseModel course,

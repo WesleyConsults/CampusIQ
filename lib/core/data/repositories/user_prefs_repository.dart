@@ -518,6 +518,54 @@ class UserPrefsRepository {
     }
   }
 
+  Future<void> setAcademicPlannerIntroSeen(bool value) async {
+    final prefs = await _getOrCreate();
+    if (prefs.hasSeenAcademicPlannerIntro == value) return;
+    prefs.hasSeenAcademicPlannerIntro = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> setAcademicProjectionAdjusted(bool value) async {
+    final prefs = await _getOrCreate();
+    if (prefs.hasAdjustedAcademicProjection == value) return;
+    prefs.hasAdjustedAcademicProjection = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> setAcademicPlannerGuideDismissed(bool value) async {
+    final prefs = await _getOrCreate();
+    if (prefs.hasDismissedAcademicPlannerGuide == value) return;
+    prefs.hasDismissedAcademicPlannerGuide = value;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> replayAcademicPlannerGuide() async {
+    final prefs = await _getOrCreate();
+    prefs.hasSeenAcademicPlannerIntro = false;
+    prefs.hasDismissedAcademicPlannerGuide = false;
+    try {
+      await _isar.writeTxn(() => _isar.userPrefsModels.put(prefs));
+    } catch (e) {
+      debugPrint('🔴 Isar write failed: $e');
+      rethrow;
+    }
+  }
+
   Future<String> getGradingSystemId() async {
     final prefs = await _getOrCreate();
     return GradingSystem.byId(prefs.gradingSystemId).id;

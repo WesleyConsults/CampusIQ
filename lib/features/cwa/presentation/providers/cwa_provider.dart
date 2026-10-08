@@ -105,6 +105,40 @@ final cwaSetupTargetConfirmedProvider = StreamProvider<bool>((ref) async* {
   }
 });
 
+class AcademicPlannerGuideState {
+  final bool hasSeenIntro;
+  final bool hasAdjustedProjection;
+  final bool hasDismissedGuide;
+
+  const AcademicPlannerGuideState({
+    required this.hasSeenIntro,
+    required this.hasAdjustedProjection,
+    required this.hasDismissedGuide,
+  });
+
+  static const initial = AcademicPlannerGuideState(
+    hasSeenIntro: false,
+    hasAdjustedProjection: false,
+    hasDismissedGuide: false,
+  );
+}
+
+/// Persistent progress for the contextual academic-planner guide.
+final academicPlannerGuideProvider =
+    StreamProvider<AcademicPlannerGuideState>((ref) async* {
+  final isar = await ref.watch(isarProvider.future);
+  final repo = UserPrefsRepository(isar);
+  await repo.getPrefs();
+
+  await for (final prefs in repo.watchPrefs()) {
+    yield AcademicPlannerGuideState(
+      hasSeenIntro: prefs?.hasSeenAcademicPlannerIntro ?? false,
+      hasAdjustedProjection: prefs?.hasAdjustedAcademicProjection ?? false,
+      hasDismissedGuide: prefs?.hasDismissedAcademicPlannerGuide ?? false,
+    );
+  }
+});
+
 /// In-flight score adjustments during slider drag (course id → score).
 /// Applied on top of persisted scores so the hero bar updates live during a
 /// drag without writing to Isar on every frame.

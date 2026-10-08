@@ -21,8 +21,15 @@ import 'package:campusiq/shared/widgets/campus_section_header.dart';
 import 'package:campusiq/shared/widgets/error_retry_widget.dart';
 import 'package:campusiq/shared/widgets/import_option_grid.dart';
 
-class CwaScreen extends ConsumerWidget {
+class CwaScreen extends ConsumerStatefulWidget {
   const CwaScreen({super.key});
+
+  @override
+  ConsumerState<CwaScreen> createState() => _CwaScreenState();
+}
+
+class _CwaScreenState extends ConsumerState<CwaScreen> {
+  bool _introScheduled = false;
 
   void _openHistory(BuildContext context) {
     context.pushNamed('cwa-history');
@@ -96,8 +103,11 @@ class CwaScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final gradingSystem = ref.watch(gradingSystemProvider);
+    final guideAsync = ref.watch(academicPlannerGuideProvider);
+    final guideState =
+        guideAsync.valueOrNull ?? AcademicPlannerGuideState.initial;
     final hasActiveSession = ref.watch(activeSessionProvider) != null;
     final bottomContentPadding = shellOverlayBottomPadding(
       context,
@@ -110,9 +120,19 @@ class CwaScreen extends ConsumerWidget {
         ref.watch(manualAcademicBaselineProvider).valueOrNull;
     final targetConfirmed =
         ref.watch(cwaSetupTargetConfirmedProvider).valueOrNull ?? false;
-    final isSetupComplete = currentCourses.isNotEmpty &&
-        (pastSemesters.isNotEmpty || manualBaseline != null) &&
-        targetConfirmed;
+    final projectionAdjusted = guideState.hasAdjustedProjection ||
+        pastSemesters.isNotEmpty ||
+        manualBaseline != null;
+    final isSetupComplete = guideState.hasDismissedGuide ||
+        (currentCourses.isNotEmpty && targetConfirmed && projectionAdjusted);
+
+    if (guideAsync.hasValue && !guideState.hasSeenIntro && !_introScheduled) {
+      _introScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? true)) return;
+        unawaited(_showPlannerIntro(gradingSystem));
+      });
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -130,6 +150,9 @@ class CwaScreen extends ConsumerWidget {
                 case _CwaMenuAction.history:
                   _openHistory(context);
                   return;
+                case _CwaMenuAction.guide:
+                  unawaited(_showPlannerIntro(gradingSystem));
+                  return;
                 case _CwaMenuAction.settings:
                   context.pushNamed('settings');
                   return;
@@ -139,6 +162,10 @@ class CwaScreen extends ConsumerWidget {
               const PopupMenuItem(
                 value: _CwaMenuAction.history,
                 child: Text('View result history'),
+              ),
+              const PopupMenuItem(
+                value: _CwaMenuAction.guide,
+                child: Text('Planner guide'),
               ),
               const PopupMenuItem(
                 value: _CwaMenuAction.settings,
@@ -155,6 +182,7 @@ class CwaScreen extends ConsumerWidget {
         onOpenManualBaseline: _openManualBaselineDialog,
         onShowImportSheet: _showImportSheet,
         onShowTargetDialog: _showTargetDialog,
+        onExplainCalculation: _showCalculationExplainer,
       ),
       floatingActionButton: isSetupComplete
           ? FloatingActionButton.extended(
@@ -171,6 +199,47 @@ class CwaScreen extends ConsumerWidget {
               foregroundColor: colorScheme.onPrimary,
             )
           : null,
+    );
+  }
+
+  Future<void> _showPlannerIntro(GradingSystem gradingSystem) async {
+    final repo = ref.read(cwaPrefsRepositoryProvider);
+    if (repo == null || !mounted) return;
+    await repo.setAcademicPlannerIntroSeen(true);
+    if (!mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => _AcademicPlannerIntroSheet(
+        gradingSystem: gradingSystem,
+        onStart: () => Navigator.of(sheetContext).pop(),
+        onExplore: () {
+          Navigator.of(sheetContext).pop();
+          unawaited(repo.setAcademicPlannerGuideDismissed(true));
+        },
+      ),
+    );
+  }
+
+  void _showCalculationExplainer(
+    BuildContext context,
+    GradingSystem gradingSystem,
+    List<CourseModel> courses,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _CalculationExplainerSheet(
+        gradingSystem: gradingSystem,
+        courses: courses,
+      ),
     );
   }
 
@@ -437,7 +506,7 @@ GradingSystem _gradingSystemForCourses(
   return sameSystem ? first : fallback;
 }
 
-enum _CwaMenuAction { history, settings }
+enum _CwaMenuAction { history, guide, settings }
 
 class _ImportOption {
   final IconData icon;
@@ -526,6 +595,11 @@ class _CwaDashboardView extends ConsumerWidget {
     double current,
     GradingSystem gradingSystem,
   ) onShowTargetDialog;
+  final void Function(
+    BuildContext context,
+    GradingSystem gradingSystem,
+    List<CourseModel> courses,
+  ) onExplainCalculation;
   final double bottomContentPadding;
 
   const _CwaDashboardView({
@@ -534,6 +608,7 @@ class _CwaDashboardView extends ConsumerWidget {
     required this.onOpenManualBaseline,
     required this.onShowImportSheet,
     required this.onShowTargetDialog,
+    required this.onExplainCalculation,
     required this.bottomContentPadding,
   });
 
@@ -543,6 +618,7 @@ class _CwaDashboardView extends ConsumerWidget {
     final semestersAsync = ref.watch(pastSemestersProvider);
     final manualBaselineAsync = ref.watch(manualAcademicBaselineProvider);
     final targetConfirmedAsync = ref.watch(cwaSetupTargetConfirmedProvider);
+    final guideAsync = ref.watch(academicPlannerGuideProvider);
     final selectedGradingSystem = ref.watch(gradingSystemProvider);
     final projected = ref.watch(projectedCwaProvider);
     final cumulative = ref.watch(cumulativeCwaProvider);
@@ -551,7 +627,10 @@ class _CwaDashboardView extends ConsumerWidget {
     final targetConfirmed = targetConfirmedAsync.valueOrNull ?? false;
     final totalCredits = ref.watch(totalCreditsProvider);
     final activeSemesterKey = ref.watch(activeSemesterProvider);
+    final viewMode = ref.watch(cwaViewModeProvider);
     final manualBaseline = manualBaselineAsync.valueOrNull;
+    final guideState =
+        guideAsync.valueOrNull ?? AcademicPlannerGuideState.initial;
 
     if (coursesAsync.hasError && coursesAsync.valueOrNull == null) {
       return Padding(
@@ -595,7 +674,10 @@ class _CwaDashboardView extends ConsumerWidget {
     final hasBaseline = manualBaseline != null;
     final hasCumulativeData = hasHistory || hasBaseline;
     final hasAnyData = hasCumulativeData || hasCurrent;
-    final setupComplete = hasCurrent && hasCumulativeData && targetConfirmed;
+    final projectionAdjusted =
+        guideState.hasAdjustedProjection || hasCumulativeData;
+    final setupComplete = hasCurrent && targetConfirmed && projectionAdjusted;
+    final showDashboard = setupComplete || guideState.hasDismissedGuide;
     final activeSemesterAlreadyRecorded =
         semesters.any((semester) => semester.semesterKey == activeSemesterKey);
     final nextStepCard = _NextStepCard(
@@ -624,25 +706,28 @@ class _CwaDashboardView extends ConsumerWidget {
       bottomContentPadding: bottomContentPadding,
       gradingSystem: gradingSystem,
       hasCurrentCourses: hasCurrent,
-      hasAcademicHistory: hasCumulativeData,
       targetConfirmed: targetConfirmed,
+      projectionAdjusted: projectionAdjusted,
       target: target,
       onAddCurrentCourses: () =>
           onShowImportSheet(context, CwaViewMode.semester),
-      onAddPastResults: () =>
-          onShowImportSheet(context, CwaViewMode.cumulative),
-      onEnterCurrentScore: () => onOpenManualBaseline(
-        context: context,
-        ref: ref,
-        gradingSystem: gradingSystem,
-        existingBaseline: manualBaseline,
-      ),
       onSetTarget: () => onShowTargetDialog(
         context,
         ref,
         target,
         gradingSystem,
       ),
+      onAdjustProjection: () =>
+          Navigator.of(context, rootNavigator: true).push<void>(
+        MaterialPageRoute(
+          builder: (_) => const CurrentSemesterCoursesScreen(),
+        ),
+      ),
+      onSkipGuide: () => ref
+          .read(cwaPrefsRepositoryProvider)
+          ?.setAcademicPlannerGuideDismissed(true),
+      onExplainCalculation: () =>
+          onExplainCalculation(context, gradingSystem, courses),
     );
 
     final dashboardView = ListView(
@@ -653,6 +738,13 @@ class _CwaDashboardView extends ConsumerWidget {
         bottomContentPadding + AppSpacing.xxl,
       ),
       children: [
+        _AcademicModeSwitcher(
+          value: viewMode,
+          gradingSystem: gradingSystem,
+          onChanged: (mode) =>
+              ref.read(cwaViewModeProvider.notifier).state = mode,
+        ),
+        const SizedBox(height: AppSpacing.md),
         _PrimaryScoreCard(
           gradingSystem: gradingSystem,
           projected: projected,
@@ -663,6 +755,9 @@ class _CwaDashboardView extends ConsumerWidget {
           courseCount: courses.length,
           hasCurrentCourses: hasCurrent,
           hasCumulativeData: hasCumulativeData,
+          viewMode: viewMode,
+          onExplainCalculation: () =>
+              onExplainCalculation(context, gradingSystem, courses),
         ),
         const SizedBox(height: AppSpacing.md),
         _CurrentSemesterSummaryCard(
@@ -713,7 +808,7 @@ class _CwaDashboardView extends ConsumerWidget {
     );
 
     return _FinalSetupTransition(
-      setupComplete: setupComplete,
+      setupComplete: showDashboard,
       setupView: setupView,
       dashboardView: dashboardView,
     );
@@ -841,33 +936,35 @@ class _CwaSetupView extends StatelessWidget {
   final double bottomContentPadding;
   final GradingSystem gradingSystem;
   final bool hasCurrentCourses;
-  final bool hasAcademicHistory;
   final bool targetConfirmed;
+  final bool projectionAdjusted;
   final double target;
   final VoidCallback onAddCurrentCourses;
-  final VoidCallback onAddPastResults;
-  final VoidCallback onEnterCurrentScore;
   final VoidCallback onSetTarget;
+  final VoidCallback onAdjustProjection;
+  final VoidCallback onSkipGuide;
+  final VoidCallback onExplainCalculation;
 
   const _CwaSetupView({
     required this.bottomContentPadding,
     required this.gradingSystem,
     required this.hasCurrentCourses,
-    required this.hasAcademicHistory,
     required this.targetConfirmed,
+    required this.projectionAdjusted,
     required this.target,
     required this.onAddCurrentCourses,
-    required this.onAddPastResults,
-    required this.onEnterCurrentScore,
     required this.onSetTarget,
+    required this.onAdjustProjection,
+    required this.onSkipGuide,
+    required this.onExplainCalculation,
   });
 
   @override
   Widget build(BuildContext context) {
     final completedCount = [
       hasCurrentCourses,
-      hasAcademicHistory,
       targetConfirmed,
+      projectionAdjusted,
     ].where((complete) => complete).length;
 
     return ListView(
@@ -884,8 +981,8 @@ class _CwaSetupView extends StatelessWidget {
           completedCount: completedCount,
           steps: [
             hasCurrentCourses,
-            hasAcademicHistory,
             targetConfirmed,
+            projectionAdjusted,
           ],
         ),
         const SizedBox(height: AppSpacing.md),
@@ -905,39 +1002,43 @@ class _CwaSetupView extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         _SetupStepCard(
           step: 2,
-          icon: LucideIcons.history,
-          title: 'Add completed results',
-          description:
-              'Import official grades from completed semesters, or enter your current ${gradingSystem.cumulativeLabel} and completed credits.',
-          actionLabel: 'Add completed results',
-          completionLabel: 'Academic history added',
-          secondaryActionLabel: hasAcademicHistory
-              ? null
-              : 'Enter current ${gradingSystem.cumulativeLabel}',
-          complete: hasAcademicHistory,
-          enabled: hasCurrentCourses && !hasAcademicHistory,
-          emphasized: hasCurrentCourses && !hasAcademicHistory,
-          onPressed: onAddPastResults,
-          onSecondaryPressed: onEnterCurrentScore,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _SetupStepCard(
-          step: 3,
           icon: LucideIcons.goal,
           title: 'Confirm your target',
           description: targetConfirmed
               ? 'Your target is ${gradingSystem.formatScore(target)}.'
-              : 'Review the ${gradingSystem.label} you want to work toward.',
+              : 'Choose the ${gradingSystem.label} you want to work toward.',
           actionLabel: 'Set my target',
           completionLabel: 'Target confirmed',
           complete: targetConfirmed,
-          enabled: hasCurrentCourses && hasAcademicHistory && !targetConfirmed,
-          emphasized:
-              hasCurrentCourses && hasAcademicHistory && !targetConfirmed,
+          enabled: hasCurrentCourses && !targetConfirmed,
+          emphasized: hasCurrentCourses && !targetConfirmed,
           onPressed: onSetTarget,
         ),
+        const SizedBox(height: AppSpacing.sm),
+        _SetupStepCard(
+          step: 3,
+          icon: LucideIcons.slidersHorizontal,
+          title: 'Try a projected score',
+          description:
+              'Adjust one expected ${gradingSystem.usesLetterGrades ? 'grade' : 'score'} and watch your projected ${gradingSystem.label} update instantly.',
+          actionLabel: 'Adjust a course',
+          completionLabel: 'Projection explored',
+          complete: projectionAdjusted,
+          enabled: hasCurrentCourses && targetConfirmed && !projectionAdjusted,
+          emphasized:
+              hasCurrentCourses && targetConfirmed && !projectionAdjusted,
+          onPressed: onAdjustProjection,
+        ),
         const SizedBox(height: AppSpacing.lg),
-        _SetupCalculationCard(gradingSystem: gradingSystem),
+        _SetupCalculationCard(
+          gradingSystem: gradingSystem,
+          onTap: onExplainCalculation,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TextButton(
+          onPressed: onSkipGuide,
+          child: const Text('Explore the planner without the guide'),
+        ),
       ],
     );
   }
@@ -1268,12 +1369,10 @@ class _SetupStepCard extends StatefulWidget {
   final String description;
   final String actionLabel;
   final String completionLabel;
-  final String? secondaryActionLabel;
   final bool complete;
   final bool enabled;
   final bool emphasized;
   final VoidCallback onPressed;
-  final VoidCallback? onSecondaryPressed;
 
   const _SetupStepCard({
     required this.step,
@@ -1286,8 +1385,6 @@ class _SetupStepCard extends StatefulWidget {
     required this.enabled,
     required this.emphasized,
     required this.onPressed,
-    this.secondaryActionLabel,
-    this.onSecondaryPressed,
   });
 
   @override
@@ -1526,18 +1623,6 @@ class _SetupStepCardState extends State<_SetupStepCard>
                                     child: Text(widget.actionLabel),
                                   ),
                                 ),
-                                if (widget.secondaryActionLabel != null) ...[
-                                  const SizedBox(height: AppSpacing.xs),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: TextButton(
-                                      onPressed: widget.enabled
-                                          ? widget.onSecondaryPressed
-                                          : null,
-                                      child: Text(widget.secondaryActionLabel!),
-                                    ),
-                                  ),
-                                ],
                               ],
                             ),
                           ),
@@ -1589,8 +1674,12 @@ class _SetupStepCardState extends State<_SetupStepCard>
 
 class _SetupCalculationCard extends StatelessWidget {
   final GradingSystem gradingSystem;
+  final VoidCallback onTap;
 
-  const _SetupCalculationCard({required this.gradingSystem});
+  const _SetupCalculationCard({
+    required this.gradingSystem,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1610,67 +1699,471 @@ class _SetupCalculationCard extends StatelessWidget {
       ),
     ];
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.65),
+    return Material(
+      color: colorScheme.primaryContainer.withValues(alpha: 0.65),
+      borderRadius: AppRadii.card,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: AppRadii.card,
-        border: Border.all(color: colorScheme.outlineVariant),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            borderRadius: AppRadii.card,
+            border: Border.all(color: colorScheme.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'What UniMate will calculate',
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    LucideIcons.info,
+                    color: colorScheme.primary,
+                    size: AppIconSizes.lg,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                'Tap to see the formula in plain language.',
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: items
+                    .map(
+                      (item) => Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            right: item == items.last ? 0 : AppSpacing.xs,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.xs,
+                              vertical: AppSpacing.sm,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surface,
+                              borderRadius: BorderRadius.circular(AppRadii.sm),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  item.icon,
+                                  color: colorScheme.primary,
+                                  size: AppIconSizes.xl,
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  item.label,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurface,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AcademicPlannerIntroSheet extends StatelessWidget {
+  final GradingSystem gradingSystem;
+  final VoidCallback onStart;
+  final VoidCallback onExplore;
+
+  const _AcademicPlannerIntroSheet({
+    required this.gradingSystem,
+    required this.onStart,
+    required this.onExplore,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return CampusModalSheet(
+      title: 'Your ${gradingSystem.label} planner',
+      scrollable: true,
+      leading: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer,
+          borderRadius: AppRadii.button,
+        ),
+        child: Icon(
+          LucideIcons.chartNoAxesCombined,
+          color: colorScheme.primary,
+          size: AppIconSizes.xxl,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'What UniMate will calculate',
+            'Add your courses, set a target, and test expected results to '
+            'understand what you need this semester.',
             style: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
+              color: colorScheme.onSurfaceVariant,
+              fontSize: 14,
+              height: 1.45,
             ),
           ),
+          const SizedBox(height: AppSpacing.lg),
+          const _IntroBenefit(
+            icon: LucideIcons.bookOpen,
+            title: 'Add courses your way',
+            description:
+                'Import a slip, use your timetable, or enter manually.',
+          ),
           const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: items
-                .map(
-                  (item) => Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: item == items.last ? 0 : AppSpacing.xs,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                          vertical: AppSpacing.sm,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface,
-                          borderRadius: BorderRadius.circular(AppRadii.sm),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              item.icon,
-                              color: colorScheme.primary,
-                              size: AppIconSizes.xl,
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              item.label,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: colorScheme.onSurface,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+          _IntroBenefit(
+            icon: LucideIcons.slidersHorizontal,
+            title: 'See changes instantly',
+            description:
+                'Try expected results and watch your projected ${gradingSystem.label} respond.',
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _IntroBenefit(
+            icon: LucideIcons.layers,
+            title: 'Current and cumulative',
+            description:
+                'Keep this semester separate from your overall ${gradingSystem.cumulativeLabel}.',
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onStart,
+              child: const Text('Start setup'),
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: onExplore,
+              child: const Text('Explore myself'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IntroBenefit extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+
+  const _IntroBenefit({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
+          child: Icon(icon, color: colorScheme.primary, size: AppIconSizes.lg),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxxs),
+              Text(
+                description,
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AcademicModeSwitcher extends StatelessWidget {
+  final CwaViewMode value;
+  final GradingSystem gradingSystem;
+  final ValueChanged<CwaViewMode> onChanged;
+
+  const _AcademicModeSwitcher({
+    required this.value,
+    required this.gradingSystem,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Academic view',
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () => _showModeHelp(context),
+              tooltip: 'Semester and cumulative explained',
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(LucideIcons.info, size: AppIconSizes.md),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<CwaViewMode>(
+            segments: [
+              const ButtonSegment(
+                value: CwaViewMode.semester,
+                icon: Icon(LucideIcons.bookOpen),
+                label: Text('Semester'),
+              ),
+              ButtonSegment(
+                value: CwaViewMode.cumulative,
+                icon: const Icon(LucideIcons.graduationCap),
+                label: Text(gradingSystem.cumulativeLabel),
+              ),
+            ],
+            selected: {value},
+            showSelectedIcon: false,
+            onSelectionChanged: (selection) => onChanged(selection.first),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showModeHelp(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CampusModalSheet(
+        title: 'Semester or ${gradingSystem.cumulativeLabel}?',
+        child: Column(
+          children: [
+            const _ModeHelpRow(
+              icon: LucideIcons.bookOpen,
+              title: 'Semester',
+              description:
+                  'Plan the courses you are taking now and test expected results.',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _ModeHelpRow(
+              icon: LucideIcons.graduationCap,
+              title: gradingSystem.cumulativeLabel,
+              description:
+                  'Combine completed semesters to understand your overall academic standing.',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModeHelpRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+
+  const _ModeHelpRow({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: colorScheme.primary, size: AppIconSizes.xxl),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                description,
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CalculationExplainerSheet extends StatelessWidget {
+  final GradingSystem gradingSystem;
+  final List<CourseModel> courses;
+
+  const _CalculationExplainerSheet({
+    required this.gradingSystem,
+    required this.courses,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final examples = courses.take(2).toList();
+    final weightedTotal = examples.fold<double>(
+      0,
+      (sum, course) => sum + (course.expectedScore * course.creditHours),
+    );
+    final credits = examples.fold<double>(
+      0,
+      (sum, course) => sum + course.creditHours,
+    );
+    final result = credits == 0 ? 0.0 : weightedTotal / credits;
+
+    return CampusModalSheet(
+      title: 'How ${gradingSystem.label} is calculated',
+      scrollable: true,
+      leading: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer,
+          borderRadius: AppRadii.button,
+        ),
+        child: Icon(
+          LucideIcons.calculator,
+          color: colorScheme.primary,
+          size: AppIconSizes.xxl,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Each course ${gradingSystem.usesLetterGrades ? 'grade point' : 'score'} is multiplied by its credit hours. The weighted total is divided by the total credits.',
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontSize: 14,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.45),
+              borderRadius: AppRadii.card,
+            ),
+            child: examples.isEmpty
+                ? Text(
+                    'Example: (course score × credits) ÷ total credits',
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
                     ),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final course in examples) ...[
+                        Text(
+                          '${course.code}: ${gradingSystem.formatScore(course.expectedScore)} × ${course.creditHours.toInt()} credits = ${(course.expectedScore * course.creditHours).toStringAsFixed(gradingSystem.displayDecimals)}',
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                      ],
+                      const Divider(),
+                      Text(
+                        '${weightedTotal.toStringAsFixed(gradingSystem.displayDecimals)} ÷ ${credits.toInt()} credits = ${gradingSystem.formatScore(result)}',
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
                   ),
-                )
-                .toList(),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Courses with more credits have a larger effect. Projected results are estimates; completed results are used for your cumulative ${gradingSystem.cumulativeLabel}.',
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontSize: 12,
+              height: 1.4,
+            ),
           ),
         ],
       ),
@@ -1688,6 +2181,8 @@ class _PrimaryScoreCard extends StatelessWidget {
   final int courseCount;
   final bool hasCurrentCourses;
   final bool hasCumulativeData;
+  final CwaViewMode viewMode;
+  final VoidCallback onExplainCalculation;
 
   const _PrimaryScoreCard({
     required this.gradingSystem,
@@ -1699,12 +2194,14 @@ class _PrimaryScoreCard extends StatelessWidget {
     required this.courseCount,
     required this.hasCurrentCourses,
     required this.hasCumulativeData,
+    required this.viewMode,
+    required this.onExplainCalculation,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hasData = hasCumulativeData || hasCurrentCourses;
-    final showingCumulative = hasCumulativeData;
+    final showingCumulative = viewMode == CwaViewMode.cumulative;
+    final hasData = showingCumulative ? hasCumulativeData : hasCurrentCourses;
     final score = showingCumulative ? cumulative : projected;
     final label = showingCumulative
         ? gradingSystem.cumulativeMetricLabel
@@ -1712,13 +2209,16 @@ class _PrimaryScoreCard extends StatelessWidget {
     final eyebrow =
         showingCumulative ? 'Your academic standing' : 'This semester';
     final detail = !hasData
-        ? 'Add courses or past results to begin. You can also enter your current ${gradingSystem.cumulativeLabel} only.'
+        ? showingCumulative
+            ? 'Add completed results or enter your current ${gradingSystem.cumulativeLabel} to see your overall standing.'
+            : 'Add current courses to begin your semester projection.'
         : showingCumulative
             ? '${totalCredits.toInt()} total credits • Target ${gradingSystem.formatScore(target)}'
             : '$courseCount course${courseCount == 1 ? '' : 's'} in progress';
-    final gapLabel = cumulativeGap <= 0
+    final activeGap = showingCumulative ? cumulativeGap : target - projected;
+    final gapLabel = activeGap <= 0
         ? 'On track'
-        : 'Gap ${gradingSystem.formatDelta(cumulativeGap)}';
+        : 'Gap ${gradingSystem.formatDelta(activeGap)}';
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -1770,7 +2270,7 @@ class _PrimaryScoreCard extends StatelessWidget {
               height: 1.4,
             ),
           ),
-          if (hasCumulativeData) ...[
+          if (hasData) ...[
             const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.symmetric(
@@ -1791,6 +2291,16 @@ class _PrimaryScoreCard extends StatelessWidget {
               ),
             ),
           ],
+          const SizedBox(height: AppSpacing.xs),
+          TextButton.icon(
+            onPressed: onExplainCalculation,
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.zero,
+            ),
+            icon: const Icon(LucideIcons.info, size: AppIconSizes.md),
+            label: const Text('How is this calculated?'),
+          ),
         ],
       ),
     );

@@ -16,6 +16,7 @@ class CourseCard extends StatefulWidget {
   final VoidCallback onDelete;
   final ValueChanged<double> onScoreChanged;
   final ValueChanged<double>? onDragEnd;
+  final EdgeInsetsGeometry padding;
 
   const CourseCard({
     super.key,
@@ -26,6 +27,10 @@ class CourseCard extends StatefulWidget {
     required this.onDelete,
     required this.onScoreChanged,
     this.onDragEnd,
+    this.padding = const EdgeInsets.symmetric(
+      horizontal: AppSpacing.xl,
+      vertical: 5,
+    ),
   });
 
   @override
@@ -76,8 +81,7 @@ class _CourseCardState extends State<CourseCard> {
     final scoreLabel = _scoreLabel(_sliderValue);
 
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 5),
+      padding: widget.padding,
       child: CampusCard(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,

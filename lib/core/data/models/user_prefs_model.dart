@@ -52,6 +52,18 @@ class UserPrefsModel {
   @Name('zzCwaSetupTargetConfirmed')
   bool cwaSetupTargetConfirmed = false;
 
+  /// Whether the one-time academic planner introduction has been shown.
+  @Name('zzHasSeenAcademicPlannerIntro')
+  bool hasSeenAcademicPlannerIntro = false;
+
+  /// Whether the student has deliberately changed a projected course score.
+  @Name('zzHasAdjustedAcademicProjection')
+  bool hasAdjustedAcademicProjection = false;
+
+  /// Whether the student chose to explore the planner without the setup guide.
+  @Name('zzHasDismissedAcademicPlannerGuide')
+  bool hasDismissedAcademicPlannerGuide = false;
+
   /// JSON snapshot of the in-progress CWA manual entry form.
   @Name('zzManualCwaDraftJson')
   String manualCwaDraftJson = '';
