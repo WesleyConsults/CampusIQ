@@ -26,7 +26,6 @@ class PlanProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final progress = _progress;
-    final percent = (progress * 100).round();
     final color = _barColor(progress);
     final isDone = total > 0 && completed >= total;
 
@@ -35,26 +34,13 @@ class PlanProgressBar extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Percentage label
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  isDone ? 'Complete!' : '$percent% done',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
-                ),
-                Text(
-                  '$completed / $total tasks',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+            Text(
+              isDone ? 'All $total tasks done' : '$completed of $total done',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
             const SizedBox(height: AppSpacing.xxs2),
             // Progress track

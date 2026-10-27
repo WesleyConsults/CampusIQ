@@ -73,7 +73,7 @@ void main() {
     expect(find.text('Quick Actions'), findsOneWidget);
     expect(
       find.text('Everything you need, right at your fingertips.'),
-      findsOneWidget,
+      findsNothing,
     );
     expect(find.textContaining('null'), findsNothing);
     expect(find.text('1 of 2 completed'), findsNothing);
@@ -123,9 +123,9 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Focus Session'));
     await tester.pump();
-    await tester.ensureVisible(find.text('Explore Timetable'));
+    await tester.ensureVisible(find.text('Timetable'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Explore Timetable'));
+    await tester.tap(find.text('Timetable'));
     await tester.pump();
 
     expect(getStarted, 1);

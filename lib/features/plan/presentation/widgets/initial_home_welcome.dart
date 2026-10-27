@@ -296,7 +296,7 @@ class _HomeQuickActions extends StatelessWidget {
         onTap: onFocusSession,
       ),
       _QuickActionData(
-        title: 'Explore Timetable',
+        title: 'Timetable',
         icon: LucideIcons.calendarDays,
         color: AppColors.gold,
         onTap: onExploreTimetable,
@@ -309,11 +309,6 @@ class _HomeQuickActions extends StatelessWidget {
         Text(
           'Quick Actions',
           style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(
-          'Everything you need, right at your fingertips.',
-          style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: AppSpacing.sm),
         LayoutBuilder(
